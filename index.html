@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PanterStudio – Videojuegos desde Colombia</title>
+  <meta name="description" content="PanterStudio es un estudio indie de videojuegos colombiano creando experiencias únicas e innovadoras. Regístrate y sé el primero en jugar nuestros títulos." />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="PanterStudio – Videojuegos desde Colombia" />
+  <meta property="og:description" content="Estudio indie de videojuegos colombiano. Pre-regístrate y sé el primero en conocer nuestros proyectos." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://panterstudio.github.io/" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Favicon (emoji fallback) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>" />
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar" id="navbar" role="navigation" aria-label="Navegación principal">
+    <a href="#inicio" class="nav-logo" aria-label="PanterStudio inicio">
+      <svg class="nav-logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="40" height="40" rx="10" fill="url(#logoGrad)"/>
+        <path d="M12 20 C12 14 28 14 28 20 C28 26 12 26 12 20Z" fill="white" opacity="0.9"/>
+        <circle cx="17" cy="20" r="2" fill="#f7c948"/>
+        <circle cx="23" cy="20" r="2" fill="#f7c948"/>
+        <defs>
+          <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40">
+            <stop offset="0%" stop-color="#f7c948"/>
+            <stop offset="50%" stop-color="#ef4444"/>
+            <stop offset="100%" stop-color="#2563eb"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="nav-logo-text">PanterStudio</span>
+    </a>
+
+    <ul class="nav-links" id="navLinks" role="list">
+      <li><a href="#nosotros">Nosotros</a></li>
+      <li><a href="#juegos">Juegos</a></li>
+      <li><a href="#preregistro">Pre-registro</a></li>
+      <li><a href="#preregistro" class="nav-cta">¡Regístrate!</a></li>
+    </ul>
+
+    <button class="hamburger" id="hamburger" aria-label="Abrir menú" aria-expanded="false" aria-controls="navLinks">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero" id="inicio" aria-label="Inicio">
+    <div class="hero-bg" aria-hidden="true"></div>
+    <div class="hero-grid" aria-hidden="true"></div>
+
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span>🇨🇴</span> Hecho en Colombia
+      </div>
+
+      <h1 class="hero-title">
+        <span class="gradient-text">PanterStudio</span>
+      </h1>
+      <p class="hero-subtitle">Indie Game Studio · Colombia</p>
+
+      <p class="hero-description">
+        Creamos videojuegos únicos con alma colombiana. Desde las selvas del Pacífico hasta los Andes, nuestras historias cobran vida en mundos interactivos que mezclan cultura, acción y aventura.
+      </p>
+
+      <div class="hero-buttons">
+        <a href="#preregistro" class="btn-primary">
+          🎮 Pre-regístrate Gratis
+        </a>
+        <a href="#juegos" class="btn-secondary">
+          🕹️ Ver Proyectos
+        </a>
+      </div>
+    </div>
+
+    <div class="hero-scroll" aria-hidden="true">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12l7 7 7-7"/>
+      </svg>
+      <span>Scroll</span>
+    </div>
+  </section>
+
+  <!-- ===== STATS BAR ===== -->
+  <div class="stats-bar" aria-label="Estadísticas del estudio">
+    <div class="stats-grid">
+      <div class="stat-item fade-in">
+        <div class="stat-number js-total-count">127</div>
+        <div class="stat-label">Pre-registros</div>
+      </div>
+      <div class="stat-item fade-in fade-in-delay-1">
+        <div class="stat-number">3</div>
+        <div class="stat-label">Juegos en desarrollo</div>
+      </div>
+      <div class="stat-item fade-in fade-in-delay-2">
+        <div class="stat-number">2024</div>
+        <div class="stat-label">Año de fundación</div>
+      </div>
+      <div class="stat-item fade-in fade-in-delay-3">
+        <div class="stat-number">🇨🇴</div>
+        <div class="stat-label">Bogotá, Colombia</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ABOUT ===== -->
+  <section class="section" id="nosotros" aria-labelledby="about-heading">
+    <div class="about-grid">
+      <div class="about-visual fade-in">
+        <div class="about-card">
+          <span class="about-icon">🐆</span>
+          <h2 class="about-card-title">PanterStudio</h2>
+          <p class="about-card-desc">
+            Inspirados en la pantera y la biodiversidad colombiana, creamos experiencias que trascienden fronteras.
+          </p>
+          <div class="colombia-flag" aria-label="Bandera de Colombia">
+            <div></div><div></div><div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="about-content fade-in fade-in-delay-1">
+        <p class="section-tag">Quiénes Somos</p>
+        <h2 class="section-title" id="about-heading">
+          Videojuegos con<br /><span style="color: var(--primary)">alma colombiana</span>
+        </h2>
+
+        <p>
+          <strong>PanterStudio</strong> es un estudio indie de videojuegos nacido en Colombia, con la misión de llevar las riquezas culturales, históricas y naturales de Latinoamérica a las pantallas del mundo.
+        </p>
+        <p>
+          Creemos que los videojuegos son el arte del siglo XXI. Por eso combinamos <strong>narrativa profunda</strong>, mecánicas innovadoras y una identidad visual única para crear experiencias que emocionan, inspiran y conectan.
+        </p>
+
+        <div class="values-list">
+          <div class="value-item">
+            <div class="value-icon">🎨</div>
+            <span>Arte y diseño inspirado en la cultura latinoamericana</span>
+          </div>
+          <div class="value-item">
+            <div class="value-icon">⚙️</div>
+            <span>Mecánicas de juego innovadoras y accesibles</span>
+          </div>
+          <div class="value-item">
+            <div class="value-icon">🌿</div>
+            <span>Historias que celebran la biodiversidad y herencia colombiana</span>
+          </div>
+          <div class="value-item">
+            <div class="value-icon">🤝</div>
+            <span>Comunidad primero – construimos junto a nuestros jugadores</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== GAMES ===== -->
+  <section class="section section-alt" id="juegos" aria-labelledby="games-heading">
+    <div class="section-header fade-in">
+      <p class="section-tag">Proyectos</p>
+      <h2 class="section-title" id="games-heading">Nuestros Juegos</h2>
+      <p class="section-desc">
+        Proyectos en desarrollo con mundos únicos y jugabilidad apasionante. Sé el primero en probarlos.
+      </p>
+    </div>
+
+    <div class="games-grid">
+      <!-- Game 1 -->
+      <article class="game-card featured fade-in" aria-label="Jaguar: Leyendas del Pacífico">
+        <div class="game-thumbnail game-thumb-1">
+          🐆
+          <span class="game-badge badge-coming-soon">Próximamente</span>
+        </div>
+        <div class="game-info">
+          <p class="game-genre">Aventura · RPG</p>
+          <h3 class="game-title">Jaguar: Leyendas del Pacífico</h3>
+          <p class="game-desc">
+            Encarna a un guerrero ancestral que despierta en la selva del Pacífico colombiano. Explora ecosistemas únicos, enfrenta criaturas de la mitología afro-colombiana y descifra los secretos de una civilización olvidada.
+          </p>
+          <div class="game-tags">
+            <span class="game-tag">Mundo abierto</span>
+            <span class="game-tag">Mitología colombiana</span>
+            <span class="game-tag">Narrativa</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Game 2 -->
+      <article class="game-card fade-in fade-in-delay-1" aria-label="Páramo: Guardián de las Nieves">
+        <div class="game-thumbnail game-thumb-2">
+          🏔️
+          <span class="game-badge badge-wip">En desarrollo</span>
+        </div>
+        <div class="game-info">
+          <p class="game-genre">Plataformas · Puzzle</p>
+          <h3 class="game-title">Páramo: Guardián de las Nieves</h3>
+          <p class="game-desc">
+            Un oso de anteojos debe restaurar el equilibrio del ecosistema de los páramos andinos. Combina puzles ambientales, plataformas y una historia emotiva sobre conservación natural.
+          </p>
+          <div class="game-tags">
+            <span class="game-tag">Plataformas</span>
+            <span class="game-tag">Eco-aventura</span>
+            <span class="game-tag">2D / 3D</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Game 3 -->
+      <article class="game-card fade-in fade-in-delay-2" aria-label="Cumbia Runners">
+        <div class="game-thumbnail game-thumb-3">
+          🥁
+          <span class="game-badge badge-concept">Concepto</span>
+        </div>
+        <div class="game-info">
+          <p class="game-genre">Ritmo · Acción</p>
+          <h3 class="game-title">Cumbia Runners</h3>
+          <p class="game-desc">
+            Un juego de ritmo y acción ambientado en un carnaval colombiano infinito. Mueve a tu personaje al ritmo de la cumbia, el vallenato y el mapalé para superar obstáculos y rivales.
+          </p>
+          <div class="game-tags">
+            <span class="game-tag">Música colombiana</span>
+            <span class="game-tag">Arcade</span>
+            <span class="game-tag">Multijugador</span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ===== PRE-REGISTRATION ===== -->
+  <section class="section prereg" id="preregistro" aria-labelledby="prereg-heading">
+    <div class="section-header fade-in">
+      <p class="section-tag">¡Únete a la comunidad!</p>
+      <h2 class="section-title" id="prereg-heading">Pre-registro Gratuito</h2>
+      <p class="section-desc">
+        Sé parte de los primeros en jugar nuestros títulos. Recibirás acceso anticipado, contenido exclusivo y un código de bienvenida único.
+      </p>
+    </div>
+
+    <div class="prereg-container fade-in fade-in-delay-1">
+      <div class="prereg-form-card">
+
+        <!-- Form -->
+        <form id="preregForm" novalidate aria-label="Formulario de pre-registro">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="name">Nombre completo <span aria-hidden="true">*</span></label>
+              <input
+                class="form-input"
+                type="text"
+                id="name"
+                name="name"
+                placeholder="Ej. Juan García"
+                required
+                autocomplete="name"
+                aria-required="true"
+              />
+              <span class="field-error" role="alert">Por favor ingresa tu nombre.</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="email">Correo electrónico <span aria-hidden="true">*</span></label>
+              <input
+                class="form-input"
+                type="email"
+                id="email"
+                name="email"
+                placeholder="tu@correo.com"
+                required
+                autocomplete="email"
+                aria-required="true"
+              />
+              <span class="field-error" role="alert">Ingresa un correo válido.</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="country">País <span aria-hidden="true">*</span></label>
+              <select class="form-select" id="country" name="country" required aria-required="true">
+                <option value="" disabled selected>Selecciona tu país</option>
+                <option value="CO">🇨🇴 Colombia</option>
+                <option value="MX">🇲🇽 México</option>
+                <option value="AR">🇦🇷 Argentina</option>
+                <option value="BR">🇧🇷 Brasil</option>
+                <option value="CL">🇨🇱 Chile</option>
+                <option value="PE">🇵🇪 Perú</option>
+                <option value="VE">🇻🇪 Venezuela</option>
+                <option value="EC">🇪🇨 Ecuador</option>
+                <option value="BO">🇧🇴 Bolivia</option>
+                <option value="PY">🇵🇾 Paraguay</option>
+                <option value="UY">🇺🇾 Uruguay</option>
+                <option value="ES">🇪🇸 España</option>
+                <option value="US">🇺🇸 Estados Unidos</option>
+                <option value="OTHER">🌍 Otro</option>
+              </select>
+              <span class="field-error" role="alert">Selecciona tu país.</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="platform">Plataforma favorita <span aria-hidden="true">*</span></label>
+              <select class="form-select" id="platform" name="platform" required aria-required="true">
+                <option value="" disabled selected>¿Dónde juegas?</option>
+                <option value="PC">💻 PC / Mac</option>
+                <option value="PS">🎮 PlayStation</option>
+                <option value="XBOX">🎮 Xbox</option>
+                <option value="NINTENDO">🕹️ Nintendo Switch</option>
+                <option value="MOBILE">📱 Móvil</option>
+                <option value="ALL">✨ Todo</option>
+              </select>
+              <span class="field-error" role="alert">Selecciona una plataforma.</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="genre">Género de juego preferido</label>
+            <select class="form-select" id="genre" name="genre">
+              <option value="" disabled selected>¿Qué tipo de juego te gusta más?</option>
+              <option value="RPG">⚔️ RPG / Aventura</option>
+              <option value="ACTION">💥 Acción</option>
+              <option value="PLATFORMER">🏃 Plataformas</option>
+              <option value="STRATEGY">🧩 Estrategia / Puzzle</option>
+              <option value="RHYTHM">🎵 Ritmo / Música</option>
+              <option value="INDIE">🎨 Indie en general</option>
+              <option value="OTHER">🎲 Otro</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="message">¿Qué esperas de PanterStudio? <span style="color:var(--text-muted); font-weight:400">(opcional)</span></label>
+            <textarea
+              class="form-textarea"
+              id="message"
+              name="message"
+              placeholder="Cuéntanos qué tipo de juegos quieres que hagamos, o simplemente salúdanos 👋"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-checkbox">
+              <input type="checkbox" id="terms" name="terms" required aria-required="true" />
+              <span>
+                Acepto los <a href="#" onclick="return false;">Términos y Condiciones</a> y la
+                <a href="#" onclick="return false;">Política de Privacidad</a> de PanterStudio.
+                Entiendo que recibiré noticias del estudio al correo registrado.
+              </span>
+            </label>
+            <span class="field-error" role="alert">Debes aceptar los términos para continuar.</span>
+          </div>
+
+          <button type="submit" class="btn-submit">
+            🎮 Completar Pre-registro
+          </button>
+        </form>
+
+        <!-- Success State -->
+        <div class="success-message" id="successMessage" role="status" aria-live="polite">
+          <span class="success-icon">🎉</span>
+          <h3 class="success-title">¡Bienvenido, <span id="regName">jugador</span>!</h3>
+          <p class="success-desc">
+            Tu pre-registro fue exitoso. Guarda tu código de acceso exclusivo:
+          </p>
+          <div class="success-code" id="regCode" aria-label="Código de pre-registro">PS-XXXXXX</div>
+          <p class="success-desc" style="margin-top:1rem; font-size:0.85rem;">
+            Te notificaremos por correo cuando el acceso anticipado esté disponible. ¡Gracias por ser parte de la comunidad PanterStudio!
+          </p>
+          <p class="counter-text">
+            Ya somos <span class="counter-number" id="successCount">128</span> jugadores pre-registrados 🚀
+          </p>
+          <button class="btn-secondary" id="resetFormBtn" style="margin-top: 1.5rem; width: 100%; justify-content: center;">
+            ← Registrar otro correo
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer role="contentinfo">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#inicio" class="nav-logo" style="display:inline-flex;" aria-label="PanterStudio">
+          <span style="font-size:1.4rem; font-weight:900; font-family:var(--font-heading); background:var(--gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">PanterStudio</span>
+        </a>
+        <p>Estudio indie de videojuegos colombiano. Creando mundos únicos con alma latinoamericana desde Bogotá, Colombia. 🇨🇴</p>
+        <div class="social-links" style="margin-top:1rem;" role="list" aria-label="Redes sociales">
+          <a class="social-link" href="#" aria-label="Twitter / X" title="Twitter" onclick="return false;">🐦</a>
+          <a class="social-link" href="#" aria-label="Instagram" title="Instagram" onclick="return false;">📸</a>
+          <a class="social-link" href="#" aria-label="Discord" title="Discord" onclick="return false;">💬</a>
+          <a class="social-link" href="#" aria-label="YouTube" title="YouTube" onclick="return false;">▶️</a>
+          <a class="social-link" href="#" aria-label="TikTok" title="TikTok" onclick="return false;">🎵</a>
+        </div>
+      </div>
+
+      <div>
+        <p class="footer-col-title">Estudio</p>
+        <ul class="footer-links" role="list">
+          <li><a href="#nosotros">Sobre Nosotros</a></li>
+          <li><a href="#juegos">Proyectos</a></li>
+          <li><a href="#preregistro">Pre-registro</a></li>
+          <li><a href="#" onclick="return false;">Blog</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="footer-col-title">Comunidad</p>
+        <ul class="footer-links" role="list">
+          <li><a href="#" onclick="return false;">Discord</a></li>
+          <li><a href="#" onclick="return false;">Newsletter</a></li>
+          <li><a href="#" onclick="return false;">Foro</a></li>
+          <li><a href="#" onclick="return false;">Fan Art</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="footer-col-title">Legal</p>
+        <ul class="footer-links" role="list">
+          <li><a href="#" onclick="return false;">Términos de Uso</a></li>
+          <li><a href="#" onclick="return false;">Privacidad</a></li>
+          <li><a href="#" onclick="return false;">Cookies</a></li>
+          <li><a href="#" onclick="return false;">Contacto</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>© 2024 PanterStudio. Todos los derechos reservados. Hecho con ❤️ en Colombia <span class="flag">🇨🇴</span></p>
+      <p>Bogotá, Colombia · <a href="mailto:hola@panterstudio.com" style="color:var(--primary); text-decoration:none;">hola@panterstudio.com</a></p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
