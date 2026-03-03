@@ -1,1 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panter Studio | Realismo en Móviles</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #00ffcc; /* Tu color insignia */
+            --bg: #0a0a0a;
+            --card: #161616;
+            --text: #f0f0f0;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* Cabecera con efecto cristal */
+        header {
+            background: rgba(17, 17, 17, 0.9);
+            padding: 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #333;
+            backdrop-filter: blur(10px);
+        }
+
+        header span {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 3px;
+            color: var(--accent);
+        }
+
+        /* Sección Hero (Principal) */
+        .hero {
+            padding: 80px 20px;
+            background: radial-gradient(circle at top right, #1a1a1a, #0a0a0a);
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Tarjetas de características */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid #222;
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: var(--accent);
+            font-size: 1.2rem;
+            margin-top: 0;
+        }
+
+        /* Botones estilo gaming */
+        .btn {
+            display: inline-block;
+            background: var(--accent);
+            color: black;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(0, 255, 204, 0.3);
+        }
+
+        footer {
+            padding: 40px;
+            text-align: center;
+            font-size: 0.9rem;
+            opacity: 0.6;
+            border-top: 1px solid #222;
+        }
+
+        /* Pequeño detalle visual para la simulación */
+        .badge {
+            background: #333;
+            color: var(--accent);
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <span>PANTER STUDIO</span>
+</header>
+
+<section class="hero">
+    <div class="badge">SISTEMA DE FÍSICA AVANZADO</div>
+    <h1>Simulación Realista en Móviles</h1>
+    <p>Llevamos el hardware de tu teléfono al límite con conducción inmersiva.</p>
+    <a class="btn" href="#proyectos">Explorar Proyectos</a>
+</section>
+
+<div class="grid" id="proyectos">
+    <div class="card">
+        <h2>🚗 Conducción Pro</h2>
+        <p>Sistema de vehículos detallado, con transferencia de peso y físicas de neumáticos reales.</p>
+    </div>
+
+    <div class="card">
+        <h2>🛠️ Daño y Suciedad</h2>
+        <p>Los vehículos se deforman y ensucian según el terreno. Nada de efectos visuales simples.</p>
+    </div>
+
+    <div class="card">
+        <h2>🌍 Mundo Abierto</h2>
+        <p>Optimización masiva para explorar entornos detallados sin caídas de FPS.</p>
+    </div>
+</div>
+
+<section style="text-align: center; padding: 60px 20px;">
+    <h2>Devlog & Contacto</h2>
+    <p>¿Quieres colaborar o saber más sobre nuestro motor?</p>
+    <p><strong>panterstudio@email.com</strong></p>
+</section>
+
+<footer>
+    &copy; 2024 Panter Studio. All rights reserved.
+</footer>
+
+</body>
+</html>
 
