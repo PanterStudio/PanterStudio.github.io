@@ -21,6 +21,7 @@ header {
     align-items: center;
     justify-content: center;
     position: relative;
+    z-index: 100;
 }
 
 .logo-img {
@@ -71,17 +72,17 @@ nav a:hover, nav a.active {
 /* Contenedor Principal */
 .container {
     max-width: 1000px;
-    margin: 0 auto;
-    padding: 0 20px;
+    margin: 70vh auto 0;
+    padding: 40px 20px;
     flex: 1;
     width: 100%;
     box-sizing: border-box;
     position: relative;
-    z-index: 1;
-    min-height: 100vh;
+    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: center;
+    min-height: auto;
 }
 
 section {
@@ -269,7 +270,7 @@ footer {
     top: 0;
     left: 0;
     width: 100%;
-    height: 100vh;
+    height: 70vh;
     z-index: 0;
     overflow: hidden;
     pointer-events: none;
