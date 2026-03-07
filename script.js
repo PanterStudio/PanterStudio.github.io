@@ -48,8 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Particles container
     let particlesContainer;
 
-    // 3. Funcionalidad para todos los botones ".btn"
-    const botones = document.querySelectorAll('.btn');
+    // 3. Funcionalidad para todos los botones ".btn" EXCEPTO pre-registro
+    const botones = document.querySelectorAll('.btn:not(#preregistro-btn)');
 
     botones.forEach(boton => {
         boton.addEventListener('click', (e) => {
@@ -226,31 +226,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('message').textContent = 'Este email ya está registrado.';
             };
         });
-    }
-
-    // Export button
-    const exportBtn = document.getElementById('export-btn');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', () => {
-            getRegistros((registros) => {
-                const dataStr = JSON.stringify(registros, null, 2);
-                const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(dataBlob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = 'preregistros.json';
-                link.click();
-            });
-        });
-    }
-
-    // Update counter
-    function updateCounter() {
-        const registros = JSON.parse(localStorage.getItem('preregistros')) || [];
-        const countElement = document.getElementById('preregistro-count');
-        if (countElement) {
-            countElement.textContent = `Pre-registros: ${registros.length}`;
-        }
     }
 
     updateCounter();
