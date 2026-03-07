@@ -221,6 +221,30 @@ footer {
     border: 1px solid #333;
 }
 
+.dark-mode ul, .dark-mode ol {
+    color: #ddd;
+}
+
+.dark-mode li {
+    color: #ddd;
+}
+
+.dark-mode p {
+    color: #ddd;
+}
+
+.dark-mode h3, .dark-mode h4 {
+    color: #eee;
+}
+
+.dark-mode em {
+    color: #aaa;
+}
+
+.dark-mode strong {
+    color: #fff;
+}
+
 /* Dark mode toggle button */
 .dark-mode-toggle {
     position: absolute;
@@ -232,6 +256,7 @@ footer {
     cursor: pointer;
     color: #fff;
     transition: color 0.3s;
+    z-index: 2000;
 }
 
 .dark-mode-toggle:hover {
