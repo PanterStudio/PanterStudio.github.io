@@ -158,3 +158,66 @@ footer {
     border-top: 3px solid #1e70c8;
     width: 100%;
 }
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #121212;
+        color: #ddd;
+    }
+
+    header {
+        background-color: #000;
+        color: #fff;
+    }
+
+    header p {
+        color: #aaa;
+    }
+
+    nav {
+        background-color: #1a1a1a;
+        border-bottom: 3px solid #1e70c8;
+    }
+
+    nav a {
+        color: #eee;
+    }
+
+    nav a:hover, nav a.active {
+        background-color: #1e70c8;
+        color: #000;
+        box-shadow: 0 0 10px #1e70c8;
+    }
+
+    section {
+        background: #1e1e1e;
+        border-left: 5px solid #1e70c8;
+    }
+
+    h2 {
+        border-bottom: 2px solid #333;
+        color: #eee;
+    }
+
+    .btn {
+        background-color: #1e70c8;
+        color: #000;
+    }
+
+    .btn:hover {
+        background-color: #5F9EA0;
+        color: #fff;
+    }
+
+    footer {
+        background-color: #000;
+        color: #aaa;
+        border-top: 3px solid #1e70c8;
+    }
+
+    .card {
+        background-color: #1e1e1e;
+        border: 1px solid #333;
+    }
+}
