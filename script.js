@@ -188,4 +188,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }).then(container => {
         particlesContainer = container;
     });
+
+    // Pre-registro form
+    const preregistroForm = document.getElementById('preregistro-form');
+    if (preregistroForm) {
+        preregistroForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            let registros = JSON.parse(localStorage.getItem('preregistros')) || [];
+            if (!registros.includes(email)) {
+                registros.push(email);
+                localStorage.setItem('preregistros', JSON.stringify(registros));
+                document.getElementById('message').textContent = '¡Pre-registro exitoso! Gracias por tu interés.';
+                updateCounter(); // Update counter after registration
+            } else {
+                document.getElementById('message').textContent = 'Este email ya está registrado.';
+            }
+        });
+    }
+
+    // Update counter
+    function updateCounter() {
+        const registros = JSON.parse(localStorage.getItem('preregistros')) || [];
+        const countElement = document.getElementById('preregistro-count');
+        if (countElement) {
+            countElement.textContent = `Pre-registros: ${registros.length}`;
+        }
+    }
+
+    updateCounter();
 });
