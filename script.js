@@ -24,6 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     console.log(saludo);
 
+    // Particles container
+    let particlesContainer;
+
     // 3. Funcionalidad para todos los botones ".btn"
     const botones = document.querySelectorAll('.btn');
 
@@ -43,6 +46,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     e.preventDefault(); // Cancela si el usuario dice "No"
                 } else {
                     alert("Iniciando descarga... (Simulación)");
+                }
+            }
+
+            // Emit particles on button click
+            if (particlesContainer) {
+                const rect = e.target.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                for (let i = 0; i < 5; i++) {
+                    particlesContainer.particles.addParticle({
+                        position: { x: centerX, y: centerY },
+                        color: { value: "#1e70c8" },
+                        size: { value: 3 },
+                        opacity: { value: 0.8 },
+                        move: { speed: 2, direction: "none", outModes: { default: "destroy" } },
+                        life: { duration: { value: 2 } }
+                    });
                 }
             }
         });
@@ -105,8 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         interactivity: {
             events: {
                 onClick: {
-                    enable: true,
-                    mode: "push",
+                    enable: false,  // Disabled global click, now handled per button
                 },
                 onHover: {
                     enable: true,
@@ -166,5 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
             },
         },
         detectRetina: true,
+    }).then(container => {
+        particlesContainer = container;
     });
 });
