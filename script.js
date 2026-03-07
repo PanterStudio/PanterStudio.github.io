@@ -3,7 +3,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Panter Studio System: Online");
 
-    // IndexedDB setup
+    // IndexedDB setup (fallback)
     let db;
     const request = indexedDB.open('PreregistrosDB', 1);
     request.onerror = () => console.error('Error opening DB');
@@ -16,22 +16,54 @@ document.addEventListener('DOMContentLoaded', () => {
         const store = db.createObjectStore('registros', { keyPath: 'email' });
     };
 
-    function saveRegistro(email) {
+    function saveRegistroLocal(email) {
         const transaction = db.transaction(['registros'], 'readwrite');
         const store = transaction.objectStore('registros');
         store.add({ email, date: new Date().toISOString() });
         return transaction;
     }
 
-    function getRegistros(callback) {
+    function getRegistrosLocal(callback) {
         const transaction = db.transaction(['registros'], 'readonly');
         const store = transaction.objectStore('registros');
         const request = store.getAll();
         request.onsuccess = () => callback(request.result);
     }
 
-    function updateCounter() {
-        if (!db) return;
+    async function saveRegistro(email) {
+        if (window.db) {
+            try {
+                await addDoc(collection(window.db, "preregistros"), {
+                    email: email,
+                    date: new Date().toISOString()
+                });
+                console.log("Registro guardado en Firebase");
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                // Fallback to local
+                saveRegistroLocal(email);
+            }
+        } else {
+            saveRegistroLocal(email);
+        }
+    }
+
+    async function getRegistros(callback) {
+        if (window.db) {
+            try {
+                const querySnapshot = await getDocs(collection(window.db, "preregistros"));
+                callback(querySnapshot.docs.map(doc => doc.data()));
+            } catch (e) {
+                console.error("Error getting documents: ", e);
+                // Fallback to local
+                getRegistrosLocal(callback);
+            }
+        } else {
+            getRegistrosLocal(callback);
+        }
+    }
+
+    async function updateCounter() {
         getRegistros((registros) => {
             const countElement = document.getElementById('registro-count');
             if (countElement) {
