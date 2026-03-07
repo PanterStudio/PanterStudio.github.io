@@ -71,7 +71,7 @@ nav a:hover, nav a.active {
 /* Contenedor Principal */
 .container {
     max-width: 1000px;
-    margin: 40px auto;
+    margin: 100vh auto 40px;
     padding: 0 20px;
     flex: 1; /* Empuja el footer hacia abajo */
     width: 100%;
@@ -257,16 +257,20 @@ footer {
 
 /* Preregistro hero */
 #preregistro-hero {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100vh;
+    z-index: 1;
     overflow: hidden;
-    margin-bottom: 0;
 }
 
 #hero-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
 }
 
 /* Pre-registro form */
