@@ -302,10 +302,8 @@ footer {
 #registro-img {
     width: 150px; /* scaled-down crop */
     height: 68px; /* maintain 971x438 aspect ratio */
-    background-image: url('https://i.imgur.com/lsFBxZY.jpeg');
-    background-position: -409px -206px; /* crop coordinates */
-    background-size: auto;
-    background-repeat: no-repeat;
+    object-fit: none;
+    object-position: -409px -206px;
     border-radius: 8px;
 }
 
