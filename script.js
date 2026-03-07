@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Si el botón es solo un enlace '#' (demo), prevenimos la acción y mostramos alerta
             const destino = boton.getAttribute('href');
             
-            if (!destino || destino === '#') {
+            if (boton.tagName === 'A' && (!destino || destino === '#')) {
                 e.preventDefault();
                 alert("🚀 ¡Esta función estará disponible próximamente en Panter Studio!");
             } 
