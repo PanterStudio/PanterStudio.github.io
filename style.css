@@ -295,11 +295,12 @@ footer {
 }
 
 #registro-img {
-    width: 100px;
-    height: auto;
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
     position: absolute;
-    top: 0;
-    right: 0;
+    top: 5px;
+    right: 5px;
     border-radius: 8px;
 }
 
