@@ -282,6 +282,17 @@ footer {
     font-weight: bold;
 }
 
+/* Registro info */
+#registro-info {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#registro-count {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
 /* Dark mode toggle button */
 .dark-mode-toggle {
     position: absolute;

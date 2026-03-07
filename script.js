@@ -3,26 +3,47 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Panter Studio System: Online");
 
-    // 1. Efecto de aparición suave (Fade-in) al cargar la página
-    document.body.style.opacity = '0';
-    document.body.style.transition = 'opacity 0.8s ease-in';
-    
-    // Pequeño retraso para asegurar que el navegador procese el estilo inicial
-    setTimeout(() => {
-        document.body.style.opacity = '1';
-    }, 100);
+    // IndexedDB setup
+    let db;
+    const request = indexedDB.open('PreregistrosDB', 1);
+    request.onerror = () => console.error('Error opening DB');
+    request.onsuccess = (event) => {
+        db = event.target.result;
+        updateCounter();
+    };
+    request.onupgradeneeded = (event) => {
+        db = event.target.result;
+        const store = db.createObjectStore('registros', { keyPath: 'email' });
+    };
 
-    // 2. Saludo dinámico en la consola basado en la hora
-    const hora = new Date().getHours();
-    let saludo;
-    if (hora < 12) {
-        saludo = "¡Buenos días, gamer!";
-    } else if (hora < 18) {
-        saludo = "¡Buenas tardes, desarrollador!";
-    } else {
-        saludo = "¡Buenas noches, noctámbulo!";
+    function saveRegistro(email) {
+        const transaction = db.transaction(['registros'], 'readwrite');
+        const store = transaction.objectStore('registros');
+        store.add({ email, date: new Date().toISOString() });
+        return transaction;
     }
-    console.log(saludo);
+
+    function getRegistros(callback) {
+        const transaction = db.transaction(['registros'], 'readonly');
+        const store = transaction.objectStore('registros');
+        const request = store.getAll();
+        request.onsuccess = () => callback(request.result);
+    }
+
+    function updateCounter() {
+        if (!db) return;
+        getRegistros((registros) => {
+            const countElement = document.getElementById('registro-count');
+            if (countElement) {
+                countElement.textContent = `Pre-registros totales: ${registros.length}`;
+            }
+            // Also update index counter
+            const indexCount = document.getElementById('preregistro-count');
+            if (indexCount) {
+                indexCount.textContent = `Pre-registros: ${registros.length}`;
+            }
+        });
+    }
 
     // Particles container
     let particlesContainer;
@@ -195,15 +216,31 @@ document.addEventListener('DOMContentLoaded', () => {
         preregistroForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
-            let registros = JSON.parse(localStorage.getItem('preregistros')) || [];
-            if (!registros.includes(email)) {
-                registros.push(email);
-                localStorage.setItem('preregistros', JSON.stringify(registros));
+            const transaction = saveRegistro(email);
+            transaction.oncomplete = () => {
+                updateCounter();
                 document.getElementById('message').textContent = '¡Pre-registro exitoso! Gracias por tu interés.';
-                updateCounter(); // Update counter after registration
-            } else {
+                preregistroForm.reset();
+            };
+            transaction.onerror = () => {
                 document.getElementById('message').textContent = 'Este email ya está registrado.';
-            }
+            };
+        });
+    }
+
+    // Export button
+    const exportBtn = document.getElementById('export-btn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            getRegistros((registros) => {
+                const dataStr = JSON.stringify(registros, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'preregistros.json';
+                link.click();
+            });
         });
     }
 
