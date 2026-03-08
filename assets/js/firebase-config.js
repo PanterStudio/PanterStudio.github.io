@@ -14,22 +14,28 @@ import("https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js").then(({ init
     import("https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"),
     import("https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"),
     import("https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js")
-  ]).then(([{ getFirestore, collection, addDoc, getDocs, query, where, setDoc, doc, deleteDoc, updateDoc }, { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }, { getAnalytics }]) => {
+  ]).then(([{ getFirestore, collection, addDoc, getDocs, getDoc, query, where, setDoc, doc, deleteDoc, updateDoc, orderBy, limit }, { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile }, { getAnalytics }]) => {
     const app = initializeApp(firebaseConfig);
     window.db         = getFirestore(app);
     window.auth       = getAuth(app);
     window.collection = collection;
     window.addDoc     = addDoc;
     window.getDocs    = getDocs;
+    window.getDoc     = getDoc;
     window.query      = query;
     window.where      = where;
     window.setDoc     = setDoc;
     window.fsDoc      = doc;
     window.deleteDoc  = deleteDoc;
     window.updateDoc  = updateDoc;
+    window.orderBy    = orderBy;
+    window.limit      = limit;
     window.signInWithEmailAndPassword = signInWithEmailAndPassword;
     window.signOut    = signOut;
     window.onAuthStateChanged = onAuthStateChanged;
+    window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+    window.sendPasswordResetEmail = sendPasswordResetEmail;
+    window.updateProfile = updateProfile;
     getAnalytics(app);
     console.log("Firebase Firestore + Auth listos");
     document.dispatchEvent(new Event('firebaseReady'));

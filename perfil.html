@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#1e70c8">
+    <title>Mi Perfil - Panter Studio</title>
+    <link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    <script src="assets/js/firebase-config.js"></script>
+</head>
+<body>
+    <div id="tsparticles"></div>
+    <header>
+        <img src="https://i.imgur.com/GYjAGS7.png" alt="Logo Panter Studio" class="logo-img">
+        <button id="dark-mode-toggle" class="dark-mode-toggle">🌙</button>
+    </header>
+
+    <nav>
+        <a href="index.html">Inicio</a>
+        <a href="juegos.html">Juegos</a>
+        <a href="imagenes.html">Imagenes</a>
+        <a href="actualizaciones.html">Actualizaciones</a>
+        <a href="donaciones.html">Apoyanos</a>
+        <a href="perfil.html" class="active">Mi Perfil</a>
+    </nav>
+
+    <div class="container">
+        <!-- Vista de Login/Registro -->
+        <section id="profileAuthSection" class="profile-auth-section">
+            <div class="profile-auth-card">
+                <img src="https://i.imgur.com/GYjAGS7.png" alt="Logo" class="profile-auth-logo">
+                <h2>Accede a tu Perfil</h2>
+                <p>Inicia sesion o crea tu cuenta para acceder a monedas, minijuegos y recompensas exclusivas.</p>
+
+                <div class="profile-auth-tabs">
+                    <button class="auth-tab active" data-tab="login">Iniciar Sesion</button>
+                    <button class="auth-tab" data-tab="register">Crear Cuenta</button>
+                </div>
+
+                <form id="loginForm" class="profile-auth-form">
+                    <label for="loginEmail">Correo electronico</label>
+                    <input type="email" id="loginEmail" placeholder="tu@correo.com" required>
+                    
+                    <label for="loginPassword">Contrasena</label>
+                    <input type="password" id="loginPassword" placeholder="********" required>
+                    
+                    <button type="submit" class="btn">Iniciar Sesion</button>
+                    <p class="auth-link">Olvidaste tu contrasena? <a href="#" id="forgotPasswordLink">Recuperar</a></p>
+                </form>
+
+                <form id="registerForm" class="profile-auth-form" hidden>
+                    <label for="registerName">Nombre de usuario</label>
+                    <input type="text" id="registerName" placeholder="TuNombre" required minlength="3" maxlength="20">
+                    
+                    <label for="registerEmail">Correo electronico</label>
+                    <input type="email" id="registerEmail" placeholder="tu@correo.com" required>
+                    
+                    <label for="registerPassword">Contrasena</label>
+                    <input type="password" id="registerPassword" placeholder="Min. 6 caracteres" required minlength="6">
+
+                    <label for="registerReferral">Codigo de referido (opcional)</label>
+                    <input type="text" id="registerReferral" placeholder="ABC123">
+                    
+                    <button type="submit" class="btn">Crear Cuenta</button>
+                </form>
+
+                <p id="authMessage" class="profile-auth-message"></p>
+
+                <div class="profile-auth-benefits">
+                    <h4>Beneficios de tener cuenta:</h4>
+                    <ul>
+                        <li>🪙 Acumula monedas para el juego</li>
+                        <li>🎰 Gira la ruleta diaria</li>
+                        <li>🎁 Recibe promociones exclusivas</li>
+                        <li>📊 Historial de actividad</li>
+                        <li>👥 Invita amigos y gana recompensas</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Vista de Perfil (cuando esta logueado) -->
+        <section id="profileDashboard" class="profile-dashboard" hidden>
+            <div class="profile-header-card">
+                <div class="profile-avatar-section">
+                    <div class="profile-avatar" id="profileAvatar">
+                        <span id="profileAvatarLetter">?</span>
+                    </div>
+                    <div class="profile-badge-container" id="profileBadges"></div>
+                </div>
+                <div class="profile-info-section">
+                    <h2 id="profileDisplayName">Usuario</h2>
+                    <p id="profileEmail" class="profile-email">correo@ejemplo.com</p>
+                    <div class="profile-stats-inline">
+                        <span class="profile-stat">
+                            <strong id="profileCoins">0</strong>
+                            <span>🪙 Monedas</span>
+                        </span>
+                        <span class="profile-stat">
+                            <strong id="profileLevel">Visitante</strong>
+                            <span>Nivel</span>
+                        </span>
+                        <span class="profile-stat">
+                            <strong id="profileJoinDate">-</strong>
+                            <span>Miembro desde</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="profile-actions-section">
+                    <button id="editProfileBtn" class="btn btn-small">Editar Perfil</button>
+                    <button id="logoutBtn" class="btn btn-small">Cerrar Sesion</button>
+                </div>
+            </div>
+
+            <div class="profile-grid">
+                <div class="profile-main-column">
+                    <!-- Minijuego: Ruleta Diaria -->
+                    <section class="profile-card profile-spin-card">
+                        <h3>🎰 Ruleta Diaria</h3>
+                        <p>Gira una vez al dia y gana monedas gratis!</p>
+                        
+                        <div class="spin-wheel-container">
+                            <div class="spin-wheel" id="spinWheel">
+                                <div class="spin-segment" data-value="5">5</div>
+                                <div class="spin-segment" data-value="10">10</div>
+                                <div class="spin-segment" data-value="25">25</div>
+                                <div class="spin-segment" data-value="50">50</div>
+                                <div class="spin-segment" data-value="100">100</div>
+                                <div class="spin-segment" data-value="5">5</div>
+                                <div class="spin-segment" data-value="10">10</div>
+                                <div class="spin-segment" data-value="25">25</div>
+                            </div>
+                            <div class="spin-pointer">▼</div>
+                        </div>
+                        
+                        <button id="spinBtn" class="btn btn-spin">Girar la Ruleta</button>
+                        <p id="spinMessage" class="spin-message"></p>
+                        <p id="spinCooldown" class="spin-cooldown"></p>
+                    </section>
+
+                    <!-- Bonus Diario -->
+                    <section class="profile-card">
+                        <h3>📅 Bonus Diario</h3>
+                        <p>Reclama monedas extra solo por iniciar sesion cada dia.</p>
+                        <div class="daily-streak">
+                            <span class="streak-day" data-day="1">1</span>
+                            <span class="streak-day" data-day="2">2</span>
+                            <span class="streak-day" data-day="3">3</span>
+                            <span class="streak-day" data-day="4">4</span>
+                            <span class="streak-day" data-day="5">5</span>
+                            <span class="streak-day" data-day="6">6</span>
+                            <span class="streak-day bonus" data-day="7">🎁</span>
+                        </div>
+                        <p>Racha actual: <strong id="profileStreak">0</strong> dias</p>
+                        <button id="claimDailyBtn" class="btn">Reclamar Bonus (+<span id="dailyBonusAmount">10</span> 🪙)</button>
+                        <p id="dailyBonusMessage" class="spin-message"></p>
+                    </section>
+
+                    <!-- Sistema de Referidos -->
+                    <section class="profile-card">
+                        <h3>👥 Invita Amigos</h3>
+                        <p>Comparte tu codigo y gana monedas cuando se registren.</p>
+                        <div class="referral-code-box">
+                            <span id="referralCode">CARGANDO...</span>
+                            <button id="copyReferralBtn" class="btn btn-small">Copiar</button>
+                        </div>
+                        <p>Referidos activos: <strong id="referralCount">0</strong></p>
+                        <p>Monedas ganadas por referidos: <strong id="referralCoins">0</strong> 🪙</p>
+                    </section>
+                </div>
+
+                <div class="profile-side-column">
+                    <!-- Resumen de Monedas -->
+                    <section class="profile-card profile-coins-card">
+                        <h3>🪙 Tus Monedas</h3>
+                        <div class="coins-display">
+                            <span class="coins-amount" id="coinsDisplayLarge">0</span>
+                            <span class="coins-label">monedas disponibles</span>
+                        </div>
+                        <div class="coins-uses">
+                            <h4>Que puedes hacer con tus monedas:</h4>
+                            <ul>
+                                <li>🎨 Desbloquear skins exclusivos</li>
+                                <li>🚗 Comprar vehiculos especiales</li>
+                                <li>⚡ Acelerar progresos</li>
+                                <li>🎁 Canjear premios fisicos*</li>
+                            </ul>
+                            <small>*Disponible en el lanzamiento del juego</small>
+                        </div>
+                    </section>
+
+                    <!-- Nivel de Patrocinador -->
+                    <section class="profile-card" id="sponsorLevelCard">
+                        <h3>⭐ Tu Nivel</h3>
+                        <div class="sponsor-level-display">
+                            <span class="sponsor-badge" id="sponsorBadge">👤</span>
+                            <span class="sponsor-name" id="sponsorLevelName">Visitante</span>
+                        </div>
+                        <p id="sponsorLevelDesc">Haz una donacion para subir de nivel y desbloquear beneficios exclusivos.</p>
+                        <a href="donaciones.html" class="btn btn-small">Ver Niveles</a>
+                    </section>
+
+                    <!-- Historial Reciente -->
+                    <section class="profile-card">
+                        <h3>📜 Actividad Reciente</h3>
+                        <ul class="activity-list" id="activityList">
+                            <li>Cargando actividad...</li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Modal Editar Perfil -->
+            <dialog id="editProfileModal" class="profile-modal">
+                <form id="editProfileForm" class="profile-modal-form">
+                    <h3>Editar Perfil</h3>
+                    
+                    <label for="editDisplayName">Nombre de usuario</label>
+                    <input type="text" id="editDisplayName" minlength="3" maxlength="20">
+                    
+                    <label for="editAvatar">Avatar (emoji)</label>
+                    <div class="avatar-picker">
+                        <button type="button" class="avatar-option" data-avatar="😊">😊</button>
+                        <button type="button" class="avatar-option" data-avatar="🎮">🎮</button>
+                        <button type="button" class="avatar-option" data-avatar="🐱">🐱</button>
+                        <button type="button" class="avatar-option" data-avatar="🐼">🐼</button>
+                        <button type="button" class="avatar-option" data-avatar="🦊">🦊</button>
+                        <button type="button" class="avatar-option" data-avatar="🐺">🐺</button>
+                        <button type="button" class="avatar-option" data-avatar="🦁">🦁</button>
+                        <button type="button" class="avatar-option" data-avatar="🐯">🐯</button>
+                        <button type="button" class="avatar-option" data-avatar="🚗">🚗</button>
+                        <button type="button" class="avatar-option" data-avatar="🚌">🚌</button>
+                        <button type="button" class="avatar-option" data-avatar="🚚">🚚</button>
+                        <button type="button" class="avatar-option" data-avatar="⭐">⭐</button>
+                    </div>
+                    <input type="hidden" id="editAvatarValue">
+                    
+                    <div class="profile-modal-actions">
+                        <button type="submit" class="btn">Guardar</button>
+                        <button type="button" class="btn" data-close-modal="editProfileModal">Cancelar</button>
+                    </div>
+                </form>
+            </dialog>
+        </section>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="assets/js/script.js"></script>
+    <script src="assets/js/perfil.js"></script>
+</body>
+</html>

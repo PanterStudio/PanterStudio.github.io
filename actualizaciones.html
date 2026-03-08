@@ -7,6 +7,7 @@
     <link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
     <link rel="stylesheet" href="assets/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    <script src="assets/js/firebase-config.js"></script>
 </head>
 <body>
     <div id="tsparticles"></div>
@@ -20,28 +21,19 @@
         <a href="juegos.html">Juegos</a>
         <a href="imagenes.html">Imágenes</a>
         <a href="actualizaciones.html" class="active">Actualizaciones</a>
+        <a href="donaciones.html">Apóyanos</a>
         <a href="personal.html">Personal</a>
+        <a href="perfil.html">Mi Perfil</a>
         <a href="preregistro.html">Pre-registro</a>
     </nav>
 
     <div class="container">
         <section>
-            <h2>Últimas Noticias</h2>
-            
-            <div style="border-bottom: 1px solid #ddd; padding-bottom: 20px; margin-bottom: 20px;">
-                <h3>📢 Actualización de Desarrollo – Nuestra Tierra Job Simulator</h3>
-                <p><em>Fecha: 7 de marzo, 2026</em></p>
-                <p>Les compartimos unas imágenes de algunos <strong>modelos ya jugables dentro del juego</strong>.</p>
-                <p>Es importante aclarar que <strong>ni el mapa ni los gráficos que se ven en la captura representan la versión final al igual que los botones, todo eso es temporal</strong>, ya que actualmente seguimos en una etapa de desarrollo y pruebas.</p>
-                <p><strong>La imagen fue capturada directamente desde un dispositivo Android</strong>.</p>
-                <p>En la escena se pueden apreciar dos de los vehículos que estamos trabajando actualmente:</p>
-                <ul>
-                    <li>🚚 <strong>NPR</strong></li>
-                    <li>🚌 <strong>Marcopolo G8</strong></li>
-                </ul>
-                <p>Seguimos trabajando día a día para continuar mejorando el proyecto y avanzar hacia versiones cada vez más completas.</p>
+            <h2>Ultimas Noticias</h2>
+            <p id="newsPageAnnouncement"></p>
+            <div id="actualizacionesList">
+                <p>Cargando novedades...</p>
             </div>
-            
         </section>
     </div>
 
@@ -49,5 +41,6 @@
         <p>&copy; 2025 Panter Studio Game Dev.</p>
     </footer>
     <script src="assets/js/script.js"></script>
+    <script src="assets/js/actualizaciones.js"></script>
 </body>
 </html>

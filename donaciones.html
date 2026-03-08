@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#1e70c8">
+    <title>Apoyanos - Panter Studio</title>
+    <link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    <script src="assets/js/firebase-config.js"></script>
+</head>
+<body>
+    <div id="tsparticles"></div>
+    <header>
+        <img src="https://i.imgur.com/GYjAGS7.png" alt="Logo Panter Studio" class="logo-img">
+        <button id="dark-mode-toggle" class="dark-mode-toggle">🌙</button>
+    </header>
+
+    <nav>
+        <a href="index.html">Inicio</a>
+        <a href="juegos.html">Juegos</a>
+        <a href="imagenes.html">Imagenes</a>
+        <a href="actualizaciones.html">Actualizaciones</a>
+        <a href="donaciones.html" class="active">Apoyanos</a>
+        <a href="perfil.html">Mi Perfil</a>
+    </nav>
+
+    <div class="container">
+        <section class="donations-hero">
+            <div class="donations-hero-content">
+                <span class="donations-badge">APOYA EL DESARROLLO</span>
+                <h1>Impulsa Nuestra Tierra Job Simulator</h1>
+                <p>Cada aporte acelera el desarrollo, mejora la calidad del juego y nos permite agregar mas contenido. Tu apoyo es la diferencia entre un buen juego y uno increible.</p>
+            </div>
+            <div class="donations-hero-visual">
+                <div class="donations-progress-ring">
+                    <svg viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(135, 206, 235, 0.2)" stroke-width="8"/>
+                        <circle id="donationProgressCircle" cx="50" cy="50" r="45" fill="none" stroke="#1e70c8" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="200" transform="rotate(-90 50 50)"/>
+                    </svg>
+                    <div class="donations-progress-text">
+                        <strong id="donationProgressPercent">0%</strong>
+                        <span>de la meta</span>
+                    </div>
+                </div>
+                <p class="donations-goal-text">Meta: <strong id="donationGoalAmount">$500</strong> / Recaudado: <strong id="donationCurrentAmount">$0</strong></p>
+            </div>
+        </section>
+
+        <section class="donations-tiers-section">
+            <h2>Niveles de Apoyo</h2>
+            <p>Elige el nivel que mejor se adapte a ti. Todos los aportes incluyen recompensas especiales.</p>
+            
+            <div class="donations-tiers-grid" id="donationsTiersGrid">
+                <p>Cargando niveles de apoyo...</p>
+            </div>
+        </section>
+
+        <section class="donations-methods-section">
+            <h2>Metodos de Pago</h2>
+            <p>Elige la plataforma que prefieras. Todos los aportes son procesados de forma segura.</p>
+            
+            <div class="donations-methods-grid" id="donationsMethodsGrid">
+                <a href="#" id="paypalLink" class="donation-method-card" target="_blank" rel="noopener">
+                    <span class="method-icon">💳</span>
+                    <span class="method-name">PayPal</span>
+                    <span class="method-desc">Tarjeta o cuenta PayPal</span>
+                </a>
+                <a href="#" id="kofiLink" class="donation-method-card" target="_blank" rel="noopener">
+                    <span class="method-icon">☕</span>
+                    <span class="method-name">Ko-fi</span>
+                    <span class="method-desc">Invitame un cafe</span>
+                </a>
+                <a href="#" id="patreonLink" class="donation-method-card" target="_blank" rel="noopener">
+                    <span class="method-icon">🎨</span>
+                    <span class="method-name">Patreon</span>
+                    <span class="method-desc">Apoyo mensual</span>
+                </a>
+                <a href="#" id="mercadopagoLink" class="donation-method-card" target="_blank" rel="noopener">
+                    <span class="method-icon">💰</span>
+                    <span class="method-name">MercadoPago</span>
+                    <span class="method-desc">Latinoamerica</span>
+                </a>
+            </div>
+        </section>
+
+        <section class="donations-benefits-section">
+            <h2>Beneficios para Patrocinadores</h2>
+            <div class="donations-benefits-grid">
+                <div class="donation-benefit-card">
+                    <span class="benefit-icon-large">🎮</span>
+                    <h4>Acceso Anticipado</h4>
+                    <p>Juega versiones beta antes que nadie y da feedback directo al equipo.</p>
+                </div>
+                <div class="donation-benefit-card">
+                    <span class="benefit-icon-large">🪙</span>
+                    <h4>Monedas del Juego</h4>
+                    <p>Recibe monedas segun tu nivel de apoyo, canjeables por items exclusivos.</p>
+                </div>
+                <div class="donation-benefit-card">
+                    <span class="benefit-icon-large">📛</span>
+                    <h4>Nombre en Creditos</h4>
+                    <p>Tu nombre aparecera en los creditos del juego como patrocinador oficial.</p>
+                </div>
+                <div class="donation-benefit-card">
+                    <span class="benefit-icon-large">🎁</span>
+                    <h4>Contenido Exclusivo</h4>
+                    <p>Skins, vehiculos y contenido especial solo para patrocinadores.</p>
+                </div>
+                <div class="donation-benefit-card">
+                    <span class="benefit-icon-large">💬</span>
+                    <h4>Canal Privado</h4>
+                    <p>Acceso a canal de Discord exclusivo con el equipo de desarrollo.</p>
+                </div>
+                <div class="donation-benefit-card">
+                    <span class="benefit-icon-large">📊</span>
+                    <h4>Devlogs Exclusivos</h4>
+                    <p>Reportes detallados del progreso antes de que sean publicos.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="donations-sponsors-section">
+            <h2>Nuestros Patrocinadores</h2>
+            <p>Gracias a estas increibles personas que hacen posible el desarrollo.</p>
+            
+            <div class="donations-sponsors-wall" id="sponsorsWall">
+                <p>Cargando patrocinadores...</p>
+            </div>
+        </section>
+
+        <section class="donations-faq-section">
+            <h2>Preguntas Frecuentes</h2>
+            <div class="donations-faq-list">
+                <details class="faq-item">
+                    <summary>Como recibo mis recompensas?</summary>
+                    <p>Una vez procesado tu pago, crea una cuenta en nuestro sitio y vincula tu donacion. Las monedas y beneficios se activan automaticamente.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Puedo cambiar mi nivel de apoyo?</summary>
+                    <p>Si, puedes aumentar tu nivel en cualquier momento. Solo se cobrara la diferencia y se actualizaran tus beneficios.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Las monedas expiran?</summary>
+                    <p>No, las monedas que ganes son permanentes y estaran disponibles cuando el juego se lance oficialmente.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Hay reembolsos?</summary>
+                    <p>Las donaciones son contribuciones voluntarias para apoyar el desarrollo. No ofrecemos reembolsos, pero si tienes algun problema contactanos.</p>
+                </details>
+            </div>
+        </section>
+
+        <section class="donations-cta-section">
+            <h2>Unete a la Comunidad de Patrocinadores</h2>
+            <p>Cada aporte, sin importar el monto, nos acerca a lanzar el juego que todos queremos.</p>
+            <a href="#donationsTiersGrid" class="btn btn-large">Ver Niveles de Apoyo</a>
+        </section>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="assets/js/script.js"></script>
+    <script src="assets/js/donaciones.js"></script>
+</body>
+</html>
