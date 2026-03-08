@@ -12,10 +12,12 @@ const firebaseConfig = {
 import("https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js").then(({ initializeApp }) => {
   Promise.all([
     import("https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"),
+    import("https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"),
     import("https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js")
-  ]).then(([{ getFirestore, collection, addDoc, getDocs, query, where, setDoc, doc }, { getAnalytics }]) => {
+  ]).then(([{ getFirestore, collection, addDoc, getDocs, query, where, setDoc, doc, deleteDoc, updateDoc }, { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }, { getAnalytics }]) => {
     const app = initializeApp(firebaseConfig);
     window.db         = getFirestore(app);
+    window.auth       = getAuth(app);
     window.collection = collection;
     window.addDoc     = addDoc;
     window.getDocs    = getDocs;
@@ -23,9 +25,13 @@ import("https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js").then(({ init
     window.where      = where;
     window.setDoc     = setDoc;
     window.fsDoc      = doc;
+    window.deleteDoc  = deleteDoc;
+    window.updateDoc  = updateDoc;
+    window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+    window.signOut    = signOut;
+    window.onAuthStateChanged = onAuthStateChanged;
     getAnalytics(app);
-    console.log("Firebase Firestore listo");
-    // Disparar evento para que script.js actualice el contador
+    console.log("Firebase Firestore + Auth listos");
     document.dispatchEvent(new Event('firebaseReady'));
   });
 });

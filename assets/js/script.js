@@ -502,6 +502,12 @@ document.addEventListener('click', (e) => {
 
 // Cerrar paneles con tecla ESC (solo si el modal no está abierto)
 document.addEventListener('keydown', (e) => {
+    // Acceso alterno discreto: Ctrl + Shift + A
+    if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+        window.location.href = 'admin.html';
+        return;
+    }
+
     if (e.key === 'Escape') {
         // Prioridad al modal promocional
         const modal = document.getElementById('preregistroModal');
