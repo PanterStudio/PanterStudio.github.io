@@ -1,4 +1,17 @@
 /* style.css - Hoja de Estilos Global */
+
+/* ===== MEJORAS PARA MÓVILES ===== */
+* {
+    -webkit-tap-highlight-color: rgba(30, 112, 200, 0.3);
+    -webkit-touch-callout: none;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
@@ -8,6 +21,439 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* ===== MODAL PROMOCIONAL PRE-REGISTRO (ESTILO COMBO) ===== */
+.promo-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+.promo-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.promo-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.promo-content {
+    position: relative;
+    background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+    border: 3px solid #1e70c8;
+    border-radius: 20px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(30, 112, 200, 0.5), 0 0 100px rgba(30, 112, 200, 0.3);
+    animation: modalSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    -webkit-overflow-scrolling: touch;
+}
+
+@keyframes modalSlideIn {
+    0% {
+        transform: scale(0.5) translateY(-100px);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+.promo-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 68, 68, 0.9);
+    border: none;
+    color: white;
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    z-index: 10;
+    font-weight: bold;
+}
+
+.promo-close:hover {
+    background: #ff0000;
+    transform: rotate(90deg) scale(1.1);
+}
+
+.promo-close:active {
+    transform: rotate(90deg) scale(0.95);
+}
+
+.promo-header {
+    background: linear-gradient(135deg, #1e70c8 0%, #5F9EA0 100%);
+    padding: 30px 20px;
+    text-align: center;
+    border-radius: 17px 17px 0 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.promo-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(255, 255, 255, 0.05) 10px,
+        rgba(255, 255, 255, 0.05) 20px
+    );
+    animation: promoStripes 20s linear infinite;
+}
+
+@keyframes promoStripes {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(50px, 50px); }
+}
+
+.promo-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 15px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    animation: promoPulse 2s ease-in-out infinite;
+}
+
+@keyframes promoPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px 5px rgba(255, 255, 255, 0.2);
+    }
+}
+
+.promo-title {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #fff;
+    margin: 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), 0 0 30px rgba(30, 112, 200, 0.8);
+    position: relative;
+    z-index: 1;
+}
+
+.promo-subtitle {
+    background: rgba(0, 255, 127, 0.9);
+    color: #000;
+    display: inline-block;
+    padding: 12px 30px;
+    border-radius: 10px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-top: 10px;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 4px 15px rgba(0, 255, 127, 0.4);
+}
+
+.promo-body {
+    padding: 30px 20px;
+}
+
+.promo-benefits {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.benefit-item {
+    background: rgba(30, 112, 200, 0.1);
+    border: 2px solid #1e70c8;
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.benefit-item:hover {
+    background: rgba(30, 112, 200, 0.2);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(30, 112, 200, 0.3);
+}
+
+.benefit-icon {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.benefit-text {
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: block;
+}
+
+.promo-features {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+}
+
+.feature-badge {
+    background: rgba(0, 255, 127, 0.2);
+    color: #00ff7f;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid #00ff7f;
+}
+
+.promo-cta {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.promo-btn {
+    padding: 18px 30px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+}
+
+.promo-btn.primary {
+    background: linear-gradient(135deg, #1e70c8 0%, #00ff7f 100%);
+    color: #000;
+    box-shadow: 0 8px 25px rgba(30, 112, 200, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.promo-btn.primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(30, 112, 200, 0.7);
+}
+
+.promo-btn.primary:active {
+    transform: translateY(-1px);
+}
+
+.promo-btn.primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.promo-btn.primary:hover::before {
+    left: 100%;
+}
+
+.btn-text {
+    position: relative;
+    z-index: 1;
+}
+
+.btn-arrow {
+    font-size: 1.5rem;
+    animation: arrowBounce 1s ease-in-out infinite;
+}
+
+@keyframes arrowBounce {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(5px); }
+}
+
+.promo-btn.secondary {
+    background: transparent;
+    color: #999;
+    border: 2px solid #333;
+}
+
+.promo-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #ccc;
+}
+
+.promo-countdown {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 68, 68, 0.1);
+    border: 2px solid #ff4444;
+    border-radius: 12px;
+    padding: 15px;
+}
+
+.countdown-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.countdown-number {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #ff4444;
+    line-height: 1;
+}
+
+.countdown-label {
+    font-size: 0.7rem;
+    color: #999;
+    text-transform: uppercase;
+}
+
+.countdown-divider {
+    font-size: 1.8rem;
+    color: #ff4444;
+    font-weight: bold;
+}
+
+.promo-footer {
+    background: rgba(30, 112, 200, 0.1);
+    padding: 15px;
+    text-align: center;
+    border-radius: 0 0 17px 17px;
+}
+
+.promo-footer p {
+    color: #87CEEB;
+    margin: 0;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+#promoRegistros {
+    color: #00ff7f;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+/* Responsive del Modal */
+@media (max-width: 768px) {
+    .promo-content {
+        width: 95%;
+        max-height: 85vh;
+    }
+    
+    .promo-title {
+        font-size: 1.8rem;
+        letter-spacing: 2px;
+    }
+    
+    .promo-subtitle {
+        font-size: 1rem;
+        padding: 10px 20px;
+    }
+    
+    .promo-benefits {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .benefit-item {
+        padding: 12px;
+    }
+    
+    .promo-btn {
+        padding: 15px 20px;
+        font-size: 1rem;
+    }
+    
+    .countdown-number {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .promo-title {
+        font-size: 1.5rem;
+        letter-spacing: 1px;
+    }
+    
+    .promo-header {
+        padding: 20px 15px;
+    }
+    
+    .promo-body {
+        padding: 20px 15px;
+    }
+    
+    .benefit-icon {
+        font-size: 1.5rem;
+    }
+    
+    .benefit-text {
+        font-size: 0.8rem;
+    }
+    
+    .countdown-number {
+        font-size: 1.3rem;
+    }
+    
+    .countdown-label {
+        font-size: 0.65rem;
+    }
 }
 
 /* Encabezado */
@@ -316,4 +762,555 @@ footer {
     color: #fff;
     transition: color 0.3s;
     z-index: 2000;
+}
+
+/* ===== VENTANAS LATERALES CON EFECTO GARRAS DE PANTERA ===== */
+
+/* Panel lateral base */
+.side-panel {
+    position: fixed;
+    top: 0;
+    width: 280px;
+    height: 100vh;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    z-index: 9999;
+    transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(30, 112, 200, 0.5);
+}
+
+.left-panel {
+    left: 0;
+    transform: translateX(-100%);
+    border-right: 3px solid #1e70c8;
+}
+
+.left-panel.active {
+    transform: translateX(0);
+}
+
+.right-panel {
+    right: 0;
+    transform: translateX(100%);
+    border-left: 3px solid #1e70c8;
+}
+
+.right-panel.active {
+    transform: translateX(0);
+}
+
+/* Contenido del panel */
+.panel-content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #1e70c8;
+}
+
+.panel-header h3 {
+    color: #87CEEB;
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.close-panel {
+    background: #1e70c8;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.close-panel:hover {
+    background: #ff4444;
+    transform: rotate(90deg);
+}
+
+/* Enlaces del panel */
+.panel-links {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.panel-link {
+    display: block;
+    color: #fff;
+    text-decoration: none;
+    padding: 15px 20px;
+    background: rgba(30, 112, 200, 0.2);
+    border-radius: 10px;
+    border-left: 4px solid #1e70c8;
+    transition: all 0.3s;
+    font-weight: 500;
+}
+
+.panel-link:hover {
+    background: rgba(30, 112, 200, 0.4);
+    transform: translateX(10px);
+    border-left-color: #87CEEB;
+    box-shadow: 0 5px 15px rgba(30, 112, 200, 0.3);
+}
+
+.social-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.social-icon {
+    font-size: 1.5rem;
+    display: inline-block;
+    min-width: 30px;
+}
+
+/* Efecto de Garras de Pantera */
+.claw-marks {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.left-claws::before,
+.left-claws::after,
+.right-claws::before,
+.right-claws::after {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 4px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(135, 206, 235, 0.8) 20%, 
+        rgba(30, 112, 200, 0.9) 50%, 
+        rgba(135, 206, 235, 0.8) 80%, 
+        transparent 100%);
+    transform-origin: center;
+    animation: clawSlash 0.6s ease-out;
+    box-shadow: 0 0 10px rgba(30, 112, 200, 0.8);
+}
+
+.left-claws::before {
+    top: 25%;
+    left: -50%;
+    transform: rotate(-15deg);
+    animation-delay: 0.1s;
+}
+
+.left-claws::after {
+    top: 50%;
+    left: -50%;
+    transform: rotate(-25deg);
+    animation-delay: 0.2s;
+}
+
+.right-claws::before {
+    top: 25%;
+    right: -50%;
+    transform: rotate(15deg);
+    animation-delay: 0.1s;
+}
+
+.right-claws::after {
+    top: 50%;
+    right: -50%;
+    transform: rotate(25deg);
+    animation-delay: 0.2s;
+}
+
+/* Marcas adicionales de garras */
+.claw-marks::after {
+    content: '';
+    position: absolute;
+    top: 70%;
+    width: 200%;
+    height: 3px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(135, 206, 235, 0.6) 30%, 
+        rgba(30, 112, 200, 0.7) 50%, 
+        rgba(135, 206, 235, 0.6) 70%, 
+        transparent 100%);
+    animation: clawSlash 0.5s ease-out;
+    animation-delay: 0.3s;
+    box-shadow: 0 0 8px rgba(30, 112, 200, 0.6);
+}
+
+.left-claws::after {
+    left: -50%;
+    transform: rotate(-20deg);
+}
+
+.right-claws::after {
+    right: -50%;
+    transform: rotate(20deg);
+}
+
+/* Animación de arrastre de garras */
+@keyframes clawSlash {
+    0% {
+        opacity: 0;
+        transform: translateX(0) scaleX(0);
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(50%) scaleX(1.5);
+    }
+}
+
+/* Botones de activación */
+.panel-trigger {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid #1e70c8;
+    background: rgba(26, 26, 26, 0.9);
+    color: #87CEEB;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 9998;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px rgba(30, 112, 200, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.left-trigger {
+    left: 10px;
+}
+
+.right-trigger {
+    right: 10px;
+}
+
+.panel-trigger:hover {
+    transform: translateY(-50%) scale(1.15);
+    background: #1e70c8;
+    color: #000;
+    box-shadow: 0 0 30px rgba(30, 112, 200, 0.8);
+}
+
+.panel-trigger:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+.trigger-icon {
+    display: block;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Dark Mode para paneles */
+.dark-mode .side-panel {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+}
+
+.dark-mode .panel-link {
+    background: rgba(30, 112, 200, 0.15);
+}
+
+.dark-mode .panel-link:hover {
+    background: rgba(30, 112, 200, 0.35);
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+    /* Header responsive */
+    header {
+        padding: 1rem 0;
+    }
+    
+    .logo-img {
+        max-width: 180px;
+    }
+    
+    header p {
+        font-size: 0.95rem;
+        padding: 0 15px;
+    }
+    
+    #preregistro-count {
+        font-size: 12px !important;
+        padding: 4px 8px !important;
+        top: 5px !important;
+        left: 5px !important;
+    }
+    
+    /* Navegación responsive */
+    nav {
+        padding: 10px 0;
+        flex-wrap: wrap;
+    }
+    
+    nav a {
+        padding: 8px 12px;
+        margin: 3px;
+        font-size: 0.8rem;
+    }
+    
+    /* Contenedor responsive */
+    .container {
+        margin: 20px auto;
+        padding: 0 15px;
+    }
+    
+    section {
+        padding: 25px 20px;
+        margin-bottom: 25px;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+    }
+    
+    h3 {
+        font-size: 1.2rem;
+    }
+    
+    /* Botones responsive */
+    .btn {
+        padding: 10px 20px;
+        font-size: 0.95rem;
+        width: 100%;
+        text-align: center;
+        box-sizing: border-box;
+    }
+    
+    /* Grid responsive */
+    .grid-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .card {
+        padding: 15px;
+    }
+    
+    /* Footer responsive */
+    footer {
+        padding: 20px 15px;
+        font-size: 0.9rem;
+    }
+    
+    /* Dark mode toggle */
+    .dark-mode-toggle {
+        top: 10px;
+        right: 10px;
+        font-size: 20px;
+    }
+    
+    /* Paneles laterales */
+    .side-panel {
+        width: 250px;
+    }
+    
+    .panel-trigger {
+        width: 45px;
+        height: 45px;
+        font-size: 20px;
+    }
+    
+    .left-trigger {
+        left: 5px;
+    }
+    
+    .right-trigger {
+        right: 5px;
+    }
+    
+    .panel-content {
+        padding: 15px;
+    }
+    
+    .panel-header h3 {
+        font-size: 1.1rem;
+    }
+    
+    .panel-link {
+        padding: 12px 15px;
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Header para móviles pequeños */
+    header {
+        padding: 0.8rem 0;
+    }
+    
+    .logo-img {
+        max-width: 150px;
+    }
+    
+    header p {
+        font-size: 0.85rem;
+        padding: 0 10px;
+        margin-top: 5px;
+    }
+    
+    #preregistro-count {
+        font-size: 10px !important;
+        padding: 3px 6px !important;
+    }
+    
+    /* Navegación para móviles pequeños */
+    nav a {
+        padding: 6px 10px;
+        margin: 2px;
+        font-size: 0.75rem;
+    }
+    
+    /* Contenido */
+    section {
+        padding: 20px 15px;
+        margin-bottom: 20px;
+    }
+    
+    h2 {
+        font-size: 1.3rem;
+    }
+    
+    /* Botones táctiles más grandes */
+    .btn {
+        padding: 12px 20px;
+        font-size: 1rem;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Grid para móviles */
+    .grid-container {
+        gap: 15px;
+    }
+    
+    /* Footer */
+    footer {
+        padding: 15px 10px;
+        font-size: 0.85rem;
+    }
+    
+    /* Paneles para móviles pequeños */
+    .side-panel {
+        width: 220px;
+    }
+    
+    .panel-trigger {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+    
+    .panel-header h3 {
+        font-size: 1rem;
+    }
+    
+    .panel-link {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+    
+    .social-icon {
+        font-size: 1.3rem;
+    }
+}
+
+/* Mejoras adicionales para touch devices */
+@media (hover: none) and (pointer: coarse) {
+    /* Botones y enlaces más grandes para touch */
+    .btn, nav a, .panel-link {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Eliminar efectos hover en dispositivos táctiles */
+    .btn:hover,
+    nav a:hover,
+    .panel-link:hover {
+        transform: none;
+    }
+    
+    /* Activar efectos en active (toque) */
+    .btn:active {
+        transform: scale(0.97);
+    }
+    
+    nav a:active {
+        transform: scale(0.95);
+    }
+}
+
+/* Orientación landscape en móviles */
+@media (max-width: 768px) and (orientation: landscape) {
+    header {
+        padding: 0.5rem 0;
+    }
+    
+    .logo-img {
+        max-width: 120px;
+    }
+    
+    header p {
+        font-size: 0.8rem;
+        margin-top: 3px;
+    }
+    
+    section {
+        padding: 15px;
+    }
+    
+    .promo-content {
+        max-height: 95vh;
+    }
+}
+
+/* Mejora de accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

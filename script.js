@@ -1,5 +1,102 @@
 /* script.js - Lógica y efectos para Panter Studio Game Dev */
 
+/* ===== MODAL PROMOCIONAL PRE-REGISTRO ===== */
+
+// Mostrar modal automáticamente al cargar
+window.addEventListener('load', () => {
+    const modal = document.getElementById('preregistroModal');
+    const hasSeenPromo = sessionStorage.getItem('promoSeen');
+    
+    // Mostrar modal solo si no lo ha visto en esta sesión
+    if (!hasSeenPromo && modal) {
+        setTimeout(() => {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            startPromoCountdown();
+            animatePromoRegistros();
+        }, 1500); // Aparece después de 1.5 segundos
+    }
+});
+
+// Función para cerrar el modal promocional
+function closePromoModal() {
+    const modal = document.getElementById('preregistroModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+        sessionStorage.setItem('promoSeen', 'true');
+    }
+}
+
+// Función para ir a pre-registro
+function goToPreregistro() {
+    closePromoModal();
+    window.location.href = 'preregistro.html';
+}
+
+// Countdown del modal promocional
+function startPromoCountdown() {
+    const endTime = new Date().getTime() + (24 * 60 * 60 * 1000); // 24 horas
+    
+    const updateCountdown = () => {
+        const now = new Date().getTime();
+        const distance = endTime - now;
+        
+        if (distance < 0) {
+            document.getElementById('promoHours').textContent = '00';
+            document.getElementById('promoMinutes').textContent = '00';
+            document.getElementById('promoSeconds').textContent = '00';
+            return;
+        }
+        
+        const hours = Math.floor(distance / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        document.getElementById('promoHours').textContent = String(hours).padStart(2, '0');
+        document.getElementById('promoMinutes').textContent = String(minutes).padStart(2, '0');
+        document.getElementById('promoSeconds').textContent = String(seconds).padStart(2, '0');
+    };
+    
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+}
+
+// Animar número de registros
+function animatePromoRegistros() {
+    const registrosElement = document.getElementById('promoRegistros');
+    if (!registrosElement) return;
+    
+    let count = 100;
+    const target = 127;
+    const duration = 2000;
+    const increment = (target - count) / (duration / 50);
+    
+    const counter = setInterval(() => {
+        count += increment;
+        if (count >= target) {
+            count = target;
+            clearInterval(counter);
+        }
+        registrosElement.textContent = Math.floor(count);
+    }, 50);
+    
+    // Actualizar con número aleatorio cada 10 segundos
+    setInterval(() => {
+        const randomIncrease = Math.floor(Math.random() * 3) + 1;
+        const currentValue = parseInt(registrosElement.textContent);
+        registrosElement.textContent = currentValue + randomIncrease;
+        
+        // Efecto de flash
+        registrosElement.style.color = '#00ffff';
+        setTimeout(() => {
+            registrosElement.style.color = '#00ff7f';
+        }, 300);
+    }, 10000);
+}
+
+/* ===== CÓDIGO ORIGINAL ===== */
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Panter Studio System: Online");
 
@@ -262,3 +359,101 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateCounter();
 });
+
+/* ===== FUNCIONES PARA VENTANAS LATERALES ===== */
+
+// Función para abrir/cerrar paneles
+function togglePanel(side) {
+    const panel = side === 'left' ? document.getElementById('leftPanel') : document.getElementById('rightPanel');
+    
+    if (panel.classList.contains('active')) {
+        closePanel(side);
+    } else {
+        openPanel(side);
+    }
+}
+
+// Función para abrir panel
+function openPanel(side) {
+    const panel = side === 'left' ? document.getElementById('leftPanel') : document.getElementById('rightPanel');
+    panel.classList.add('active');
+    
+    // Efecto de sonido simulado (opcional)
+    console.log(`Panel ${side} abierto con efecto de garras de pantera 🐾`);
+}
+
+// Función para cerrar panel
+function closePanel(side) {
+    const panel = side === 'left' ? document.getElementById('leftPanel') : document.getElementById('rightPanel');
+    panel.classList.remove('active');
+    
+    console.log(`Panel ${side} cerrado`);
+}
+
+// Cerrar paneles al hacer clic fuera de ellos
+document.addEventListener('click', (e) => {
+    const leftPanel = document.getElementById('leftPanel');
+    const rightPanel = document.getElementById('rightPanel');
+    const leftTrigger = document.querySelector('.left-trigger');
+    const rightTrigger = document.querySelector('.right-trigger');
+    
+    // Cerrar panel izquierdo si se hace clic fuera
+    if (leftPanel && leftPanel.classList.contains('active')) {
+        if (!leftPanel.contains(e.target) && !leftTrigger.contains(e.target)) {
+            closePanel('left');
+        }
+    }
+    
+    // Cerrar panel derecho si se hace clic fuera
+    if (rightPanel && rightPanel.classList.contains('active')) {
+        if (!rightPanel.contains(e.target) && !rightTrigger.contains(e.target)) {
+            closePanel('right');
+        }
+    }
+});
+
+// Cerrar paneles con tecla ESC (solo si el modal no está abierto)
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        // Prioridad al modal promocional
+        const modal = document.getElementById('preregistroModal');
+        if (modal && modal.classList.contains('active')) {
+            closePromoModal();
+            return;
+        }
+        
+        // Si no hay modal, cerrar paneles
+        const leftPanel = document.getElementById('leftPanel');
+        const rightPanel = document.getElementById('rightPanel');
+        
+        if (leftPanel && leftPanel.classList.contains('active')) {
+            closePanel('left');
+        }
+        if (rightPanel && rightPanel.classList.contains('active')) {
+            closePanel('right');
+        }
+    }
+});
+
+// NO abrir paneles automáticamente (el modal promocional tiene prioridad)
+// Los paneles están disponibles a través de los botones flotantes
+
+// Prevenir scroll cuando los paneles están abiertos (opcional para móviles)
+function preventScroll(side, isOpen) {
+    if (window.innerWidth <= 768) {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            const leftPanel = document.getElementById('leftPanel');
+            const rightPanel = document.getElementById('rightPanel');
+            const modal = document.getElementById('preregistroModal');
+            
+            // Solo permitir scroll si todo está cerrado
+            if (!leftPanel.classList.contains('active') && 
+                !rightPanel.classList.contains('active') &&
+                (!modal || !modal.classList.contains('active'))) {
+                document.body.style.overflow = 'auto';
+            }
+        }
+    }
+}

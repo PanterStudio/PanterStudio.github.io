@@ -2,14 +2,150 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#1e70c8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Inicio - Panter Studio</title>
     <link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
+    <link rel="apple-touch-icon" href="https://i.imgur.com/GYjAGS7.png">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
 </head>
 <body>
     <div id="tsparticles"></div>
+    
+    <!-- POPUP PRE-REGISTRO ESTILO COMBO -->
+    <div id="preregistroModal" class="promo-modal">
+        <div class="promo-overlay" onclick="closePromoModal()"></div>
+        <div class="promo-content">
+            <button class="promo-close" onclick="closePromoModal()">✕</button>
+            
+            <div class="promo-header">
+                <div class="promo-badge">OFERTA EXCLUSIVA</div>
+                <h1 class="promo-title">¡ÚNETE AHORA!</h1>
+                <div class="promo-subtitle">Pre-Registro Gratis</div>
+            </div>
+            
+            <div class="promo-body">
+                <div class="promo-benefits">
+                    <div class="benefit-item">
+                        <span class="benefit-icon">🎮</span>
+                        <span class="benefit-text">Acceso Anticipado</span>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">🎁</span>
+                        <span class="benefit-text">Recompensas Exclusivas</span>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">⭐</span>
+                        <span class="benefit-text">Contenido Premium</span>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">🏆</span>
+                        <span class="benefit-text">Ranking Especial</span>
+                    </div>
+                </div>
+                
+                <div class="promo-features">
+                    <div class="feature-badge">✓ Sin costo</div>
+                    <div class="feature-badge">✓ Notificaciones</div>
+                    <div class="feature-badge">✓ Beta Access</div>
+                </div>
+                
+                <div class="promo-cta">
+                    <button class="promo-btn primary" onclick="goToPreregistro()">
+                        <span class="btn-text">PRE-REGÍSTRATE AHORA</span>
+                        <span class="btn-arrow">→</span>
+                    </button>
+                    <button class="promo-btn secondary" onclick="closePromoModal()">
+                        Tal vez más tarde
+                    </button>
+                </div>
+                
+                <div class="promo-countdown">
+                    <div class="countdown-item">
+                        <span class="countdown-number" id="promoHours">24</span>
+                        <span class="countdown-label">Horas</span>
+                    </div>
+                    <div class="countdown-divider">:</div>
+                    <div class="countdown-item">
+                        <span class="countdown-number" id="promoMinutes">00</span>
+                        <span class="countdown-label">Minutos</span>
+                    </div>
+                    <div class="countdown-divider">:</div>
+                    <div class="countdown-item">
+                        <span class="countdown-number" id="promoSeconds">00</span>
+                        <span class="countdown-label">Segundos</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="promo-footer">
+                <p>🔥 <span id="promoRegistros">127</span> personas se han pre-registrado hoy</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ventana Lateral Izquierda -->
+    <div class="side-panel left-panel" id="leftPanel">
+        <div class="panel-content">
+            <div class="panel-header">
+                <h3>🎮 Navegación</h3>
+                <button class="close-panel" onclick="closePanel('left')">✕</button>
+            </div>
+            <div class="panel-links">
+                <a href="index.html" class="panel-link">🏠 Inicio</a>
+                <a href="juegos.html" class="panel-link">🎮 Juegos</a>
+                <a href="imagenes.html" class="panel-link">🖼️ Imágenes</a>
+                <a href="actualizaciones.html" class="panel-link">📰 Actualizaciones</a>
+                <a href="personal.html" class="panel-link">👥 Personal</a>
+                <a href="preregistro.html" class="panel-link">📝 Pre-registro</a>
+            </div>
+        </div>
+        <div class="claw-marks left-claws"></div>
+    </div>
+
+    <!-- Ventana Lateral Derecha -->
+    <div class="side-panel right-panel" id="rightPanel">
+        <div class="panel-content">
+            <div class="panel-header">
+                <h3>🌐 Redes Sociales</h3>
+                <button class="close-panel" onclick="closePanel('right')">✕</button>
+            </div>
+            <div class="panel-links">
+                <a href="#" class="panel-link social-link">
+                    <span class="social-icon">📘</span> Facebook
+                </a>
+                <a href="#" class="panel-link social-link">
+                    <span class="social-icon">🐦</span> Twitter
+                </a>
+                <a href="#" class="panel-link social-link">
+                    <span class="social-icon">📷</span> Instagram
+                </a>
+                <a href="#" class="panel-link social-link">
+                    <span class="social-icon">▶️</span> YouTube
+                </a>
+                <a href="#" class="panel-link social-link">
+                    <span class="social-icon">💬</span> Discord
+                </a>
+                <a href="#" class="panel-link social-link">
+                    <span class="social-icon">🎮</span> TikTok
+                </a>
+            </div>
+        </div>
+        <div class="claw-marks right-claws"></div>
+    </div>
+
+    <!-- Botones de activación -->
+    <button class="panel-trigger left-trigger" onclick="togglePanel('left')" title="Navegación">
+        <span class="trigger-icon">☰</span>
+    </button>
+    <button class="panel-trigger right-trigger" onclick="togglePanel('right')" title="Redes Sociales">
+        <span class="trigger-icon">🌐</span>
+    </button>
+
     <header>
         <img src="https://i.imgur.com/GYjAGS7.png" alt="Logo Panter Studio" class="logo-img">
         <p>Creando mundos, diseñando sueños.</p>
