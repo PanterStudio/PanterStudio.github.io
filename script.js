@@ -16,9 +16,10 @@ const EMAILJS_TEMPLATE_ID = 'template_2uro1hc';
      {{game_name}} → nombre del juego
      {{user_pos}}  → número de posición en la lista */
 async function sendConfirmationEmail(userEmail, position) {
-    if (typeof emailjs === 'undefined') return;
-    if (EMAILJS_PUBLIC_KEY === 'TU_PUBLIC_KEY') return; // No configurado aún
+    if (typeof emailjs === 'undefined') return false;
+    if (EMAILJS_PUBLIC_KEY === 'TU_PUBLIC_KEY') return false;
     try {
+        emailjs.init(EMAILJS_PUBLIC_KEY);
         await emailjs.send(
             EMAILJS_SERVICE_ID,
             EMAILJS_TEMPLATE_ID,
@@ -26,11 +27,12 @@ async function sendConfirmationEmail(userEmail, position) {
                 to_email: userEmail,
                 game_name: 'Nuestra Tierra Job Simulator',
                 user_pos: position,
-            },
-            EMAILJS_PUBLIC_KEY
+            }
         );
+        return true;
     } catch (err) {
-        console.warn('EmailJS: no se pudo enviar el correo de confirmación.', err);
+        console.warn('EmailJS error:', err);
+        return false;
     }
 }
 
@@ -94,78 +96,87 @@ function updatePromoCapacityDisplay(totalRegistros) {
     }
 }
 
+/* ===== BASE DE DATOS LOCAL (localStorage) ===== */
+// Cambiar a false para usar solo localStorage
+const USE_FIREBASE = true;
+
+const LS_KEY = 'panterRegistros';
+
+function getRegistrosLS() {
+    try {
+        return JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+    } catch {
+        return [];
+    }
+}
+
+function saveRegistroLS(email) {
+    const registros = getRegistrosLS();
+    const emailNorm = email.trim().toLowerCase();
+    if (registros.some(r => r.email === emailNorm)) {
+        throw new Error('Email duplicado');
+    }
+    registros.push({ email: emailNorm, date: new Date().toISOString() });
+    localStorage.setItem(LS_KEY, JSON.stringify(registros));
+}
+
 /* ===== CÓDIGO ORIGINAL ===== */
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Panter Studio System: Online");
 
-    // IndexedDB setup (fallback)
-    let db;
-    const request = indexedDB.open('PreregistrosDB', 1);
-    request.onerror = () => console.error('Error opening DB');
-    request.onsuccess = (event) => {
-        db = event.target.result;
-        updateCounter();
-    };
-    request.onupgradeneeded = (event) => {
-        db = event.target.result;
-        const store = db.createObjectStore('registros', { keyPath: 'email' });
-    };
-
-    function saveRegistroLocal(email) {
-        return new Promise((resolve, reject) => {
-            if (!db) {
-                reject(new Error('Base de datos local no disponible'));
-                return;
-            }
-
-            const transaction = db.transaction(['registros'], 'readwrite');
-            const store = transaction.objectStore('registros');
-            store.add({ email, date: new Date().toISOString() });
-
-            transaction.oncomplete = () => resolve();
-            transaction.onerror = () => reject(transaction.error || new Error('No se pudo guardar el registro'));
+    function waitForFirebase(timeout = 6000) {
+        return new Promise((resolve) => {
+            if (window.db && window.addDoc) return resolve(true);
+            const start = Date.now();
+            const interval = setInterval(() => {
+                if (window.db && window.addDoc) {
+                    clearInterval(interval);
+                    resolve(true);
+                } else if (Date.now() - start >= timeout) {
+                    clearInterval(interval);
+                    resolve(false);
+                }
+            }, 100);
         });
     }
 
-    function getRegistrosLocal(callback) {
-        const transaction = db.transaction(['registros'], 'readonly');
-        const store = transaction.objectStore('registros');
-        const request = store.getAll();
-        request.onsuccess = () => callback(request.result);
-    }
-
     async function saveRegistro(email) {
-        if (window.db) {
-            try {
-                await addDoc(collection(window.db, "preregistros"), {
-                    email: email,
-                    date: new Date().toISOString()
-                });
-                console.log("Registro guardado en Firebase");
-            } catch (e) {
-                console.error("Error adding document: ", e);
-                // Fallback to local
-                await saveRegistroLocal(email);
+        const emailNorm = email.trim().toLowerCase();
+        if (USE_FIREBASE) {
+            const ready = await waitForFirebase();
+            if (ready) {
+                try {
+                    // Usar email como ID del documento para prevenir duplicados
+                    const docRef = window.fsDoc(window.db, 'preregistros', emailNorm);
+                    await window.setDoc(docRef, {
+                        email: emailNorm,
+                        date: new Date().toISOString()
+                    }, { merge: false });
+                    return;
+                } catch (e) {
+                    console.error('Firebase error al guardar:', e);
+                    if (e.code === 'permission-denied' || e.code === 'already-exists') throw e;
+                    // Sino cae a local
+                }
             }
-        } else {
-            await saveRegistroLocal(email);
         }
+        saveRegistroLS(emailNorm);
     }
 
     async function getRegistros(callback) {
-        if (window.db) {
-            try {
-                const querySnapshot = await getDocs(collection(window.db, "preregistros"));
-                callback(querySnapshot.docs.map(doc => doc.data()));
-            } catch (e) {
-                console.error("Error getting documents: ", e);
-                // Fallback to local
-                getRegistrosLocal(callback);
+        if (USE_FIREBASE) {
+            const ready = await waitForFirebase(3000);
+            if (ready) {
+                try {
+                    const snapshot = await window.getDocs(window.collection(window.db, 'preregistros'));
+                    return callback(snapshot.docs.map(d => d.data()));
+                } catch (e) {
+                    console.warn('Firebase error al leer, usando local:', e);
+                }
             }
-        } else {
-            getRegistrosLocal(callback);
         }
+        callback(getRegistrosLS());
     }
 
     async function updateCounter() {
@@ -416,9 +427,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 preregistrosActuales++;
                 updateCounter();
                 const position = preregistrosActuales;
-                document.getElementById('message').textContent = '¡Pre-registro exitoso! Revisa tu correo para confirmar.';
+                const msgEl = document.getElementById('message');
+                msgEl.textContent = '¡Pre-registro exitoso! Enviando correo de confirmación...';
                 preregistroForm.reset();
-                sendConfirmationEmail(email, position);
+                const emailSent = await sendConfirmationEmail(email, position);
+                msgEl.textContent = emailSent
+                    ? '¡Listo! Revisa tu correo, te enviamos la confirmación.'
+                    : '¡Pre-registro exitoso! (Correo de confirmación no disponible en este momento)';
             } catch (error) {
                 document.getElementById('message').textContent = 'Este email ya está registrado.';
             }
@@ -426,6 +441,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     updateCounter();
+
+    // Cuando Firebase termine de cargar, refrescar el contador con datos reales
+    document.addEventListener('firebaseReady', () => {
+        updateCounter();
+    });
 });
 
 /* ===== FUNCIONES PARA VENTANAS LATERALES ===== */
