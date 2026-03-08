@@ -86,9 +86,9 @@ body {
     position: absolute;
     top: 15px;
     right: 15px;
-    background: rgba(255, 68, 68, 0.9);
-    border: none;
-    color: white;
+    background: rgba(30, 112, 200, 0.3);
+    border: 2px solid #1e70c8;
+    color: #87CEEB;
     font-size: 24px;
     width: 40px;
     height: 40px;
@@ -103,8 +103,10 @@ body {
 }
 
 .promo-close:hover {
-    background: #ff0000;
+    background: #1e70c8;
+    color: #000;
     transform: rotate(90deg) scale(1.1);
+    box-shadow: 0 0 20px rgba(30, 112, 200, 0.6);
 }
 
 .promo-close:active {
@@ -112,12 +114,13 @@ body {
 }
 
 .promo-header {
-    background: linear-gradient(135deg, #1e70c8 0%, #5F9EA0 100%);
+    background: linear-gradient(135deg, #000000 0%, #1e70c8 50%, #000000 100%);
     padding: 30px 20px;
     text-align: center;
     border-radius: 17px 17px 0 0;
     position: relative;
     overflow: hidden;
+    border-bottom: 3px solid #1e70c8;
 }
 
 .promo-header::before {
@@ -144,8 +147,8 @@ body {
 
 .promo-badge {
     display: inline-block;
-    background: rgba(255, 255, 255, 0.2);
-    color: #fff;
+    background: rgba(30, 112, 200, 0.3);
+    color: #87CEEB;
     padding: 8px 20px;
     border-radius: 20px;
     font-size: 0.75rem;
@@ -153,35 +156,35 @@ body {
     text-transform: uppercase;
     letter-spacing: 2px;
     margin-bottom: 15px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid #1e70c8;
     animation: promoPulse 2s ease-in-out infinite;
 }
 
 @keyframes promoPulse {
     0%, 100% {
         transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+        box-shadow: 0 0 0 0 rgba(30, 112, 200, 0.6);
     }
     50% {
         transform: scale(1.05);
-        box-shadow: 0 0 20px 5px rgba(255, 255, 255, 0.2);
+        box-shadow: 0 0 20px 5px rgba(135, 206, 235, 0.4);
     }
 }
 
 .promo-title {
     font-size: 2.5rem;
     font-weight: 900;
-    color: #fff;
+    color: #87CEEB;
     margin: 10px 0;
     text-transform: uppercase;
     letter-spacing: 3px;
-    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), 0 0 30px rgba(30, 112, 200, 0.8);
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.8), 0 0 30px rgba(30, 112, 200, 1), 0 0 50px rgba(135, 206, 235, 0.5);
     position: relative;
     z-index: 1;
 }
 
 .promo-subtitle {
-    background: rgba(0, 255, 127, 0.9);
+    background: linear-gradient(135deg, #1e70c8 0%, #00ff7f 100%);
     color: #000;
     display: inline-block;
     padding: 12px 30px;
@@ -191,7 +194,8 @@ body {
     margin-top: 10px;
     position: relative;
     z-index: 1;
-    box-shadow: 0 4px 15px rgba(0, 255, 127, 0.4);
+    box-shadow: 0 4px 15px rgba(30, 112, 200, 0.5);
+    border: 2px solid #87CEEB;
 }
 
 .promo-body {
@@ -228,7 +232,7 @@ body {
 }
 
 .benefit-text {
-    color: #fff;
+    color: #87CEEB;
     font-size: 0.9rem;
     font-weight: 600;
     display: block;
@@ -324,22 +328,23 @@ body {
 
 .promo-btn.secondary {
     background: transparent;
-    color: #999;
-    border: 2px solid #333;
+    color: #87CEEB;
+    border: 2px solid #1e70c8;
 }
 
 .promo-btn.secondary:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: #ccc;
+    background: rgba(30, 112, 200, 0.2);
+    color: #fff;
+    box-shadow: 0 5px 20px rgba(30, 112, 200, 0.3);
 }
 
 .promo-countdown {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    gap: 8px;
-    background: rgba(255, 68, 68, 0.1);
-    border: 2px solid #ff4444;
+    gap: 12px;
+    background: rgba(30, 112, 200, 0.1);
+    border: 2px solid #1e70c8;
     border-radius: 12px;
     padding: 15px;
 }
@@ -348,25 +353,21 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    flex: 1;
+    min-width: 0;
 }
 
 .countdown-number {
     font-size: 1.8rem;
     font-weight: bold;
-    color: #ff4444;
+    color: #87CEEB;
     line-height: 1;
 }
 
 .countdown-label {
     font-size: 0.7rem;
-    color: #999;
+    color: #87CEEB;
     text-transform: uppercase;
-}
-
-.countdown-divider {
-    font-size: 1.8rem;
-    color: #ff4444;
-    font-weight: bold;
 }
 
 .promo-footer {
@@ -542,6 +543,108 @@ h2 {
     letter-spacing: 1px;
 }
 
+/* Destacado de pre-registro en index */
+.index-preregistro-highlight {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 22px;
+    align-items: center;
+    background: linear-gradient(145deg, #0f1624 0%, #121a2b 60%, #0b101a 100%);
+    border: 1px solid rgba(30, 112, 200, 0.45);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 28px;
+    box-shadow: 0 12px 25px rgba(10, 18, 30, 0.35);
+}
+
+.index-preregistro-media {
+    position: relative;
+}
+
+.index-preregistro-media img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 10px;
+    border: 2px solid rgba(30, 112, 200, 0.6);
+    box-shadow: 0 8px 20px rgba(30, 112, 200, 0.25);
+}
+
+.index-preregistro-copy h3 {
+    margin: 8px 0 10px 0;
+    color: #ffffff;
+    font-size: 1.35rem;
+}
+
+.index-preregistro-copy p {
+    margin: 0;
+    color: #cce6f8;
+}
+
+.highlight-tag {
+    display: inline-block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 1px;
+    background: rgba(30, 112, 200, 0.22);
+    color: #87CEEB;
+    border: 1px solid rgba(135, 206, 235, 0.55);
+    border-radius: 999px;
+    padding: 5px 11px;
+}
+
+.index-preregistro-actions {
+    margin-top: 16px;
+}
+
+.highlight-note {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #9fd4f4;
+}
+
+.index-preregistro-inline {
+    margin-top: 18px;
+    margin-bottom: 6px;
+    padding: 14px;
+    border-radius: 10px;
+    background: rgba(30, 112, 200, 0.1);
+    border: 1px solid rgba(30, 112, 200, 0.35);
+}
+
+.index-preregistro-inline p {
+    margin: 0;
+    color: #2f4a63;
+}
+
+.index-preregistro-inline .btn {
+    margin-top: 10px;
+}
+
+@media (max-width: 900px) {
+    .index-preregistro-highlight {
+        grid-template-columns: 1fr;
+        padding: 14px;
+    }
+
+    .index-preregistro-media {
+        max-width: 420px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 600px) {
+    .index-preregistro-copy h3 {
+        font-size: 1.1rem;
+    }
+
+    .highlight-note,
+    .index-preregistro-inline p {
+        font-size: 0.88rem;
+    }
+}
+
 /* Botones */
 .btn {
     display: inline-block;
@@ -647,6 +750,14 @@ footer {
     color: #eee;
 }
 
+.dark-mode .index-preregistro-highlight {
+    background: linear-gradient(145deg, #090d16 0%, #0d1322 60%, #080b13 100%);
+}
+
+.dark-mode .index-preregistro-inline p {
+    color: #cce6f8;
+}
+
 .dark-mode .btn {
     background-color: #1e70c8;
     color: #000;
@@ -704,7 +815,469 @@ footer {
 
 /* Preregistro hero */
 #preregistro-hero {
-    display: none;
+    display: block;
+}
+
+.preregistro-showcase {
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(circle at 20% 20%, rgba(30, 112, 200, 0.22), transparent 42%),
+                radial-gradient(circle at 85% 80%, rgba(135, 206, 235, 0.15), transparent 40%),
+                linear-gradient(160deg, #0d0d0d 0%, #121826 45%, #0e1118 100%);
+    color: #e6f7ff;
+    border: 1px solid rgba(30, 112, 200, 0.45);
+    border-left: 5px solid #1e70c8;
+    padding: 0;
+}
+
+/* Glows decorativos */
+.preregistro-glow {
+    position: absolute;
+    inset: -120px auto auto -120px;
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle, rgba(30, 112, 200, 0.45), transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.preregistro-glow-right {
+    inset: auto -120px -100px auto;
+    background: radial-gradient(circle, rgba(135, 206, 235, 0.2), transparent 70%);
+}
+
+/* Imagen hero */
+.preregistro-hero-banner {
+    position: relative;
+    width: 100%;
+    max-height: 340px;
+    overflow: hidden;
+    border-radius: 7px 7px 0 0;
+}
+
+.preregistro-hero-img {
+    width: 100%;
+    height: 340px;
+    object-fit: cover;
+    object-position: center 30%;
+    display: block;
+    filter: brightness(0.6);
+}
+
+.preregistro-hero-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(10,18,34,0.65) 100%);
+}
+
+.hero-cupo-ribbon {
+    display: inline-block;
+    background: rgba(30, 112, 200, 0.85);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 6px 16px;
+    border-radius: 999px;
+    border: 1px solid #87CEEB;
+    margin-bottom: 14px;
+    animation: promoPulse 2.5s ease-in-out infinite;
+}
+
+.hero-title {
+    font-size: 2.6rem;
+    font-weight: 900;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 0 0 10px 0;
+    text-shadow: 0 2px 14px rgba(30, 112, 200, 0.9), 0 0 40px rgba(135, 206, 235, 0.5);
+    line-height: 1.1;
+}
+
+.hero-title span {
+    color: #87CEEB;
+}
+
+.hero-sub {
+    color: rgba(255,255,255,0.85);
+    font-size: 1.05rem;
+    margin: 0;
+}
+
+/* Layout 2 columnas */
+.preregistro-two-col {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+    padding: 28px;
+    align-items: start;
+    position: relative;
+    z-index: 1;
+}
+
+.preregistro-left-col,
+.preregistro-right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* Headline */
+.preregistro-headline {
+    margin-bottom: 0;
+}
+
+.headline-badge {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #87CEEB;
+    border: 1px solid rgba(135, 206, 235, 0.6);
+    background: rgba(30, 112, 200, 0.18);
+    padding: 6px 12px;
+    border-radius: 999px;
+}
+
+.preregistro-section-title {
+    margin: 12px 0 8px 0;
+    color: #ffffff;
+    font-size: 1.25rem;
+}
+
+.preregistro-headline p {
+    margin: 0;
+    color: #c8e7fb;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* Beneficios: 2 columnas con ícono + texto */
+.preregistro-benefits {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 0;
+}
+
+.benefit-card {
+    background: rgba(16, 24, 38, 0.75);
+    border: 1px solid rgba(30, 112, 200, 0.45);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.benefit-icon-wrap {
+    font-size: 1.8rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.benefit-card-body h4 {
+    margin: 0 0 5px 0;
+    color: #87CEEB;
+    font-size: 0.95rem;
+}
+
+.benefit-card-body p {
+    margin: 0;
+    color: #d3ecfb;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.benefit-card:hover {
+    transform: translateY(-3px);
+    border-color: #87CEEB;
+    box-shadow: 0 8px 24px rgba(30, 112, 200, 0.25);
+}
+
+/* Panel de progreso */
+.registro-panel {
+    background: rgba(13, 20, 34, 0.75);
+    border: 1px solid rgba(30, 112, 200, 0.55);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 0;
+    text-align: left;
+    display: block;
+}
+
+.registro-panel-top {
+    margin-bottom: 12px;
+}
+
+.registro-main-count {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+    color: #ffffff;
+}
+
+.registro-status {
+    margin: 5px 0 0 0;
+    color: #87CEEB;
+    font-size: 0.9rem;
+}
+
+.registro-progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.registro-progress-track {
+    width: 100%;
+    height: 13px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.15);
+    overflow: hidden;
+    border: 1px solid rgba(135, 206, 235, 0.35);
+}
+
+.registro-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #1e70c8 0%, #87CEEB 70%, #00ff7f 100%);
+    box-shadow: 0 0 14px rgba(30, 112, 200, 0.45);
+    width: 0%;
+    transition: width 1s ease;
+}
+
+.registro-porcentaje {
+    min-width: 52px;
+    text-align: right;
+    font-weight: 700;
+    color: #87CEEB;
+}
+
+.registro-disponibles {
+    margin: 10px 0 0 0;
+    font-size: 0.88rem;
+    color: #b8def4;
+}
+
+/* Formulario derecho */
+.preregistro-form-shell {
+    background: rgba(8, 12, 24, 0.9);
+    border: 1px solid rgba(30, 112, 200, 0.6);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(10, 18, 34, 0.5), 0 0 30px rgba(30, 112, 200, 0.15);
+}
+
+.form-shell-header {
+    background: linear-gradient(135deg, #1e70c8 0%, #0f3a6b 100%);
+    padding: 22px 22px 18px 22px;
+    text-align: center;
+    border-bottom: 1px solid rgba(135, 206, 235, 0.3);
+}
+
+.form-shell-icon {
+    font-size: 2.2rem;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.form-shell-header h3 {
+    margin: 0 0 5px 0;
+    color: #fff;
+    font-size: 1.3rem;
+}
+
+.form-shell-header p {
+    margin: 0;
+    color: rgba(255,255,255,0.75);
+    font-size: 0.88rem;
+}
+
+.preregistro-form-pro {
+    display: grid;
+    gap: 10px;
+    max-width: 100%;
+    margin: 0;
+    padding: 20px 22px;
+}
+
+.preregistro-form-pro label {
+    color: #b8def4;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.preregistro-form-pro input {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(135, 206, 235, 0.35);
+    color: #ffffff;
+    padding: 13px 15px;
+    border-radius: 10px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.preregistro-form-pro input:focus {
+    border-color: #1e70c8;
+    box-shadow: 0 0 0 3px rgba(30, 112, 200, 0.25);
+}
+
+.preregistro-form-pro input::placeholder {
+    color: rgba(200, 231, 251, 0.55);
+}
+
+.preregistro-cta {
+    width: 100%;
+    margin-top: 4px;
+    font-size: 1.05rem;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 15px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #1e70c8 0%, #00a8ff 100%);
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+
+.preregistro-cta::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.4s;
+}
+
+.preregistro-cta:hover::before {
+    left: 100%;
+}
+
+.preregistro-cta:hover {
+    background: linear-gradient(135deg, #1e70c8 0%, #87CEEB 100%);
+    color: #000;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(30, 112, 200, 0.45);
+}
+
+.cta-icon {
+    font-size: 1.3rem;
+}
+
+.registro-message {
+    margin: 0 22px 10px 22px;
+    min-height: 22px;
+    font-size: 0.92rem;
+}
+
+.form-trust-list {
+    list-style: none;
+    margin: 0;
+    padding: 14px 22px 18px;
+    border-top: 1px solid rgba(30, 112, 200, 0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-trust-list li {
+    color: #87CEEB;
+    font-size: 0.85rem;
+}
+
+/* Dark mode */
+.dark-mode .preregistro-showcase {
+    background: radial-gradient(circle at 20% 20%, rgba(30, 112, 200, 0.2), transparent 42%),
+                radial-gradient(circle at 85% 10%, rgba(135, 206, 235, 0.12), transparent 40%),
+                linear-gradient(160deg, #080808 0%, #0d1321 45%, #070b12 100%);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .preregistro-two-col {
+        grid-template-columns: 1fr;
+    }
+
+    .preregistro-right-col {
+        order: -1;
+    }
+
+    .hero-title {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .preregistro-two-col {
+        padding: 18px;
+        gap: 18px;
+    }
+
+    .preregistro-benefits {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-title {
+        font-size: 1.7rem;
+    }
+
+    .preregistro-hero-img {
+        height: 220px;
+    }
+
+    .registro-main-count {
+        font-size: 1rem;
+    }
+
+    .registro-progress-wrap {
+        gap: 8px;
+    }
+
+    .registro-porcentaje {
+        min-width: 45px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .preregistro-hero-img {
+        height: 180px;
+    }
+
+    .hero-title {
+        font-size: 1.4rem;
+        letter-spacing: 1px;
+    }
+
+    .hero-sub {
+        font-size: 0.9rem;
+    }
+
+    .hero-cupo-ribbon {
+        font-size: 0.75rem;
+        padding: 5px 12px;
+    }
+
+    .preregistro-two-col {
+        padding: 14px;
+    }
+
+    .form-shell-header {
+        padding: 16px;
+    }
 }
 
 /* Pre-registro form */

@@ -26,18 +26,105 @@
     </nav>
 
     <div class="container">
-        <section>
-            <h2>Pre-registro para Nuestra Tierra Job Simulator</h2>
-            <p>¡Sé el primero en enterarte del lanzamiento! Regístrate para recibir actualizaciones exclusivas y acceso anticipado.</p>
-            <div id="registro-info">
-                <p id="registro-count">Pre-registros totales: Cargando...</p>
+        <section id="preregistro-hero" class="preregistro-showcase">
+            <div class="preregistro-glow"></div>
+            <div class="preregistro-glow preregistro-glow-right"></div>
+
+            <!-- HERO CON IMAGEN -->
+            <div class="preregistro-hero-banner">
+                <img src="https://i.imgur.com/1IRRyFY.jpeg" alt="Nuestra Tierra Job Simulator" loading="lazy" class="preregistro-hero-img">
+                <div class="preregistro-hero-overlay">
+                    <span class="hero-cupo-ribbon">&#128274; Cupo Limitado: 10,000 Lugares</span>
+                    <h2 class="hero-title">Nuestra Tierra<br><span>Job Simulator</span></h2>
+                    <p class="hero-sub">Sé parte de la historia desde el primer día</p>
+                </div>
             </div>
-            <form id="preregistro-form">
-                <label for="email">Correo Electrónico:</label>
-                <input type="email" id="email" name="email" required>
-                <button type="submit" id="preregistro-btn" class="btn">Pre-registrarme</button>
-            </form>
-            <p id="message"></p>
+
+            <!-- LAYOUT 2 COLUMNAS -->
+            <div class="preregistro-two-col">
+
+                <!-- COLUMNA IZQUIERDA: info + beneficios -->
+                <div class="preregistro-left-col">
+                    <div class="preregistro-headline">
+                        <span class="headline-badge">&#127942; LISTA OFICIAL DE ESPERA</span>
+                        <h3 class="preregistro-section-title">¿Por qué unirte ahora?</h3>
+                        <p>Esta comunidad define el lanzamiento. Al unirte sumas fuerza al proyecto y aseguras tu lugar antes del lanzamiento.</p>
+                    </div>
+
+                    <div class="preregistro-benefits">
+                        <article class="benefit-card">
+                            <div class="benefit-icon-wrap">&#127918;</div>
+                            <div class="benefit-card-body">
+                                <h4>Acceso Anticipado</h4>
+                                <p>Juega antes que nadie — demos y betas exclusivas para la lista.</p>
+                            </div>
+                        </article>
+                        <article class="benefit-card">
+                            <div class="benefit-icon-wrap">&#127873;</div>
+                            <div class="benefit-card-body">
+                                <h4>Recompensas de Fundador</h4>
+                                <p>Items y reconocimientos que solo recibirán los primeros 10,000.</p>
+                            </div>
+                        </article>
+                        <article class="benefit-card">
+                            <div class="benefit-icon-wrap">&#128226;</div>
+                            <div class="benefit-card-body">
+                                <h4>Noticias Exclusivas</h4>
+                                <p>Entérate del avance del juego antes de cualquier anuncio público.</p>
+                            </div>
+                        </article>
+                        <article class="benefit-card">
+                            <div class="benefit-icon-wrap">&#11088;</div>
+                            <div class="benefit-card-body">
+                                <h4>Miembro Fundador</h4>
+                                <p>Badge especial en la comunidad que marca tu legado en el juego.</p>
+                            </div>
+                        </article>
+                    </div>
+
+                    <!-- PANEL DE PROGRESO -->
+                    <div id="registro-info" class="registro-panel">
+                        <div class="registro-panel-top">
+                            <p id="registro-count" class="registro-main-count">Cargando...</p>
+                            <p id="registro-status" class="registro-status">Meta comunitaria en marcha</p>
+                        </div>
+                        <div class="registro-progress-wrap" aria-label="Progreso de pre-registro">
+                            <div class="registro-progress-track">
+                                <div id="registro-progress-fill" class="registro-progress-fill" style="width: 0%;"></div>
+                            </div>
+                            <span id="registro-porcentaje" class="registro-porcentaje">0%</span>
+                        </div>
+                        <p id="registro-disponibles" class="registro-disponibles">Cupos disponibles: Cargando...</p>
+                    </div>
+                </div>
+
+                <!-- COLUMNA DERECHA: formulario -->
+                <div class="preregistro-right-col">
+                    <div class="preregistro-form-shell">
+                        <div class="form-shell-header">
+                            <span class="form-shell-icon">&#128273;</span>
+                            <h3>Reserva Tu Lugar</h3>
+                            <p>Gratis · Sin compromisos · Solo 10,000 cupos</p>
+                        </div>
+
+                        <form id="preregistro-form" class="preregistro-form-pro">
+                            <label for="email">Correo Electrónico</label>
+                            <input type="email" id="email" name="email" placeholder="tu-correo@ejemplo.com" required>
+                            <button type="submit" id="preregistro-btn" class="btn preregistro-cta">
+                                <span class="cta-icon">&#128640;</span>
+                                <span class="cta-text">Pre-registrarme</span>
+                            </button>
+                        </form>
+                        <p id="message" class="registro-message"></p>
+
+                        <ul class="form-trust-list">
+                            <li>&#10003; 100% gratuito, sin pagos</li>
+                            <li>&#10003; Recibirás un correo de confirmación</li>
+                            <li>&#10003; Puedes cancelar en cualquier momento</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </section>
     </div>
 

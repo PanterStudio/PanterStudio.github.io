@@ -23,9 +23,9 @@
             <button class="promo-close" onclick="closePromoModal()">✕</button>
             
             <div class="promo-header">
-                <div class="promo-badge">OFERTA EXCLUSIVA</div>
-                <h1 class="promo-title">¡ÚNETE AHORA!</h1>
-                <div class="promo-subtitle">Pre-Registro Gratis</div>
+                <div class="promo-badge">LISTA DE ESPERA</div>
+                <h1 class="promo-title">¡SÉ DE LOS PRIMEROS!</h1>
+                <div class="promo-subtitle">Únete a la Comunidad</div>
             </div>
             
             <div class="promo-body">
@@ -36,27 +36,27 @@
                     </div>
                     <div class="benefit-item">
                         <span class="benefit-icon">🎁</span>
-                        <span class="benefit-text">Recompensas Exclusivas</span>
+                        <span class="benefit-text">Recompensas Especiales</span>
                     </div>
                     <div class="benefit-item">
-                        <span class="benefit-icon">⭐</span>
-                        <span class="benefit-text">Contenido Premium</span>
+                        <span class="benefit-icon">📢</span>
+                        <span class="benefit-text">Noticias Exclusivas</span>
                     </div>
                     <div class="benefit-item">
-                        <span class="benefit-icon">🏆</span>
-                        <span class="benefit-text">Ranking Especial</span>
+                        <span class="benefit-icon">🌟</span>
+                        <span class="benefit-text">Miembro Fundador</span>
                     </div>
                 </div>
                 
                 <div class="promo-features">
-                    <div class="feature-badge">✓ Sin costo</div>
+                    <div class="feature-badge">✓ 100% Gratis</div>
                     <div class="feature-badge">✓ Notificaciones</div>
-                    <div class="feature-badge">✓ Beta Access</div>
+                    <div class="feature-badge">✓ Acceso Temprano</div>
                 </div>
                 
                 <div class="promo-cta">
                     <button class="promo-btn primary" onclick="goToPreregistro()">
-                        <span class="btn-text">PRE-REGÍSTRATE AHORA</span>
+                        <span class="btn-text">ÚNETE A LA LISTA</span>
                         <span class="btn-arrow">→</span>
                     </button>
                     <button class="promo-btn secondary" onclick="closePromoModal()">
@@ -66,24 +66,22 @@
                 
                 <div class="promo-countdown">
                     <div class="countdown-item">
-                        <span class="countdown-number" id="promoHours">24</span>
-                        <span class="countdown-label">Horas</span>
+                        <span class="countdown-number" id="promoRegistrados">0</span>
+                        <span class="countdown-label">Registrados</span>
                     </div>
-                    <div class="countdown-divider">:</div>
                     <div class="countdown-item">
-                        <span class="countdown-number" id="promoMinutes">00</span>
-                        <span class="countdown-label">Minutos</span>
+                        <span class="countdown-number" id="promoCupoTotal">10000</span>
+                        <span class="countdown-label">Cupo Total</span>
                     </div>
-                    <div class="countdown-divider">:</div>
                     <div class="countdown-item">
-                        <span class="countdown-number" id="promoSeconds">00</span>
-                        <span class="countdown-label">Segundos</span>
+                        <span class="countdown-number" id="promoDisponibles">10000</span>
+                        <span class="countdown-label">Disponibles</span>
                     </div>
                 </div>
             </div>
             
             <div class="promo-footer">
-                <p>🔥 <span id="promoRegistros">127</span> personas se han pre-registrado hoy</p>
+                <p>🔥 <span id="promoRegistros">0</span> personas esperan el lanzamiento</p>
             </div>
         </div>
     </div>
@@ -164,12 +162,34 @@
 
     <div class="container">
         <section>
+            <div class="index-preregistro-highlight">
+                <div class="index-preregistro-media">
+                    <img src="https://i.imgur.com/1IRRyFY.jpeg" alt="Pre-registro Nuestra Tierra Job Simulator" loading="lazy">
+                </div>
+                <div class="index-preregistro-copy">
+                    <span class="highlight-tag">COMUNIDAD FUNDADORA</span>
+                    <h3>Únete al Pre-registro de Nuestra Tierra Job Simulator</h3>
+                    <p>
+                        Estamos construyendo la lista oficial de jugadores que quieren estar desde el primer día.
+                        Hay cupo limitado a 10000 registros.
+                    </p>
+                    <div class="index-preregistro-actions">
+                        <a href="preregistro.html" class="btn">Pre-registrarme ahora</a>
+                        <p class="highlight-note">Recordatorio: acceso anticipado y recompensas para miembros tempranos.</p>
+                    </div>
+                </div>
+            </div>
+
             <h2>Sobre Nosotros</h2>
             <p>Bienvenidos al sitio oficial de <strong>Panter Studio Game Dev</strong>. Somos un equipo apasionado dedicado al desarrollo de videojuegos indie con historias profundas y jugabilidad innovadora.</p>
             <p>Nuestro objetivo es crear experiencias que los jugadores nunca olviden, combinando arte visual moderno con mecánicas clásicas.</p>
             <br>
             <h3>Nuestra Misión</h3>
             <p>Innovar en cada género que tocamos y mantener una comunicación transparente con nuestra comunidad.</p>
+            <div class="index-preregistro-inline">
+                <p>¿Quieres apoyar el lanzamiento? Entra a la lista y asegura tu lugar.</p>
+                <a href="preregistro.html" class="btn">Ir al pre-registro</a>
+            </div>
             <a href="juegos.html" class="btn">Ver nuestros proyectos</a>
         </section>
     </div>

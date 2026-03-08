@@ -2,6 +2,9 @@
 
 /* ===== MODAL PROMOCIONAL PRE-REGISTRO ===== */
 
+const MAX_PREREGISTROS = 10000;
+let preregistrosActuales = 0;
+
 // Mostrar modal automáticamente al cargar
 window.addEventListener('load', () => {
     const modal = document.getElementById('preregistroModal');
@@ -12,8 +15,7 @@ window.addEventListener('load', () => {
         setTimeout(() => {
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
-            startPromoCountdown();
-            animatePromoRegistros();
+            updatePromoCapacityDisplay(preregistrosActuales);
         }, 1500); // Aparece después de 1.5 segundos
     }
 });
@@ -34,65 +36,28 @@ function goToPreregistro() {
     window.location.href = 'preregistro.html';
 }
 
-// Countdown del modal promocional
-function startPromoCountdown() {
-    const endTime = new Date().getTime() + (24 * 60 * 60 * 1000); // 24 horas
-    
-    const updateCountdown = () => {
-        const now = new Date().getTime();
-        const distance = endTime - now;
-        
-        if (distance < 0) {
-            document.getElementById('promoHours').textContent = '00';
-            document.getElementById('promoMinutes').textContent = '00';
-            document.getElementById('promoSeconds').textContent = '00';
-            return;
-        }
-        
-        const hours = Math.floor(distance / (1000 * 60 * 60));
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        
-        document.getElementById('promoHours').textContent = String(hours).padStart(2, '0');
-        document.getElementById('promoMinutes').textContent = String(minutes).padStart(2, '0');
-        document.getElementById('promoSeconds').textContent = String(seconds).padStart(2, '0');
-    };
-    
-    updateCountdown();
-    setInterval(updateCountdown, 1000);
-}
+// Actualiza el bloque visual del modal usando cupos reales.
+function updatePromoCapacityDisplay(totalRegistros) {
+    const total = Math.max(0, Number(totalRegistros) || 0);
+    const disponibles = Math.max(MAX_PREREGISTROS - total, 0);
 
-// Animar número de registros
-function animatePromoRegistros() {
+    const registradosEl = document.getElementById('promoRegistrados');
+    const cupoEl = document.getElementById('promoCupoTotal');
+    const disponiblesEl = document.getElementById('promoDisponibles');
     const registrosElement = document.getElementById('promoRegistros');
-    if (!registrosElement) return;
-    
-    let count = 100;
-    const target = 127;
-    const duration = 2000;
-    const increment = (target - count) / (duration / 50);
-    
-    const counter = setInterval(() => {
-        count += increment;
-        if (count >= target) {
-            count = target;
-            clearInterval(counter);
-        }
-        registrosElement.textContent = Math.floor(count);
-    }, 50);
-    
-    // Actualizar con número aleatorio cada 10 segundos
-    setInterval(() => {
-        const randomIncrease = Math.floor(Math.random() * 3) + 1;
-        const currentValue = parseInt(registrosElement.textContent);
-        registrosElement.textContent = currentValue + randomIncrease;
-        
-        // Efecto de flash
-        registrosElement.style.color = '#00ffff';
-        setTimeout(() => {
-            registrosElement.style.color = '#00ff7f';
-        }, 300);
-    }, 10000);
+
+    if (registradosEl) {
+        registradosEl.textContent = String(total);
+    }
+    if (cupoEl) {
+        cupoEl.textContent = String(MAX_PREREGISTROS);
+    }
+    if (disponiblesEl) {
+        disponiblesEl.textContent = String(disponibles);
+    }
+    if (registrosElement) {
+        registrosElement.textContent = String(total);
+    }
 }
 
 /* ===== CÓDIGO ORIGINAL ===== */
@@ -114,10 +79,19 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function saveRegistroLocal(email) {
-        const transaction = db.transaction(['registros'], 'readwrite');
-        const store = transaction.objectStore('registros');
-        store.add({ email, date: new Date().toISOString() });
-        return transaction;
+        return new Promise((resolve, reject) => {
+            if (!db) {
+                reject(new Error('Base de datos local no disponible'));
+                return;
+            }
+
+            const transaction = db.transaction(['registros'], 'readwrite');
+            const store = transaction.objectStore('registros');
+            store.add({ email, date: new Date().toISOString() });
+
+            transaction.oncomplete = () => resolve();
+            transaction.onerror = () => reject(transaction.error || new Error('No se pudo guardar el registro'));
+        });
     }
 
     function getRegistrosLocal(callback) {
@@ -138,10 +112,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (e) {
                 console.error("Error adding document: ", e);
                 // Fallback to local
-                saveRegistroLocal(email);
+                await saveRegistroLocal(email);
             }
         } else {
-            saveRegistroLocal(email);
+            await saveRegistroLocal(email);
         }
     }
 
@@ -162,16 +136,69 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function updateCounter() {
         getRegistros((registros) => {
+            const totalRegistros = registros.length;
+            preregistrosActuales = totalRegistros;
+            const disponibles = Math.max(MAX_PREREGISTROS - totalRegistros, 0);
+            const porcentaje = Math.min((totalRegistros / MAX_PREREGISTROS) * 100, 100);
+
             const countElement = document.getElementById('registro-count');
             if (countElement) {
-                countElement.textContent = `Pre-registros totales: ${registros.length}`;
+                countElement.textContent = `Pre-registros totales: ${totalRegistros}/${MAX_PREREGISTROS}`;
             }
+
+            const disponiblesElement = document.getElementById('registro-disponibles');
+            if (disponiblesElement) {
+                disponiblesElement.textContent = `Cupos disponibles: ${disponibles}`;
+            }
+
+            const porcentajeElement = document.getElementById('registro-porcentaje');
+            if (porcentajeElement) {
+                porcentajeElement.textContent = `${porcentaje.toFixed(1)}%`;
+            }
+
+            const progressFill = document.getElementById('registro-progress-fill');
+            if (progressFill) {
+                progressFill.style.width = `${porcentaje}%`;
+            }
+
+            const statusElement = document.getElementById('registro-status');
+            if (statusElement) {
+                statusElement.textContent = totalRegistros >= MAX_PREREGISTROS
+                    ? 'Cupo completo: lista de espera cerrada por ahora.'
+                    : 'Meta comunitaria en marcha';
+            }
+
             // Also update index counter
             const indexCount = document.getElementById('preregistro-count');
             if (indexCount) {
-                indexCount.textContent = `Pre-registros: ${registros.length}`;
+                indexCount.textContent = `Pre-registros: ${totalRegistros}/${MAX_PREREGISTROS}`;
             }
+
+            updatePromoCapacityDisplay(totalRegistros);
+            updatePreregistroButtonState(totalRegistros);
         });
+    }
+
+    function updatePreregistroButtonState(totalRegistros) {
+        const preregistroBtn = document.getElementById('preregistro-btn');
+        const emailInput = document.getElementById('email');
+        const messageElement = document.getElementById('message');
+        const cupoLleno = totalRegistros >= MAX_PREREGISTROS;
+
+        if (preregistroBtn) {
+            preregistroBtn.disabled = cupoLleno;
+            preregistroBtn.textContent = cupoLleno ? 'Cupo lleno' : 'Pre-registrarme';
+            preregistroBtn.style.opacity = cupoLleno ? '0.6' : '1';
+            preregistroBtn.style.cursor = cupoLleno ? 'not-allowed' : 'pointer';
+        }
+
+        if (emailInput) {
+            emailInput.disabled = cupoLleno;
+        }
+
+        if (messageElement && cupoLleno) {
+            messageElement.textContent = 'Se alcanzo el limite de 10000 pre-registros.';
+        }
     }
 
     // Particles container
@@ -342,18 +369,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // Pre-registro form
     const preregistroForm = document.getElementById('preregistro-form');
     if (preregistroForm) {
-        preregistroForm.addEventListener('submit', (e) => {
+        preregistroForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (preregistrosActuales >= MAX_PREREGISTROS) {
+                document.getElementById('message').textContent = 'Se alcanzo el limite de 10000 pre-registros.';
+                return;
+            }
+
             const email = document.getElementById('email').value;
-            const transaction = saveRegistro(email);
-            transaction.oncomplete = () => {
+            try {
+                await saveRegistro(email);
                 updateCounter();
                 document.getElementById('message').textContent = '¡Pre-registro exitoso! Gracias por tu interés.';
                 preregistroForm.reset();
-            };
-            transaction.onerror = () => {
+            } catch (error) {
                 document.getElementById('message').textContent = 'Este email ya está registrado.';
-            };
+            }
         });
     }
 
