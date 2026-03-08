@@ -1,8 +1,42 @@
 /* script.js - Lógica y efectos para Panter Studio Game Dev */
 
+/* ===== CONFIGURACIÓN EMAILJS ===================================
+   1. Crea tu cuenta gratis en https://www.emailjs.com
+   2. Conecta tu servicio de correo (Gmail, Outlook, etc.)
+   3. Crea una plantilla de correo (ver instrucciones abajo)
+   4. Reemplaza los tres valores de abajo con tus credenciales
+================================================================ */
+const EMAILJS_PUBLIC_KEY  = 'iMeAQSEDDe8WDiiWV';
+const EMAILJS_SERVICE_ID  = 'service_h9jiigs';
+const EMAILJS_TEMPLATE_ID = 'template_2uro1hc';
+
+/* Envía el correo de confirmación al usuario que se registró.
+   Variables disponibles en tu plantilla EmailJS:
+     {{to_email}}  → correo del usuario
+     {{game_name}} → nombre del juego
+     {{user_pos}}  → número de posición en la lista */
+async function sendConfirmationEmail(userEmail, position) {
+    if (typeof emailjs === 'undefined') return;
+    if (EMAILJS_PUBLIC_KEY === 'TU_PUBLIC_KEY') return; // No configurado aún
+    try {
+        await emailjs.send(
+            EMAILJS_SERVICE_ID,
+            EMAILJS_TEMPLATE_ID,
+            {
+                to_email: userEmail,
+                game_name: 'Nuestra Tierra Job Simulator',
+                user_pos: position,
+            },
+            EMAILJS_PUBLIC_KEY
+        );
+    } catch (err) {
+        console.warn('EmailJS: no se pudo enviar el correo de confirmación.', err);
+    }
+}
+
 /* ===== MODAL PROMOCIONAL PRE-REGISTRO ===== */
 
-const MAX_PREREGISTROS = 10000;
+const MAX_PREREGISTROS = 1000;
 let preregistrosActuales = 0;
 
 // Mostrar modal automáticamente al cargar
@@ -197,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (messageElement && cupoLleno) {
-            messageElement.textContent = 'Se alcanzo el limite de 10000 pre-registros.';
+            messageElement.textContent = 'Se alcanzo el limite de 1000 pre-registros.';
         }
     }
 
@@ -372,16 +406,19 @@ document.addEventListener('DOMContentLoaded', () => {
         preregistroForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (preregistrosActuales >= MAX_PREREGISTROS) {
-                document.getElementById('message').textContent = 'Se alcanzo el limite de 10000 pre-registros.';
+                document.getElementById('message').textContent = 'Se alcanzo el limite de 1000 pre-registros.';
                 return;
             }
 
             const email = document.getElementById('email').value;
             try {
                 await saveRegistro(email);
+                preregistrosActuales++;
                 updateCounter();
-                document.getElementById('message').textContent = '¡Pre-registro exitoso! Gracias por tu interés.';
+                const position = preregistrosActuales;
+                document.getElementById('message').textContent = '¡Pre-registro exitoso! Revisa tu correo para confirmar.';
                 preregistroForm.reset();
+                sendConfirmationEmail(email, position);
             } catch (error) {
                 document.getElementById('message').textContent = 'Este email ya está registrado.';
             }
