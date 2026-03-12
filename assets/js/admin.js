@@ -30,6 +30,8 @@ const CEO_ASSIGNABLE_ROLES = {
     vip: 'VIP'
 };
 
+const EMAIL_ANALYSIS_COLLECTIONS = ['users', 'preregistros', 'donations', 'sponsors'];
+
 const gate = document.getElementById('adminGate');
 const panel = document.getElementById('adminPanel');
 const gateMessage = document.getElementById('adminGateMessage');
@@ -79,6 +81,80 @@ function setCeoMessage(message, isError = false) {
     ceoUsersMessageEl.className = isError ? 'admin-message error' : 'admin-message';
 }
 
+function isValidEmailValue(value) {
+    if (typeof value !== 'string') return false;
+    const trimmed = value.trim().toLowerCase();
+    if (!trimmed || trimmed.length > 160) return false;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+}
+
+function collectEmailsFromUnknownData(data, bag, depth = 0) {
+    if (!data || depth > 3) return;
+
+    if (typeof data === 'string') {
+        if (isValidEmailValue(data)) {
+            bag.add(data.trim().toLowerCase());
+        }
+        return;
+    }
+
+    if (Array.isArray(data)) {
+        data.forEach((item) => collectEmailsFromUnknownData(item, bag, depth + 1));
+        return;
+    }
+
+    if (typeof data === 'object') {
+        Object.values(data).forEach((value) => collectEmailsFromUnknownData(value, bag, depth + 1));
+    }
+}
+
+function extractEmailsFromDoc(data, docId = '') {
+    const bag = new Set();
+    const knownKeys = ['email', 'userEmail', 'donorEmail', 'contactEmail', 'ownerEmail', 'sponsorEmail'];
+
+    if (isValidEmailValue(docId)) {
+        bag.add(String(docId).trim().toLowerCase());
+    }
+
+    knownKeys.forEach((key) => {
+        if (isValidEmailValue(data?.[key])) {
+            bag.add(String(data[key]).trim().toLowerCase());
+        }
+    });
+
+    collectEmailsFromUnknownData(data, bag);
+    return [...bag];
+}
+
+function addEmailToIndex(indexMap, email, patch = {}) {
+    if (!isValidEmailValue(email)) return;
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const current = indexMap.get(normalizedEmail) || {
+        uid: '',
+        email: normalizedEmail,
+        name: '',
+        role: 'usuario',
+        isAdmin: false,
+        sources: new Set()
+    };
+
+    if (patch.uid) current.uid = patch.uid;
+    if (patch.name) current.name = patch.name;
+    if (patch.role) current.role = patch.role;
+    if (typeof patch.isAdmin === 'boolean') current.isAdmin = patch.isAdmin;
+    if (Array.isArray(patch.sources)) {
+        patch.sources.forEach((source) => current.sources.add(source));
+    }
+
+    if (isFounderEmail(normalizedEmail)) {
+        current.role = 'founder_ceo';
+        current.isAdmin = true;
+    }
+
+    indexMap.set(normalizedEmail, current);
+}
+
 function createRoleOptions(selectedRole) {
     const normalized = normalizeCeoRole(selectedRole);
     return Object.entries(CEO_ASSIGNABLE_ROLES)
@@ -94,32 +170,41 @@ function renderCeoUsersTable(filterText = '') {
         if (!searchText) return true;
         const email = String(item.email || '').toLowerCase();
         const name = String(item.name || '').toLowerCase();
-        return email.includes(searchText) || name.includes(searchText);
+        const sources = Array.from(item.sources || []).join(' ').toLowerCase();
+        return email.includes(searchText) || name.includes(searchText) || sources.includes(searchText);
     });
 
     if (rows.length === 0) {
-        ceoUsersTableBody.innerHTML = '<tr><td colspan="6">No se encontraron usuarios.</td></tr>';
+        ceoUsersTableBody.innerHTML = '<tr><td colspan="7">No se encontraron correos.</td></tr>';
         return;
     }
 
     ceoUsersTableBody.innerHTML = rows.map((user, index) => {
         const isFounder = isFounderEmail(user.email);
-        const currentRoleLabel = isFounder ? 'Fundador / CEO' : (CEO_ASSIGNABLE_ROLES[normalizeCeoRole(user.role)] || 'Usuario');
+        const canAssignRole = Boolean(user.uid);
+        const currentRoleLabel = isFounder
+            ? 'Fundador / CEO'
+            : (canAssignRole ? (CEO_ASSIGNABLE_ROLES[normalizeCeoRole(user.role)] || 'Usuario') : 'Sin cuenta');
         const rowRole = isFounder ? 'founder_ceo' : normalizeCeoRole(user.role);
+        const sources = Array.from(user.sources || []);
+        const sourceHtml = sources.length
+            ? sources.map((source) => `<span class="admin-role-pill">${source}</span>`).join(' ')
+            : '<span class="admin-role-pill">desconocido</span>';
 
         return `
             <tr data-user-id="${user.uid}">
-                <td>${index + 1}</td>
-                <td>${user.email || 'sin correo'}</td>
-                <td>${user.name || 'Sin nombre'}</td>
-                <td><span class="admin-role-pill">${currentRoleLabel}</span></td>
-                <td>
-                    <select class="admin-role-select" data-role-select="${user.uid}" ${isFounder ? 'disabled' : ''}>
+                <td data-label="#">${index + 1}</td>
+                <td data-label="Correo">${user.email || 'sin correo'}</td>
+                <td data-label="Nombre">${user.name || 'Sin nombre'}</td>
+                <td data-label="Rol actual"><span class="admin-role-pill">${currentRoleLabel}</span></td>
+                <td data-label="Fuente">${sourceHtml}</td>
+                <td data-label="Nuevo rol">
+                    <select class="admin-role-select" data-role-select="${user.uid}" ${isFounder || !canAssignRole ? 'disabled' : ''}>
                         ${createRoleOptions(rowRole)}
                     </select>
                 </td>
-                <td>
-                    <button class="btn admin-role-save-btn" data-role-save="${user.uid}" ${isFounder ? 'disabled' : ''}>Guardar</button>
+                <td data-label="Accion">
+                    <button class="btn admin-role-save-btn" data-role-save="${user.uid}" ${isFounder || !canAssignRole ? 'disabled' : ''}>${canAssignRole ? 'Guardar' : 'N/A'}</button>
                 </td>
             </tr>
         `;
@@ -131,31 +216,63 @@ async function loadCeoUsers() {
 
     if (!window.db || !window.collection || !window.getDocs) {
         setCeoMessage('Firebase aun no esta disponible para cargar usuarios.', true);
-        ceoUsersTableBody.innerHTML = '<tr><td colspan="6">No se pudo cargar la lista.</td></tr>';
+        ceoUsersTableBody.innerHTML = '<tr><td colspan="7">No se pudo cargar la lista.</td></tr>';
         return;
     }
 
-    setCeoMessage('Cargando cuentas...');
+    setCeoMessage('Analizando correos en toda la base...');
 
     try {
-        const snapshot = await window.getDocs(window.collection(window.db, 'users'));
-        ceoUsersList = snapshot.docs.map((docSnap) => {
+        const emailIndexMap = new Map();
+
+        const usersSnapshot = await window.getDocs(window.collection(window.db, 'users'));
+        usersSnapshot.docs.forEach((docSnap) => {
             const data = docSnap.data() || {};
-            return {
+            const email = String(data.email || '').trim().toLowerCase();
+            if (!isValidEmailValue(email)) return;
+
+            addEmailToIndex(emailIndexMap, email, {
                 uid: docSnap.id,
-                email: String(data.email || '').trim(),
                 name: String(data.username || data.displayName || '').trim(),
-                role: isFounderEmail(data.email) ? 'founder_ceo' : normalizeCeoRole(data.role),
-                isAdmin: Boolean(data.isAdmin)
-            };
-        }).sort((a, b) => String(a.email).localeCompare(String(b.email), 'es'));
+                role: isFounderEmail(email) ? 'founder_ceo' : normalizeCeoRole(data.role),
+                isAdmin: Boolean(data.isAdmin),
+                sources: ['users']
+            });
+        });
+
+        const extraCollections = EMAIL_ANALYSIS_COLLECTIONS.filter((name) => name !== 'users');
+        const extraSnapshots = await Promise.all(
+            extraCollections.map(async (collectionName) => {
+                try {
+                    const snap = await window.getDocs(window.collection(window.db, collectionName));
+                    return { collectionName, snap, error: null };
+                } catch (error) {
+                    console.warn(`No se pudo leer la coleccion ${collectionName}:`, error);
+                    return { collectionName, snap: null, error };
+                }
+            })
+        );
+
+        extraSnapshots.forEach(({ collectionName, snap }) => {
+            if (!snap) return;
+            snap.docs.forEach((docSnap) => {
+                const data = docSnap.data() || {};
+                const emails = extractEmailsFromDoc(data, docSnap.id);
+                emails.forEach((email) => {
+                    addEmailToIndex(emailIndexMap, email, { sources: [collectionName] });
+                });
+            });
+        });
+
+        ceoUsersList = Array.from(emailIndexMap.values())
+            .sort((a, b) => String(a.email).localeCompare(String(b.email), 'es'));
 
         renderCeoUsersTable(ceoEmailSearchInput?.value || '');
-        setCeoMessage(`Usuarios cargados: ${ceoUsersList.length}`);
+        setCeoMessage(`Correos unicos analizados: ${ceoUsersList.length} (fuentes: ${EMAIL_ANALYSIS_COLLECTIONS.join(', ')})`);
     } catch (err) {
         console.error('Error cargando usuarios del CEO:', err);
-        setCeoMessage('Error cargando usuarios. Intenta nuevamente.', true);
-        ceoUsersTableBody.innerHTML = '<tr><td colspan="6">Error al cargar.</td></tr>';
+        setCeoMessage('Error analizando correos de la base. Intenta nuevamente.', true);
+        ceoUsersTableBody.innerHTML = '<tr><td colspan="7">Error al cargar.</td></tr>';
     }
 }
 
@@ -168,6 +285,10 @@ async function saveCeoUserRole(uid, role) {
     const normalizedRole = normalizeCeoRole(role);
     const userItem = ceoUsersList.find((item) => item.uid === uid);
     if (!userItem) return;
+    if (!userItem.uid) {
+        setCeoMessage('Este correo no tiene cuenta en users. No se puede asignar rol aun.', true);
+        return;
+    }
     if (isFounderEmail(userItem.email)) {
         setCeoMessage('La cuenta Fundador/CEO no puede ser modificada.', true);
         return;

@@ -2325,6 +2325,15 @@ footer {
     --admin-warn: #ffd082;
     --admin-danger: #ff8a8a;
     color-scheme: dark;
+    background:
+        radial-gradient(circle at 8% 12%, rgba(30, 112, 200, 0.2), transparent 32%),
+        radial-gradient(circle at 90% 18%, rgba(135, 206, 235, 0.12), transparent 28%),
+        linear-gradient(160deg, #090b10, #0d1118 55%, #0a0d13);
+    color: var(--admin-text-soft);
+}
+
+.admin-page section {
+    background-color: transparent;
 }
 
 .admin-welcome {
@@ -2399,6 +2408,10 @@ footer {
     letter-spacing: 0.04em;
 }
 
+.admin-users-section .admin-role-pill {
+    margin: 2px 6px 2px 0;
+}
+
 .admin-role-select {
     width: 100%;
     min-width: 150px;
@@ -2414,7 +2427,62 @@ footer {
     min-width: 110px;
 }
 
+.admin-page .btn {
+    color: #eaf6ff;
+}
+
+.admin-users-section {
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px solid var(--admin-line);
+    border-radius: 14px;
+    background: linear-gradient(165deg, rgba(14, 25, 39, 0.9), rgba(12, 16, 24, 0.96));
+}
+
+.admin-users-section .admin-section-header {
+    margin-bottom: 10px;
+}
+
+.admin-users-section .admin-section-intro {
+    margin: 0 0 10px;
+    color: #d3ebff;
+}
+
+.admin-users-section .admin-message {
+    color: #cde9ff;
+}
+
+.admin-users-section .admin-filter-row {
+    margin-bottom: 10px;
+}
+
+.admin-users-section .admin-filter-row input {
+    background: rgba(3, 8, 14, 0.88);
+    border-color: rgba(120, 195, 255, 0.45);
+    color: #f1f9ff;
+}
+
+.admin-users-section .admin-filter-row input::placeholder {
+    color: rgba(224, 240, 255, 0.55);
+}
+
 @media (max-width: 768px) {
+    .admin-users-section {
+        padding: 12px;
+        border-radius: 12px;
+    }
+
+    .admin-users-section .admin-section-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .admin-users-section .admin-section-header .btn {
+        width: 100%;
+        min-height: 42px;
+    }
+
     .admin-role-select {
         min-width: 130px;
         font-size: 0.9rem;
@@ -2424,6 +2492,75 @@ footer {
         min-width: 96px;
         padding: 9px 10px;
         font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 680px) {
+    .admin-users-section .admin-table {
+        min-width: 0;
+        border: 0;
+        background: transparent;
+    }
+
+    .admin-users-section .admin-table thead {
+        display: none;
+    }
+
+    .admin-users-section .admin-table tbody,
+    .admin-users-section .admin-table tr,
+    .admin-users-section .admin-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .admin-users-section .admin-table tr {
+        margin-bottom: 10px;
+        border: 1px solid rgba(120, 195, 255, 0.28);
+        border-radius: 12px;
+        background: rgba(11, 17, 27, 0.95);
+        overflow: hidden;
+    }
+
+    .admin-users-section .admin-table td {
+        border-bottom: 1px solid rgba(120, 195, 255, 0.16);
+        padding: 8px 10px;
+        display: grid;
+        grid-template-columns: 110px minmax(0, 1fr);
+        align-items: center;
+        gap: 8px;
+        font-size: 0.86rem;
+    }
+
+    .admin-users-section .admin-table td:last-child {
+        border-bottom: 0;
+    }
+
+    .admin-users-section .admin-table td::before {
+        content: attr(data-label);
+        color: #9fd4f4;
+        font-size: 0.7rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 700;
+    }
+
+    .admin-users-section .admin-table td[data-label="Fuente"] {
+        display: block;
+    }
+
+    .admin-users-section .admin-table td[data-label="Fuente"]::before {
+        display: block;
+        margin-bottom: 6px;
+    }
+
+    .admin-users-section .admin-role-save-btn {
+        width: 100%;
+        min-height: 40px;
+    }
+
+    .admin-users-section .admin-role-select {
+        min-width: 0;
+        width: 100%;
     }
 }
 

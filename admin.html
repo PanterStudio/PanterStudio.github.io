@@ -66,7 +66,7 @@
                     <h3>Gestión de Cuentas (CEO)</h3>
                     <button id="adminCeoRefreshUsersBtn" class="btn">Actualizar lista</button>
                 </header>
-                <p class="admin-section-intro">Consulta correos de la base de usuarios, filtra por búsqueda y asigna rol operativo: admin, youtuber, streamer, usuario o vip.</p>
+                <p class="admin-section-intro">Analiza correos de toda la base disponible (users, preregistros, donations y sponsors), filtra por búsqueda y asigna rol operativo cuando la cuenta exista en users.</p>
 
                 <div class="admin-filter-row">
                     <input type="search" id="adminCeoEmailSearch" placeholder="Buscar por correo o nombre">
@@ -82,13 +82,14 @@
                                 <th>Correo</th>
                                 <th>Nombre</th>
                                 <th>Rol actual</th>
+                                <th>Fuente</th>
                                 <th>Nuevo rol</th>
                                 <th>Acción</th>
                             </tr>
                         </thead>
                         <tbody id="adminCeoUsersTableBody">
                             <tr>
-                                <td colspan="6">Cargando usuarios...</td>
+                                <td colspan="7">Cargando usuarios...</td>
                             </tr>
                         </tbody>
                     </table>
