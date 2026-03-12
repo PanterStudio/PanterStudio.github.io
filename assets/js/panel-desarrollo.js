@@ -1,6 +1,15 @@
 const FOUNDER_CEO_EMAIL = 'pantergamey@gmail.com';
+const ADMIN_EMAILS_LS_KEY = 'panterAdminEmails';
+const DEFAULT_ADMIN_EMAILS = [
+    'pantergamey@gmail.com',
+    'panterstudiogamedev@gmail.com'
+];
 
 const ROLE_ALIASES = {
+    founder: 'founder_ceo',
+    ceo: 'founder_ceo',
+    fundador_ceo: 'founder_ceo',
+    'fundador / ceo': 'founder_ceo',
     admin: 'administrador',
     admin_general: 'administrador',
     developer: 'programador',
@@ -37,6 +46,18 @@ function normalizeRole(role) {
 
 function canAccessDevPanel(role) {
     return ALLOWED_PANEL_ROLES.has(normalizeRole(role));
+}
+
+function getConfiguredAdminEmails() {
+    try {
+        const fromStorage = JSON.parse(localStorage.getItem(ADMIN_EMAILS_LS_KEY) || '[]');
+        const storageEmails = Array.isArray(fromStorage) ? fromStorage : String(localStorage.getItem(ADMIN_EMAILS_LS_KEY) || '').split(',');
+        return [...new Set([...DEFAULT_ADMIN_EMAILS, ...storageEmails]
+            .map((email) => String(email || '').trim().toLowerCase())
+            .filter(Boolean))];
+    } catch {
+        return [...DEFAULT_ADMIN_EMAILS];
+    }
 }
 
 function setMessage(text, isError = false) {
@@ -117,6 +138,7 @@ async function resolveUserAccess(user) {
     const email = String(user?.email || '').trim().toLowerCase();
     if (!email) return { canAccess: false, role: 'usuario' };
     if (email === FOUNDER_CEO_EMAIL) return { canAccess: true, role: 'founder_ceo' };
+    if (getConfiguredAdminEmails().includes(email)) return { canAccess: true, role: 'administrador' };
 
     let role = 'usuario';
     try {
@@ -124,6 +146,7 @@ async function resolveUserAccess(user) {
         const profile = profileSnap.exists() ? profileSnap.data() || {} : {};
         role = normalizeRole(profile.role || 'usuario');
         if (profile.isAdmin === true && role === 'usuario') role = 'administrador';
+        if (role === 'founder_ceo') return { canAccess: true, role };
     } catch (err) {
         console.error('No se pudo resolver el rol para panel desarrollo:', err);
     }
