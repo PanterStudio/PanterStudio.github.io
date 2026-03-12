@@ -348,12 +348,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const modal = document.getElementById('authModal');
         const closeBtn = document.getElementById('authModalCloseBtn');
         const loginOpenBtn = document.getElementById('loginAuthBtn');
+        const tabRegister = document.getElementById('authTabRegister');
+        const tabLogin = document.getElementById('authTabLogin');
+        const registerForm = document.getElementById('authRegisterForm');
         const loginForm = document.getElementById('authLoginForm');
         const message = document.getElementById('authModalMessage');
 
-        if (!modal || !loginOpenBtn || !loginForm || !message) return;
+        if (!modal || !loginOpenBtn || !tabRegister || !tabLogin || !registerForm || !loginForm || !message) return;
+
+        function setMode(mode) {
+            const isRegister = mode === 'register';
+            tabRegister.classList.toggle('active', isRegister);
+            tabLogin.classList.toggle('active', !isRegister);
+            registerForm.hidden = !isRegister;
+            loginForm.hidden = isRegister;
+            message.textContent = '';
+        }
 
         function openModal() {
+            setMode('login');
             message.textContent = '';
             modal.hidden = false;
             document.body.style.overflow = 'hidden';
@@ -367,6 +380,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         loginOpenBtn.addEventListener('click', openModal);
+        tabRegister.addEventListener('click', () => setMode('register'));
+        tabLogin.addEventListener('click', () => setMode('login'));
 
         modal.addEventListener('click', (event) => {
             const closeByOverlay = event.target instanceof HTMLElement && event.target.dataset.authClose === 'true';
@@ -389,11 +404,12 @@ document.addEventListener('DOMContentLoaded', () => {
     async function setupUserAuth() {
         if (userAuthInitialized) return;
         const modal = document.getElementById('authModal');
+        const registerForm = document.getElementById('authRegisterForm');
         const loginForm = document.getElementById('authLoginForm');
         const message = document.getElementById('authModalMessage');
         const googleBtn = document.getElementById('googleAuthModalBtn');
         const logoutBtn = document.getElementById('logoutAuthBtn');
-        if (!logoutBtn || !loginForm || !message || !googleBtn) return;
+        if (!logoutBtn || !registerForm || !loginForm || !message || !googleBtn) return;
         userAuthInitialized = true;
         let authObserverBound = false;
 
@@ -436,6 +452,48 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         ensureAuthReady(false);
+
+        registerForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            if (!(await ensureAuthReady(true))) return;
+            const nameInput = document.getElementById('authRegisterName');
+            const emailInput = document.getElementById('authRegisterEmail');
+            const passInput = document.getElementById('authRegisterPassword');
+            const username = nameInput?.value.trim() || '';
+            const email = emailInput?.value.trim() || '';
+            const password = passInput?.value || '';
+
+            if (!username) {
+                message.textContent = 'Ingresa un nombre de usuario.';
+                return;
+            }
+            if (!USERNAME_REGEX.test(username)) {
+                message.textContent = 'Nombre invalido. Solo letras, numeros y guion bajo (3-24 caracteres).';
+                return;
+            }
+
+            try {
+                message.textContent = 'Verificando nombre de usuario...';
+                const taken = await isUsernameTaken(username);
+                if (taken) {
+                    const suggs = generateSuggestions(username);
+                    message.textContent = `"${username}" ya está en uso. Prueba: ${suggs.slice(0, 3).join(', ')}`;
+                    return;
+                }
+                message.textContent = 'Creando cuenta...';
+                const credential = await window.createUserWithEmailAndPassword(window.auth, email, password);
+                if (credential?.user) {
+                    await saveUserProfile(credential.user, username);
+                }
+                message.textContent = '¡Cuenta creada! Bienvenido.';
+                registerForm.reset();
+                if (modal) modal.hidden = true;
+                document.body.style.overflow = 'auto';
+            } catch (err) {
+                console.error('Error en registro:', err);
+                message.textContent = `Error: ${getAuthErrorMessage(err)}`;
+            }
+        });
 
         loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -643,22 +701,47 @@ document.addEventListener('DOMContentLoaded', () => {
             const ready = await waitForFirebase();
             if (ready) {
                 try {
-                    // Usar email como ID del documento para prevenir duplicados
-                    const docRef = window.fsDoc(window.db, 'preregistros', emailNorm);
-                    await window.setDoc(docRef, {
-                        email: emailNorm,
-                        date: new Date().toISOString()
-                    }, { merge: false });
-                    return;
+                        // Verificacion explicita para no sobrescribir registros existentes.
+                        const docRef = window.fsDoc(window.db, 'preregistros', emailNorm);
+                        const existing = await window.getDoc(docRef);
+                        if (existing.exists()) {
+                            const err = new Error('EMAIL_EXISTS');
+                            err.code = 'email-already-registered';
+                            throw err;
+                        }
+                        await window.setDoc(docRef, {
+                            email: emailNorm,
+                            date: new Date().toISOString()
+                        }, { merge: false });
+                        return;
                 } catch (e) {
                     console.error('Firebase error al guardar:', e);
-                    if (e.code === 'permission-denied' || e.code === 'already-exists') throw e;
+                        if (e.code === 'permission-denied' || e.code === 'already-exists' || e.code === 'email-already-registered') throw e;
                     // Sino cae a local
                 }
             }
         }
         saveRegistroLS(emailNorm);
     }
+
+        async function isEmailAlreadyRegistered(email) {
+            const emailNorm = email.trim().toLowerCase();
+
+            if (USE_FIREBASE) {
+                const ready = await waitForFirebase(3000);
+                if (ready && window.db && window.fsDoc && window.getDoc) {
+                    try {
+                        const docRef = window.fsDoc(window.db, 'preregistros', emailNorm);
+                        const existing = await window.getDoc(docRef);
+                        if (existing.exists()) return true;
+                    } catch (e) {
+                        console.warn('No se pudo verificar duplicado en Firebase, se revisa local:', e);
+                    }
+                }
+            }
+
+            return getRegistrosLS().some((r) => String(r?.email || '').toLowerCase() === emailNorm);
+        }
 
     async function getRegistros(callback) {
         if (USE_FIREBASE) {
@@ -954,20 +1037,32 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const email = document.getElementById('email').value;
+            const emailNorm = email.trim().toLowerCase();
+            const msgEl = document.getElementById('message');
+
+            if (await isEmailAlreadyRegistered(emailNorm)) {
+                if (msgEl) {
+                    msgEl.textContent = 'Este correo ya esta registrado. Usa otro correo o inicia sesion.';
+                }
+                alert('Ese correo ya existe en el pre-registro.');
+                return;
+            }
+
             try {
-                await saveRegistro(email);
+                await saveRegistro(emailNorm);
                 preregistrosActuales++;
                 updateCounter();
                 const position = preregistrosActuales;
-                const msgEl = document.getElementById('message');
                 msgEl.textContent = '¡Pre-registro exitoso! Enviando correo de confirmación...';
                 preregistroForm.reset();
-                const emailSent = await sendConfirmationEmail(email, position);
+                const emailSent = await sendConfirmationEmail(emailNorm, position);
                 msgEl.textContent = emailSent
                     ? '¡Listo! Revisa tu correo, te enviamos la confirmación.'
                     : '¡Pre-registro exitoso! (Correo de confirmación no disponible en este momento)';
             } catch (error) {
-                document.getElementById('message').textContent = 'Este email ya está registrado.';
+                if (msgEl) {
+                    msgEl.textContent = 'Este correo ya esta registrado. No se envio ningun correo.';
+                }
             }
         });
     }
