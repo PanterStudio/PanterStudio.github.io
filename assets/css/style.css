@@ -2325,6 +2325,10 @@ footer {
     -webkit-backdrop-filter: blur(4px);
 }
 
+.admin-welcome[hidden] {
+    display: none !important;
+}
+
 .admin-welcome-card {
     width: min(560px, 92vw);
     padding: 24px 22px;
