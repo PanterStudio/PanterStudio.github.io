@@ -27,6 +27,8 @@ const typeFilter = document.getElementById('devHubTypeFilter');
 const projectsGrid = document.getElementById('devHubProjectsGrid');
 
 let projects = [];
+let accessResolved = false;
+let accessTimeoutId = null;
 
 function normalizeRole(role) {
     const normalizedRaw = String(role || '').trim().toLowerCase();
@@ -55,6 +57,30 @@ function showGateError(text) {
 function showPanel() {
     if (gate) gate.hidden = true;
     if (panel) panel.hidden = false;
+}
+
+function clearAccessTimeout() {
+    if (accessTimeoutId) {
+        clearTimeout(accessTimeoutId);
+        accessTimeoutId = null;
+    }
+}
+
+function startAccessTimeout() {
+    clearAccessTimeout();
+    accessTimeoutId = setTimeout(() => {
+        if (accessResolved) return;
+
+        if (window.auth?.currentUser) {
+            onAuthStateResolved(window.auth.currentUser).catch((err) => {
+                console.error('Error resolviendo acceso por fallback:', err);
+                redirectToHome('No se pudo validar tu rol en el tiempo esperado.');
+            });
+            return;
+        }
+
+        redirectToHome('No se detecto una sesion valida tras 3 segundos.');
+    }, 3000);
 }
 
 function redirectToHome(msg) {
@@ -248,7 +274,11 @@ function bindEvents() {
     if (typeFilter) typeFilter.addEventListener('change', renderProjects);
 }
 
-async function onAuthStateChanged(user) {
+async function onAuthStateResolved(user) {
+    if (accessResolved) return;
+    accessResolved = true;
+    clearAccessTimeout();
+
     if (!user) {
         redirectToHome('Debes iniciar sesion para acceder al Panel Desarrollo.');
         return;
@@ -266,15 +296,23 @@ async function onAuthStateChanged(user) {
 
 async function init() {
     bindEvents();
+    startAccessTimeout();
 
-    const ready = await waitForFirebaseReady();
+    const ready = await waitForFirebaseReady(3000);
     if (!ready) {
-        showGateError('Firebase no cargo a tiempo. Recarga la pagina.');
+        if (window.auth?.currentUser) {
+            onAuthStateResolved(window.auth.currentUser).catch((err) => {
+                console.error('Error resolviendo sesion actual:', err);
+                redirectToHome('No se pudo validar tu acceso al Panel Desarrollo.');
+            });
+            return;
+        }
+        redirectToHome('Firebase no cargo a tiempo para validar permisos.');
         return;
     }
 
     window.onAuthStateChanged(window.auth, (user) => {
-        onAuthStateChanged(user).catch((err) => {
+        onAuthStateResolved(user).catch((err) => {
             console.error('Error validando panel desarrollo:', err);
             redirectToHome('No se pudo validar la sesion en Panel Desarrollo.');
         });

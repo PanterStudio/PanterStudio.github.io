@@ -71,6 +71,8 @@ const projectStatus = String(params.get('projectStatus') || 'development').trim(
 
 let tasks = [];
 let currentUser = null;
+let accessResolved = false;
+let accessTimeoutId = null;
 
 function normalizeRole(role) {
     const normalizedRaw = String(role || '').trim().toLowerCase();
@@ -99,6 +101,30 @@ function showGateError(text) {
 function showPanel() {
     if (gate) gate.hidden = true;
     if (panel) panel.hidden = false;
+}
+
+function clearAccessTimeout() {
+    if (accessTimeoutId) {
+        clearTimeout(accessTimeoutId);
+        accessTimeoutId = null;
+    }
+}
+
+function startAccessTimeout() {
+    clearAccessTimeout();
+    accessTimeoutId = setTimeout(() => {
+        if (accessResolved) return;
+
+        if (window.auth?.currentUser) {
+            handleAuthResolved(window.auth.currentUser).catch((err) => {
+                console.error('Error resolviendo acceso al proyecto por fallback:', err);
+                redirectToList('No se pudo validar tu rol para el proyecto.');
+            });
+            return;
+        }
+
+        redirectToList('No se detecto una sesion valida tras 3 segundos.');
+    }, 3000);
 }
 
 function redirectToList(msg) {
@@ -438,7 +464,11 @@ function bindEvents() {
     bindBoardEvents();
 }
 
-async function handleAuth(user) {
+async function handleAuthResolved(user) {
+    if (accessResolved) return;
+    accessResolved = true;
+    clearAccessTimeout();
+
     currentUser = user;
     if (!user) {
         redirectToList('Debes iniciar sesion para continuar.');
@@ -463,15 +493,23 @@ async function handleAuth(user) {
 
 async function init() {
     bindEvents();
+    startAccessTimeout();
 
-    const ready = await waitForFirebaseReady();
+    const ready = await waitForFirebaseReady(3000);
     if (!ready) {
-        showGateError('Firebase no cargo a tiempo. Recarga la pagina.');
+        if (window.auth?.currentUser) {
+            handleAuthResolved(window.auth.currentUser).catch((err) => {
+                console.error('Error resolviendo sesion actual del proyecto:', err);
+                redirectToList('No se pudo validar acceso al proyecto.');
+            });
+            return;
+        }
+        redirectToList('Firebase no cargo a tiempo para validar permisos.');
         return;
     }
 
     window.onAuthStateChanged(window.auth, (user) => {
-        handleAuth(user).catch((err) => {
+        handleAuthResolved(user).catch((err) => {
             console.error('Error iniciando panel de proyecto:', err);
             redirectToList('No se pudo validar acceso al proyecto.');
         });
