@@ -2386,6 +2386,47 @@ footer {
     animation: adminWelcomeBar 1.6s linear infinite;
 }
 
+.admin-role-pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(135, 206, 235, 0.45);
+    background: rgba(30, 112, 200, 0.18);
+    color: #d7efff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.admin-role-select {
+    width: 100%;
+    min-width: 150px;
+    background: rgba(0, 0, 0, 0.58);
+    border: 1px solid rgba(135, 206, 235, 0.45);
+    border-radius: 10px;
+    color: #e8f6ff;
+    padding: 8px 10px;
+}
+
+.admin-role-save-btn {
+    white-space: nowrap;
+    min-width: 110px;
+}
+
+@media (max-width: 768px) {
+    .admin-role-select {
+        min-width: 130px;
+        font-size: 0.9rem;
+    }
+
+    .admin-role-save-btn {
+        min-width: 96px;
+        padding: 9px 10px;
+        font-size: 0.9rem;
+    }
+}
+
 @keyframes adminWelcomeIn {
     0% {
         opacity: 0;
