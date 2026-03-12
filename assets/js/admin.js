@@ -42,7 +42,6 @@ let currentSponsors = [];
 const loginCard = document.getElementById('adminLoginCard');
 const panel = document.getElementById('adminPanel');
 const loginMessage = document.getElementById('adminLoginMessage');
-const sessionRetryBtn = document.getElementById('adminSessionRetryBtn');
 
 const totalEl = document.getElementById('adminTotalRegistros');
 const disponiblesEl = document.getElementById('adminDisponibles');
@@ -1021,19 +1020,24 @@ function showLogin() {
     panel.hidden = true;
 }
 
+function redirectToHome(message) {
+    loginMessage.textContent = message;
+    loginMessage.className = 'admin-message error';
+    showLogin();
+    setTimeout(() => {
+        window.location.href = 'index.html';
+    }, 1400);
+}
+
 function handleAuthStateChange(user) {
     currentUser = user;
     if (!user) {
-        loginMessage.textContent = 'Inicia sesión desde Inicio con una cuenta admin para acceder aquí.';
-        loginMessage.className = 'admin-message';
-        showLogin();
+        redirectToHome('Debes iniciar sesión con una cuenta admin para acceder al panel.');
         return;
     }
 
     if (!isAdminEmail(user.email || '')) {
-        loginMessage.textContent = 'Tu cuenta inició sesión, pero no tiene permisos de administrador.';
-        loginMessage.className = 'admin-message error';
-        showLogin();
+        redirectToHome('Tu cuenta no tiene permisos de administrador.');
         return;
     }
 
@@ -1051,21 +1055,6 @@ async function handleLogout() {
 }
 
 // Events
-if (sessionRetryBtn) {
-    sessionRetryBtn.addEventListener('click', async () => {
-        loginMessage.textContent = 'Revisando sesión actual...';
-        loginMessage.className = 'admin-message';
-        try {
-            await waitForFirebaseAuth();
-            handleAuthStateChange(window.auth.currentUser || null);
-        } catch (err) {
-            console.error('Session check error:', err);
-            loginMessage.textContent = 'No se pudo comprobar la sesión actual.';
-            loginMessage.className = 'admin-message error';
-        }
-    });
-}
-
 refreshBtn.addEventListener('click', loadAllDashboardData);
 exportBtn.addEventListener('click', exportCSV);
 backupBtn.addEventListener('click', exportBackupJSON);
