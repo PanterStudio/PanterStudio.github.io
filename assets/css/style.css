@@ -1459,7 +1459,7 @@ footer {
     padding: 0 16px;
 }
 
-.admin-login-card,
+.admin-gate,
 .admin-panel {
     background: rgba(9, 14, 24, 0.88);
     border: 1px solid rgba(30, 112, 200, 0.45);
@@ -1467,23 +1467,9 @@ footer {
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
 }
 
-.admin-login-card {
+.admin-gate {
     max-width: 460px;
     margin: 70px auto;
-
-.admin-login-help {
-    margin: 0 auto 1rem;
-    max-width: 480px;
-    line-height: 1.6;
-}
-
-.admin-login-actions {
-    display: flex;
-    justify-content: center;
-    gap: 0.8rem;
-    flex-wrap: wrap;
-    margin-top: 1.2rem;
-}
     padding: 26px;
     text-align: center;
 }
@@ -1493,12 +1479,12 @@ footer {
     margin-bottom: 10px;
 }
 
-.admin-login-card h1 {
+.admin-gate h1 {
     margin: 8px 0;
     color: #fff;
 }
 
-.admin-login-card p {
+.admin-gate p {
     color: #bcdcf5;
     margin-top: 0;
 }
@@ -2023,7 +2009,7 @@ footer {
 }
 
 @media (max-width: 768px) {
-    .admin-login-card {
+    .admin-gate {
         margin: 30px auto;
         padding: 18px;
     }

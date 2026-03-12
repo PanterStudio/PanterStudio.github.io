@@ -39,9 +39,9 @@ let currentDonations = [];
 let currentSponsors = [];
 
 // DOM
-const loginCard = document.getElementById('adminLoginCard');
+const gate = document.getElementById('adminGate');
 const panel = document.getElementById('adminPanel');
-const loginMessage = document.getElementById('adminLoginMessage');
+const gateMessage = document.getElementById('adminGateMessage');
 
 const totalEl = document.getElementById('adminTotalRegistros');
 const disponiblesEl = document.getElementById('adminDisponibles');
@@ -1010,22 +1010,20 @@ async function loadAllDashboardData() {
 }
 
 function showPanel() {
-    loginCard.hidden = true;
+    if (gate) gate.hidden = true;
     panel.hidden = false;
     loadAllDashboardData();
 }
 
-function showLogin() {
-    loginCard.hidden = false;
-    panel.hidden = true;
-}
-
 function redirectToHome(message) {
-    loginMessage.textContent = message;
-    loginMessage.className = 'admin-message error';
-    showLogin();
+    if (gateMessage) {
+        gateMessage.textContent = message;
+        gateMessage.className = 'admin-message error';
+    }
+    if (gate) gate.hidden = false;
+    panel.hidden = true;
     setTimeout(() => {
-        window.location.href = 'index.html';
+        window.location.replace('index.html');
     }, 1400);
 }
 
@@ -1041,8 +1039,10 @@ function handleAuthStateChange(user) {
         return;
     }
 
-    loginMessage.textContent = '';
-    loginMessage.className = 'admin-message';
+    if (gateMessage) {
+        gateMessage.textContent = '';
+        gateMessage.className = 'admin-message';
+    }
     showPanel();
 }
 
@@ -1274,11 +1274,17 @@ document.querySelectorAll('[data-close-modal]').forEach((btn) => {
 
 (async function init() {
     try {
+        if (gateMessage) {
+            gateMessage.textContent = 'Verificando acceso...';
+            gateMessage.className = 'admin-message';
+        }
         await waitForFirebaseAuth();
         window.onAuthStateChanged(window.auth, handleAuthStateChange);
     } catch (err) {
         console.error('Error inicializando auth:', err);
-        loginMessage.textContent = 'Error: Firebase no cargo correctamente';
-        loginMessage.className = 'error';
+        if (gateMessage) {
+            gateMessage.textContent = 'Error: Firebase no cargo correctamente';
+            gateMessage.className = 'admin-message error';
+        }
     }
 })();
