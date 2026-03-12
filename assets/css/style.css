@@ -2294,6 +2294,410 @@ footer {
     border-top: 3px solid #1e70c8;
 }
 
+/* ===== ADMIN VISIBILITY + MOBILE REFRESH ===== */
+.admin-page {
+    --admin-bg-0: #071019;
+    --admin-bg-1: #0f1a27;
+    --admin-bg-2: #13253a;
+    --admin-surface: #122033;
+    --admin-surface-2: #162a43;
+    --admin-line: rgba(120, 195, 255, 0.32);
+    --admin-line-strong: rgba(120, 195, 255, 0.52);
+    --admin-text: #eef7ff;
+    --admin-text-soft: #c9e3f6;
+    --admin-accent: #5bb7ff;
+    --admin-accent-2: #7fd1ff;
+    --admin-ok: #37d68b;
+    --admin-warn: #ffd070;
+    --admin-danger: #ff7f7f;
+}
+
+.admin-bg-glow {
+    background:
+        radial-gradient(circle at 12% 10%, rgba(91, 183, 255, 0.32), transparent 34%),
+        radial-gradient(circle at 88% 16%, rgba(255, 208, 112, 0.18), transparent 32%),
+        radial-gradient(circle at 48% 92%, rgba(127, 209, 255, 0.12), transparent 30%);
+}
+
+.admin-gate,
+.admin-panel {
+    border: 1px solid var(--admin-line);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.42);
+}
+
+.admin-panel {
+    background:
+        radial-gradient(circle at 0% 0%, rgba(91, 183, 255, 0.13), transparent 32%),
+        linear-gradient(160deg, rgba(15, 29, 45, 0.98), rgba(10, 19, 30, 0.98));
+}
+
+.admin-hero {
+    border-color: var(--admin-line-strong);
+    background:
+        linear-gradient(145deg, rgba(21, 39, 60, 0.98), rgba(14, 28, 45, 0.98)),
+        linear-gradient(120deg, rgba(91, 183, 255, 0.2), transparent 65%);
+}
+
+.admin-kicker,
+.admin-workspace-nav a,
+.admin-chip,
+.admin-news-state,
+.game-tag {
+    border-color: var(--admin-line);
+}
+
+.admin-gate h1,
+.admin-hero-copy h2,
+.admin-topbar h2,
+.admin-section-header h3,
+.admin-quick-card h4,
+.admin-table-wrap h3,
+.admin-modal-form h3,
+.game-card-body h4,
+.admin-news-top-row h4 {
+    color: var(--admin-text);
+}
+
+.admin-gate p,
+.admin-hero-copy p,
+.admin-section-intro,
+.admin-topbar p,
+.admin-presence-label,
+.admin-role-card p,
+.admin-quick-card p,
+.admin-news-body p,
+.admin-news-body small,
+.admin-settings-form label,
+.admin-modal-form label,
+.admin-message {
+    color: var(--admin-text-soft);
+}
+
+.admin-presence-card,
+.admin-role-card,
+.admin-stat-card,
+.admin-quick-card,
+.admin-news-card,
+.game-card,
+.admin-modal,
+.admin-table {
+    border-color: var(--admin-line);
+}
+
+.admin-presence-card,
+.admin-role-card,
+.admin-stat-card,
+.admin-quick-card,
+.admin-news-card,
+.game-card,
+.admin-modal {
+    background-color: var(--admin-surface);
+}
+
+.admin-stat-card {
+    background: linear-gradient(165deg, rgba(91, 183, 255, 0.18), rgba(16, 30, 47, 0.98));
+}
+
+.admin-stat-card strong {
+    color: #ffffff;
+    text-shadow: 0 0 14px rgba(91, 183, 255, 0.25);
+}
+
+.admin-filter-row input,
+.admin-filter-row select,
+.admin-settings-form input,
+.admin-settings-form textarea,
+.admin-modal-form input,
+.admin-modal-form textarea,
+.admin-modal-form select,
+.admin-mini-form input,
+.admin-mini-form select,
+.admin-mini-form textarea {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    border: 1px solid var(--admin-line-strong);
+    border-radius: 10px;
+}
+
+.admin-filter-row input::placeholder,
+.admin-settings-form input::placeholder,
+.admin-settings-form textarea::placeholder,
+.admin-modal-form input::placeholder,
+.admin-modal-form textarea::placeholder {
+    color: rgba(224, 240, 255, 0.62);
+}
+
+.admin-filter-row input:focus,
+.admin-filter-row select:focus,
+.admin-settings-form input:focus,
+.admin-settings-form textarea:focus,
+.admin-modal-form input:focus,
+.admin-modal-form textarea:focus,
+.admin-modal-form select:focus,
+.admin-mini-form input:focus,
+.admin-mini-form select:focus,
+.admin-mini-form textarea:focus {
+    outline: none;
+    border-color: var(--admin-accent-2);
+    box-shadow: 0 0 0 3px rgba(127, 209, 255, 0.25);
+}
+
+.admin-table {
+    border: 1px solid var(--admin-line);
+    border-radius: 12px;
+    overflow: hidden;
+    min-width: 760px;
+    background: rgba(14, 25, 39, 0.88);
+}
+
+.admin-table th,
+.admin-table td {
+    border-bottom: 1px solid rgba(120, 195, 255, 0.22);
+}
+
+.admin-table th {
+    background: rgba(91, 183, 255, 0.16);
+    color: #eff8ff;
+}
+
+.admin-table tbody tr:nth-child(odd) {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.admin-table tbody tr:hover {
+    background: rgba(127, 209, 255, 0.1);
+}
+
+.btn-small {
+    border-radius: 8px;
+    background: linear-gradient(135deg, #2f9cf7, #60bbff);
+    color: #03121f;
+    font-weight: 700;
+}
+
+.btn-small:hover {
+    background: linear-gradient(135deg, #60bbff, #85cfff);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef5350, #ff8a80);
+    color: #2a0909;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #ff8a80, #ffaea8);
+}
+
+.admin-modal {
+    width: min(720px, 94vw);
+    max-height: 88vh;
+    overflow: auto;
+    border-radius: 16px;
+}
+
+.admin-modal-form {
+    padding: 22px;
+}
+
+.admin-modal-actions {
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 1024px) {
+    .admin-shell {
+        max-width: 100%;
+        margin: 18px auto;
+        padding: 0 12px;
+    }
+
+    .admin-panel {
+        padding: 16px;
+    }
+
+    .admin-hero {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-presence-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-top-actions {
+        width: 100%;
+    }
+
+    .admin-top-actions .btn {
+        flex: 1 1 180px;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-shell {
+        margin: 10px auto;
+        padding: 0 8px;
+    }
+
+    .admin-gate,
+    .admin-panel {
+        border-radius: 12px;
+    }
+
+    .admin-hero {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+    .admin-kicker {
+        font-size: 0.68rem;
+        padding: 5px 10px;
+    }
+
+    .admin-hero-copy h2 {
+        font-size: clamp(1.35rem, 6vw, 1.8rem);
+        line-height: 1.2;
+    }
+
+    .admin-hero-copy p,
+    .admin-section-intro,
+    .admin-role-card p,
+    .admin-quick-card p {
+        font-size: 0.9rem;
+        line-height: 1.55;
+    }
+
+    .admin-presence-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .admin-workspace-nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .admin-workspace-nav a {
+        width: 100%;
+        text-align: center;
+        padding: 9px 10px;
+        font-size: 0.78rem;
+    }
+
+    .admin-topbar {
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .admin-top-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        gap: 8px;
+    }
+
+    .admin-top-actions .btn,
+    .admin-section-header .btn,
+    .admin-header-actions .btn {
+        width: 100%;
+        min-height: 40px;
+        font-size: 0.82rem;
+        padding: 8px 10px;
+    }
+
+    .admin-stats-grid,
+    .admin-quick-grid,
+    .admin-games-grid,
+    .admin-news-grid,
+    .admin-tiers-grid,
+    .admin-donations-summary {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .admin-stat-card,
+    .admin-quick-card,
+    .game-card,
+    .admin-news-card,
+    .admin-tier-card {
+        padding: 12px;
+        border-radius: 12px;
+    }
+
+    .admin-filter-row,
+    .admin-settings-grid,
+    .admin-switches {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .admin-switches label {
+        width: 100%;
+    }
+
+    .admin-table {
+        min-width: 620px;
+    }
+
+    .admin-table th,
+    .admin-table td {
+        padding: 8px;
+        font-size: 0.8rem;
+    }
+
+    .admin-chip {
+        font-size: 0.7rem;
+    }
+
+    .game-card-image,
+    .admin-news-image {
+        height: 150px;
+    }
+
+    .game-card-actions,
+    .admin-modal-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .btn-small {
+        width: 100%;
+        min-height: 36px;
+        padding: 6px 8px;
+        font-size: 0.75rem;
+    }
+
+    .admin-modal {
+        width: calc(100vw - 14px);
+        max-height: 92vh;
+        border-radius: 12px;
+    }
+
+    .admin-modal-form {
+        padding: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-workspace-nav {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-top-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-table {
+        min-width: 560px;
+    }
+
+    .admin-modal-actions,
+    .game-card-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
 .dark-mode .card {
     background-color: #1e1e1e;
     border: 1px solid #333;
