@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#1e70c8">
+    <title>Releases - Panter Studio</title>
+    <link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <script src="../../assets/js/core/firebase-config.js"></script>
+</head>
+<body class="dev-studio-page" data-site-root="../..">
+
+    <!-- Gate -->
+    <div class="dev-studio-gate" id="relGate">
+        <img src="https://i.imgur.com/GYjAGS7.png" alt="Panter Studio">
+        <h1>Releases</h1>
+        <p id="relGateMessage">Verificando acceso...</p>
+    </div>
+
+    <!-- Sidebar toggle -->
+    <button class="dev-sidebar-toggle" id="relSidebarToggle">☰</button>
+
+    <!-- Sidebar -->
+    <nav class="dev-sidebar" id="relSidebar">
+        <div class="dev-sidebar-header">
+            <img src="https://i.imgur.com/GYjAGS7.png" alt="Logo" class="dev-sidebar-logo">
+            <div class="dev-sidebar-brand">
+                Panter Studio
+                <small>Releases</small>
+            </div>
+        </div>
+
+        <div class="dev-sidebar-section">
+            <span class="dev-sidebar-section-label">Dev Hub</span>
+            <a class="dev-nav-link" href="panel-desarrollo.html">
+                <span class="dev-nav-icon">🏠</span> Proyectos
+            </a>
+        </div>
+
+        <div class="dev-sidebar-section">
+            <span class="dev-sidebar-section-label">Herramientas</span>
+            <a class="dev-nav-link active" href="releases.html">
+                <span class="dev-nav-icon">📦</span> Releases
+            </a>
+            <a class="dev-nav-link" href="bugs.html">
+                <span class="dev-nav-icon">🐛</span> Bug Tracker
+            </a>
+            <a class="dev-nav-link" href="ideas.html">
+                <span class="dev-nav-icon">💡</span> Ideas Board
+            </a>
+        </div>
+
+        <div class="dev-sidebar-section">
+            <span class="dev-sidebar-section-label">Cuenta</span>
+            <span class="dev-nav-link dev-muted" id="relUserLabel" style="cursor:default;">—</span>
+            <button class="dev-nav-link" id="relLogoutBtn">
+                <span class="dev-nav-icon">🚪</span> Cerrar sesion
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <div class="dev-main-content" id="relPanel" hidden>
+
+        <!-- Topbar -->
+        <div class="dev-topbar-strip">
+            <div class="dev-topbar-left">
+                <h2>Releases</h2>
+                <p>Registro de builds y versiones publicadas</p>
+            </div>
+            <div class="dev-topbar-right">
+                <button class="dev-btn" id="relReloadBtn">↻ Recargar</button>
+            </div>
+        </div>
+
+        <div class="dev-page-body">
+
+            <!-- KPIs -->
+            <div class="dev-kpi-row">
+                <div class="dev-kpi-card">
+                    <span class="dev-kpi-label">Total releases</span>
+                    <span class="dev-kpi-value" id="relTotal">0</span>
+                </div>
+                <div class="dev-kpi-card accent-green">
+                    <span class="dev-kpi-label">Publicas</span>
+                    <span class="dev-kpi-value" id="relPublic">0</span>
+                </div>
+                <div class="dev-kpi-card accent-yellow">
+                    <span class="dev-kpi-label">Beta</span>
+                    <span class="dev-kpi-value" id="relBeta">0</span>
+                </div>
+                <div class="dev-kpi-card accent-red">
+                    <span class="dev-kpi-label">Internas / Alpha</span>
+                    <span class="dev-kpi-value" id="relAlpha">0</span>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:14px;align-items:start;">
+
+                <!-- Upload form -->
+                <div class="dev-card">
+                    <h3 id="relFormTitle">Subir release</h3>
+                    <form id="relForm" class="dev-form">
+                        <input type="hidden" id="relId">
+                        <div>
+                            <label>Proyecto</label>
+                            <input type="text" id="relProject" required placeholder="Nombre del juego / app">
+                        </div>
+                        <div class="dev-form-row">
+                            <div>
+                                <label>Version</label>
+                                <input type="text" id="relVersion" required placeholder="v0.3.0-beta">
+                            </div>
+                            <div>
+                                <label>Tipo</label>
+                                <select id="relType">
+                                    <option value="alpha">Alpha</option>
+                                    <option value="beta" selected>Beta</option>
+                                    <option value="interna">Interna</option>
+                                    <option value="publica">Publica</option>
+                                    <option value="hotfix">Hotfix</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label>Plataforma(s)</label>
+                            <input type="text" id="relPlatform" placeholder="PC, Android, Web...">
+                        </div>
+                        <div>
+                            <label>Enlace de descarga</label>
+                            <input type="url" id="relDownloadUrl" placeholder="https://...">
+                        </div>
+                        <div>
+                            <label>Tamano del build</label>
+                            <input type="text" id="relSize" placeholder="120 MB">
+                        </div>
+                        <div>
+                            <label>Fecha de publicacion</label>
+                            <input type="date" id="relDate">
+                        </div>
+                        <div>
+                            <label>Notas del release (changelog)</label>
+                            <textarea id="relNotes" rows="5" placeholder="- Se agrego sistema de inventario&#10;- Correcciones de rendimiento&#10;- Nuevo nivel: Cavernas profundas"></textarea>
+                        </div>
+                        <div class="dev-form-actions">
+                            <button type="submit" class="dev-btn dev-btn-primary">Guardar release</button>
+                            <button type="button" id="relResetBtn" class="dev-btn">Limpiar</button>
+                        </div>
+                    </form>
+                    <p id="relMessage" class="dev-msg" style="margin-top:8px;"></p>
+                </div>
+
+                <!-- Releases list -->
+                <div>
+                    <div class="dev-filter-bar" style="margin-bottom:10px;">
+                        <input type="search" id="relSearch" placeholder="Buscar por proyecto, version...">
+                        <select id="relTypeFilter">
+                            <option value="all">Todos los tipos</option>
+                            <option value="alpha">Alpha</option>
+                            <option value="beta">Beta</option>
+                            <option value="interna">Interna</option>
+                            <option value="publica">Publica</option>
+                            <option value="hotfix">Hotfix</option>
+                        </select>
+                        <select id="relProjectFilter">
+                            <option value="all">Todos los proyectos</option>
+                        </select>
+                    </div>
+                    <div id="relList">
+                        <p class="dev-empty">Sin releases registrados aun.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../assets/js/admin/releases.js"></script>
+</body>
+</html>

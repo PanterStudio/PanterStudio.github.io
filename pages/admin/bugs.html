@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#1e70c8">
+    <title>Bug Tracker - Panter Studio</title>
+    <link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <script src="../../assets/js/core/firebase-config.js"></script>
+</head>
+<body class="dev-studio-page" data-site-root="../..">
+
+    <!-- Gate -->
+    <div class="dev-studio-gate" id="bugGate">
+        <img src="https://i.imgur.com/GYjAGS7.png" alt="Panter Studio">
+        <h1>Bug Tracker</h1>
+        <p id="bugGateMessage">Verificando acceso...</p>
+    </div>
+
+    <!-- Sidebar toggle -->
+    <button class="dev-sidebar-toggle" id="bugSidebarToggle">☰</button>
+
+    <!-- Sidebar -->
+    <nav class="dev-sidebar" id="bugSidebar">
+        <div class="dev-sidebar-header">
+            <img src="https://i.imgur.com/GYjAGS7.png" alt="Logo" class="dev-sidebar-logo">
+            <div class="dev-sidebar-brand">
+                Panter Studio
+                <small>Bug Tracker</small>
+            </div>
+        </div>
+
+        <div class="dev-sidebar-section">
+            <span class="dev-sidebar-section-label">Dev Hub</span>
+            <a class="dev-nav-link" href="panel-desarrollo.html">
+                <span class="dev-nav-icon">🏠</span> Proyectos
+            </a>
+        </div>
+
+        <div class="dev-sidebar-section">
+            <span class="dev-sidebar-section-label">Herramientas</span>
+            <a class="dev-nav-link" href="releases.html">
+                <span class="dev-nav-icon">📦</span> Releases
+            </a>
+            <a class="dev-nav-link active" href="bugs.html">
+                <span class="dev-nav-icon">🐛</span> Bug Tracker
+            </a>
+            <a class="dev-nav-link" href="ideas.html">
+                <span class="dev-nav-icon">💡</span> Ideas Board
+            </a>
+        </div>
+
+        <div class="dev-sidebar-section">
+            <span class="dev-sidebar-section-label">Cuenta</span>
+            <span class="dev-nav-link dev-muted" id="bugUserLabel" style="cursor:default;">—</span>
+            <button class="dev-nav-link" id="bugLogoutBtn">
+                <span class="dev-nav-icon">🚪</span> Cerrar sesion
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <div class="dev-main-content" id="bugPanel" hidden>
+
+        <!-- Topbar -->
+        <div class="dev-topbar-strip">
+            <div class="dev-topbar-left">
+                <h2>Bug Tracker</h2>
+                <p>Reporta, asigna y resuelve bugs del equipo</p>
+            </div>
+            <div class="dev-topbar-right">
+                <button class="dev-btn" id="bugReloadBtn">↻ Recargar</button>
+            </div>
+        </div>
+
+        <div class="dev-page-body">
+
+            <!-- KPIs -->
+            <div class="dev-kpi-row">
+                <div class="dev-kpi-card">
+                    <span class="dev-kpi-label">Total bugs</span>
+                    <span class="dev-kpi-value" id="bugTotal">0</span>
+                </div>
+                <div class="dev-kpi-card accent-red">
+                    <span class="dev-kpi-label">Criticos</span>
+                    <span class="dev-kpi-value" id="bugCritical">0</span>
+                </div>
+                <div class="dev-kpi-card accent-yellow">
+                    <span class="dev-kpi-label">En progreso</span>
+                    <span class="dev-kpi-value" id="bugInProgress">0</span>
+                </div>
+                <div class="dev-kpi-card accent-green">
+                    <span class="dev-kpi-label">Resueltos</span>
+                    <span class="dev-kpi-value" id="bugResolved">0</span>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:14px;align-items:start;">
+
+                <!-- Bug report form -->
+                <div class="dev-card" style="align-self:start;">
+                    <h3 id="bugFormTitle">Reportar bug</h3>
+                    <form id="bugForm" class="dev-form">
+                        <input type="hidden" id="bugId">
+                        <div>
+                            <label>Titulo del bug</label>
+                            <input type="text" id="bugTitle" required placeholder="Crash al abrir inventario en nivel 3">
+                        </div>
+                        <div class="dev-form-row">
+                            <div>
+                                <label>Proyecto</label>
+                                <input type="text" id="bugProject" required placeholder="Nombre del proyecto">
+                            </div>
+                            <div>
+                                <label>Build / Version</label>
+                                <input type="text" id="bugBuild" placeholder="v0.3.0-alpha">
+                            </div>
+                        </div>
+                        <div class="dev-form-row">
+                            <div>
+                                <label>Prioridad</label>
+                                <select id="bugPriority">
+                                    <option value="critica">Critica 🔴</option>
+                                    <option value="alta">Alta 🟠</option>
+                                    <option value="media" selected>Media 🟡</option>
+                                    <option value="baja">Baja 🟢</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Estado</label>
+                                <select id="bugStatus">
+                                    <option value="nuevo">Nuevo</option>
+                                    <option value="en_progreso">En progreso</option>
+                                    <option value="resuelto">Resuelto</option>
+                                    <option value="verificado">Verificado</option>
+                                    <option value="no_reproducible">No reproducible</option>
+                                    <option value="rechazado">Rechazado</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="dev-form-row">
+                            <div>
+                                <label>Categoria</label>
+                                <select id="bugCategory">
+                                    <option value="gameplay">Gameplay</option>
+                                    <option value="rendimiento">Rendimiento</option>
+                                    <option value="ui_ux">UI/UX</option>
+                                    <option value="audio">Audio</option>
+                                    <option value="graficos">Graficos</option>
+                                    <option value="red">Red / Online</option>
+                                    <option value="crash">Crash / Freeze</option>
+                                    <option value="guardado">Sistema de guardado</option>
+                                    <option value="otro">Otro</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Plataforma</label>
+                                <input type="text" id="bugPlatform" placeholder="PC / Android / Web">
+                            </div>
+                        </div>
+                        <div>
+                            <label>Descripcion del bug</label>
+                            <textarea id="bugDescription" rows="3" required placeholder="Que falla y cuando ocurre..."></textarea>
+                        </div>
+                        <div>
+                            <label>Pasos para reproducir</label>
+                            <textarea id="bugSteps" rows="3" placeholder="1. Abrir inventario&#10;2. Seleccionar espada&#10;3. Aplica el efecto&#10;4. Crash"></textarea>
+                        </div>
+                        <div>
+                            <label>Resultado esperado</label>
+                            <input type="text" id="bugExpected" placeholder="El objeto se equipa sin error">
+                        </div>
+                        <div>
+                            <label>Asignado a</label>
+                            <input type="text" id="bugAssignee" placeholder="Nombre del desarrollador">
+                        </div>
+                        <div class="dev-form-actions">
+                            <button type="submit" class="dev-btn dev-btn-primary">Guardar bug</button>
+                            <button type="button" id="bugResetBtn" class="dev-btn">Limpiar</button>
+                        </div>
+                    </form>
+                    <p id="bugMessage" class="dev-msg" style="margin-top:8px;"></p>
+                </div>
+
+                <!-- Bug list -->
+                <div>
+                    <div class="dev-filter-bar" style="margin-bottom:10px;">
+                        <input type="search" id="bugSearch" placeholder="Buscar bug...">
+                        <select id="bugPriorityFilter">
+                            <option value="all">Toda prioridad</option>
+                            <option value="critica">Critica</option>
+                            <option value="alta">Alta</option>
+                            <option value="media">Media</option>
+                            <option value="baja">Baja</option>
+                        </select>
+                        <select id="bugStatusFilter">
+                            <option value="open">Abiertos</option>
+                            <option value="all">Todos</option>
+                            <option value="nuevo">Nuevo</option>
+                            <option value="en_progreso">En progreso</option>
+                            <option value="resuelto">Resuelto</option>
+                            <option value="verificado">Verificado</option>
+                            <option value="no_reproducible">No reproducible</option>
+                            <option value="rechazado">Rechazado</option>
+                        </select>
+                        <select id="bugProjectFilter">
+                            <option value="all">Todos los proyectos</option>
+                        </select>
+                    </div>
+                    <div id="bugList">
+                        <p class="dev-empty">Sin bugs reportados aun.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../assets/js/admin/bugs.js"></script>
+</body>
+</html>
