@@ -275,14 +275,16 @@ function bindEvents() {
 }
 
 async function onAuthStateResolved(user) {
+    if (!user) {
+        if (window.auth?.currentUser) {
+            return onAuthStateResolved(window.auth.currentUser);
+        }
+        return;
+    }
+
     if (accessResolved) return;
     accessResolved = true;
     clearAccessTimeout();
-
-    if (!user) {
-        redirectToHome('Debes iniciar sesion para acceder al Panel Desarrollo.');
-        return;
-    }
 
     const access = await resolveUserAccess(user);
     if (!access.canAccess) {
@@ -294,21 +296,10 @@ async function onAuthStateResolved(user) {
     await loadProjects();
 }
 
-async function init() {
-    bindEvents();
-    startAccessTimeout();
-
-    const ready = await waitForFirebaseReady(3000);
-    if (!ready) {
-        if (window.auth?.currentUser) {
-            onAuthStateResolved(window.auth.currentUser).catch((err) => {
-                console.error('Error resolviendo sesion actual:', err);
-                redirectToHome('No se pudo validar tu acceso al Panel Desarrollo.');
-            });
-            return;
-        }
-        redirectToHome('Firebase no cargo a tiempo para validar permisos.');
-        return;
+function bootAuthListener() {
+    if (!window.auth || !window.onAuthStateChanged) {
+        showGateError('Inicializando autenticacion...');
+        return false;
     }
 
     window.onAuthStateChanged(window.auth, (user) => {
@@ -317,6 +308,34 @@ async function init() {
             redirectToHome('No se pudo validar la sesion en Panel Desarrollo.');
         });
     });
+
+    if (window.auth.currentUser) {
+        onAuthStateResolved(window.auth.currentUser).catch((err) => {
+            console.error('Error usando currentUser en panel desarrollo:', err);
+        });
+    }
+
+    return true;
+}
+
+async function init() {
+    bindEvents();
+    startAccessTimeout();
+
+    if (bootAuthListener()) return;
+
+    document.addEventListener('firebaseReady', () => {
+        bootAuthListener();
+    }, { once: true });
+
+    setTimeout(() => {
+        bootAuthListener();
+        if (!accessResolved && window.auth?.currentUser) {
+            onAuthStateResolved(window.auth.currentUser).catch((err) => {
+                console.error('Error resolviendo currentUser por fallback:', err);
+            });
+        }
+    }, 2200);
 }
 
 init();
