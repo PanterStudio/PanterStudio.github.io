@@ -207,6 +207,26 @@
         </div>
     </div>
 
+    <!-- Modal de nombre de usuario (primer acceso con Google) -->
+    <div id="usernameModal" class="username-modal" hidden>
+        <div class="username-modal-overlay"></div>
+        <div class="username-modal-card">
+            <h3>🎮 Elige tu nombre de jugador</h3>
+            <p class="username-modal-desc">¡Bienvenido! Es tu primer acceso. Elige un nombre único que te identifique en la comunidad.</p>
+            <div class="username-input-row">
+                <input type="text" id="usernameInput" placeholder="TuNombreAqui" maxlength="24" autocomplete="off" spellcheck="false">
+                <button type="button" id="usernameRandomBtn" class="btn btn-ghost username-random-btn" title="Nombre al azar">🎲</button>
+            </div>
+            <p id="usernameStatus" class="username-status" aria-live="polite"></p>
+            <div id="usernameSuggestions" class="username-suggestions" hidden>
+                <p class="username-suggestions-label">Prueba uno de estos:</p>
+                <div id="usernameSuggestionsRow" class="username-suggestions-row"></div>
+            </div>
+            <button type="button" id="usernameConfirmBtn" class="btn username-confirm-btn" disabled>Confirmar nombre</button>
+            <p class="username-hint">3–24 caracteres · Solo letras, números y guión bajo (_)</p>
+        </div>
+    </div>
+
     <nav>
         <a href="index.html" class="active">Inicio</a>
         <div class="nav-dropdown">

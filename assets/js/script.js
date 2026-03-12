@@ -45,6 +45,55 @@ const DEFAULT_ADMIN_EMAILS = [
     // Agrega aqui correos admin, por ejemplo: 'tu-correo@gmail.com'
 ];
 
+/* ===== SISTEMA DE NOMBRE DE USUARIO ===== */
+const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,24}$/;
+const USERNAME_ADJ  = ['Veloz','Feroz','Astuto','Brillante','Salvaje','Sombrio','Rapido','Fuerte','Oscuro','Agil','Fiero','Noble'];
+const USERNAME_NOUN = ['Pantera','Lobo','Aguila','Zorro','Leon','Tigre','Cobra','Halcon','Jaguar','Oso','Linx','Condor'];
+let usernameModalShown = false;
+
+function generateRandomUsername() {
+    const adj  = USERNAME_ADJ[Math.floor(Math.random() * USERNAME_ADJ.length)];
+    const noun = USERNAME_NOUN[Math.floor(Math.random() * USERNAME_NOUN.length)];
+    const num  = Math.floor(Math.random() * 9000) + 1000;
+    return adj + noun + num;
+}
+
+function generateSuggestions(base) {
+    const clean = base.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 18) || 'Jugador';
+    const results = [];
+    const used = new Set([clean]);
+    while (results.length < 4) {
+        const n = Math.floor(Math.random() * 900) + 100;
+        const c = clean + n;
+        if (!used.has(c)) { used.add(c); results.push(c); }
+    }
+    results.push(clean + '_GG');
+    return results;
+}
+
+async function isUsernameTaken(username) {
+    if (!window.db || !window.getDocs || !window.query || !window.collection || !window.where) return false;
+    const snap = await window.getDocs(
+        window.query(window.collection(window.db, 'users'), window.where('username', '==', username))
+    );
+    return !snap.empty;
+}
+
+async function saveUserProfile(user, username) {
+    await window.setDoc(window.fsDoc(window.db, 'users', user.uid), {
+        username,
+        email: user.email || '',
+        createdAt: new Date().toISOString()
+    }, { merge: true });
+    await window.updateProfile(user, { displayName: username });
+}
+
+async function getUserProfile(uid) {
+    if (!window.db || !window.getDoc || !window.fsDoc) return null;
+    const snap = await window.getDoc(window.fsDoc(window.db, 'users', uid));
+    return snap.exists() ? snap.data() : null;
+}
+
 // Mostrar modal automáticamente al cargar
 window.addEventListener('load', () => {
     const modal = document.getElementById('preregistroModal');
@@ -346,8 +395,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error('Error recuperando redirect de Google:', err);
                 }
 
-                window.onAuthStateChanged(window.auth, (user) => {
+                window.onAuthStateChanged(window.auth, async (user) => {
                     updateAuthUi(user || null);
+                    if (user) {
+                        try {
+                            const profile = await getUserProfile(user.uid);
+                            if (!profile?.username) {
+                                await showUsernameModal(user);
+                            }
+                        } catch (e) {
+                            console.warn('No se pudo verificar perfil:', e);
+                        }
+                    } else {
+                        usernameModalShown = false;
+                    }
                 });
                 authObserverBound = true;
             }
@@ -371,14 +432,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 message.textContent = 'Ingresa un nombre de usuario.';
                 return;
             }
+            if (!USERNAME_REGEX.test(username)) {
+                message.textContent = 'Nombre invalido. Solo letras, numeros y guion bajo (3-24 caracteres).';
+                return;
+            }
 
             try {
+                message.textContent = 'Verificando nombre de usuario...';
+                const taken = await isUsernameTaken(username);
+                if (taken) {
+                    const suggs = generateSuggestions(username);
+                    message.textContent = `"${username}" ya está en uso. Prueba: ${suggs.slice(0, 3).join(', ')}`;
+                    return;
+                }
                 message.textContent = 'Creando cuenta...';
                 const credential = await window.createUserWithEmailAndPassword(window.auth, email, password);
                 if (credential?.user) {
-                    await window.updateProfile(credential.user, { displayName: username });
+                    await saveUserProfile(credential.user, username);
                 }
-                message.textContent = 'Cuenta creada correctamente.';
+                message.textContent = '¡Cuenta creada! Bienvenido.';
                 registerForm.reset();
                 if (modal) modal.hidden = true;
                 document.body.style.overflow = 'auto';
@@ -439,6 +511,137 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Error al cerrar sesion:', err);
             }
         });
+    }
+
+    function setupUsernameModal() {
+        const modal = document.getElementById('usernameModal');
+        if (!modal) return;
+        const input      = document.getElementById('usernameInput');
+        const randomBtn  = document.getElementById('usernameRandomBtn');
+        const confirmBtn = document.getElementById('usernameConfirmBtn');
+        const statusEl   = document.getElementById('usernameStatus');
+        const suggBox    = document.getElementById('usernameSuggestions');
+        const suggRow    = document.getElementById('usernameSuggestionsRow');
+        if (!input || !randomBtn || !confirmBtn || !statusEl || !suggBox || !suggRow) return;
+
+        let checkTimer  = null;
+        let lastChecked = '';
+        let isAvailable = false;
+
+        function setStatus(text, type) {
+            statusEl.textContent = text;
+            statusEl.className   = 'username-status' + (type ? ' username-status--' + type : '');
+        }
+
+        function renderSuggestions(names) {
+            suggRow.innerHTML = '';
+            if (!names || names.length === 0) { suggBox.hidden = true; return; }
+            names.forEach(name => {
+                const chip = document.createElement('button');
+                chip.type      = 'button';
+                chip.className = 'username-suggest-chip';
+                chip.textContent = name;
+                chip.addEventListener('click', () => {
+                    input.value = name;
+                    suggBox.hidden = true;
+                    clearTimeout(checkTimer);
+                    triggerCheck(name);
+                });
+                suggRow.appendChild(chip);
+            });
+            suggBox.hidden = false;
+        }
+
+        async function triggerCheck(value) {
+            const clean = value.trim();
+            lastChecked  = clean;
+            confirmBtn.disabled = true;
+            isAvailable  = false;
+            if (!clean) { setStatus('', ''); suggBox.hidden = true; return; }
+            if (!USERNAME_REGEX.test(clean)) {
+                setStatus('Solo letras, números y guión bajo (3–24 caracteres).', 'error');
+                suggBox.hidden = true;
+                return;
+            }
+            setStatus('Verificando...', 'checking');
+            try {
+                const taken = await isUsernameTaken(clean);
+                if (lastChecked !== clean) return;
+                if (taken) {
+                    setStatus('"' + clean + '" ya está en uso.', 'error');
+                    renderSuggestions(generateSuggestions(clean));
+                } else {
+                    setStatus('¡Disponible! ✓', 'ok');
+                    suggBox.hidden = true;
+                    confirmBtn.disabled = false;
+                    isAvailable = true;
+                }
+            } catch {
+                setStatus('No se pudo verificar. Intenta de nuevo.', 'error');
+            }
+        }
+
+        input.addEventListener('input', () => {
+            clearTimeout(checkTimer);
+            confirmBtn.disabled = true;
+            isAvailable = false;
+            const v = input.value;
+            if (!v.trim()) { setStatus('', ''); suggBox.hidden = true; return; }
+            setStatus('Verificando...', 'checking');
+            checkTimer = setTimeout(() => triggerCheck(v), 600);
+        });
+
+        randomBtn.addEventListener('click', () => {
+            const name = generateRandomUsername();
+            input.value = name;
+            clearTimeout(checkTimer);
+            checkTimer = setTimeout(() => triggerCheck(name), 300);
+        });
+
+        confirmBtn.addEventListener('click', async () => {
+            if (!isAvailable || !lastChecked) return;
+            const user = window.auth?.currentUser;
+            if (!user) return;
+            confirmBtn.disabled = true;
+            setStatus('Guardando...', 'checking');
+            try {
+                await saveUserProfile(user, lastChecked);
+                modal.hidden = true;
+                document.body.style.overflow = 'auto';
+                updateAuthUi(user);
+            } catch {
+                setStatus('Error al guardar. Intenta de nuevo.', 'error');
+                confirmBtn.disabled = false;
+            }
+        });
+    }
+
+    async function showUsernameModal(user) {
+        if (usernameModalShown) return;
+        usernameModalShown = true;
+        closePromoModal();
+        const authModal = document.getElementById('authModal');
+        if (authModal) authModal.hidden = true;
+        const modal      = document.getElementById('usernameModal');
+        if (!modal) return;
+        const input      = document.getElementById('usernameInput');
+        const statusEl   = document.getElementById('usernameStatus');
+        const confirmBtn = document.getElementById('usernameConfirmBtn');
+        const suggBox    = document.getElementById('usernameSuggestions');
+        if (input)      input.value = '';
+        if (statusEl)   { statusEl.textContent = ''; statusEl.className = 'username-status'; }
+        if (confirmBtn) confirmBtn.disabled = true;
+        if (suggBox)    suggBox.hidden = true;
+        if (input && user?.displayName) {
+            const cleaned = user.displayName.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 24);
+            if (cleaned.length >= 3) {
+                input.value = cleaned;
+                setTimeout(() => input.dispatchEvent(new Event('input')), 400);
+            }
+        }
+        modal.hidden = false;
+        document.body.style.overflow = 'hidden';
+        if (input) setTimeout(() => input.focus(), 100);
     }
 
     function waitForFirebase(timeout = 6000) {
@@ -802,6 +1005,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setupAuthModal();
     setupUserAuth();
+    setupUsernameModal();
 });
 
 /* ===== FUNCIONES PARA VENTANAS LATERALES ===== */

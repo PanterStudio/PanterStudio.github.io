@@ -692,6 +692,144 @@ header p {
     color: #9fd4f4;
 }
 
+/* ===== MODAL DE NOMBRE DE USUARIO ===== */
+.username-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 12000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.username-modal[hidden] {
+    display: none !important;
+}
+
+.username-modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.82);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.username-modal-card {
+    position: relative;
+    width: min(460px, 92%);
+    background: linear-gradient(160deg, #0d1422 0%, #121c2e 100%);
+    border: 1px solid rgba(135, 206, 235, 0.45);
+    border-top: 3px solid #1e70c8;
+    border-radius: 14px;
+    padding: 28px 24px 22px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55), 0 0 60px rgba(30, 112, 200, 0.18);
+    color: #d6ecff;
+    z-index: 1;
+}
+
+.username-modal-card h3 {
+    margin: 0 0 6px;
+    font-size: 1.3rem;
+    color: #ffffff;
+}
+
+.username-modal-desc {
+    font-size: 0.88rem;
+    color: #a0c8e8;
+    margin: 0 0 18px;
+    line-height: 1.5;
+}
+
+.username-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.username-input-row input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(135, 206, 235, 0.35);
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    font-size: 1rem;
+}
+
+.username-input-row input:focus {
+    outline: none;
+    border-color: #1e70c8;
+    box-shadow: 0 0 0 3px rgba(30, 112, 200, 0.25);
+}
+
+.username-random-btn {
+    padding: 10px 14px !important;
+    font-size: 1.15rem !important;
+    flex-shrink: 0;
+}
+
+.username-status {
+    min-height: 20px;
+    margin: 8px 0 4px;
+    font-size: 0.84rem;
+    font-weight: 600;
+}
+
+.username-status--ok       { color: #4ade80; }
+.username-status--error    { color: #f87171; }
+.username-status--checking { color: #93c5fd; }
+
+.username-suggestions {
+    margin: 4px 0 12px;
+}
+
+.username-suggestions-label {
+    font-size: 0.78rem;
+    color: #93c5fd;
+    margin: 0 0 6px;
+}
+
+.username-suggestions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.username-suggest-chip {
+    background: rgba(30, 112, 200, 0.18);
+    border: 1px solid rgba(135, 206, 235, 0.4);
+    border-radius: 999px;
+    color: #bfe4fb;
+    font-size: 0.82rem;
+    padding: 5px 13px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.username-suggest-chip:hover {
+    background: rgba(30, 112, 200, 0.45);
+    color: #ffffff;
+}
+
+.username-confirm-btn {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.username-confirm-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.username-hint {
+    margin: 10px 0 0;
+    font-size: 0.76rem;
+    color: #7aa8c8;
+    text-align: center;
+}
+
 /* Barra de Navegación */
 nav {
     background-color: #1a1a1a;
