@@ -1279,7 +1279,23 @@ document.querySelectorAll('[data-close-modal]').forEach((btn) => {
             gateMessage.className = 'admin-message';
         }
         await waitForFirebaseAuth();
-        window.onAuthStateChanged(window.auth, handleAuthStateChange);
+        let authResolved = false;
+
+        window.onAuthStateChanged(window.auth, (user) => {
+            authResolved = true;
+            handleAuthStateChange(user || null);
+        });
+
+        if (window.auth.currentUser) {
+            authResolved = true;
+            handleAuthStateChange(window.auth.currentUser);
+            return;
+        }
+
+        setTimeout(() => {
+            if (authResolved) return;
+            handleAuthStateChange(window.auth.currentUser || null);
+        }, 2500);
     } catch (err) {
         console.error('Error inicializando auth:', err);
         if (gateMessage) {
