@@ -294,6 +294,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         registerOpenBtn.addEventListener('click', () => openModal('register'));
+        const loginOpenBtn = document.getElementById('loginAuthBtn');
+        if (loginOpenBtn) loginOpenBtn.addEventListener('click', () => openModal('login'));
         tabRegister.addEventListener('click', () => setMode('register'));
         tabLogin.addEventListener('click', () => setMode('login'));
 
@@ -318,13 +320,12 @@ document.addEventListener('DOMContentLoaded', () => {
     async function setupUserAuth() {
         if (userAuthInitialized) return;
         const modal = document.getElementById('authModal');
-        const loginQuickBtn = document.getElementById('loginAuthBtn');
         const registerForm = document.getElementById('authRegisterForm');
         const loginForm = document.getElementById('authLoginForm');
         const message = document.getElementById('authModalMessage');
         const googleBtn = document.getElementById('googleAuthModalBtn');
         const logoutBtn = document.getElementById('logoutAuthBtn');
-        if (!logoutBtn || !registerForm || !loginForm || !message || !googleBtn || !loginQuickBtn) return;
+        if (!logoutBtn || !registerForm || !loginForm || !message || !googleBtn) return;
         userAuthInitialized = true;
         let authObserverBound = false;
 
@@ -428,10 +429,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         googleBtn.addEventListener('click', async () => {
             await startGoogleSignIn(true);
-        });
-
-        loginQuickBtn.addEventListener('click', async () => {
-            await startGoogleSignIn(false);
         });
 
         logoutBtn.addEventListener('click', async () => {
