@@ -33,6 +33,7 @@ const welcomeTitleEl = document.getElementById('adminWelcomeTitle');
 const welcomeSubtitleEl = document.getElementById('adminWelcomeSubtitle');
 
 let welcomeTimer = null;
+let hasPlayedWelcome = false;
 
 function normalizeRole(role) {
     const normalized = String(role || '').trim().toLowerCase();
@@ -80,8 +81,14 @@ function showPanel() {
     if (panel) panel.hidden = false;
 }
 
-function playWelcomeAnimation(user, role) {
+function hideWelcomeOverlay() {
     if (!welcomeOverlay) return;
+    welcomeOverlay.hidden = true;
+}
+
+function playWelcomeAnimation(user, role) {
+    if (!welcomeOverlay || hasPlayedWelcome) return;
+    hasPlayedWelcome = true;
 
     if (welcomeTimer) {
         clearTimeout(welcomeTimer);
@@ -90,8 +97,6 @@ function playWelcomeAnimation(user, role) {
 
     const userName = user?.displayName || user?.email || 'equipo Panter Studio';
     const roleLabel = getRoleLabel(role);
-    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
     if (welcomeTitleEl) {
         welcomeTitleEl.textContent = `Bienvenido, ${userName}`;
     }
@@ -101,9 +106,9 @@ function playWelcomeAnimation(user, role) {
 
     welcomeOverlay.hidden = false;
 
-    const duration = prefersReducedMotion ? 650 : 1600;
+    const duration = 3000;
     welcomeTimer = setTimeout(() => {
-        welcomeOverlay.hidden = true;
+        hideWelcomeOverlay();
         welcomeTimer = null;
     }, duration);
 }
@@ -215,6 +220,11 @@ function bootAuthListener() {
 
 function initAdminPanel() {
     bindEvents();
+
+    // Failsafe: si por cualquier motivo la capa quedó visible, se cierra sola a los 3 segundos.
+    setTimeout(() => {
+        hideWelcomeOverlay();
+    }, 3000);
 
     if (bootAuthListener()) return;
 
