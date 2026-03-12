@@ -776,8 +776,7 @@ function openEditTier(tierId) {
     const tier = currentTiers.find((t) => t.id === tierId);
     if (!tier || !tierModal) return;
 
-    const titleEl = document.getElementById('tierModalTitle');
-    if (titleEl) titleEl.textContent = 'Editar Nivel';
+    if (tierModalTitle) tierModalTitle.textContent = 'Editar Nivel';
     document.getElementById('tierId').value = tier.id;
     document.getElementById('tierName').value = tier.name || '';
     document.getElementById('tierAmount').value = tier.amount || 0;
@@ -806,8 +805,11 @@ function openAddCoinsModal(userId) {
     if (userInfoEl) {
         userInfoEl.textContent = `${user.displayName || 'Usuario'} (${maskEmail(user.email)}) - Actual: ${user.coins || 0} 🪙`;
     }
+    document.getElementById('coinsUserId').value = user.id;
     document.getElementById('coinsAmount').value = '';
-    document.getElementById('coinsReason').value = '';
+    document.getElementById('coinsReason').value = 'manual';
+    const noteEl = document.getElementById('coinsNote');
+    if (noteEl) noteEl.value = '';
     coinsModal.showModal();
 }
 
@@ -1165,17 +1167,16 @@ settingsResetBtn.addEventListener('click', () => {
 });
 
 // ===== TIER EVENTS =====
-const addTierBtn = document.getElementById('addTierBtn');
-const tierForm = document.getElementById('tierForm');
-
 if (addTierBtn) {
     addTierBtn.addEventListener('click', () => {
-        const titleEl = document.getElementById('tierModalTitle');
-        if (titleEl) titleEl.textContent = 'Nuevo Nivel de Donacion';
+        if (tierModalTitle) tierModalTitle.textContent = 'Nuevo Nivel de Donacion';
         if (tierForm) tierForm.reset();
         document.getElementById('tierId').value = '';
-        document.getElementById('tierColor').value = '#ff0066';
+        document.getElementById('tierColor').value = '#1e70c8';
         document.getElementById('tierActive').checked = true;
+        document.getElementById('tierFeatured').checked = false;
+        const benefitsEl = document.getElementById('tierBenefits');
+        if (benefitsEl) benefitsEl.value = '';
         if (tierModal) tierModal.showModal();
     });
 }
@@ -1233,18 +1234,39 @@ if (usersTableBody) {
     });
 }
 
-const coinsForm = document.getElementById('coinsForm');
+if (addCoinsBtn) {
+    addCoinsBtn.addEventListener('click', () => {
+        selectedUserForCoins = null;
+        const userInfoEl = document.getElementById('coinsUserInfo');
+        if (userInfoEl) {
+            userInfoEl.textContent = 'Escribe el ID del usuario y la cantidad de monedas a aplicar.';
+        }
+        document.getElementById('coinsUserId').value = '';
+        document.getElementById('coinsAmount').value = '100';
+        document.getElementById('coinsReason').value = 'manual';
+        const noteEl = document.getElementById('coinsNote');
+        if (noteEl) noteEl.value = '';
+        if (coinsModal) coinsModal.showModal();
+    });
+}
+
 if (coinsForm) {
     coinsForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        if (!selectedUserForCoins) return;
+        const typedUserId = document.getElementById('coinsUserId').value.trim();
+        const targetUserId = typedUserId || selectedUserForCoins?.id || '';
+        if (!targetUserId) {
+            alert('Selecciona un usuario o escribe un ID válido.');
+            return;
+        }
         const amount = Number(document.getElementById('coinsAmount').value) || 0;
         const reason = document.getElementById('coinsReason').value.trim();
+        const note = document.getElementById('coinsNote')?.value.trim() || '';
         if (amount === 0) {
             alert('Ingresa una cantidad diferente de 0');
             return;
         }
-        addCoinsToUser(selectedUserForCoins.id, amount, reason);
+        addCoinsToUser(targetUserId, amount, note ? `${reason}: ${note}` : reason);
     });
 }
 

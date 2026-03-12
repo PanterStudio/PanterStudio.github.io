@@ -305,6 +305,9 @@
                         <label for="tierDescription">Descripcion/Beneficios</label>
                         <textarea id="tierDescription" rows="3" placeholder="Acceso anticipado, mencion en creditos..."></textarea>
 
+                        <label for="tierBenefits">Lista de beneficios (uno por linea)</label>
+                        <textarea id="tierBenefits" rows="4" placeholder="Acceso anticipado&#10;Badge exclusivo&#10;Mencion en creditos"></textarea>
+
                         <label for="tierCoins">Monedas otorgadas</label>
                         <input type="number" id="tierCoins" min="0" value="0">
 
@@ -397,8 +400,10 @@
                     <form id="adminCoinsForm" class="admin-modal-form">
                         <h3>Agregar/Quitar Monedas</h3>
 
+                        <p id="coinsUserInfo" class="admin-message">Selecciona un usuario desde la tabla o escribe su ID manualmente.</p>
+
                         <label for="coinsUserId">ID del Usuario *</label>
-                        <input type="text" id="coinsUserId" required>
+                        <input type="text" id="coinsUserId" placeholder="UID del usuario" required>
 
                         <label for="coinsAmount">Cantidad de monedas</label>
                         <input type="number" id="coinsAmount" value="100">
