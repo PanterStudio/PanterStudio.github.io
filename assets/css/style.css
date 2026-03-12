@@ -485,6 +485,213 @@ header p {
     font-size: 1.1rem;
 }
 
+.header-auth {
+    position: absolute;
+    top: 16px;
+    right: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.auth-signal-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.auth-signal-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 10px currentColor;
+}
+
+.auth-signal-guest {
+    background: #a9b7c4;
+    color: #a9b7c4;
+}
+
+.auth-signal-online {
+    background: #00d084;
+    color: #00d084;
+}
+
+.auth-signal-admin {
+    background: #ffc247;
+    color: #ffc247;
+}
+
+.auth-signal-text {
+    font-size: 0.72rem;
+    color: #cde6f8;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+}
+
+.auth-role-badge {
+    display: inline-block;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    border-radius: 999px;
+    padding: 2px 8px;
+    border: 1px solid rgba(255, 194, 71, 0.75);
+    color: #ffd98a;
+    background: rgba(255, 194, 71, 0.16);
+}
+
+.auth-user-label {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #9fd4f4;
+    background: rgba(30, 112, 200, 0.18);
+    border: 1px solid rgba(135, 206, 235, 0.35);
+    border-radius: 999px;
+    padding: 4px 10px;
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.header-auth-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.auth-btn {
+    margin-top: 0;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+}
+
+.auth-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 11000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-modal[hidden] {
+    display: none !important;
+}
+
+.auth-modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(5px);
+}
+
+.auth-modal-card {
+    position: relative;
+    width: min(460px, 92%);
+    background: linear-gradient(160deg, #0d1422 0%, #121c2e 100%);
+    border: 1px solid rgba(135, 206, 235, 0.45);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+    color: #d6ecff;
+}
+
+.auth-modal-card h3 {
+    margin: 0 0 14px;
+    color: #ffffff;
+}
+
+.auth-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid rgba(135, 206, 235, 0.45);
+    background: rgba(30, 112, 200, 0.2);
+    color: #dff1ff;
+    cursor: pointer;
+}
+
+.auth-modal-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.auth-tab {
+    border: 1px solid rgba(135, 206, 235, 0.35);
+    border-radius: 10px;
+    background: rgba(30, 112, 200, 0.12);
+    color: #bfe4fb;
+    font-weight: 700;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.auth-tab.active {
+    background: rgba(30, 112, 200, 0.45);
+    color: #ffffff;
+}
+
+.auth-modal-form {
+    display: grid;
+    gap: 8px;
+}
+
+.auth-modal-form label {
+    font-size: 0.86rem;
+    color: #bfe4fb;
+}
+
+.auth-modal-form input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(135, 206, 235, 0.35);
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+}
+
+.auth-modal-form input:focus {
+    outline: none;
+    border-color: #1e70c8;
+    box-shadow: 0 0 0 3px rgba(30, 112, 200, 0.25);
+}
+
+.auth-submit {
+    margin-top: 6px;
+    width: 100%;
+}
+
+.auth-modal-sep {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 12px 0;
+}
+
+.auth-modal-sep span {
+    font-size: 0.78rem;
+    color: #b7d9f3;
+    padding: 0 10px;
+}
+
+.auth-modal-message {
+    margin: 10px 0 0;
+    min-height: 18px;
+    font-size: 0.82rem;
+    color: #9fd4f4;
+}
+
 /* Barra de Navegación */
 nav {
     background-color: #1a1a1a;
@@ -498,7 +705,8 @@ nav {
     flex-wrap: wrap;
 }
 
-nav a {
+nav a,
+.nav-dropdown-toggle {
     color: white;
     text-decoration: none;
     padding: 10px 20px;
@@ -510,10 +718,56 @@ nav a {
     font-size: 0.9rem;
 }
 
-nav a:hover, nav a.active {
+nav a:hover,
+nav a.active,
+.nav-dropdown-toggle:hover,
+.nav-dropdown-toggle.active {
     background-color: #1e70c8; 
     color: #000;
     box-shadow: 0 0 10px #1e70c8;
+}
+
+.nav-dropdown {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.nav-dropdown-toggle {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.nav-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 5px;
+    min-width: 190px;
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    padding: 8px;
+    border-radius: 10px;
+    background: rgba(17, 17, 17, 0.98);
+    border: 1px solid rgba(30, 112, 200, 0.55);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.45);
+    z-index: 1200;
+}
+
+.nav-dropdown-menu a {
+    margin: 0;
+    width: 100%;
+    text-align: left;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.nav-dropdown.open .nav-dropdown-menu,
+.nav-dropdown:hover .nav-dropdown-menu,
+.nav-dropdown:focus-within .nav-dropdown-menu {
+    display: flex;
 }
 
 /* Contenedor Principal */
@@ -664,6 +918,175 @@ h2 {
     font-size: 0.92rem;
 }
 
+/* Juegos showcase */
+.juegos-showcase {
+    background: linear-gradient(155deg, #0f1624 0%, #121c2d 58%, #0a101a 100%);
+    border: 1px solid rgba(30, 112, 200, 0.45);
+    border-left: 5px solid #1e70c8;
+    box-shadow: 0 14px 30px rgba(10, 18, 30, 0.35);
+}
+
+.juegos-hero h2 {
+    margin: 10px 0 12px 0;
+    border-bottom: none;
+    color: #ffffff;
+}
+
+.juegos-hero p {
+    margin: 0;
+    color: #c9e7fb;
+    max-width: 760px;
+}
+
+.juegos-metrics {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.juegos-metric-box {
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(135, 206, 235, 0.35);
+    background: rgba(30, 112, 200, 0.12);
+    text-align: center;
+}
+
+.juegos-metric-box strong {
+    display: block;
+    color: #87CEEB;
+    font-size: 1.25rem;
+}
+
+.juegos-metric-box span {
+    color: #d6ecff;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.juegos-grid {
+    margin-top: 22px;
+}
+
+.juego-featured-card {
+    display: grid;
+    grid-template-columns: minmax(280px, 360px) 1fr;
+    gap: 20px;
+    align-items: stretch;
+    background: linear-gradient(145deg, rgba(9, 14, 24, 0.95) 0%, rgba(13, 20, 34, 0.95) 100%);
+    border-radius: 14px;
+    border: 1px solid rgba(30, 112, 200, 0.5);
+    overflow: hidden;
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.35);
+}
+
+.juego-featured-media {
+    position: relative;
+    min-height: 240px;
+}
+
+.juego-featured-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.juego-status-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 255, 127, 0.55);
+    background: rgba(0, 255, 127, 0.14);
+    color: #9dffcb;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.9px;
+}
+
+.juego-featured-body {
+    padding: 20px 22px 22px;
+}
+
+.juego-featured-body h3 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 1.35rem;
+}
+
+.juego-featured-body p {
+    margin-top: 12px;
+    color: #cce6f8;
+}
+
+.juego-feature-list {
+    margin: 14px 0 0;
+    padding-left: 18px;
+    color: #d8eefc;
+    display: grid;
+    gap: 8px;
+}
+
+.juego-tags {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.juego-tag {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(135, 206, 235, 0.45);
+    background: rgba(30, 112, 200, 0.14);
+    color: #9fd4f4;
+    font-size: 0.74rem;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+.juego-actions {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.juego-actions .btn {
+    margin-top: 0;
+}
+
+.btn.btn-ghost {
+    background: transparent;
+    color: #9fd4f4;
+    border: 1px solid rgba(135, 206, 235, 0.5);
+}
+
+.btn.btn-ghost:hover {
+    background: rgba(30, 112, 200, 0.25);
+    color: #ffffff;
+}
+
+.juegos-coming-strip {
+    margin-top: 18px;
+    padding: 12px 14px;
+    border: 1px solid rgba(30, 112, 200, 0.34);
+    border-radius: 10px;
+    background: rgba(30, 112, 200, 0.14);
+}
+
+.juegos-coming-strip p {
+    margin: 0;
+    color: #c9e7fb;
+    font-size: 0.92rem;
+}
+
 @media (max-width: 900px) {
     .index-preregistro-highlight {
         grid-template-columns: 1fr;
@@ -677,6 +1100,19 @@ h2 {
 
     .index-value-points {
         grid-template-columns: 1fr;
+    }
+
+    .juegos-metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .juego-featured-card {
+        grid-template-columns: 1fr;
+    }
+
+    .juego-featured-media {
+        min-height: 220px;
+        max-height: 300px;
     }
 }
 
@@ -693,6 +1129,19 @@ h2 {
     .value-point p,
     .index-launch-strip p {
         font-size: 0.85rem;
+    }
+
+    .juego-featured-body h3 {
+        font-size: 1.15rem;
+    }
+
+    .juego-featured-body,
+    .juegos-showcase {
+        padding: 16px;
+    }
+
+    .juego-actions .btn {
+        width: 100%;
     }
 }
 
@@ -781,14 +1230,23 @@ footer {
     border-bottom: 3px solid #1e70c8;
 }
 
-.dark-mode nav a {
+.dark-mode nav a,
+.dark-mode .nav-dropdown-toggle {
     color: #eee;
 }
 
-.dark-mode nav a:hover, .dark-mode nav a.active {
+.dark-mode nav a:hover,
+.dark-mode nav a.active,
+.dark-mode .nav-dropdown-toggle:hover,
+.dark-mode .nav-dropdown-toggle.active {
     background-color: #1e70c8;
     color: #000;
     box-shadow: 0 0 10px #1e70c8;
+}
+
+.dark-mode .nav-dropdown-menu {
+    background: rgba(8, 8, 8, 0.98);
+    border-color: rgba(135, 206, 235, 0.45);
 }
 
 .dark-mode section {
@@ -825,6 +1283,18 @@ footer {
 
 .dark-mode .index-launch-strip p {
     color: #cfe8f9;
+}
+
+.dark-mode .juegos-showcase {
+    background: linear-gradient(155deg, #090f1a 0%, #0c1422 58%, #070b13 100%);
+    border-color: rgba(135, 206, 235, 0.35);
+}
+
+.dark-mode .juegos-hero p,
+.dark-mode .juego-featured-body p,
+.dark-mode .juegos-coming-strip p,
+.dark-mode .juego-feature-list {
+    color: #d6ecff;
 }
 
 /* Acceso fantasma al admin */
@@ -2346,6 +2816,22 @@ footer {
     header {
         padding: 1rem 0;
     }
+
+    .header-auth {
+        position: static;
+        margin-top: 10px;
+        align-items: center;
+    }
+
+    .header-auth-actions {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .auth-user-label {
+        max-width: 220px;
+    }
     
     .logo-img {
         max-width: 180px;
@@ -2369,7 +2855,8 @@ footer {
         flex-wrap: wrap;
     }
     
-    nav a {
+    nav a,
+    .nav-dropdown-toggle {
         padding: 8px 12px;
         margin: 3px;
         font-size: 0.8rem;
@@ -2460,6 +2947,11 @@ footer {
 }
 
 @media (max-width: 480px) {
+    .auth-btn {
+        width: 100%;
+        max-width: 250px;
+    }
+
     /* Header para móviles pequeños */
     header {
         padding: 0.8rem 0;
@@ -2481,7 +2973,8 @@ footer {
     }
     
     /* Navegación para móviles pequeños */
-    nav a {
+    nav a,
+    .nav-dropdown-toggle {
         padding: 6px 10px;
         margin: 2px;
         font-size: 0.75rem;
@@ -2546,7 +3039,7 @@ footer {
 /* Mejoras adicionales para touch devices */
 @media (hover: none) and (pointer: coarse) {
     /* Botones y enlaces más grandes para touch */
-    .btn, nav a, .panel-link {
+    .btn, nav a, .nav-dropdown-toggle, .panel-link {
         min-height: 44px;
         display: flex;
         align-items: center;

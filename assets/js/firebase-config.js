@@ -14,7 +14,7 @@ import("https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js").then(({ init
     import("https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"),
     import("https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"),
     import("https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js")
-  ]).then(([{ getFirestore, collection, addDoc, getDocs, getDoc, query, where, setDoc, doc, deleteDoc, updateDoc, orderBy, limit }, { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile }, { getAnalytics }]) => {
+  ]).then(([{ getFirestore, collection, addDoc, getDocs, getDoc, query, where, setDoc, doc, deleteDoc, updateDoc, orderBy, limit }, { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult }, { getAnalytics }]) => {
     const app = initializeApp(firebaseConfig);
     window.db         = getFirestore(app);
     window.auth       = getAuth(app);
@@ -36,6 +36,10 @@ import("https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js").then(({ init
     window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
     window.sendPasswordResetEmail = sendPasswordResetEmail;
     window.updateProfile = updateProfile;
+    window.GoogleAuthProvider = GoogleAuthProvider;
+    window.signInWithPopup = signInWithPopup;
+    window.signInWithRedirect = signInWithRedirect;
+    window.getRedirectResult = getRedirectResult;
     getAnalytics(app);
     console.log("Firebase Firestore + Auth listos");
     document.dispatchEvent(new Event('firebaseReady'));

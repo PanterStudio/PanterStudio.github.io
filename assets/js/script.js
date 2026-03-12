@@ -40,14 +40,15 @@ async function sendConfirmationEmail(userEmail, position) {
 
 const MAX_PREREGISTROS = 1000;
 let preregistrosActuales = 0;
+const ADMIN_EMAILS_LS_KEY = 'panterAdminEmails';
+const DEFAULT_ADMIN_EMAILS = [
+    // Agrega aqui correos admin, por ejemplo: 'tu-correo@gmail.com'
+];
 
 // Mostrar modal automáticamente al cargar
 window.addEventListener('load', () => {
     const modal = document.getElementById('preregistroModal');
-    const hasSeenPromo = sessionStorage.getItem('promoSeen');
-    
-    // Mostrar modal solo si no lo ha visto en esta sesión
-    if (!hasSeenPromo && modal) {
+    if (modal) {
         setTimeout(() => {
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -62,7 +63,6 @@ function closePromoModal() {
     if (modal) {
         modal.classList.remove('active');
         document.body.style.overflow = 'auto';
-        sessionStorage.setItem('promoSeen', 'true');
     }
 }
 
@@ -124,6 +124,325 @@ function saveRegistroLS(email) {
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Panter Studio System: Online");
+    let userAuthInitialized = false;
+
+    function getConfiguredAdminEmails() {
+        const fromStorage = localStorage.getItem(ADMIN_EMAILS_LS_KEY) || '';
+        const storageEmails = fromStorage
+            .split(',')
+            .map((email) => email.trim().toLowerCase())
+            .filter(Boolean);
+
+        const defaultEmails = DEFAULT_ADMIN_EMAILS
+            .map((email) => String(email || '').trim().toLowerCase())
+            .filter(Boolean);
+
+        return Array.from(new Set([...defaultEmails, ...storageEmails]));
+    }
+
+    function isAdminEmail(email) {
+        if (!email) return false;
+        const admins = getConfiguredAdminEmails();
+        return admins.includes(String(email).toLowerCase());
+    }
+
+    function getAuthErrorMessage(err) {
+        const code = err?.code || '';
+        const map = {
+            'auth/operation-not-allowed': 'Esta accion no esta habilitada en Firebase. Activa el metodo correspondiente (Google o Email/Password).',
+            'auth/unauthorized-domain': 'Este dominio no esta autorizado en Firebase Authentication.',
+            'auth/popup-blocked': 'El navegador bloqueo la ventana emergente. Permite popups para este sitio.',
+            'auth/popup-closed-by-user': 'Cerraste la ventana de Google antes de completar el acceso.',
+            'auth/invalid-credential': 'Credenciales invalidas. Intenta nuevamente.',
+            'auth/user-not-found': 'No existe una cuenta con ese correo.',
+            'auth/wrong-password': 'Contrasena incorrecta.',
+            'auth/invalid-email': 'El correo no tiene un formato valido.',
+            'auth/email-already-in-use': 'Este correo ya esta registrado.',
+            'auth/weak-password': 'La contrasena es muy debil. Usa al menos 6 caracteres.',
+            'auth/network-request-failed': 'Error de red. Revisa tu conexion e intenta de nuevo.'
+        };
+
+        const message = map[code] || 'No fue posible completar la autenticacion.';
+        return code ? `${message} (${code})` : message;
+    }
+
+    async function waitForFirebaseAuth(timeout = 7000) {
+        return new Promise((resolve) => {
+            if (
+                window.auth &&
+                window.onAuthStateChanged &&
+                window.GoogleAuthProvider &&
+                window.signInWithPopup &&
+                window.signOut &&
+                window.signInWithRedirect &&
+                window.getRedirectResult &&
+                window.signInWithEmailAndPassword &&
+                window.createUserWithEmailAndPassword &&
+                window.updateProfile
+            ) {
+                return resolve(true);
+            }
+            const start = Date.now();
+            const timer = setInterval(() => {
+                if (
+                    window.auth &&
+                    window.onAuthStateChanged &&
+                    window.GoogleAuthProvider &&
+                    window.signInWithPopup &&
+                    window.signOut &&
+                    window.signInWithRedirect &&
+                    window.getRedirectResult &&
+                    window.signInWithEmailAndPassword &&
+                    window.createUserWithEmailAndPassword &&
+                    window.updateProfile
+                ) {
+                    clearInterval(timer);
+                    resolve(true);
+                } else if (Date.now() - start >= timeout) {
+                    clearInterval(timer);
+                    resolve(false);
+                }
+            }, 100);
+        });
+    }
+
+    function updateAuthUi(user) {
+        const authLabel = document.getElementById('authUserLabel');
+        const registerBtn = document.getElementById('registerAuthBtn');
+        const loginBtn = document.getElementById('loginAuthBtn');
+        const logoutBtn = document.getElementById('logoutAuthBtn');
+        const authSignalDot = document.getElementById('authSignalDot');
+        const authSignalText = document.getElementById('authSignalText');
+        const authRoleBadge = document.getElementById('authRoleBadge');
+        const adminNavLink = document.getElementById('adminNavLink');
+        const adminSideLink = document.getElementById('adminPanelSideLink');
+
+        if (!authLabel || !registerBtn || !loginBtn || !logoutBtn) return;
+
+        const email = user?.email || '';
+        const displayName = user?.displayName || '';
+        const isAdmin = isAdminEmail(email);
+
+        if (user) {
+            authLabel.textContent = displayName
+                ? `${displayName} (${email})`
+                : email;
+            registerBtn.hidden = true;
+            loginBtn.hidden = true;
+            logoutBtn.hidden = false;
+
+            if (authSignalDot) {
+                authSignalDot.classList.remove('auth-signal-guest', 'auth-signal-online', 'auth-signal-admin');
+                authSignalDot.classList.add(isAdmin ? 'auth-signal-admin' : 'auth-signal-online');
+            }
+            if (authSignalText) {
+                authSignalText.textContent = isAdmin ? 'Conectado (Admin)' : 'Conectado';
+            }
+            if (authRoleBadge) authRoleBadge.hidden = !isAdmin;
+        } else {
+            authLabel.textContent = 'Invitado';
+            registerBtn.hidden = false;
+            loginBtn.hidden = false;
+            logoutBtn.hidden = true;
+
+            if (authSignalDot) {
+                authSignalDot.classList.remove('auth-signal-online', 'auth-signal-admin');
+                authSignalDot.classList.add('auth-signal-guest');
+            }
+            if (authSignalText) {
+                authSignalText.textContent = 'Invitado';
+            }
+            if (authRoleBadge) authRoleBadge.hidden = true;
+        }
+
+        if (adminNavLink) adminNavLink.hidden = !isAdmin;
+        if (adminSideLink) adminSideLink.hidden = !isAdmin;
+    }
+
+    function setupAuthModal() {
+        const modal = document.getElementById('authModal');
+        const closeBtn = document.getElementById('authModalCloseBtn');
+        const registerOpenBtn = document.getElementById('registerAuthBtn');
+        const tabRegister = document.getElementById('authTabRegister');
+        const tabLogin = document.getElementById('authTabLogin');
+        const registerForm = document.getElementById('authRegisterForm');
+        const loginForm = document.getElementById('authLoginForm');
+        const message = document.getElementById('authModalMessage');
+
+        if (!modal || !registerOpenBtn || !tabRegister || !tabLogin || !registerForm || !loginForm || !message) return;
+
+        function setMode(mode) {
+            const isRegister = mode === 'register';
+            tabRegister.classList.toggle('active', isRegister);
+            tabLogin.classList.toggle('active', !isRegister);
+            registerForm.hidden = !isRegister;
+            loginForm.hidden = isRegister;
+            message.textContent = '';
+        }
+
+        function openModal(mode) {
+            setMode(mode);
+            modal.hidden = false;
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            modal.hidden = true;
+            if (!document.getElementById('preregistroModal')?.classList.contains('active')) {
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        registerOpenBtn.addEventListener('click', () => openModal('register'));
+        tabRegister.addEventListener('click', () => setMode('register'));
+        tabLogin.addEventListener('click', () => setMode('login'));
+
+        modal.addEventListener('click', (event) => {
+            const closeByOverlay = event.target instanceof HTMLElement && event.target.dataset.authClose === 'true';
+            if (closeByOverlay) closeModal();
+        });
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeModal);
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !modal.hidden) {
+                closeModal();
+            }
+        });
+
+        modal.dataset.closeAuthModal = 'true';
+    }
+
+    async function setupUserAuth() {
+        if (userAuthInitialized) return;
+        const modal = document.getElementById('authModal');
+        const loginQuickBtn = document.getElementById('loginAuthBtn');
+        const registerForm = document.getElementById('authRegisterForm');
+        const loginForm = document.getElementById('authLoginForm');
+        const message = document.getElementById('authModalMessage');
+        const googleBtn = document.getElementById('googleAuthModalBtn');
+        const logoutBtn = document.getElementById('logoutAuthBtn');
+        if (!logoutBtn || !registerForm || !loginForm || !message || !googleBtn || !loginQuickBtn) return;
+        userAuthInitialized = true;
+        let authObserverBound = false;
+
+        const ensureAuthReady = async (showUserHint = false) => {
+            const authReady = await waitForFirebaseAuth();
+            if (!authReady) {
+                const hint = 'Firebase Auth aun no esta listo. Recarga la pagina e intenta nuevamente.';
+                if (showUserHint) {
+                    message.textContent = hint;
+                }
+                return false;
+            }
+
+            if (!authObserverBound) {
+                try {
+                    await window.getRedirectResult(window.auth);
+                } catch (err) {
+                    console.error('Error recuperando redirect de Google:', err);
+                }
+
+                window.onAuthStateChanged(window.auth, (user) => {
+                    updateAuthUi(user || null);
+                });
+                authObserverBound = true;
+            }
+
+            return true;
+        };
+
+        ensureAuthReady(false);
+
+        registerForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            if (!(await ensureAuthReady(true))) return;
+            const nameInput = document.getElementById('authRegisterName');
+            const emailInput = document.getElementById('authRegisterEmail');
+            const passInput = document.getElementById('authRegisterPassword');
+            const username = nameInput?.value.trim() || '';
+            const email = emailInput?.value.trim() || '';
+            const password = passInput?.value || '';
+
+            if (!username) {
+                message.textContent = 'Ingresa un nombre de usuario.';
+                return;
+            }
+
+            try {
+                message.textContent = 'Creando cuenta...';
+                const credential = await window.createUserWithEmailAndPassword(window.auth, email, password);
+                if (credential?.user) {
+                    await window.updateProfile(credential.user, { displayName: username });
+                }
+                message.textContent = 'Cuenta creada correctamente.';
+                registerForm.reset();
+                if (modal) modal.hidden = true;
+                document.body.style.overflow = 'auto';
+            } catch (err) {
+                console.error('Error en registro:', err);
+                message.textContent = `Error: ${getAuthErrorMessage(err)}`;
+            }
+        });
+
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            if (!(await ensureAuthReady(true))) return;
+            const emailInput = document.getElementById('authLoginEmail');
+            const passInput = document.getElementById('authLoginPassword');
+            const email = emailInput?.value.trim() || '';
+            const password = passInput?.value || '';
+
+            try {
+                message.textContent = 'Ingresando...';
+                await window.signInWithEmailAndPassword(window.auth, email, password);
+                message.textContent = 'Sesion iniciada.';
+                loginForm.reset();
+                if (modal) modal.hidden = true;
+                document.body.style.overflow = 'auto';
+            } catch (err) {
+                console.error('Error en login:', err);
+                message.textContent = `Error: ${getAuthErrorMessage(err)}`;
+            }
+        });
+
+        const startGoogleSignIn = async (useModalMessage = false) => {
+            if (!(await ensureAuthReady(useModalMessage))) {
+                if (!useModalMessage) alert('Firebase Auth aun no esta listo. Recarga la pagina e intenta nuevamente.');
+                return;
+            }
+            try {
+                if (useModalMessage) message.textContent = 'Conectando con Google...';
+                const provider = new window.GoogleAuthProvider();
+                provider.setCustomParameters({ prompt: 'select_account' });
+                if (useModalMessage) message.textContent = 'Redirigiendo a Google...';
+                await window.signInWithRedirect(window.auth, provider);
+            } catch (err) {
+                console.error('Error en login con Google:', err);
+                if (useModalMessage) message.textContent = `Error: ${getAuthErrorMessage(err)}`;
+                else alert(getAuthErrorMessage(err));
+            }
+        };
+
+        googleBtn.addEventListener('click', async () => {
+            await startGoogleSignIn(true);
+        });
+
+        loginQuickBtn.addEventListener('click', async () => {
+            await startGoogleSignIn(false);
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            if (!(await ensureAuthReady(false))) return;
+            try {
+                await window.signOut(window.auth);
+            } catch (err) {
+                console.error('Error al cerrar sesion:', err);
+            }
+        });
+    }
 
     function waitForFirebase(timeout = 6000) {
         return new Promise((resolve) => {
@@ -211,12 +530,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 statusElement.textContent = totalRegistros >= MAX_PREREGISTROS
                     ? 'Cupo completo: lista de espera cerrada por ahora.'
                     : 'Meta comunitaria en marcha';
-            }
-
-            // Also update index counter
-            const indexCount = document.getElementById('preregistro-count');
-            if (indexCount) {
-                indexCount.textContent = `Pre-registros: ${totalRegistros}/${MAX_PREREGISTROS}`;
             }
 
             updatePromoCapacityDisplay(totalRegistros);
@@ -307,7 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Aunque ya lo hicimos manualmente en el HTML con class="active", esto asegura que funcione
     // si agregas más páginas en el futuro.
     const rutaActual = window.location.pathname.split("/").pop();
-    const enlacesNav = document.querySelectorAll('nav a');
+    const enlacesNav = document.querySelectorAll('nav > a');
 
     enlacesNav.forEach(enlace => {
         const rutaEnlace = enlace.getAttribute('href');
@@ -315,6 +628,48 @@ document.addEventListener('DOMContentLoaded', () => {
             enlace.classList.add('active');
             enlace.style.borderBottom = "2px solid white"; // Extra visual
         }
+    });
+
+    const appRoutes = ['juegos.html', 'aplicaciones.html'];
+    const navDropdowns = document.querySelectorAll('.nav-dropdown');
+
+    navDropdowns.forEach((dropdown) => {
+        const toggle = dropdown.querySelector('.nav-dropdown-toggle');
+        const menuLinks = dropdown.querySelectorAll('.nav-dropdown-menu a');
+        if (!toggle) return;
+
+        toggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            const isOpen = dropdown.classList.contains('open');
+            navDropdowns.forEach((item) => {
+                item.classList.remove('open');
+                const itemToggle = item.querySelector('.nav-dropdown-toggle');
+                if (itemToggle) itemToggle.setAttribute('aria-expanded', 'false');
+            });
+            if (!isOpen) {
+                dropdown.classList.add('open');
+                toggle.setAttribute('aria-expanded', 'true');
+            }
+        });
+
+        if (appRoutes.includes(rutaActual)) {
+            toggle.classList.add('active');
+            menuLinks.forEach((link) => {
+                if (link.getAttribute('href') === rutaActual) {
+                    link.classList.add('active');
+                }
+            });
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        navDropdowns.forEach((dropdown) => {
+            if (!dropdown.contains(event.target)) {
+                dropdown.classList.remove('open');
+                const toggle = dropdown.querySelector('.nav-dropdown-toggle');
+                if (toggle) toggle.setAttribute('aria-expanded', 'false');
+            }
+        });
     });
 
     // Dark mode toggle
@@ -445,7 +800,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Cuando Firebase termine de cargar, refrescar el contador con datos reales
     document.addEventListener('firebaseReady', () => {
         updateCounter();
+        setupUserAuth();
     });
+
+    setupAuthModal();
+    setupUserAuth();
 });
 
 /* ===== FUNCIONES PARA VENTANAS LATERALES ===== */

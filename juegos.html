@@ -17,7 +17,13 @@
 
     <nav>
         <a href="index.html">Inicio</a>
-        <a href="juegos.html" class="active">Juegos</a>
+        <div class="nav-dropdown">
+            <button type="button" class="nav-dropdown-toggle active" aria-haspopup="true" aria-expanded="false">Aplicaciones</button>
+            <div class="nav-dropdown-menu">
+                <a href="juegos.html" class="active">Juegos</a>
+                <a href="aplicaciones.html">Aplicaciones</a>
+            </div>
+        </div>
         <a href="imagenes.html">Imágenes</a>
         <a href="actualizaciones.html">Actualizaciones</a>
         <a href="donaciones.html">Apóyanos</a>
@@ -27,15 +33,66 @@
     </nav>
 
     <div class="container">
-        <section>
-            <h2>Nuestros Juegos</h2>
-            <div class="grid-container">
-                <div class="card">
-                    <h3>Nuestra Tierra Job Simulator</h3>
-                    <img src="https://i.imgur.com/tWQ3svn.jpeg" alt="Vista previa Nuestra Tierra Job Simulator" style="width: 100%; height: auto; margin-bottom: 15px; border-radius: 8px;">
-                    <p>Juego de simulación colombiano en desarrollo para móvil. Explora trabajos tradicionales y modernos en un entorno auténtico.</p>
-                    <a href="#" class="btn">Vista Previa</a>
+        <section class="juegos-showcase">
+            <div class="juegos-hero">
+                <span class="highlight-tag">CATALOGO EN EXPANSION</span>
+                <h2>Nuestros Juegos</h2>
+                <p>
+                    Cada proyecto se construye con enfoque narrativo, identidad local y sistemas pensados para una comunidad activa.
+                    Esta es la primera experiencia oficial en desarrollo.
+                </p>
+                <div class="juegos-metrics" aria-label="Resumen de proyectos">
+                    <div class="juegos-metric-box">
+                        <strong>01</strong>
+                        <span>Proyecto anunciado</span>
+                    </div>
+                    <div class="juegos-metric-box">
+                        <strong>1000</strong>
+                        <span>Cupos de fundador</span>
+                    </div>
+                    <div class="juegos-metric-box">
+                        <strong>2026</strong>
+                        <span>Ventana objetivo</span>
+                    </div>
                 </div>
+            </div>
+
+            <div class="juegos-grid">
+                <article class="juego-featured-card">
+                    <div class="juego-featured-media">
+                        <img src="https://i.imgur.com/tWQ3svn.jpeg" alt="Vista previa Nuestra Tierra Job Simulator" loading="lazy">
+                        <span class="juego-status-badge">EN DESARROLLO</span>
+                    </div>
+                    <div class="juego-featured-body">
+                        <h3>Nuestra Tierra Job Simulator</h3>
+                        <p>
+                            Simulación colombiana para móvil donde exploras trabajos tradicionales y modernos en un entorno auténtico,
+                            con progresión por habilidades, economía local y eventos comunitarios.
+                        </p>
+
+                        <ul class="juego-feature-list" aria-label="Pilares del proyecto">
+                            <li>Progresión por oficios y reputación</li>
+                            <li>Mapa vivo con zonas y rutinas dinámicas</li>
+                            <li>Eventos de temporada y retos colaborativos</li>
+                        </ul>
+
+                        <div class="juego-tags" aria-label="Etiquetas del juego">
+                            <span class="juego-tag">Simulacion</span>
+                            <span class="juego-tag">Movil</span>
+                            <span class="juego-tag">Narrativa</span>
+                            <span class="juego-tag">Comunidad</span>
+                        </div>
+
+                        <div class="juego-actions">
+                            <a href="preregistro.html" class="btn">Entrar al pre-registro</a>
+                            <a href="actualizaciones.html" class="btn btn-ghost">Ver avance del desarrollo</a>
+                        </div>
+                    </div>
+                </article>
+            </div>
+
+            <div class="juegos-coming-strip">
+                <p><strong>Proximo paso:</strong> pronto se habilitara una galeria de prototipos jugables y bitacoras tecnicas del desarrollo.</p>
             </div>
         </section>
     </div>
