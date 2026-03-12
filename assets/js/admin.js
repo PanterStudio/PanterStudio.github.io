@@ -3,10 +3,101 @@
 const LS_KEY = 'panterRegistros';
 const SETTINGS_DOC_PATH = ['settings', 'site'];
 const ADMIN_EMAILS_LS_KEY = 'panterAdminEmails';
+const FOUNDER_CEO_EMAIL = 'pantergamey@gmail.com';
 const DEFAULT_ADMIN_EMAILS = [
     'pantergamey@gmail.com',
     'panterstudiogamedev@gmail.com'
 ];
+
+const ROLE_LABELS = {
+    founder_ceo: 'Fundador / CEO',
+    admin_general: 'Admin General',
+    developer: 'Desarrollador',
+    modeler: 'Modelador',
+    community_manager: 'Community Manager',
+    support_ops: 'Soporte / Operaciones',
+    viewer: 'Solo lectura'
+};
+
+const ROLE_PERMISSIONS = {
+    founder_ceo: {
+        dashboard: true,
+        games: true,
+        news: true,
+        settings: true,
+        donations: true,
+        users: true,
+        minigames: true,
+        manageRoles: true,
+        editCoins: true
+    },
+    admin_general: {
+        dashboard: true,
+        games: true,
+        news: true,
+        settings: true,
+        donations: true,
+        users: true,
+        minigames: true,
+        manageRoles: false,
+        editCoins: true
+    },
+    developer: {
+        dashboard: true,
+        games: true,
+        news: true,
+        settings: false,
+        donations: false,
+        users: false,
+        minigames: true,
+        manageRoles: false,
+        editCoins: false
+    },
+    modeler: {
+        dashboard: true,
+        games: true,
+        news: false,
+        settings: false,
+        donations: false,
+        users: false,
+        minigames: false,
+        manageRoles: false,
+        editCoins: false
+    },
+    community_manager: {
+        dashboard: true,
+        games: false,
+        news: true,
+        settings: false,
+        donations: false,
+        users: true,
+        minigames: false,
+        manageRoles: false,
+        editCoins: false
+    },
+    support_ops: {
+        dashboard: true,
+        games: false,
+        news: false,
+        settings: false,
+        donations: true,
+        users: true,
+        minigames: true,
+        manageRoles: false,
+        editCoins: true
+    },
+    viewer: {
+        dashboard: true,
+        games: false,
+        news: false,
+        settings: false,
+        donations: false,
+        users: false,
+        minigames: false,
+        manageRoles: false,
+        editCoins: false
+    }
+};
 
 const DEFAULT_SETTINGS = {
     siteName: 'Panter Studio',
@@ -37,6 +128,9 @@ let currentUsers = [];
 let currentTiers = [];
 let currentDonations = [];
 let currentSponsors = [];
+let currentRole = 'viewer';
+let currentPermissions = { ...ROLE_PERMISSIONS.viewer };
+let selectedUserForRole = null;
 
 // DOM
 const gate = document.getElementById('adminGate');
@@ -51,6 +145,8 @@ const totalGamesEl = document.getElementById('adminTotalGames');
 const lastSyncEl = document.getElementById('adminLastSync');
 const dataSourceEl = document.getElementById('adminDataSource');
 const statusTextEl = document.getElementById('adminSiteStatusText');
+const currentUserEl = document.getElementById('adminCurrentUser');
+const currentRoleLabelEl = document.getElementById('adminCurrentRoleLabel');
 
 const tableBody = document.getElementById('adminTableBody');
 const refreshBtn = document.getElementById('adminRefreshBtn');
@@ -104,6 +200,13 @@ const coinsForm = document.getElementById('adminCoinsForm');
 const exportUsersBtn = document.getElementById('adminExportUsersBtn');
 const userDetailModal = document.getElementById('adminUserDetailModal');
 const userDetailContent = document.getElementById('adminUserDetailContent');
+const roleModal = document.getElementById('adminRoleModal');
+const roleForm = document.getElementById('adminRoleForm');
+const roleUserIdInput = document.getElementById('adminRoleUserId');
+const roleIsAdminInput = document.getElementById('adminRoleIsAdmin');
+const roleSelectInput = document.getElementById('adminRoleSelect');
+const roleTargetInfoEl = document.getElementById('adminRoleTargetInfo');
+const roleHintEl = document.getElementById('adminRoleHint');
 
 // DOM - Minigames
 const minigamesForm = document.getElementById('adminMinigamesForm');
@@ -170,6 +273,97 @@ function getConfiguredAdminEmails() {
 function isAdminEmail(email) {
     if (!email) return false;
     return getConfiguredAdminEmails().includes(String(email).trim().toLowerCase());
+}
+
+function normalizeRole(role) {
+    return ROLE_PERMISSIONS[role] ? role : 'viewer';
+}
+
+function getRoleLabel(role) {
+    return ROLE_LABELS[normalizeRole(role)] || ROLE_LABELS.viewer;
+}
+
+function getRoleChipClass(role) {
+    const key = normalizeRole(role);
+    if (key === 'founder_ceo') return 'role-founder';
+    if (key === 'admin_general') return 'role-admin';
+    if (key === 'developer') return 'role-dev';
+    if (key === 'modeler') return 'role-art';
+    if (key === 'community_manager') return 'role-community';
+    if (key === 'support_ops') return 'role-ops';
+    return 'role-viewer';
+}
+
+async function resolveUserRole(user) {
+    const email = String(user?.email || '').toLowerCase();
+    if (!email) {
+        return { role: 'viewer', isAdmin: false };
+    }
+
+    if (email === FOUNDER_CEO_EMAIL) {
+        const ready = await waitForFirebase();
+        if (ready) {
+            try {
+                await window.setDoc(window.fsDoc(window.db, 'users', user.uid), {
+                    email,
+                    isAdmin: true,
+                    role: 'founder_ceo',
+                    roleUpdatedAt: new Date().toISOString(),
+                    roleUpdatedBy: 'system'
+                }, { merge: true });
+            } catch (err) {
+                console.warn('No se pudo fijar rol founder_ceo en perfil:', err);
+            }
+        }
+        return { role: 'founder_ceo', isAdmin: true };
+    }
+
+    const ready = await waitForFirebase();
+    if (!ready) {
+        const fallbackAdmin = isAdminEmail(email);
+        return { role: fallbackAdmin ? 'admin_general' : 'viewer', isAdmin: fallbackAdmin };
+    }
+
+    try {
+        const snap = await window.getDoc(window.fsDoc(window.db, 'users', user.uid));
+        const profile = snap.exists() ? (snap.data() || {}) : {};
+        const role = normalizeRole(profile.role || (isAdminEmail(email) ? 'admin_general' : 'viewer'));
+        const isAdmin = profile.isAdmin === true || role === 'founder_ceo' || role === 'admin_general' || isAdminEmail(email);
+        return { role, isAdmin };
+    } catch (err) {
+        console.warn('No se pudo resolver rol desde Firestore, usando fallback:', err);
+        const fallbackAdmin = isAdminEmail(email);
+        return { role: fallbackAdmin ? 'admin_general' : 'viewer', isAdmin: fallbackAdmin };
+    }
+}
+
+function applyRolePermissions() {
+    const byId = {
+        adminOverview: currentPermissions.dashboard,
+        adminGamesSection: currentPermissions.games,
+        adminNewsSection: currentPermissions.news,
+        adminSettingsSection: currentPermissions.settings,
+        adminDonationsSection: currentPermissions.donations,
+        adminUsersSection: currentPermissions.users,
+        adminMinigamesSection: currentPermissions.minigames
+    };
+
+    Object.entries(byId).forEach(([id, enabled]) => {
+        const el = document.getElementById(id);
+        if (el) el.hidden = !enabled;
+    });
+
+    if (addGameBtn) addGameBtn.disabled = !currentPermissions.games;
+    if (addNewsBtn) addNewsBtn.disabled = !currentPermissions.news;
+    if (addTierBtn) addTierBtn.disabled = !currentPermissions.donations;
+    if (addCoinsBtn) addCoinsBtn.disabled = !currentPermissions.editCoins;
+    if (settingsForm) {
+        const elems = settingsForm.querySelectorAll('input, textarea, select, button');
+        elems.forEach((el) => {
+            if (el.id === 'adminSettingsResetBtn') return;
+            el.disabled = !currentPermissions.settings;
+        });
+    }
 }
 
 async function waitForFirebase(timeout = 7000) {
@@ -573,13 +767,19 @@ function renderUsers() {
     if (usersVerifiedEl) usersVerifiedEl.textContent = String(filtered.filter(u => u.emailVerified).length);
 
     if (!filtered.length) {
-        usersTableBody.innerHTML = '<tr><td colspan="8">No hay usuarios que coincidan</td></tr>';
+        usersTableBody.innerHTML = '<tr><td colspan="9">No hay usuarios que coincidan</td></tr>';
         return;
     }
 
     usersTableBody.innerHTML = filtered.slice(0, 100)
         .map((u, idx) => {
             const levelBadge = getLevelBadge(u.level);
+            const role = normalizeRole(u.role || (String(u.email || '').toLowerCase() === FOUNDER_CEO_EMAIL ? 'founder_ceo' : (u.isAdmin ? 'admin_general' : 'viewer')));
+            const roleLabel = getRoleLabel(role);
+            const roleClass = getRoleChipClass(role);
+            const roleBtn = currentPermissions.manageRoles
+                ? `<button data-manage-role-user="${esc(u.id)}" class="btn-small">Rol</button>`
+                : '';
             return `
                 <tr>
                     <td>${idx + 1}</td>
@@ -587,16 +787,83 @@ function renderUsers() {
                     <td>${esc(u.displayName || '-')}</td>
                     <td>${esc(maskEmail(u.email))}</td>
                     <td>${u.coins || 0} 🪙</td>
+                    <td><span class="admin-chip ${roleClass}">${esc(roleLabel)}</span></td>
                     <td><span class="admin-chip">${levelBadge}</span></td>
                     <td>${esc(formatDate(u.createdAt))}</td>
                     <td>
                         <button data-view-user="${esc(u.id)}" class="btn-small">Ver</button>
-                        <button data-add-coins-user="${esc(u.id)}" class="btn-small">+🪙</button>
+                        ${currentPermissions.editCoins ? `<button data-add-coins-user="${esc(u.id)}" class="btn-small">+🪙</button>` : ''}
+                        ${roleBtn}
                     </td>
                 </tr>
             `;
         })
         .join('');
+}
+
+function openRoleModal(userId) {
+    if (!currentPermissions.manageRoles || !roleModal || !roleForm) return;
+    const user = currentUsers.find((u) => u.id === userId);
+    if (!user) return;
+    selectedUserForRole = user;
+
+    const email = String(user.email || '').toLowerCase();
+    const isFounder = email === FOUNDER_CEO_EMAIL;
+    const role = normalizeRole(user.role || (isFounder ? 'founder_ceo' : (user.isAdmin ? 'admin_general' : 'viewer')));
+    const isAdmin = isFounder ? true : (user.isAdmin === true || role === 'admin_general');
+
+    if (roleUserIdInput) roleUserIdInput.value = user.id;
+    if (roleIsAdminInput) {
+        roleIsAdminInput.value = isAdmin ? 'true' : 'false';
+        roleIsAdminInput.disabled = isFounder;
+    }
+    if (roleSelectInput) {
+        roleSelectInput.value = role;
+        roleSelectInput.disabled = isFounder;
+    }
+    if (roleTargetInfoEl) {
+        roleTargetInfoEl.textContent = `${user.displayName || 'Usuario'} (${user.email || 'sin correo'})`;
+        roleTargetInfoEl.className = 'admin-message role-target-info';
+    }
+    if (roleHintEl) {
+        roleHintEl.textContent = isFounder
+            ? 'La cuenta del fundador/CEO es fija y no se puede degradar.'
+            : 'Define si tendrá acceso al panel y el rol operativo.';
+        roleHintEl.className = `admin-message role-hint${isFounder ? ' role-lock-note' : ''}`;
+    }
+    roleModal.showModal();
+}
+
+async function saveUserRoleConfig() {
+    if (!selectedUserForRole || !currentPermissions.manageRoles) return;
+    const ready = await waitForFirebase();
+    if (!ready) {
+        alert('Firebase no disponible');
+        return;
+    }
+
+    const email = String(selectedUserForRole.email || '').toLowerCase();
+    const isFounder = email === FOUNDER_CEO_EMAIL;
+    const role = isFounder ? 'founder_ceo' : normalizeRole(roleSelectInput?.value || 'viewer');
+    const isAdmin = isFounder ? true : (roleIsAdminInput?.value === 'true');
+
+    try {
+        await window.setDoc(window.fsDoc(window.db, 'users', selectedUserForRole.id), {
+            email: selectedUserForRole.email || '',
+            isAdmin,
+            role,
+            roleUpdatedAt: new Date().toISOString(),
+            roleUpdatedBy: currentUser?.uid || 'unknown'
+        }, { merge: true });
+
+        selectedUserForRole.isAdmin = isAdmin;
+        selectedUserForRole.role = role;
+        renderUsers();
+        if (roleModal) roleModal.close();
+        alert('Rol actualizado correctamente.');
+    } catch (err) {
+        alert(`No se pudo guardar el rol: ${err.message}`);
+    }
 }
 
 function getLevelBadge(level) {
@@ -1036,16 +1303,35 @@ function handleAuthStateChange(user) {
         return;
     }
 
-    if (!isAdminEmail(user.email || '')) {
-        redirectToHome('Tu cuenta no tiene permisos de administrador.');
-        return;
-    }
+    resolveUserRole(user)
+        .then(({ role, isAdmin }) => {
+            if (!isAdmin) {
+                redirectToHome('Tu cuenta no tiene permisos de administrador.');
+                return;
+            }
 
-    if (gateMessage) {
-        gateMessage.textContent = '';
-        gateMessage.className = 'admin-message';
-    }
-    showPanel();
+            currentRole = normalizeRole(role);
+            currentPermissions = { ...(ROLE_PERMISSIONS[currentRole] || ROLE_PERMISSIONS.viewer) };
+
+            if (gateMessage) {
+                gateMessage.textContent = '';
+                gateMessage.className = 'admin-message';
+            }
+            if (currentUserEl) {
+                currentUserEl.textContent = user.displayName
+                    ? `${user.displayName} (${user.email || 'sin correo'})`
+                    : (user.email || 'Cuenta interna');
+            }
+            if (currentRoleLabelEl) {
+                currentRoleLabelEl.textContent = getRoleLabel(currentRole);
+            }
+            applyRolePermissions();
+            showPanel();
+        })
+        .catch((err) => {
+            console.error('Error resolviendo rol de acceso:', err);
+            redirectToHome('No se pudo validar tu rol de acceso.');
+        });
 }
 
 async function handleLogout() {
@@ -1226,7 +1512,9 @@ if (usersTableBody) {
     usersTableBody.addEventListener('click', (event) => {
         const addCoinsBtn = event.target.closest('[data-add-coins-user]');
         const viewBtn = event.target.closest('[data-view-user]');
+        const roleBtn = event.target.closest('[data-manage-role-user]');
         if (addCoinsBtn) openAddCoinsModal(addCoinsBtn.dataset.addCoinsUser);
+        if (roleBtn) openRoleModal(roleBtn.dataset.manageRoleUser);
         if (viewBtn) {
             const user = currentUsers.find(u => u.id === viewBtn.dataset.viewUser);
             if (user) alert(`Usuario: ${user.displayName || '-'}\nEmail: ${user.email}\nMonedas: ${user.coins || 0}\nNivel: ${getLevelBadge(user.level)}\nRegistrado: ${formatDate(user.createdAt)}`);
@@ -1267,6 +1555,13 @@ if (coinsForm) {
             return;
         }
         addCoinsToUser(targetUserId, amount, note ? `${reason}: ${note}` : reason);
+    });
+}
+
+if (roleForm) {
+    roleForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveUserRoleConfig();
     });
 }
 

@@ -41,6 +41,7 @@ async function sendConfirmationEmail(userEmail, position) {
 const MAX_PREREGISTROS = 1000;
 let preregistrosActuales = 0;
 const ADMIN_EMAILS_LS_KEY = 'panterAdminEmails';
+const FOUNDER_CEO_EMAIL = 'pantergamey@gmail.com';
 const DEFAULT_ADMIN_EMAILS = [
     'pantergamey@gmail.com',
     'panterstudiogamedev@gmail.com'
@@ -81,9 +82,13 @@ async function isUsernameTaken(username) {
 }
 
 async function saveUserProfile(user, username) {
+    const email = String(user.email || '').toLowerCase();
+    const isFounder = email === FOUNDER_CEO_EMAIL;
     await window.setDoc(window.fsDoc(window.db, 'users', user.uid), {
         username,
         email: user.email || '',
+        role: isFounder ? 'founder_ceo' : 'viewer',
+        isAdmin: isFounder,
         createdAt: new Date().toISOString()
     }, { merge: true });
     await window.updateProfile(user, { displayName: username });
@@ -196,6 +201,34 @@ document.addEventListener('DOMContentLoaded', () => {
         return admins.includes(String(email).toLowerCase());
     }
 
+    function getRoleLabel(role) {
+        const labels = {
+            founder_ceo: 'Fundador/CEO',
+            admin_general: 'Admin',
+            developer: 'Desarrollador',
+            modeler: 'Modelador',
+            community_manager: 'Community',
+            support_ops: 'Operaciones',
+            viewer: 'Miembro'
+        };
+        return labels[role] || labels.viewer;
+    }
+
+    async function resolveAdminAccess(user) {
+        const email = String(user?.email || '').toLowerCase();
+        if (!email) return { isAdmin: false, role: 'viewer' };
+        if (email === FOUNDER_CEO_EMAIL) return { isAdmin: true, role: 'founder_ceo' };
+
+        try {
+            const profile = await getUserProfile(user.uid);
+            const role = profile?.role || 'viewer';
+            const isAdmin = profile?.isAdmin === true || role === 'admin_general' || role === 'founder_ceo' || isAdminEmail(email);
+            return { isAdmin, role };
+        } catch {
+            return { isAdmin: isAdminEmail(email), role: 'viewer' };
+        }
+    }
+
     function getAuthErrorMessage(err) {
         const code = err?.code || '';
         const map = {
@@ -256,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function updateAuthUi(user) {
+    async function updateAuthUi(user) {
         const authLabel = document.getElementById('authUserLabel');
         const registerBtn = document.getElementById('registerAuthBtn');
         const loginBtn = document.getElementById('loginAuthBtn');
@@ -271,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const email = user?.email || '';
         const displayName = user?.displayName || '';
-        const isAdmin = isAdminEmail(email);
+        const { isAdmin, role } = user ? await resolveAdminAccess(user) : { isAdmin: false, role: 'viewer' };
 
         if (user) {
             authLabel.textContent = displayName
@@ -288,7 +321,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (authSignalText) {
                 authSignalText.textContent = isAdmin ? 'Conectado (Admin)' : 'Conectado';
             }
-            if (authRoleBadge) authRoleBadge.hidden = !isAdmin;
+            if (authRoleBadge) {
+                authRoleBadge.hidden = !isAdmin;
+                if (isAdmin) authRoleBadge.textContent = getRoleLabel(role).toUpperCase();
+            }
         } else {
             authLabel.textContent = 'Invitado';
             registerBtn.hidden = false;
