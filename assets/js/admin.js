@@ -62,6 +62,7 @@ const ceoRefreshUsersBtn = document.getElementById('adminCeoRefreshUsersBtn');
 
 const logoutBtn = document.getElementById('adminLogoutBtn');
 const goHomeBtn = document.getElementById('adminGoHomeBtn');
+const devPanelBtn = document.getElementById('adminDevPanelBtn');
 
 const welcomeOverlay = document.getElementById('adminWelcome');
 const welcomeTitleEl = document.getElementById('adminWelcomeTitle');
@@ -528,6 +529,12 @@ function bindEvents() {
     if (goHomeBtn) {
         goHomeBtn.addEventListener('click', () => {
             window.location.replace('index.html');
+        });
+    }
+
+    if (devPanelBtn) {
+        devPanelBtn.addEventListener('click', () => {
+            window.location.href = 'panel-desarrollo.html';
         });
     }
 
