@@ -1,10 +1,18 @@
-const FOUNDER_CEO_EMAIL = 'pantergamey@gmail.com';
+/* panel-desarrollo-proyecto.js – per-project workspace */
+const FOUNDER_CEO_EMAIL        = 'pantergamey@gmail.com';
 const PROJECT_TASKS_COLLECTION = 'development_project_tasks';
-const ADMIN_EMAILS_LS_KEY = 'panterAdminEmails';
-const DEFAULT_ADMIN_EMAILS = [
-    'pantergamey@gmail.com',
-    'panterstudiogamedev@gmail.com'
-];
+const MILESTONES_COLLECTION    = 'project_milestones';
+const TEAM_COLLECTION          = 'project_team';
+const NOTES_COLLECTION         = 'project_notes';
+const PROJ_META_COLLECTION     = 'project_meta';
+const ADMIN_EMAILS_LS_KEY      = 'panterAdminEmails';
+const DEFAULT_ADMIN_EMAILS     = ['pantergamey@gmail.com', 'panterstudiogamedev@gmail.com'];
+
+const SITE_ROOT = (document.body?.dataset.siteRoot || '.').replace(/\/$/, '');
+
+function toSitePath(path) {
+    return `${SITE_ROOT}/${String(path || '').replace(/^\/+/, '')}`.replace(/\\/g, '/');
+}
 
 const ROLE_ALIASES = {
     founder: 'founder_ceo',
@@ -150,7 +158,7 @@ function startAccessTimeout() {
 
 function redirectToList(msg) {
     showGateError(msg);
-    setTimeout(() => window.location.replace('panel-desarrollo.html'), 1300);
+    setTimeout(() => window.location.replace(toSitePath('pages/admin/panel-desarrollo.html')), 1300);
 }
 
 async function waitForFirebaseReady(timeout = 5000) {
@@ -457,7 +465,7 @@ function bindBoardEvents() {
 }
 
 function bindEvents() {
-    if (backBtn) backBtn.addEventListener('click', () => window.location.href = 'panel-desarrollo.html');
+    if (backBtn) backBtn.addEventListener('click', () => window.location.href = toSitePath('pages/admin/panel-desarrollo.html'));
     if (reloadBtn) reloadBtn.addEventListener('click', () => loadTasks());
 
     if (logoutBtn) {
@@ -467,7 +475,7 @@ function bindEvents() {
             } catch (err) {
                 console.error('Error al cerrar sesion:', err);
             } finally {
-                window.location.replace('index.html');
+                window.location.replace(toSitePath('index.html'));
             }
         });
     }

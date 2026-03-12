@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#1e70c8">
+    <title>Panel Proyecto - Panter Studio</title>
+    <link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <script src="../../assets/js/core/firebase-config.js"></script>
+</head>
+<body class="dev-studio-page" data-site-root="../..">
+
+    <!-- Gate -->
+    <div class="dev-studio-gate" id="gameProjGate">
+        <img src="https://i.imgur.com/GYjAGS7.png" alt="Panter Studio">
+        <h1>Panel del Proyecto</h1>
+        <p id="gameProjGateMessage">Verificando acceso...</p>
+    </div>
+
+    <!-- Sidebar toggle -->
+    <button class="dev-sidebar-toggle" id="projSidebarToggle">☰</button>
+
+    <!-- Sidebar -->
+    <nav class="dev-sidebar" id="projSidebar">
+        <div class="dev-sidebar-header">
+            <img src="https://i.imgur.com/GYjAGS7.png" alt="Logo" class="dev-sidebar-logo">
+            <div class="dev-sidebar-brand">
+                Panter Studio
+                <small>Proyecto</small>
+            </div>
+        </div>
+
+        <div class="dev-sidebar-project" id="sidebarProjectInfo">
+            <p class="dev-sidebar-project-name" id="sidebarProjName">Cargando...</p>
+            <span class="dev-sidebar-project-type" id="sidebarProjType">—</span>
+        </div>
+
+        <div class="dev-sidebar-section">
+            <span class="dev-sidebar-section-label">Secciones</span>
+            <button class="dev-nav-link active" data-proj-tab="overview">
+                <span class="dev-nav-icon">📊</span> Vista general
+            </button>
+            <button class="dev-nav-link" data-proj-tab="tasks">
+                <span class="dev-nav-icon">✅</span> Tareas
+            </button>
+            <button class="dev-nav-link" data-proj-tab="milestones">
+                <span class="dev-nav-icon">🏁</span> Hitos
+            </button>
+            <button class="dev-nav-link" data-proj-tab="team">
+                <span class="dev-nav-icon">👥</span> Equipo
+            </button>
+            <button class="dev-nav-link" data-proj-tab="notes">
+                <span class="dev-nav-icon">📝</span> Notas
+            </button>
+        </div>
+
+        <div class="dev-sidebar-section">
+            <span class="dev-sidebar-section-label">Herramientas</span>
+            <a class="dev-nav-link" href="releases.html">
+                <span class="dev-nav-icon">📦</span> Releases
+            </a>
+            <a class="dev-nav-link" href="bugs.html">
+                <span class="dev-nav-icon">🐛</span> Bug Tracker
+            </a>
+            <a class="dev-nav-link" href="ideas.html">
+                <span class="dev-nav-icon">💡</span> Ideas Board
+            </a>
+            <a class="dev-nav-link" href="panel-desarrollo.html">
+                <span class="dev-nav-icon">🏠</span> Dev Hub
+            </a>
+        </div>
+
+        <div class="dev-sidebar-footer">
+            <button class="dev-nav-link" id="gameProjLogoutBtn">
+                <span class="dev-nav-icon">🚪</span> Cerrar sesion
+            </button>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <div class="dev-main-content" id="gameProjPanel" hidden>
+
+        <!-- Topbar -->
+        <div class="dev-topbar-strip">
+            <div class="dev-topbar-left">
+                <h2 id="gameProjTitle">Cargando...</h2>
+                <p>
+                    <span id="gameProjTypeBadge" class="dev-badge dev-badge-blue" style="margin-right:6px;">proyecto</span>
+                    <span id="gameProjStatus">Estado: —</span>
+                </p>
+            </div>
+            <div class="dev-topbar-right">
+                <button class="dev-btn" id="gameProjReloadBtn">↻</button>
+                <button class="dev-btn" id="gameProjBackBtn">← Dev Hub</button>
+            </div>
+        </div>
+
+        <!-- Cuerpo tabs -->
+        <div class="dev-page-body">
+
+            <!-- KPIs globales del proyecto -->
+            <div class="dev-kpi-row" id="projKpiRow">
+                <div class="dev-kpi-card">
+                    <span class="dev-kpi-label">Total tareas</span>
+                    <span class="dev-kpi-value" id="gameProjTotalTasks">0</span>
+                </div>
+                <div class="dev-kpi-card accent-green">
+                    <span class="dev-kpi-label">Terminadas</span>
+                    <span class="dev-kpi-value" id="projDoneTasks">0</span>
+                </div>
+                <div class="dev-kpi-card accent-yellow">
+                    <span class="dev-kpi-label">En curso</span>
+                    <span class="dev-kpi-value" id="projInProgress">0</span>
+                </div>
+                <div class="dev-kpi-card accent-red">
+                    <span class="dev-kpi-label">Bloqueadas</span>
+                    <span class="dev-kpi-value" id="projBlocked">0</span>
+                </div>
+                <div class="dev-kpi-card accent-purple">
+                    <span class="dev-kpi-label">% completado</span>
+                    <span class="dev-kpi-value" id="projPercent">0%</span>
+                </div>
+            </div>
+
+            <!-- ============ TAB: OVERVIEW ============ -->
+            <div class="dev-proj-tab-panel" id="tabOverview">
+                <div style="display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px;margin-bottom:14px;">
+
+                    <!-- Descripción del proyecto -->
+                    <div class="dev-card">
+                        <div class="dev-section-header">
+                            <h3>Descripción del proyecto</h3>
+                            <button class="dev-btn dev-btn-sm" id="projDescEditBtn">Editar</button>
+                        </div>
+                        <p id="projDescText" style="color:#a8d0eb;line-height:1.6;margin:0;">Sin descripción.</p>
+                        <form id="projDescForm" hidden style="margin-top:10px;">
+                            <textarea id="projDescInput" rows="4" class="dev-form" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid rgba(135,206,235,.35);border-radius:9px;background:rgba(2,8,14,.9);color:#eaf6ff;resize:vertical;font-family:inherit;"></textarea>
+                            <div class="dev-form-actions" style="margin-top:8px;">
+                                <button type="submit" class="dev-btn dev-btn-primary dev-btn-sm">Guardar</button>
+                                <button type="button" id="projDescCancelBtn" class="dev-btn dev-btn-sm">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Info del proyecto -->
+                    <div class="dev-card">
+                        <h3>Información</h3>
+                        <table class="dev-table" style="font-size:.82rem;">
+                            <tbody>
+                                <tr><td class="dev-muted">Tipo</td><td id="infoType">—</td></tr>
+                                <tr><td class="dev-muted">Estado</td><td id="infoStatus">—</td></tr>
+                                <tr><td class="dev-muted">Build actual</td><td id="infoBuild">—</td></tr>
+                                <tr><td class="dev-muted">Inicio</td><td id="infoStart">—</td></tr>
+                                <tr><td class="dev-muted">Meta de lanzamiento</td><td id="infoTarget">—</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Progreso por disciplina -->
+                <div class="dev-card" style="margin-bottom:14px;">
+                    <h3>Progreso por disciplina</h3>
+                    <div id="projDisciplineStats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:4px;"></div>
+                </div>
+
+                <!-- Últimas tareas -->
+                <div class="dev-card">
+                    <div class="dev-section-header">
+                        <h3>Últimas tareas modificadas</h3>
+                        <button class="dev-btn dev-btn-sm" data-proj-tab-go="tasks">Ver todas</button>
+                    </div>
+                    <div id="projRecentTasks"><p class="dev-empty">Sin tareas aún.</p></div>
+                </div>
+            </div>
+
+            <!-- ============ TAB: TAREAS ============ -->
+            <div class="dev-proj-tab-panel" id="tabTasks" hidden>
+                <div style="display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:14px;">
+
+                    <!-- Formulario de tarea -->
+                    <div class="dev-card" style="align-self:start;">
+                        <h3 id="taskFormTitle">Nueva tarea</h3>
+                        <form id="gameProjTaskForm" class="dev-form">
+                            <input type="hidden" id="gameProjTaskId">
+                            <div>
+                                <label>Título técnico</label>
+                                <input type="text" id="gameProjTaskTitle" required placeholder="Sistema de inventario: slots persistentes">
+                            </div>
+                            <div class="dev-form-row">
+                                <div>
+                                    <label>Disciplina</label>
+                                    <select id="gameProjTaskDiscipline">
+                                        <option value="programacion">Programación</option>
+                                        <option value="modelado">Modelado</option>
+                                        <option value="diseno_juego">Diseño de juego</option>
+                                        <option value="ui_ux">UI/UX</option>
+                                        <option value="qa_bugs">QA/Bugs</option>
+                                        <option value="audio">Audio</option>
+                                        <option value="narrativa">Narrativa</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Prioridad</label>
+                                    <select id="gameProjTaskPriority">
+                                        <option value="alta">Alta 🔴</option>
+                                        <option value="media" selected>Media 🟡</option>
+                                        <option value="baja">Baja 🟢</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="dev-form-row">
+                                <div>
+                                    <label>Etapa</label>
+                                    <select id="gameProjTaskStage">
+                                        <option value="preproduccion">Preproducción</option>
+                                        <option value="produccion">Producción</option>
+                                        <option value="testing">Testing</option>
+                                        <option value="polish">Polish</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Estado</label>
+                                    <select id="gameProjTaskStatus">
+                                        <option value="pendiente">Pendiente</option>
+                                        <option value="en_curso">En curso</option>
+                                        <option value="bloqueada">Bloqueada</option>
+                                        <option value="lista_qa">Lista para QA</option>
+                                        <option value="terminada">Terminada</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="dev-form-row">
+                                <div>
+                                    <label>Fecha objetivo</label>
+                                    <input type="date" id="gameProjTaskDueDate">
+                                </div>
+                                <div>
+                                    <label>Build / Versión</label>
+                                    <input type="text" id="gameProjTaskBuild" placeholder="v0.3.5-alpha">
+                                </div>
+                            </div>
+                            <div>
+                                <label>Detalle técnico</label>
+                                <textarea id="gameProjTaskDescription" rows="3" placeholder="Criterios de aceptación, dependencias, notas..."></textarea>
+                            </div>
+                            <div class="dev-form-actions">
+                                <button type="submit" class="dev-btn dev-btn-primary">Guardar</button>
+                                <button type="button" id="gameProjTaskResetBtn" class="dev-btn">Limpiar</button>
+                            </div>
+                        </form>
+                        <p id="gameProjMessage" class="dev-msg" style="margin-top:8px;"></p>
+                    </div>
+
+                    <!-- Tablero kanban -->
+                    <div>
+                        <div class="dev-filter-bar" style="margin-bottom:10px;">
+                            <input type="search" id="gameProjSearch" placeholder="Buscar tarea...">
+                            <select id="gameProjDisciplineFilter">
+                                <option value="all">Todas las disciplinas</option>
+                                <option value="programacion">Programación</option>
+                                <option value="modelado">Modelado</option>
+                                <option value="diseno_juego">Diseño de juego</option>
+                                <option value="ui_ux">UI/UX</option>
+                                <option value="qa_bugs">QA/Bugs</option>
+                                <option value="audio">Audio</option>
+                                <option value="narrativa">Narrativa</option>
+                            </select>
+                            <select id="gameProjPriorityFilter">
+                                <option value="all">Toda prioridad</option>
+                                <option value="alta">Alta</option>
+                                <option value="media">Media</option>
+                                <option value="baja">Baja</option>
+                            </select>
+                        </div>
+                        <div id="gameProjBoard" class="dev-kanban"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ TAB: HITOS ============ -->
+            <div class="dev-proj-tab-panel" id="tabMilestones" hidden>
+                <div style="display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:14px;">
+                    <div class="dev-card" style="align-self:start;">
+                        <h3>Nuevo hito</h3>
+                        <form id="milestoneForm" class="dev-form">
+                            <input type="hidden" id="msId">
+                            <div>
+                                <label>Nombre del hito</label>
+                                <input type="text" id="msTitle" required placeholder="Beta pública v0.5">
+                            </div>
+                            <div>
+                                <label>Descripción</label>
+                                <textarea id="msDesc" rows="2" placeholder="Qué incluye este hito..."></textarea>
+                            </div>
+                            <div class="dev-form-row">
+                                <div>
+                                    <label>Fecha objetivo</label>
+                                    <input type="date" id="msDate">
+                                </div>
+                                <div>
+                                    <label>Estado</label>
+                                    <select id="msStatus">
+                                        <option value="pendiente">Pendiente</option>
+                                        <option value="en_curso">En curso</option>
+                                        <option value="completado">Completado</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="dev-form-actions">
+                                <button type="submit" class="dev-btn dev-btn-primary">Guardar hito</button>
+                                <button type="button" id="msResetBtn" class="dev-btn">Limpiar</button>
+                            </div>
+                        </form>
+                        <p id="msMessage" class="dev-msg" style="margin-top:8px;"></p>
+                    </div>
+                    <div class="dev-card">
+                        <div class="dev-section-header">
+                            <h3>Línea de tiempo</h3>
+                        </div>
+                        <div class="dev-timeline" id="milestoneTimeline">
+                            <p class="dev-empty">Sin hitos registrados.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ TAB: EQUIPO ============ -->
+            <div class="dev-proj-tab-panel" id="tabTeam" hidden>
+                <div style="display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:14px;">
+                    <div class="dev-card" style="align-self:start;">
+                        <h3>Agregar miembro</h3>
+                        <form id="teamForm" class="dev-form">
+                            <input type="hidden" id="teamMemberId">
+                            <div>
+                                <label>Nombre / Usuario</label>
+                                <input type="text" id="teamMemberName" required placeholder="Alias del equipo">
+                            </div>
+                            <div>
+                                <label>Rol en el proyecto</label>
+                                <select id="teamMemberRole">
+                                    <option value="programador">Programador</option>
+                                    <option value="modelador">Modelador 3D</option>
+                                    <option value="disenador">Diseñador</option>
+                                    <option value="qa">QA Tester</option>
+                                    <option value="audio">Audio</option>
+                                    <option value="narrativa">Narrativa</option>
+                                    <option value="lead">Lead / Director</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Avatar (emoji)</label>
+                                <input type="text" id="teamMemberAvatar" maxlength="4" placeholder="🧑‍💻">
+                            </div>
+                            <div class="dev-form-actions">
+                                <button type="submit" class="dev-btn dev-btn-primary">Agregar</button>
+                            </div>
+                        </form>
+                        <p id="teamMessage" class="dev-msg" style="margin-top:8px;"></p>
+                    </div>
+                    <div class="dev-card">
+                        <div class="dev-section-header">
+                            <h3>Miembros del proyecto</h3>
+                        </div>
+                        <div id="teamList"><p class="dev-empty">Sin miembros registrados.</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ TAB: NOTAS ============ -->
+            <div class="dev-proj-tab-panel" id="tabNotes" hidden>
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,340px);gap:14px;">
+                    <div class="dev-card">
+                        <div class="dev-section-header">
+                            <h3>Notas del proyecto</h3>
+                            <button class="dev-btn dev-btn-sm dev-btn-primary" id="addNoteBtn">+ Nueva nota</button>
+                        </div>
+                        <div id="notesList"><p class="dev-empty">Sin notas aún.</p></div>
+                    </div>
+                    <div class="dev-card" id="noteEditorWrap">
+                        <h3 id="noteEditorTitle">Nueva nota</h3>
+                        <form id="noteForm" class="dev-form">
+                            <input type="hidden" id="noteId">
+                            <div>
+                                <label>Título</label>
+                                <input type="text" id="noteTitleInput" placeholder="Mecánica de inventario...">
+                            </div>
+                            <div>
+                                <label>Contenido</label>
+                                <textarea id="noteContent" rows="8" placeholder="Escribe aquí tus notas, referencias, ideas..."></textarea>
+                            </div>
+                            <div>
+                                <label>Etiqueta</label>
+                                <select id="noteTag">
+                                    <option value="general">General</option>
+                                    <option value="diseno">Diseño</option>
+                                    <option value="codigo">Código</option>
+                                    <option value="arte">Arte</option>
+                                    <option value="audio">Audio</option>
+                                    <option value="referencia">Referencia</option>
+                                </select>
+                            </div>
+                            <div class="dev-form-actions">
+                                <button type="submit" class="dev-btn dev-btn-primary">Guardar nota</button>
+                            </div>
+                        </form>
+                        <p id="noteMessage" class="dev-msg" style="margin-top:8px;"></p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="../../assets/js/admin/panel-desarrollo-proyecto.js"></script>
+</body>
+</html>
+        <section class="gameproj-gate" id="gameProjGate">
+            <img src="https://i.imgur.com/GYjAGS7.png" alt="Logo Panter Studio" class="dev-logo">
+            <h1>Panel del Proyecto</h1>
+            <p id="gameProjGateMessage" class="dev-message">Verificando acceso...</p>
+        </section>
+
+        <section class="gameproj-panel" id="gameProjPanel" hidden>
+            <header class="gameproj-topbar">
+                <div>
+                    <span id="gameProjTypeBadge" class="gameproj-badge">Proyecto</span>
+                    <h2 id="gameProjTitle">Cargando...</h2>
+                    <p id="gameProjStatus">Estado: -</p>
+                </div>
+                <div class="gameproj-top-actions">
+                    <button id="gameProjBackBtn" class="btn">Volver a lista</button>
+                    <button id="gameProjReloadBtn" class="btn">Recargar</button>
+                    <button id="gameProjLogoutBtn" class="btn">Cerrar sesion</button>
+                </div>
+            </header>
+
+            <section class="gameproj-kpi-grid">
+                <article><span>Tareas totales</span><strong id="gameProjTotalTasks">0</strong></article>
+                <article><span>Programacion</span><strong id="gameProjCodeTasks">0</strong></article>
+                <article><span>Arte/Modelado</span><strong id="gameProjArtTasks">0</strong></article>
+                <article><span>QA/Bugs</span><strong id="gameProjQaTasks">0</strong></article>
+            </section>
+
+            <section class="gameproj-main">
+                <form id="gameProjTaskForm" class="gameproj-form">
+                    <h3>Tarea de desarrollo</h3>
+                    <input type="hidden" id="gameProjTaskId">
+
+                    <label for="gameProjTaskTitle">Titulo tecnico</label>
+                    <input type="text" id="gameProjTaskTitle" required placeholder="Sistema de inventario: guardar items por slot">
+
+                    <label for="gameProjTaskDiscipline">Disciplina</label>
+                    <select id="gameProjTaskDiscipline">
+                        <option value="programacion">Programacion</option>
+                        <option value="modelado">Modelado</option>
+                        <option value="diseno_juego">Diseño de juego</option>
+                        <option value="ui_ux">UI/UX</option>
+                        <option value="qa_bugs">QA/Bugs</option>
+                        <option value="audio">Audio</option>
+                    </select>
+
+                    <label for="gameProjTaskStage">Etapa</label>
+                    <select id="gameProjTaskStage">
+                        <option value="preproduccion">Preproduccion</option>
+                        <option value="produccion">Produccion</option>
+                        <option value="testing">Testing</option>
+                        <option value="polish">Polish</option>
+                    </select>
+
+                    <label for="gameProjTaskPriority">Prioridad</label>
+                    <select id="gameProjTaskPriority">
+                        <option value="alta">Alta</option>
+                        <option value="media" selected>Media</option>
+                        <option value="baja">Baja</option>
+                    </select>
+
+                    <label for="gameProjTaskStatus">Estado de avance</label>
+                    <select id="gameProjTaskStatus">
+                        <option value="pendiente">Pendiente</option>
+                        <option value="en_curso">En curso</option>
+                        <option value="bloqueada">Bloqueada</option>
+                        <option value="lista_qa">Lista para QA</option>
+                        <option value="terminada">Terminada</option>
+                    </select>
+
+                    <label for="gameProjTaskDueDate">Fecha objetivo</label>
+                    <input type="date" id="gameProjTaskDueDate">
+
+                    <label for="gameProjTaskBuild">Build/Version</label>
+                    <input type="text" id="gameProjTaskBuild" placeholder="v0.3.5-alpha">
+
+                    <label for="gameProjTaskDescription">Detalle tecnico</label>
+                    <textarea id="gameProjTaskDescription" rows="3" placeholder="Criterios de aceptacion, dependencias y notas tecnicas"></textarea>
+
+                    <div class="gameproj-form-actions">
+                        <button type="submit" class="btn">Guardar tarea</button>
+                        <button type="button" id="gameProjTaskResetBtn" class="btn">Limpiar</button>
+                    </div>
+                </form>
+
+                <div class="gameproj-board-area">
+                    <section class="gameproj-filters">
+                        <input type="search" id="gameProjSearch" placeholder="Buscar tarea por titulo, build o detalle">
+                        <select id="gameProjDisciplineFilter">
+                            <option value="all">Todas las disciplinas</option>
+                            <option value="programacion">Programacion</option>
+                            <option value="modelado">Modelado</option>
+                            <option value="diseno_juego">Diseño de juego</option>
+                            <option value="ui_ux">UI/UX</option>
+                            <option value="qa_bugs">QA/Bugs</option>
+                            <option value="audio">Audio</option>
+                        </select>
+                        <p id="gameProjMessage" class="dev-message"></p>
+                    </section>
+
+                    <section id="gameProjBoard" class="gameproj-board"></section>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <script src="../../assets/js/admin/panel-desarrollo-proyecto.js"></script>
+</body>
+</html>

@@ -64,6 +64,16 @@ const DEFAULT_ADMIN_EMAILS = [
     'panterstudiogamedev@gmail.com'
 ];
 
+const SITE_ROOT = (document.body?.dataset.siteRoot || '.').replace(/\/$/, '');
+
+function toSitePath(path) {
+    return `${SITE_ROOT}/${String(path || '').replace(/^\/+/, '')}`.replace(/\\/g, '/');
+}
+
+function getRouteFilename(path) {
+    return String(path || '').split('/').pop();
+}
+
 /* ===== SISTEMA DE NOMBRE DE USUARIO ===== */
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,24}$/;
 const USERNAME_ADJ  = ['Veloz','Feroz','Astuto','Brillante','Salvaje','Sombrio','Rapido','Fuerte','Oscuro','Agil','Fiero','Noble'];
@@ -141,7 +151,7 @@ function closePromoModal() {
 // Función para ir a pre-registro
 function goToPreregistro() {
     closePromoModal();
-    window.location.href = 'preregistro.html';
+    window.location.href = toSitePath('pages/preregistro.html');
 }
 
 // Actualiza el bloque visual del modal usando cupos reales.
@@ -927,11 +937,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 5. Detectar en qué página estamos para resaltar el menú (Fallback)
     // Aunque ya lo hicimos manualmente en el HTML con class="active", esto asegura que funcione
     // si agregas más páginas en el futuro.
-    const rutaActual = window.location.pathname.split("/").pop();
+    const rutaActual = getRouteFilename(window.location.pathname);
     const enlacesNav = document.querySelectorAll('nav > a');
 
     enlacesNav.forEach(enlace => {
-        const rutaEnlace = enlace.getAttribute('href');
+        const rutaEnlace = getRouteFilename(enlace.getAttribute('href'));
         if (rutaEnlace === rutaActual) {
             enlace.classList.add('active');
             enlace.style.borderBottom = "2px solid white"; // Extra visual
@@ -963,7 +973,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (appRoutes.includes(rutaActual)) {
             toggle.classList.add('active');
             menuLinks.forEach((link) => {
-                if (link.getAttribute('href') === rutaActual) {
+                if (getRouteFilename(link.getAttribute('href')) === rutaActual) {
                     link.classList.add('active');
                 }
             });

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#1e70c8">
+    <title>Dev Hub - Panter Studio</title>
+    <link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <script src="../../assets/js/core/firebase-config.js"></script>
+</head>
+<body class="dev-studio-page" data-site-root="../..">
+
+    <!-- Gate de acceso -->
+    <div class="dev-studio-gate" id="devHubGate">
+        <img src="https://i.imgur.com/GYjAGS7.png" alt="Panter Studio">
+        <h1>Dev Hub</h1>
+        <p id="devHubGateMessage">Verificando permisos...</p>
+    </div>
+
+    <!-- Sidebar -->
+    <button class="dev-sidebar-toggle" id="devSidebarToggle">☰</button>
+
+    <nav class="dev-sidebar" id="devSidebar">
+        <div class="dev-sidebar-header">
+            <img src="https://i.imgur.com/GYjAGS7.png" alt="Logo" class="dev-sidebar-logo">
+            <div class="dev-sidebar-brand">
+                Panter Studio
+                <small>Dev Hub</small>
+            </div>
+        </div>
+
+        <div class="dev-sidebar-section">
+            <span class="dev-sidebar-section-label">Navegación</span>
+            <a class="dev-nav-link active" id="sideTabProjects" href="#">
+                <span class="dev-nav-icon">🎮</span> Proyectos
+            </a>
+            <a class="dev-nav-link" id="sideTabRecent" href="#">
+                <span class="dev-nav-icon">🕒</span> Actividad reciente
+            </a>
+        </div>
+
+        <div class="dev-sidebar-section">
+            <span class="dev-sidebar-section-label">Herramientas globales</span>
+            <a class="dev-nav-link" href="releases.html">
+                <span class="dev-nav-icon">📦</span> Releases
+            </a>
+            <a class="dev-nav-link" href="bugs.html">
+                <span class="dev-nav-icon">🐛</span> Bug Tracker
+            </a>
+            <a class="dev-nav-link" href="ideas.html">
+                <span class="dev-nav-icon">💡</span> Tablero de Ideas
+            </a>
+        </div>
+
+        <div class="dev-sidebar-section">
+            <span class="dev-sidebar-section-label">Admin</span>
+            <a class="dev-nav-link" id="devHubGoAdminBtn" href="#">
+                <span class="dev-nav-icon">⚙️</span> Panel Admin
+            </a>
+        </div>
+
+        <div class="dev-sidebar-footer">
+            <button class="dev-nav-link" id="devHubLogoutBtn">
+                <span class="dev-nav-icon">🚪</span> Cerrar sesion
+            </button>
+        </div>
+    </nav>
+
+    <!-- Contenido principal (oculto hasta autenticar) -->
+    <div class="dev-main-content" id="devHubPanel" hidden>
+
+        <!-- Topbar -->
+        <div class="dev-topbar-strip">
+            <div class="dev-topbar-left">
+                <h2>Dev Hub</h2>
+                <p id="devHubUserLabel">Cargando usuario...</p>
+            </div>
+            <div class="dev-topbar-right">
+                <button class="dev-btn" id="devHubReloadBtn">↻ Recargar</button>
+            </div>
+        </div>
+
+        <!-- Cuerpo -->
+        <div class="dev-page-body">
+
+            <!-- KPIs -->
+            <div class="dev-kpi-row">
+                <div class="dev-kpi-card">
+                    <span class="dev-kpi-label">Proyectos activos</span>
+                    <span class="dev-kpi-value" id="devHubTotalProjects">0</span>
+                </div>
+                <div class="dev-kpi-card accent-green">
+                    <span class="dev-kpi-label">Juegos</span>
+                    <span class="dev-kpi-value" id="devHubGamesCount">0</span>
+                </div>
+                <div class="dev-kpi-card accent-purple">
+                    <span class="dev-kpi-label">Aplicaciones</span>
+                    <span class="dev-kpi-value" id="devHubAppsCount">0</span>
+                </div>
+                <div class="dev-kpi-card accent-yellow">
+                    <span class="dev-kpi-label">Tareas abiertas</span>
+                    <span class="dev-kpi-value" id="devHubOpenTasks">—</span>
+                </div>
+                <div class="dev-kpi-card accent-red">
+                    <span class="dev-kpi-label">Bugs abiertos</span>
+                    <span class="dev-kpi-value" id="devHubOpenBugs">—</span>
+                </div>
+            </div>
+
+            <!-- Accesos rápidos -->
+            <div class="dev-section">
+                <div class="dev-section-header">
+                    <h3 class="dev-section-title">Accesos rápidos</h3>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;">
+                    <a href="releases.html" class="dev-card" style="text-decoration:none;display:flex;align-items:center;gap:10px;">
+                        <span style="font-size:1.5rem;">📦</span>
+                        <div>
+                            <div style="color:#fff;font-weight:700;font-size:.88rem;">Releases</div>
+                            <div class="dev-muted">Versiones del build</div>
+                        </div>
+                    </a>
+                    <a href="bugs.html" class="dev-card" style="text-decoration:none;display:flex;align-items:center;gap:10px;">
+                        <span style="font-size:1.5rem;">🐛</span>
+                        <div>
+                            <div style="color:#fff;font-weight:700;font-size:.88rem;">Bug Tracker</div>
+                            <div class="dev-muted">Reportar y seguir bugs</div>
+                        </div>
+                    </a>
+                    <a href="ideas.html" class="dev-card" style="text-decoration:none;display:flex;align-items:center;gap:10px;">
+                        <span style="font-size:1.5rem;">💡</span>
+                        <div>
+                            <div style="color:#fff;font-weight:700;font-size:.88rem;">Ideas Board</div>
+                            <div class="dev-muted">Canvas de nodos</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tab: Proyectos / Actividad -->
+            <div class="dev-tabs">
+                <button class="dev-tab active" data-tab="projects">Proyectos en desarrollo</button>
+                <button class="dev-tab" data-tab="recent">Actividad reciente</button>
+            </div>
+
+            <!-- Tab panel: proyectos -->
+            <div class="dev-tab-panel active" id="tabProjects">
+                <div class="dev-filter-bar">
+                    <input type="search" id="devHubSearch" placeholder="Buscar proyecto...">
+                    <select id="devHubTypeFilter">
+                        <option value="all">Todos los tipos</option>
+                        <option value="juego">Juegos</option>
+                        <option value="aplicacion">Aplicaciones</option>
+                    </select>
+                </div>
+                <p id="devHubMessage" class="dev-msg"></p>
+                <div id="devHubProjectsGrid" class="dev-card-grid"></div>
+            </div>
+
+            <!-- Tab panel: actividad -->
+            <div class="dev-tab-panel" id="tabRecent">
+                <div class="dev-card">
+                    <h3>Actividad reciente del equipo</h3>
+                    <div id="devHubActivityList"><p class="dev-empty">Cargando actividad...</p></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="../../assets/js/admin/panel-desarrollo.js"></script>
+</body>
+</html>

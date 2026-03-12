@@ -7,6 +7,12 @@ const DEFAULT_ADMIN_EMAILS = [
     'panterstudiogamedev@gmail.com'
 ];
 
+const SITE_ROOT = (document.body?.dataset.siteRoot || '.').replace(/\/$/, '');
+
+function toSitePath(path) {
+    return `${SITE_ROOT}/${String(path || '').replace(/^\/+/, '')}`.replace(/\\/g, '/');
+}
+
 const ROLE_LABELS = {
     founder_ceo: 'Fundador / CEO',
     administrador: 'Administrador',
@@ -393,7 +399,7 @@ function showGateError(message) {
 function redirectToHome(message) {
     showGateError(message);
     setTimeout(() => {
-        window.location.replace('index.html');
+        window.location.replace(toSitePath('index.html'));
     }, 1400);
 }
 
@@ -517,7 +523,7 @@ async function handleLogout() {
     } catch (err) {
         console.error('Error al cerrar sesión:', err);
     } finally {
-        window.location.replace('index.html');
+        window.location.replace(toSitePath('index.html'));
     }
 }
 
@@ -528,13 +534,13 @@ function bindEvents() {
 
     if (goHomeBtn) {
         goHomeBtn.addEventListener('click', () => {
-            window.location.replace('index.html');
+            window.location.replace(toSitePath('index.html'));
         });
     }
 
     if (devPanelBtn) {
         devPanelBtn.addEventListener('click', () => {
-            window.location.href = 'panel-desarrollo.html';
+            window.location.href = toSitePath('pages/admin/panel-desarrollo.html');
         });
     }
 

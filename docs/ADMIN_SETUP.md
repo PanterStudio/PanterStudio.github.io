@@ -137,7 +137,7 @@ Firestore creará automáticamente la colección `games` cuando agregues el prim
 
 ### "Firebase Auth no cargó a tiempo"
 - Revisa tu conexión a internet
-- Verifica que `assets/js/firebase-config.js` tenga las credenciales correctas
+- Verifica que `assets/js/core/firebase-config.js` tenga las credenciales correctas
 - Limpia caché del navegador (Ctrl + Shift + R)
 
 ### "Credenciales incorrectas"
