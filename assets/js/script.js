@@ -42,7 +42,8 @@ const MAX_PREREGISTROS = 1000;
 let preregistrosActuales = 0;
 const ADMIN_EMAILS_LS_KEY = 'panterAdminEmails';
 const DEFAULT_ADMIN_EMAILS = [
-    // Agrega aqui correos admin, por ejemplo: 'tu-correo@gmail.com'
+    'pantergamey@gmail.com',
+    'panterstudiogamedev@gmail.com'
 ];
 
 /* ===== SISTEMA DE NOMBRE DE USUARIO ===== */
