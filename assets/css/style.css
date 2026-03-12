@@ -570,6 +570,20 @@ header p {
     font-size: 0.8rem;
 }
 
+.header-auth-actions .auth-btn {
+    min-height: 42px;
+    min-width: 110px;
+}
+
+.header-auth-actions .auth-btn[hidden] {
+    display: none !important;
+}
+
+.header-auth-actions .auth-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .auth-modal {
     position: fixed;
     inset: 0;
@@ -3640,9 +3654,15 @@ footer {
     }
 
     .header-auth-actions {
-        width: 100%;
+        width: min(320px, 100%);
         justify-content: center;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+    }
+
+    .header-auth-actions .auth-btn {
+        width: 100%;
+        min-height: 46px;
+        font-size: 0.95rem;
     }
 
     .auth-user-label {
@@ -3763,9 +3783,11 @@ footer {
 }
 
 @media (max-width: 480px) {
-    .auth-btn {
+    .header-auth-actions .auth-btn {
         width: 100%;
-        max-width: 250px;
+        max-width: none;
+        min-height: 48px;
+        font-size: 1rem;
     }
 
     /* Header para móviles pequeños */

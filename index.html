@@ -159,8 +159,7 @@
             </div>
             <p id="authUserLabel" class="auth-user-label">Invitado</p>
             <div class="header-auth-actions">
-                <button id="registerAuthBtn" class="btn auth-btn">Registrarse</button>
-                <button id="loginAuthBtn" class="btn btn-ghost auth-btn">Entrar</button>
+                <button id="loginAuthBtn" class="btn auth-btn">Entrar</button>
                 <button id="logoutAuthBtn" class="btn btn-ghost auth-btn" hidden>Salir</button>
             </div>
         </div>
@@ -173,25 +172,7 @@
             <button type="button" class="auth-modal-close" id="authModalCloseBtn" aria-label="Cerrar">✕</button>
             <h3 id="authModalTitle">Acceso a tu cuenta</h3>
 
-            <div class="auth-modal-tabs">
-                <button type="button" id="authTabRegister" class="auth-tab active">Registrarse</button>
-                <button type="button" id="authTabLogin" class="auth-tab">Entrar</button>
-            </div>
-
-            <form id="authRegisterForm" class="auth-modal-form">
-                <label for="authRegisterName">Nombre de usuario</label>
-                <input type="text" id="authRegisterName" placeholder="TuNombre" minlength="3" maxlength="24" required>
-
-                <label for="authRegisterEmail">Correo</label>
-                <input type="email" id="authRegisterEmail" placeholder="tu-correo@gmail.com" required>
-
-                <label for="authRegisterPassword">Contraseña</label>
-                <input type="password" id="authRegisterPassword" placeholder="Minimo 6 caracteres" minlength="6" required>
-
-                <button type="submit" class="btn auth-submit">Crear cuenta</button>
-            </form>
-
-            <form id="authLoginForm" class="auth-modal-form" hidden>
+            <form id="authLoginForm" class="auth-modal-form">
                 <label for="authLoginEmail">Correo</label>
                 <input type="email" id="authLoginEmail" placeholder="tu-correo@gmail.com" required>
 

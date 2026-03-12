@@ -291,7 +291,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function updateAuthUi(user) {
         const authLabel = document.getElementById('authUserLabel');
-        const registerBtn = document.getElementById('registerAuthBtn');
         const loginBtn = document.getElementById('loginAuthBtn');
         const logoutBtn = document.getElementById('logoutAuthBtn');
         const authSignalDot = document.getElementById('authSignalDot');
@@ -300,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const adminNavLink = document.getElementById('adminNavLink');
         const adminSideLink = document.getElementById('adminPanelSideLink');
 
-        if (!authLabel || !registerBtn || !loginBtn || !logoutBtn) return;
+        if (!authLabel || !loginBtn || !logoutBtn) return;
 
         const email = user?.email || '';
         const displayName = user?.displayName || '';
@@ -310,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
             authLabel.textContent = displayName
                 ? `${displayName} (${email})`
                 : email;
-            registerBtn.hidden = true;
+            loginBtn.disabled = true;
             loginBtn.hidden = true;
             logoutBtn.hidden = false;
 
@@ -327,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             authLabel.textContent = 'Invitado';
-            registerBtn.hidden = false;
+            loginBtn.disabled = false;
             loginBtn.hidden = false;
             logoutBtn.hidden = true;
 
@@ -348,26 +347,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupAuthModal() {
         const modal = document.getElementById('authModal');
         const closeBtn = document.getElementById('authModalCloseBtn');
-        const registerOpenBtn = document.getElementById('registerAuthBtn');
-        const tabRegister = document.getElementById('authTabRegister');
-        const tabLogin = document.getElementById('authTabLogin');
-        const registerForm = document.getElementById('authRegisterForm');
+        const loginOpenBtn = document.getElementById('loginAuthBtn');
         const loginForm = document.getElementById('authLoginForm');
         const message = document.getElementById('authModalMessage');
 
-        if (!modal || !registerOpenBtn || !tabRegister || !tabLogin || !registerForm || !loginForm || !message) return;
+        if (!modal || !loginOpenBtn || !loginForm || !message) return;
 
-        function setMode(mode) {
-            const isRegister = mode === 'register';
-            tabRegister.classList.toggle('active', isRegister);
-            tabLogin.classList.toggle('active', !isRegister);
-            registerForm.hidden = !isRegister;
-            loginForm.hidden = isRegister;
+        function openModal() {
             message.textContent = '';
-        }
-
-        function openModal(mode) {
-            setMode(mode);
             modal.hidden = false;
             document.body.style.overflow = 'hidden';
         }
@@ -379,11 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        registerOpenBtn.addEventListener('click', () => openModal('register'));
-        const loginOpenBtn = document.getElementById('loginAuthBtn');
-        if (loginOpenBtn) loginOpenBtn.addEventListener('click', () => openModal('login'));
-        tabRegister.addEventListener('click', () => setMode('register'));
-        tabLogin.addEventListener('click', () => setMode('login'));
+        loginOpenBtn.addEventListener('click', openModal);
 
         modal.addEventListener('click', (event) => {
             const closeByOverlay = event.target instanceof HTMLElement && event.target.dataset.authClose === 'true';
@@ -406,12 +389,11 @@ document.addEventListener('DOMContentLoaded', () => {
     async function setupUserAuth() {
         if (userAuthInitialized) return;
         const modal = document.getElementById('authModal');
-        const registerForm = document.getElementById('authRegisterForm');
         const loginForm = document.getElementById('authLoginForm');
         const message = document.getElementById('authModalMessage');
         const googleBtn = document.getElementById('googleAuthModalBtn');
         const logoutBtn = document.getElementById('logoutAuthBtn');
-        if (!logoutBtn || !registerForm || !loginForm || !message || !googleBtn) return;
+        if (!logoutBtn || !loginForm || !message || !googleBtn) return;
         userAuthInitialized = true;
         let authObserverBound = false;
 
@@ -454,48 +436,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         ensureAuthReady(false);
-
-        registerForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            if (!(await ensureAuthReady(true))) return;
-            const nameInput = document.getElementById('authRegisterName');
-            const emailInput = document.getElementById('authRegisterEmail');
-            const passInput = document.getElementById('authRegisterPassword');
-            const username = nameInput?.value.trim() || '';
-            const email = emailInput?.value.trim() || '';
-            const password = passInput?.value || '';
-
-            if (!username) {
-                message.textContent = 'Ingresa un nombre de usuario.';
-                return;
-            }
-            if (!USERNAME_REGEX.test(username)) {
-                message.textContent = 'Nombre invalido. Solo letras, numeros y guion bajo (3-24 caracteres).';
-                return;
-            }
-
-            try {
-                message.textContent = 'Verificando nombre de usuario...';
-                const taken = await isUsernameTaken(username);
-                if (taken) {
-                    const suggs = generateSuggestions(username);
-                    message.textContent = `"${username}" ya está en uso. Prueba: ${suggs.slice(0, 3).join(', ')}`;
-                    return;
-                }
-                message.textContent = 'Creando cuenta...';
-                const credential = await window.createUserWithEmailAndPassword(window.auth, email, password);
-                if (credential?.user) {
-                    await saveUserProfile(credential.user, username);
-                }
-                message.textContent = '¡Cuenta creada! Bienvenido.';
-                registerForm.reset();
-                if (modal) modal.hidden = true;
-                document.body.style.overflow = 'auto';
-            } catch (err) {
-                console.error('Error en registro:', err);
-                message.textContent = `Error: ${getAuthErrorMessage(err)}`;
-            }
-        });
 
         loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
