@@ -2310,6 +2310,82 @@ footer {
     --admin-ok: #5F9EA0;
     --admin-warn: #ffd082;
     --admin-danger: #ff8a8a;
+    color-scheme: dark;
+}
+
+.admin-welcome {
+    position: fixed;
+    inset: 0;
+    z-index: 15000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.76);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.admin-welcome-card {
+    width: min(560px, 92vw);
+    padding: 24px 22px;
+    border-radius: 16px;
+    border: 1px solid rgba(135, 206, 235, 0.45);
+    background:
+        linear-gradient(155deg, rgba(0, 0, 0, 0.96), rgba(26, 26, 26, 0.98)),
+        radial-gradient(circle at top left, rgba(30, 112, 200, 0.26), transparent 55%);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.5);
+    color: #ffffff;
+    text-align: center;
+    animation: adminWelcomeIn 420ms ease-out;
+}
+
+.admin-welcome-kicker {
+    margin: 0;
+    font-size: 0.76rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #87CEEB;
+}
+
+.admin-welcome-card h2 {
+    margin: 10px 0 8px;
+    color: #ffffff;
+    font-size: clamp(1.35rem, 3.2vw, 1.95rem);
+}
+
+.admin-welcome-card p {
+    margin: 0;
+    color: #d3e9fa;
+}
+
+.admin-welcome-line {
+    margin: 16px auto 0;
+    width: 80%;
+    height: 3px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #1e70c8, #87CEEB, #1e70c8);
+    background-size: 220% 100%;
+    animation: adminWelcomeBar 1.6s linear infinite;
+}
+
+@keyframes adminWelcomeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(16px) scale(0.98);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes adminWelcomeBar {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 220% 0;
+    }
 }
 
 .admin-bg-glow {

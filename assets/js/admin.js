@@ -131,11 +131,15 @@ let currentSponsors = [];
 let currentRole = 'viewer';
 let currentPermissions = { ...ROLE_PERMISSIONS.viewer };
 let selectedUserForRole = null;
+let welcomeTimer = null;
 
 // DOM
 const gate = document.getElementById('adminGate');
 const panel = document.getElementById('adminPanel');
 const gateMessage = document.getElementById('adminGateMessage');
+const welcomeOverlay = document.getElementById('adminWelcome');
+const welcomeTitleEl = document.getElementById('adminWelcomeTitle');
+const welcomeSubtitleEl = document.getElementById('adminWelcomeSubtitle');
 
 const totalEl = document.getElementById('adminTotalRegistros');
 const disponiblesEl = document.getElementById('adminDisponibles');
@@ -1284,6 +1288,33 @@ function showPanel() {
     loadAllDashboardData();
 }
 
+function playWelcomeAnimation(user, role) {
+    if (!welcomeOverlay) return;
+
+    if (welcomeTimer) {
+        clearTimeout(welcomeTimer);
+        welcomeTimer = null;
+    }
+
+    const userName = user?.displayName || user?.email || 'equipo Panter Studio';
+    const roleLabel = getRoleLabel(role);
+    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (welcomeTitleEl) {
+        welcomeTitleEl.textContent = `Bienvenido, ${userName}`;
+    }
+    if (welcomeSubtitleEl) {
+        welcomeSubtitleEl.textContent = `Acceso activo como ${roleLabel}. Preparando panel...`;
+    }
+
+    welcomeOverlay.hidden = false;
+    const duration = prefersReducedMotion ? 700 : 1900;
+    welcomeTimer = setTimeout(() => {
+        welcomeOverlay.hidden = true;
+        welcomeTimer = null;
+    }, duration);
+}
+
 function redirectToHome(message) {
     if (gateMessage) {
         gateMessage.textContent = message;
@@ -1291,6 +1322,7 @@ function redirectToHome(message) {
     }
     if (gate) gate.hidden = false;
     panel.hidden = true;
+    if (welcomeOverlay) welcomeOverlay.hidden = true;
     setTimeout(() => {
         window.location.replace('index.html');
     }, 1400);
@@ -1327,6 +1359,7 @@ function handleAuthStateChange(user) {
             }
             applyRolePermissions();
             showPanel();
+            playWelcomeAnimation(user, currentRole);
         })
         .catch((err) => {
             console.error('Error resolviendo rol de acceso:', err);
