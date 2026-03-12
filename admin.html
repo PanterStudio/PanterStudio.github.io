@@ -17,16 +17,12 @@
             <img src="https://i.imgur.com/GYjAGS7.png" alt="Logo Panter Studio" class="admin-logo">
             <h1>Panel Administrativo</h1>
             <p>Acceso restringido para gestion interna.</p>
+            <p class="admin-login-help">Este panel ya no usa una contraseña aparte. Entra con tu cuenta en la página principal y, si tu correo está marcado como admin, se habilitará automáticamente.</p>
 
-            <form id="adminLoginForm" class="admin-form">
-                <label for="adminEmail">Correo</label>
-                <input type="email" id="adminEmail" placeholder="tu-correo-admin" required>
-
-                <label for="adminPassword">Contrasena</label>
-                <input type="password" id="adminPassword" placeholder="********" required>
-
-                <button type="submit" class="btn">Ingresar</button>
-            </form>
+            <div class="admin-login-actions">
+                <a href="index.html" class="btn">Ir a iniciar sesión</a>
+                <button type="button" id="adminSessionRetryBtn" class="btn btn-ghost">Revisar sesión actual</button>
+            </div>
 
             <p id="adminLoginMessage" class="admin-message"></p>
             <a href="index.html" class="admin-back-link">Volver al inicio</a>

@@ -2,6 +2,11 @@
 
 const LS_KEY = 'panterRegistros';
 const SETTINGS_DOC_PATH = ['settings', 'site'];
+const ADMIN_EMAILS_LS_KEY = 'panterAdminEmails';
+const DEFAULT_ADMIN_EMAILS = [
+    'pantergamey@gmail.com',
+    'panterstudiogamedev@gmail.com'
+];
 
 const DEFAULT_SETTINGS = {
     siteName: 'Panter Studio',
@@ -36,8 +41,8 @@ let currentSponsors = [];
 // DOM
 const loginCard = document.getElementById('adminLoginCard');
 const panel = document.getElementById('adminPanel');
-const loginForm = document.getElementById('adminLoginForm');
 const loginMessage = document.getElementById('adminLoginMessage');
+const sessionRetryBtn = document.getElementById('adminSessionRetryBtn');
 
 const totalEl = document.getElementById('adminTotalRegistros');
 const disponiblesEl = document.getElementById('adminDisponibles');
@@ -149,6 +154,25 @@ function getLocalRegistros() {
     }
 }
 
+function getConfiguredAdminEmails() {
+    const fromStorage = localStorage.getItem(ADMIN_EMAILS_LS_KEY) || '';
+    const storageEmails = fromStorage
+        .split(',')
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean);
+
+    const defaultEmails = DEFAULT_ADMIN_EMAILS
+        .map((email) => String(email || '').trim().toLowerCase())
+        .filter(Boolean);
+
+    return Array.from(new Set([...defaultEmails, ...storageEmails]));
+}
+
+function isAdminEmail(email) {
+    if (!email) return false;
+    return getConfiguredAdminEmails().includes(String(email).trim().toLowerCase());
+}
+
 async function waitForFirebase(timeout = 7000) {
     return new Promise((resolve) => {
         if (window.db && window.getDocs && window.collection && window.fsDoc) return resolve(true);
@@ -167,7 +191,7 @@ async function waitForFirebase(timeout = 7000) {
 
 async function waitForFirebaseAuth(timeout = 7000) {
     const start = Date.now();
-    while (!window.auth || !window.signInWithEmailAndPassword || !window.onAuthStateChanged) {
+    while (!window.auth || !window.onAuthStateChanged || !window.signOut) {
         if (Date.now() - start > timeout) {
             throw new Error('Firebase Auth no cargo a tiempo');
         }
@@ -999,8 +1023,23 @@ function showLogin() {
 
 function handleAuthStateChange(user) {
     currentUser = user;
-    if (user) showPanel();
-    else showLogin();
+    if (!user) {
+        loginMessage.textContent = 'Inicia sesión desde Inicio con una cuenta admin para acceder aquí.';
+        loginMessage.className = 'admin-message';
+        showLogin();
+        return;
+    }
+
+    if (!isAdminEmail(user.email || '')) {
+        loginMessage.textContent = 'Tu cuenta inició sesión, pero no tiene permisos de administrador.';
+        loginMessage.className = 'admin-message error';
+        showLogin();
+        return;
+    }
+
+    loginMessage.textContent = '';
+    loginMessage.className = 'admin-message';
+    showPanel();
 }
 
 async function handleLogout() {
@@ -1012,23 +1051,20 @@ async function handleLogout() {
 }
 
 // Events
-loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('adminEmail').value.trim();
-    const password = document.getElementById('adminPassword').value;
-
-    loginMessage.textContent = 'Autenticando...';
-    loginMessage.className = '';
-
-    try {
-        await waitForFirebaseAuth();
-        await window.signInWithEmailAndPassword(window.auth, email, password);
-    } catch (err) {
-        console.error('Login error:', err);
-        loginMessage.textContent = `Error: ${err.message || 'Credenciales incorrectas'}`;
-        loginMessage.className = 'error';
-    }
-});
+if (sessionRetryBtn) {
+    sessionRetryBtn.addEventListener('click', async () => {
+        loginMessage.textContent = 'Revisando sesión actual...';
+        loginMessage.className = 'admin-message';
+        try {
+            await waitForFirebaseAuth();
+            handleAuthStateChange(window.auth.currentUser || null);
+        } catch (err) {
+            console.error('Session check error:', err);
+            loginMessage.textContent = 'No se pudo comprobar la sesión actual.';
+            loginMessage.className = 'admin-message error';
+        }
+    });
+}
 
 refreshBtn.addEventListener('click', loadAllDashboardData);
 exportBtn.addEventListener('click', exportCSV);
