@@ -138,6 +138,89 @@
                 </div>
             </div>
 
+            <!-- Gestión rápida de proyectos y actualizaciones -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;align-items:start;">
+                <section class="dev-card">
+                    <h3 style="margin:.2rem 0 .7rem;">➕ Agregar proyecto</h3>
+                    <div class="dev-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                        <div>
+                            <label for="devCreateProjectType" class="dev-muted">Tipo</label>
+                            <select id="devCreateProjectType" class="dev-select" style="width:100%;">
+                                <option value="juego">Juego</option>
+                                <option value="aplicacion">Aplicación</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="devCreateProjectStatus" class="dev-muted">Estado</label>
+                            <select id="devCreateProjectStatus" class="dev-select" style="width:100%;">
+                                <option value="development">Desarrollo</option>
+                                <option value="planning">Planeación</option>
+                                <option value="testing">Testing</option>
+                                <option value="production">Producción</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label for="devCreateProjectTitle" class="dev-muted">Nombre del proyecto</label>
+                        <input id="devCreateProjectTitle" type="text" placeholder="Ej: Nuestra Tierra Job Simulator" style="width:100%;">
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label for="devCreateProjectSummary" class="dev-muted">Resumen</label>
+                        <textarea id="devCreateProjectSummary" rows="3" placeholder="Descripción corta para la lista pública" style="width:100%;"></textarea>
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label for="devCreateProjectImage" class="dev-muted">Imagen (URL)</label>
+                        <input id="devCreateProjectImage" type="url" placeholder="https://..." style="width:100%;">
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label for="devCreateProjectTags" class="dev-muted">Tags (coma separada)</label>
+                        <input id="devCreateProjectTags" type="text" placeholder="simulacion, movil, narrativa" style="width:100%;">
+                    </div>
+                    <label style="display:flex;align-items:center;gap:8px;margin-top:10px;color:#9dcbe0;font-size:.8rem;">
+                        <input id="devCreateProjectPublished" type="checkbox" checked>
+                        Mostrar públicamente en Juegos/Aplicaciones
+                    </label>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                        <button class="dev-btn dev-btn-primary" id="devCreateProjectBtn">Guardar proyecto</button>
+                    </div>
+                    <p id="devCreateProjectMsg" class="dev-msg" style="margin-top:8px;"></p>
+                </section>
+
+                <section class="dev-card">
+                    <h3 style="margin:.2rem 0 .7rem;">📝 Agregar actualización</h3>
+                    <div>
+                        <label for="devCreateUpdateProject" class="dev-muted">Proyecto</label>
+                        <select id="devCreateUpdateProject" class="dev-select" style="width:100%;">
+                            <option value="">Selecciona un proyecto...</option>
+                        </select>
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label for="devCreateUpdateTitle" class="dev-muted">Título</label>
+                        <input id="devCreateUpdateTitle" type="text" placeholder="Ej: Nueva build interna" style="width:100%;">
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label for="devCreateUpdateSummary" class="dev-muted">Resumen</label>
+                        <input id="devCreateUpdateSummary" type="text" placeholder="Resumen corto" style="width:100%;">
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label for="devCreateUpdateContent" class="dev-muted">Detalle de la actualización</label>
+                        <textarea id="devCreateUpdateContent" rows="5" placeholder="Qué se cambió, qué falta, blockers..." style="width:100%;"></textarea>
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label for="devCreateUpdateImage" class="dev-muted">Imagen (URL opcional)</label>
+                        <input id="devCreateUpdateImage" type="url" placeholder="https://..." style="width:100%;">
+                    </div>
+                    <label style="display:flex;align-items:center;gap:8px;margin-top:10px;color:#9dcbe0;font-size:.8rem;">
+                        <input id="devCreateUpdatePublished" type="checkbox" checked>
+                        Publicar en página pública de actualizaciones
+                    </label>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                        <button class="dev-btn dev-btn-primary" id="devCreateUpdateBtn">Publicar actualización</button>
+                    </div>
+                    <p id="devCreateUpdateMsg" class="dev-msg" style="margin-top:8px;"></p>
+                </section>
+            </div>
+
             <!-- Tab: Proyectos / Actividad -->
             <div class="dev-tabs">
                 <button class="dev-tab active" data-tab="projects">Proyectos en desarrollo</button>

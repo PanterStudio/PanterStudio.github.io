@@ -82,13 +82,26 @@
         }
     }
 
-    function renderNews(newsList) {
-        if (!newsList.length) {
-            listEl.innerHTML = '<p>No hay novedades publicadas por ahora.</p>';
-            return;
+    async function loadProjectUpdates() {
+        try {
+            const snap = await window.getDocs(window.collection(window.db, 'project_updates'));
+            return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        } catch (err) {
+            console.warn('No se pudieron leer actualizaciones por proyecto', err);
+            return [];
         }
+    }
 
-        const sorted = newsList
+    function projectLink(update) {
+        const id = String(update?.projectId || '').trim();
+        const type = String(update?.projectType || '').trim();
+        if (!id) return '';
+        const params = new URLSearchParams({ projectId: id, projectType: type || 'juego' });
+        return `<p><a href="proyecto.html?${esc(params.toString())}">Ver pagina del proyecto</a></p>`;
+    }
+
+    function renderNews(newsList, projectUpdates) {
+        const sortedNews = newsList
             .filter((item) => item.published === true)
             .sort((a, b) => {
                 if (a.pinned && !b.pinned) return -1;
@@ -96,12 +109,16 @@
                 return new Date(b.date || b.updatedAt || 0) - new Date(a.date || a.updatedAt || 0);
             });
 
-        if (!sorted.length) {
+        const sortedProjectUpdates = projectUpdates
+            .filter((item) => item.published !== false)
+            .sort((a, b) => new Date(b.date || b.updatedAt || 0) - new Date(a.date || a.updatedAt || 0));
+
+        if (!sortedNews.length && !sortedProjectUpdates.length) {
             listEl.innerHTML = '<p>No hay novedades publicadas por ahora.</p>';
             return;
         }
 
-        listEl.innerHTML = sorted
+        const htmlNews = sortedNews
             .map((item) => {
                 const tags = String(item.tags || '')
                     .split(',')
@@ -122,6 +139,28 @@
                 `;
             })
             .join('');
+
+        const htmlProjectUpdates = sortedProjectUpdates
+            .map((item) => {
+                const badge = item.projectTitle ? `<span class="feature-badge">${esc(item.projectTitle)}</span>` : '';
+                return `
+                    <article class="card" style="margin-top: 16px; border-left: 4px solid #3cb371;">
+                        <h3>${esc(item.title || 'Actualizacion de proyecto')}</h3>
+                        <p><em>Fecha: ${formatDate(item.date || item.updatedAt || item.createdAt)}</em></p>
+                        ${item.summary ? `<p><strong>${esc(item.summary)}</strong></p>` : ''}
+                        ${item.image ? `<img src="${esc(item.image)}" alt="${esc(item.title || 'Imagen actualizacion')}">` : ''}
+                        ${toParagraphs(item.content)}
+                        <div class="promo-features" style="margin-top: 12px;">${badge}</div>
+                        ${projectLink(item)}
+                    </article>
+                `;
+            })
+            .join('');
+
+        listEl.innerHTML = `
+            ${htmlProjectUpdates ? `<h3 style="margin-top:16px;">Actualizaciones por proyecto</h3>${htmlProjectUpdates}` : ''}
+            ${htmlNews ? `<h3 style="margin-top:16px;">Noticias generales</h3>${htmlNews}` : ''}
+        `;
     }
 
     async function init() {
@@ -131,7 +170,7 @@
             return;
         }
 
-        const [settings, news] = await Promise.all([loadSettings(), loadNews()]);
+        const [settings, news, projectUpdates] = await Promise.all([loadSettings(), loadNews(), loadProjectUpdates()]);
 
         if (settings.enableNewsPage === false) {
             listEl.innerHTML = '<p>La seccion de actualizaciones esta desactivada temporalmente.</p>';
@@ -142,7 +181,7 @@
             announcementEl.textContent = settings.announcement;
         }
 
-        renderNews(news);
+        renderNews(news, projectUpdates);
     }
 
     init();

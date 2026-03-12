@@ -366,18 +366,15 @@ function renderLines() {
 }
 
 function buildLine(conn, fromEl, toEl) {
-    const wrapRect = canvasWrap.getBoundingClientRect();
-    // Get node positions in world space, then convert to wrap-relative pixels
     const fromNode = nodes.find(n => n.id === conn.from);
     const toNode   = nodes.find(n => n.id === conn.to);
     if (!fromNode || !toNode) return document.createElementNS('http://www.w3.org/2000/svg','line');
 
-    const fromRect = fromEl.getBoundingClientRect();
-    const toRect   = toEl.getBoundingClientRect();
-    const x1 = fromRect.left + fromRect.width  / 2 - wrapRect.left;
-    const y1 = fromRect.top  + fromRect.height / 2 - wrapRect.top;
-    const x2 = toRect.left   + toRect.width    / 2 - wrapRect.left;
-    const y2 = toRect.top    + toRect.height   / 2 - wrapRect.top;
+    // SVG lives inside the transformed viewport, so lines must use world coords.
+    const x1 = fromNode.x + (fromEl.offsetWidth || 0) / 2;
+    const y1 = fromNode.y + (fromEl.offsetHeight || 0) / 2;
+    const x2 = toNode.x + (toEl.offsetWidth || 0) / 2;
+    const y2 = toNode.y + (toEl.offsetHeight || 0) / 2;
 
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.setAttribute('x1', x1); line.setAttribute('y1', y1);
@@ -410,13 +407,13 @@ function updateLinesForNode(nodeId) {
         const fromEl = nodeContainer.querySelector(`[data-node-id="${conn.from}"]`);
         const toEl   = nodeContainer.querySelector(`[data-node-id="${conn.to}"]`);
         if (!fromEl || !toEl) { ln.remove(); return; }
-        const wrapRect = canvasWrap.getBoundingClientRect();
-        const fromRect = fromEl.getBoundingClientRect();
-        const toRect   = toEl.getBoundingClientRect();
-        ln.setAttribute('x1', fromRect.left + fromRect.width  / 2 - wrapRect.left);
-        ln.setAttribute('y1', fromRect.top  + fromRect.height / 2 - wrapRect.top);
-        ln.setAttribute('x2', toRect.left   + toRect.width    / 2 - wrapRect.left);
-        ln.setAttribute('y2', toRect.top    + toRect.height   / 2 - wrapRect.top);
+        const fromNode = nodes.find(n => n.id === conn.from);
+        const toNode   = nodes.find(n => n.id === conn.to);
+        if (!fromNode || !toNode) { ln.remove(); return; }
+        ln.setAttribute('x1', fromNode.x + (fromEl.offsetWidth || 0) / 2);
+        ln.setAttribute('y1', fromNode.y + (fromEl.offsetHeight || 0) / 2);
+        ln.setAttribute('x2', toNode.x + (toEl.offsetWidth || 0) / 2);
+        ln.setAttribute('y2', toNode.y + (toEl.offsetHeight || 0) / 2);
     });
 }
 
@@ -572,6 +569,8 @@ function applyEditPanel() {
             el.style.borderColor = node.color + 'aa';
             el.querySelector('.dev-idea-node-title').style.color = lightenColor(node.color, 0.7);
         }
+        // Body/title changes can resize the card and shift the center points.
+        updateLinesForNode(node.id);
     }
     autoSave();
 }
@@ -639,8 +638,6 @@ function onCanvasPointerMove(e) {
         viewport.x = panState.origVx + (e.clientX - panState.startX);
         viewport.y = panState.origVy + (e.clientY - panState.startY);
         applyViewport();
-        // Update all lines (they're in wrap coords)
-        renderLines();
         return;
     }
     // ── Connect mode preview line ─────────────────────────────────────────────
@@ -676,7 +673,6 @@ function onWheel(e) {
     e.preventDefault();
     const delta = e.deltaY < 0 ? 1.1 : 0.9;
     zoomAt(e.clientX, e.clientY, delta);
-    renderLines();
 }
 
 // ── Keyboard shortcuts ────────────────────────────────────────────────────────
@@ -690,9 +686,9 @@ function onKeyDown(e) {
             if (connectMode) setConnectMode(false);
             else if (selectedNodeId) closeEditPanel();
             break;
-        case '+': case '=': zoomAt(canvasWrap.getBoundingClientRect().width / 2, canvasWrap.getBoundingClientRect().height / 2, 1.1); renderLines(); break;
-        case '-': zoomAt(canvasWrap.getBoundingClientRect().width / 2, canvasWrap.getBoundingClientRect().height / 2, 0.9); renderLines(); break;
-        case '0': viewport = { x: 0, y: 0, scale: 1 }; applyViewport(); renderLines(); updateStatusBar(); break;
+        case '+': case '=': zoomAt(canvasWrap.getBoundingClientRect().width / 2, canvasWrap.getBoundingClientRect().height / 2, 1.1); break;
+        case '-': zoomAt(canvasWrap.getBoundingClientRect().width / 2, canvasWrap.getBoundingClientRect().height / 2, 0.9); break;
+        case '0': viewport = { x: 0, y: 0, scale: 1 }; applyViewport(); updateStatusBar(); break;
         case 'Delete': case 'Backspace':
             if (selectedNodeId) deleteNode(selectedNodeId);
             break;
@@ -830,9 +826,9 @@ function init() {
     // ── Toolbar buttons ────────────────────────────────────────────────────────
     addNodeBtn.addEventListener('click',     () => addNode());
     connectModeBtn.addEventListener('click', () => setConnectMode(!connectMode));
-    zoomInBtn.addEventListener('click',  () => { zoomAt(canvasWrap.getBoundingClientRect().width / 2, canvasWrap.getBoundingClientRect().height / 2, 1.15); renderLines(); });
-    zoomOutBtn.addEventListener('click', () => { zoomAt(canvasWrap.getBoundingClientRect().width / 2, canvasWrap.getBoundingClientRect().height / 2, 1 / 1.15); renderLines(); });
-    resetViewBtn.addEventListener('click',   () => { viewport = { x: 0, y: 0, scale: 1 }; applyViewport(); renderLines(); updateStatusBar(); });
+    zoomInBtn.addEventListener('click',  () => { zoomAt(canvasWrap.getBoundingClientRect().width / 2, canvasWrap.getBoundingClientRect().height / 2, 1.15); });
+    zoomOutBtn.addEventListener('click', () => { zoomAt(canvasWrap.getBoundingClientRect().width / 2, canvasWrap.getBoundingClientRect().height / 2, 1 / 1.15); });
+    resetViewBtn.addEventListener('click',   () => { viewport = { x: 0, y: 0, scale: 1 }; applyViewport(); updateStatusBar(); });
     saveBtnEl.addEventListener('click',  saveToFirestore);
     clearBtnEl.addEventListener('click', clearAll);
 

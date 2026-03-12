@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juegos - Panter Studio</title>
+    <title>Proyecto - Panter Studio</title>
     <link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
     <link rel="stylesheet" href="../assets/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
     <script src="../assets/js/core/firebase-config.js"></script>
 </head>
-<body data-site-root=".." data-catalog-type="juego">
+<body data-site-root="..">
     <div id="tsparticles"></div>
     <header>
         <img src="https://i.imgur.com/GYjAGS7.png" alt="Logo Panter Studio" class="logo-img">
@@ -19,9 +19,9 @@
     <nav>
         <a href="../index.html">Inicio</a>
         <div class="nav-dropdown">
-            <button type="button" class="nav-dropdown-toggle active" aria-haspopup="true" aria-expanded="false">Aplicaciones</button>
+            <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">Aplicaciones</button>
             <div class="nav-dropdown-menu">
-                <a href="juegos.html" class="active">Juegos</a>
+                <a href="juegos.html">Juegos</a>
                 <a href="aplicaciones.html">Aplicaciones</a>
             </div>
         </div>
@@ -36,42 +36,40 @@
     <div class="container">
         <section class="juegos-showcase">
             <div class="juegos-hero">
-                <span class="highlight-tag">CATALOGO EN EXPANSION</span>
-                <h2>Nuestros Juegos</h2>
-                <p>
-                    Cada proyecto se construye con enfoque narrativo, identidad local y sistemas pensados para una comunidad activa.
-                    Esta es la primera experiencia oficial en desarrollo.
-                </p>
-                <div class="juegos-metrics" aria-label="Resumen de proyectos">
+                <span class="highlight-tag" id="projectTypeTag">PROYECTO</span>
+                <h2 id="projectTitle">Cargando proyecto...</h2>
+                <p id="projectSummary">Estamos cargando los datos del proyecto.</p>
+                <div class="juegos-metrics" aria-label="Resumen del proyecto">
                     <div class="juegos-metric-box">
-                        <strong>01</strong>
-                        <span>Proyecto anunciado</span>
+                        <strong id="projectStatus">—</strong>
+                        <span>Estado</span>
                     </div>
                     <div class="juegos-metric-box">
-                        <strong>1000</strong>
-                        <span>Cupos de fundador</span>
+                        <strong id="projectUpdatesCount">0</strong>
+                        <span>Actualizaciones</span>
                     </div>
                     <div class="juegos-metric-box">
-                        <strong>2026</strong>
-                        <span>Ventana objetivo</span>
+                        <strong id="projectLastUpdate">—</strong>
+                        <span>Ultima novedad</span>
                     </div>
                 </div>
+                <div id="projectActionArea" class="juego-actions" style="margin-top:14px;"></div>
             </div>
 
-            <div class="juegos-grid" id="catalogProjectsList">
-                <p>Cargando juegos...</p>
-            </div>
+            <div class="juegos-grid" id="projectHeroCard"></div>
 
-            <div class="juegos-coming-strip">
-                <p><strong>Proximo paso:</strong> pronto se habilitara una galeria de prototipos jugables y bitacoras tecnicas del desarrollo.</p>
+            <div class="card" style="margin-top:16px;">
+                <h3>Bitacora de actualizaciones</h3>
+                <div id="projectUpdatesList"><p>Cargando actualizaciones...</p></div>
             </div>
         </section>
     </div>
 
     <footer>
-        <p>&copy; 2025 Panter Studio Game Dev.</p>
+        <p>&copy; 2026 Panter Studio Game Dev.</p>
     </footer>
+
     <script src="../assets/js/core/script.js"></script>
-    <script src="../assets/js/pages/catalogo.js"></script>
+    <script src="../assets/js/pages/proyecto.js"></script>
 </body>
 </html>
