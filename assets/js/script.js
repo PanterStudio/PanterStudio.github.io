@@ -36,6 +36,23 @@ async function sendConfirmationEmail(userEmail, position) {
     }
 }
 
+function speakPreregistroSuccess(name = 'jugador') {
+    if (!('speechSynthesis' in window) || typeof window.SpeechSynthesisUtterance === 'undefined') {
+        return;
+    }
+
+    const message = `Excelente, ${name}. Tu pre registro fue exitoso. Bienvenido a Panter Studio.`;
+    const utterance = new window.SpeechSynthesisUtterance(message);
+    utterance.lang = 'es-ES';
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    // Cancela cualquier locucion anterior para evitar solapamiento.
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+}
+
 /* ===== MODAL PROMOCIONAL PRE-REGISTRO ===== */
 
 const MAX_PREREGISTROS = 1000;
@@ -1059,6 +1076,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 msgEl.textContent = emailSent
                     ? '¡Listo! Revisa tu correo, te enviamos la confirmación.'
                     : '¡Pre-registro exitoso! (Correo de confirmación no disponible en este momento)';
+
+                const voiceName = emailNorm.split('@')[0] || 'jugador';
+                speakPreregistroSuccess(voiceName);
             } catch (error) {
                 if (msgEl) {
                     msgEl.textContent = 'Este correo ya esta registrado. No se envio ningun correo.';
