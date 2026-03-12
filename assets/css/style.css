@@ -1764,39 +1764,39 @@ footer {
 }
 
 .admin-chip.role-founder {
-    border-color: rgba(255, 199, 84, 0.6);
-    background: rgba(255, 199, 84, 0.18);
-    color: #ffe5ab;
+    border-color: rgba(135, 206, 235, 0.65);
+    background: rgba(30, 112, 200, 0.28);
+    color: #eaf7ff;
 }
 
 .admin-chip.role-admin {
-    border-color: rgba(106, 222, 255, 0.55);
-    background: rgba(106, 222, 255, 0.14);
+    border-color: rgba(135, 206, 235, 0.6);
+    background: rgba(30, 112, 200, 0.22);
     color: #d6f6ff;
 }
 
 .admin-chip.role-dev {
-    border-color: rgba(74, 222, 128, 0.5);
-    background: rgba(74, 222, 128, 0.12);
-    color: #cffff0;
+    border-color: rgba(30, 112, 200, 0.6);
+    background: rgba(30, 112, 200, 0.2);
+    color: #d6ecff;
 }
 
 .admin-chip.role-art {
-    border-color: rgba(244, 114, 182, 0.5);
-    background: rgba(244, 114, 182, 0.12);
-    color: #ffd2e7;
+    border-color: rgba(95, 158, 160, 0.65);
+    background: rgba(95, 158, 160, 0.22);
+    color: #dff7f8;
 }
 
 .admin-chip.role-community {
-    border-color: rgba(167, 139, 250, 0.5);
-    background: rgba(167, 139, 250, 0.14);
-    color: #e4ddff;
+    border-color: rgba(135, 206, 235, 0.55);
+    background: rgba(30, 112, 200, 0.18);
+    color: #e4f3ff;
 }
 
 .admin-chip.role-ops {
-    border-color: rgba(251, 191, 36, 0.5);
-    background: rgba(251, 191, 36, 0.12);
-    color: #ffe8ab;
+    border-color: rgba(95, 158, 160, 0.6);
+    background: rgba(95, 158, 160, 0.2);
+    color: #e8fcff;
 }
 
 .admin-chip.role-viewer {
@@ -2296,27 +2296,27 @@ footer {
 
 /* ===== ADMIN VISIBILITY + MOBILE REFRESH ===== */
 .admin-page {
-    --admin-bg-0: #071019;
-    --admin-bg-1: #0f1a27;
-    --admin-bg-2: #13253a;
-    --admin-surface: #122033;
-    --admin-surface-2: #162a43;
-    --admin-line: rgba(120, 195, 255, 0.32);
-    --admin-line-strong: rgba(120, 195, 255, 0.52);
-    --admin-text: #eef7ff;
-    --admin-text-soft: #c9e3f6;
-    --admin-accent: #5bb7ff;
-    --admin-accent-2: #7fd1ff;
-    --admin-ok: #37d68b;
-    --admin-warn: #ffd070;
-    --admin-danger: #ff7f7f;
+    --admin-bg-0: #0a0a0a;
+    --admin-bg-1: #111111;
+    --admin-bg-2: #1a1a1a;
+    --admin-surface: #161616;
+    --admin-surface-2: #1f1f1f;
+    --admin-line: rgba(30, 112, 200, 0.38);
+    --admin-line-strong: rgba(135, 206, 235, 0.55);
+    --admin-text: #ffffff;
+    --admin-text-soft: #cfe8fa;
+    --admin-accent: #1e70c8;
+    --admin-accent-2: #87CEEB;
+    --admin-ok: #5F9EA0;
+    --admin-warn: #ffd082;
+    --admin-danger: #ff8a8a;
 }
 
 .admin-bg-glow {
     background:
-        radial-gradient(circle at 12% 10%, rgba(91, 183, 255, 0.32), transparent 34%),
-        radial-gradient(circle at 88% 16%, rgba(255, 208, 112, 0.18), transparent 32%),
-        radial-gradient(circle at 48% 92%, rgba(127, 209, 255, 0.12), transparent 30%);
+        radial-gradient(circle at 12% 10%, rgba(30, 112, 200, 0.28), transparent 34%),
+        radial-gradient(circle at 88% 16%, rgba(135, 206, 235, 0.16), transparent 32%),
+        radial-gradient(circle at 48% 92%, rgba(30, 112, 200, 0.1), transparent 30%);
 }
 
 .admin-gate,
@@ -2327,15 +2327,15 @@ footer {
 
 .admin-panel {
     background:
-        radial-gradient(circle at 0% 0%, rgba(91, 183, 255, 0.13), transparent 32%),
-        linear-gradient(160deg, rgba(15, 29, 45, 0.98), rgba(10, 19, 30, 0.98));
+        radial-gradient(circle at 0% 0%, rgba(30, 112, 200, 0.14), transparent 32%),
+        linear-gradient(160deg, rgba(18, 18, 18, 0.98), rgba(12, 12, 12, 0.98));
 }
 
 .admin-hero {
     border-color: var(--admin-line-strong);
     background:
-        linear-gradient(145deg, rgba(21, 39, 60, 0.98), rgba(14, 28, 45, 0.98)),
-        linear-gradient(120deg, rgba(91, 183, 255, 0.2), transparent 65%);
+        linear-gradient(145deg, rgba(0, 0, 0, 0.96), rgba(26, 26, 26, 0.96)),
+        linear-gradient(120deg, rgba(30, 112, 200, 0.2), transparent 65%);
 }
 
 .admin-kicker,
@@ -2395,12 +2395,12 @@ footer {
 }
 
 .admin-stat-card {
-    background: linear-gradient(165deg, rgba(91, 183, 255, 0.18), rgba(16, 30, 47, 0.98));
+    background: linear-gradient(165deg, rgba(30, 112, 200, 0.2), rgba(18, 18, 18, 0.98));
 }
 
 .admin-stat-card strong {
     color: #ffffff;
-    text-shadow: 0 0 14px rgba(91, 183, 255, 0.25);
+    text-shadow: 0 0 14px rgba(30, 112, 200, 0.32);
 }
 
 .admin-filter-row input,
@@ -2456,7 +2456,7 @@ footer {
 }
 
 .admin-table th {
-    background: rgba(91, 183, 255, 0.16);
+    background: rgba(30, 112, 200, 0.2);
     color: #eff8ff;
 }
 
@@ -2465,18 +2465,18 @@ footer {
 }
 
 .admin-table tbody tr:hover {
-    background: rgba(127, 209, 255, 0.1);
+    background: rgba(30, 112, 200, 0.16);
 }
 
 .btn-small {
     border-radius: 8px;
-    background: linear-gradient(135deg, #2f9cf7, #60bbff);
-    color: #03121f;
+    background: #1e70c8;
+    color: #ffffff;
     font-weight: 700;
 }
 
 .btn-small:hover {
-    background: linear-gradient(135deg, #60bbff, #85cfff);
+    background: #5F9EA0;
 }
 
 .btn-danger {
