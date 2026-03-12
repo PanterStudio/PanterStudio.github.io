@@ -221,14 +221,38 @@ document.addEventListener('DOMContentLoaded', () => {
     function getRoleLabel(role) {
         const labels = {
             founder_ceo: 'Fundador/CEO',
-            admin_general: 'Admin',
-            developer: 'Desarrollador',
+            administrador: 'Administrador',
+            programador: 'Programador',
+            modelador: 'Modelador',
+            admin_general: 'Administrador',
+            developer: 'Programador',
             modeler: 'Modelador',
             community_manager: 'Community',
             support_ops: 'Operaciones',
+            youtuber: 'Youtuber',
+            streamer: 'Streamer',
+            vip: 'VIP',
+            usuario: 'Usuario',
             viewer: 'Miembro'
         };
         return labels[role] || labels.viewer;
+    }
+
+    function normalizeAdminRole(role) {
+        const normalized = String(role || '').trim().toLowerCase();
+        const aliases = {
+            admin: 'administrador',
+            admin_general: 'administrador',
+            developer: 'programador',
+            modeler: 'modelador',
+            viewer: 'usuario'
+        };
+        return aliases[normalized] || normalized || 'usuario';
+    }
+
+    function canAccessAdminPanel(role) {
+        const allowed = new Set(['founder_ceo', 'administrador', 'programador', 'modelador']);
+        return allowed.has(normalizeAdminRole(role));
     }
 
     async function resolveAdminAccess(user) {
@@ -238,11 +262,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const profile = await getUserProfile(user.uid);
-            const role = profile?.role || 'viewer';
-            const isAdmin = profile?.isAdmin === true || role === 'admin_general' || role === 'founder_ceo' || isAdminEmail(email);
+            let role = normalizeAdminRole(profile?.role || (isAdminEmail(email) ? 'administrador' : 'usuario'));
+            if (profile?.isAdmin === true && (!profile?.role || role === 'usuario')) {
+                role = 'administrador';
+            }
+            if (isAdminEmail(email) && !canAccessAdminPanel(role)) {
+                role = 'administrador';
+            }
+            const isAdmin = canAccessAdminPanel(role);
             return { isAdmin, role };
         } catch {
-            return { isAdmin: isAdminEmail(email), role: 'viewer' };
+            const role = isAdminEmail(email) ? 'administrador' : 'usuario';
+            return { isAdmin: canAccessAdminPanel(role), role };
         }
     }
 

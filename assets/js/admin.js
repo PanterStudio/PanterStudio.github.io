@@ -9,6 +9,9 @@ const DEFAULT_ADMIN_EMAILS = [
 
 const ROLE_LABELS = {
     founder_ceo: 'Fundador / CEO',
+    administrador: 'Administrador',
+    programador: 'Programador',
+    modelador: 'Modelador',
     admin_general: 'Admin General',
     developer: 'Desarrollador',
     modeler: 'Modelador',
@@ -23,12 +26,24 @@ const ROLE_LABELS = {
 };
 
 const CEO_ASSIGNABLE_ROLES = {
-    admin: 'Admin',
+    administrador: 'Administrador',
+    programador: 'Programador',
+    modelador: 'Modelador',
     youtuber: 'Youtuber',
     streamer: 'Streamer',
     usuario: 'Usuario',
     vip: 'VIP'
 };
+
+const ROLE_ALIASES = {
+    admin: 'administrador',
+    admin_general: 'administrador',
+    developer: 'programador',
+    modeler: 'modelador',
+    viewer: 'usuario'
+};
+
+const PANEL_ACCESS_ROLES = new Set(['founder_ceo', 'administrador', 'programador', 'modelador']);
 
 const EMAIL_ANALYSIS_COLLECTIONS = ['users', 'preregistros', 'donations', 'sponsors'];
 
@@ -58,7 +73,8 @@ let ceoUsersList = [];
 let currentUser = null;
 
 function normalizeRole(role) {
-    const normalized = String(role || '').trim().toLowerCase();
+    const normalizedRaw = String(role || '').trim().toLowerCase();
+    const normalized = ROLE_ALIASES[normalizedRaw] || normalizedRaw;
     return Object.prototype.hasOwnProperty.call(ROLE_LABELS, normalized) ? normalized : 'viewer';
 }
 
@@ -67,8 +83,13 @@ function getRoleLabel(role) {
 }
 
 function normalizeCeoRole(role) {
-    const normalized = String(role || '').trim().toLowerCase();
+    const normalizedRaw = String(role || '').trim().toLowerCase();
+    const normalized = ROLE_ALIASES[normalizedRaw] || normalizedRaw;
     return Object.prototype.hasOwnProperty.call(CEO_ASSIGNABLE_ROLES, normalized) ? normalized : 'usuario';
+}
+
+function canRoleAccessPanel(role) {
+    return PANEL_ACCESS_ROLES.has(normalizeRole(role));
 }
 
 function isFounderEmail(email) {
@@ -297,13 +318,13 @@ async function saveCeoUserRole(uid, role) {
     try {
         await window.setDoc(window.fsDoc(window.db, 'users', uid), {
             role: normalizedRole,
-            isAdmin: normalizedRole === 'admin',
+            isAdmin: canRoleAccessPanel(normalizedRole),
             roleUpdatedAt: new Date().toISOString(),
             roleUpdatedBy: currentUser?.uid || ''
         }, { merge: true });
 
         userItem.role = normalizedRole;
-        userItem.isAdmin = normalizedRole === 'admin';
+        userItem.isAdmin = canRoleAccessPanel(normalizedRole);
 
         renderCeoUsersTable(ceoEmailSearchInput?.value || '');
         setCeoMessage(`Rol actualizado: ${userItem.email} -> ${CEO_ASSIGNABLE_ROLES[normalizedRole]}`);
@@ -434,11 +455,19 @@ async function resolveUserAccess(user) {
         }
     }
 
-    const isAdminByProfile = Boolean(profileData?.isAdmin);
     const isAdminByList = getAdminEmails().includes(email);
-    const isAdmin = isAdminByProfile || isAdminByList;
+    let role = normalizeRole(profileData?.role || (isAdminByList ? 'administrador' : 'usuario'));
 
-    const role = normalizeRole(profileData?.role || (isAdmin ? 'admin_general' : 'viewer'));
+    // Compatibilidad con cuentas antiguas que tenian isAdmin pero sin rol definido.
+    if (Boolean(profileData?.isAdmin) && (!profileData?.role || role === 'usuario' || role === 'viewer')) {
+        role = 'administrador';
+    }
+
+    if (isAdminByList && !canRoleAccessPanel(role)) {
+        role = 'administrador';
+    }
+
+    const isAdmin = canRoleAccessPanel(role);
     return { isAdmin, role };
 }
 
