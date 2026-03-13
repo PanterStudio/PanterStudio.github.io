@@ -59,6 +59,8 @@ const MAX_PREREGISTROS = 1000;
 let preregistrosActuales = 0;
 const ADMIN_EMAILS_LS_KEY = 'panterAdminEmails';
 const FOUNDER_CEO_EMAIL = 'pantergamey@gmail.com';
+const REFERRAL_STORAGE_KEY = 'panterPendingReferralCode';
+const DEFAULT_REFERRAL_REWARD = 50;
 const DEFAULT_ADMIN_EMAILS = [
     'pantergamey@gmail.com',
     'panterstudiogamedev@gmail.com'
@@ -108,17 +110,115 @@ async function isUsernameTaken(username) {
     return !snap.empty;
 }
 
-async function saveUserProfile(user, username) {
+function normalizeReferralCode(code) {
+    return String(code || '').replace(/\s+/g, '').trim().toUpperCase().slice(0, 32);
+}
+
+function setPendingReferralCode(code) {
+    try {
+        const normalized = normalizeReferralCode(code);
+        if (normalized) {
+            localStorage.setItem(REFERRAL_STORAGE_KEY, normalized);
+            return normalized;
+        }
+        localStorage.removeItem(REFERRAL_STORAGE_KEY);
+    } catch {}
+    return '';
+}
+
+function getPendingReferralCode() {
+    let urlCode = '';
+    try {
+        const params = new URLSearchParams(window.location.search);
+        urlCode = normalizeReferralCode(
+            params.get('ref') || params.get('invite') || params.get('invitation') || params.get('codigo') || ''
+        );
+    } catch {}
+
+    if (urlCode) return setPendingReferralCode(urlCode);
+
+    try {
+        return normalizeReferralCode(localStorage.getItem(REFERRAL_STORAGE_KEY) || '');
+    } catch {
+        return '';
+    }
+}
+
+function generateReferralCode(uid) {
+    return String(uid || '').slice(0, 6).toUpperCase();
+}
+
+async function findReferrerByCode(refCode) {
+    const normalized = normalizeReferralCode(refCode);
+    if (!normalized || !window.db || !window.getDocs || !window.collection) return null;
+
+    try {
+        const snap = await window.getDocs(window.collection(window.db, 'users'));
+        const referrer = snap.docs.find((doc) => normalizeReferralCode(doc.data()?.referralCode) === normalized);
+        return referrer || null;
+    } catch (err) {
+        console.warn('No se pudo validar el codigo de invitacion:', err);
+        return null;
+    }
+}
+
+async function applyReferralCode(refCode, newUserUid, currentProfile = null) {
+    const normalized = normalizeReferralCode(refCode);
+    if (!normalized) return { applied: false, reason: 'not-provided', reward: 0 };
+    if (normalizeReferralCode(currentProfile?.referralCode) === normalized) {
+        return { applied: false, reason: 'self', reward: 0 };
+    }
+    if (currentProfile?.referredBy) {
+        return { applied: false, reason: 'already-linked', reward: 0 };
+    }
+
+    const referrer = await findReferrerByCode(normalized);
+    if (!referrer) return { applied: false, reason: 'invalid', reward: 0 };
+    if (referrer.id === newUserUid) return { applied: false, reason: 'self', reward: 0 };
+
+    const reward = DEFAULT_REFERRAL_REWARD;
+    const referrerData = referrer.data() || {};
+    await window.setDoc(window.fsDoc(window.db, 'users', referrer.id), {
+        referralCount: Number(referrerData.referralCount || 0) + 1,
+        referralCoins: Number(referrerData.referralCoins || 0) + reward,
+        coins: Number(referrerData.coins || 0) + reward,
+        updatedAt: new Date().toISOString()
+    }, { merge: true });
+
+    await window.setDoc(window.fsDoc(window.db, 'users', newUserUid), {
+        referredBy: normalized,
+        updatedAt: new Date().toISOString()
+    }, { merge: true });
+
+    return { applied: true, reason: 'applied', reward };
+}
+
+async function saveUserProfile(user, username, options = {}) {
+    const existingProfile = await getUserProfile(user.uid);
     const email = String(user.email || '').toLowerCase();
     const isFounder = email === FOUNDER_CEO_EMAIL;
+    const now = new Date().toISOString();
+    const pendingReferral = normalizeReferralCode(options.referralCode || getPendingReferralCode());
+
     await window.setDoc(window.fsDoc(window.db, 'users', user.uid), {
         username,
+        displayName: username,
         email: user.email || '',
-        role: isFounder ? 'founder_ceo' : 'viewer',
-        isAdmin: isFounder,
-        createdAt: new Date().toISOString()
+        role: existingProfile?.role || (isFounder ? 'founder_ceo' : 'viewer'),
+        isAdmin: typeof existingProfile?.isAdmin === 'boolean' ? existingProfile.isAdmin : isFounder,
+        referralCode: existingProfile?.referralCode || generateReferralCode(user.uid),
+        referredBy: existingProfile?.referredBy || null,
+        createdAt: existingProfile?.createdAt || now,
+        updatedAt: now
     }, { merge: true });
     await window.updateProfile(user, { displayName: username });
+
+    let referralResult = { applied: false, reason: 'not-provided', reward: 0 };
+    if (pendingReferral && !existingProfile?.referredBy) {
+        referralResult = await applyReferralCode(pendingReferral, user.uid, existingProfile);
+    }
+    if (pendingReferral) setPendingReferralCode('');
+    return referralResult;
 }
 
 async function getUserProfile(uid) {
@@ -517,9 +617,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const nameInput = document.getElementById('authRegisterName');
             const emailInput = document.getElementById('authRegisterEmail');
             const passInput = document.getElementById('authRegisterPassword');
+            const referralInput = document.getElementById('authRegisterReferral');
             const username = nameInput?.value.trim() || '';
             const email = emailInput?.value.trim() || '';
             const password = passInput?.value || '';
+            const referralCode = normalizeReferralCode(referralInput?.value || getPendingReferralCode());
 
             if (!username) {
                 message.textContent = 'Ingresa un nombre de usuario.';
@@ -541,9 +643,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 message.textContent = 'Creando cuenta...';
                 const credential = await window.createUserWithEmailAndPassword(window.auth, email, password);
                 if (credential?.user) {
-                    await saveUserProfile(credential.user, username);
+                    const referralResult = await saveUserProfile(credential.user, username, { referralCode });
+                    if (referralResult.reason === 'invalid') {
+                        message.textContent = 'Cuenta creada. El codigo de invitacion no existe, asi que no se aplico.';
+                    } else if (referralResult.reason === 'self') {
+                        message.textContent = 'Cuenta creada. No puedes usar tu propio codigo de invitacion.';
+                    } else if (referralResult.applied) {
+                        message.textContent = `¡Cuenta creada! Codigo aplicado correctamente. +${referralResult.reward} para quien te invito.`;
+                    } else {
+                        message.textContent = '¡Cuenta creada! Bienvenido.';
+                    }
                 }
-                message.textContent = '¡Cuenta creada! Bienvenido.';
                 registerForm.reset();
                 if (modal) modal.hidden = true;
                 document.body.style.overflow = 'auto';

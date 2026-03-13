@@ -1,5 +1,6 @@
 (function () {
     const SITE_ROOT = (document.body?.dataset.siteRoot || '.').replace(/\/$/, '');
+    const REFERRAL_STORAGE_KEY = 'panterPendingReferralCode';
     function toSitePath(path) {
         return `${SITE_ROOT}/${String(path || '').replace(/^\/+/, '')}`.replace(/\\/g, '/');
     }
@@ -87,6 +88,23 @@
     const sponsorLevelDesc = document.getElementById('sponsorLevelDesc');
     const profileSponsorSummary = document.getElementById('profileSponsorSummary');
 
+    const profileCoinsDollars   = document.getElementById('profileCoinsDollars');
+    const redeemCoinsAvailable  = document.getElementById('redeemCoinsAvailable');
+    const redeemDollars         = document.getElementById('redeemDollars');
+    const redeemTotalPaid       = document.getElementById('redeemTotalPaid');
+    const redeemTotalCount      = document.getElementById('redeemTotalCount');
+    const redeemAmountInput     = document.getElementById('redeemAmount');
+    const redeemPaypalInput     = document.getElementById('redeemPaypal');
+    const redeemBtn             = document.getElementById('redeemBtn');
+    const redeemMessage         = document.getElementById('redeemMessage');
+    const redeemHistory         = document.getElementById('redeemHistory');
+    const redeemHistoryList     = document.getElementById('redeemHistoryList');
+    const profileGamesPlayedToday = document.getElementById('profileGamesPlayedToday');
+
+    const COINS_PER_DOLLAR      = 5000;
+    const MIN_REDEEM_COINS      = 5000;
+    const REDEEM_COLLECTION     = 'coin_redemptions';
+
     let currentUser = null;
     let currentUserData = null;
     let settings = {};
@@ -118,6 +136,94 @@
     function formatCurrency(amount) {
         const value = Number(amount || 0);
         return `$${value.toFixed(2)}`;
+    }
+
+    function coinsToUsd(coins) {
+        return `$${(Number(coins || 0) / COINS_PER_DOLLAR).toFixed(2)}`;
+    }
+
+    function countGamesPlayedToday(uid) {
+        const today = new Date().toDateString();
+        let count = 0;
+        ['game1', 'game2', 'game3'].forEach(id => {
+            try {
+                const key = `panterMG_${id}_${uid}`;
+                const stored = localStorage.getItem(key);
+                if (stored && new Date(stored).toDateString() === today) count++;
+            } catch {}
+        });
+        return count;
+    }
+
+    async function loadRedemptionHistory(uid) {
+        try {
+            const snap = await window.getDocs(window.collection(window.db, REDEEM_COLLECTION));
+            return snap.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }))
+                .filter(item => item.uid === uid)
+                .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+        } catch { return []; }
+    }
+
+    function renderRedemptionHistory(history) {
+        if (!redeemHistoryList || !redeemHistory) return;
+        if (history.length === 0) { redeemHistory.hidden = true; return; }
+        redeemHistory.hidden = false;
+        const statusLabel = { pending: 'Pendiente', approved: 'Aprobado', paid: 'Pagado', rejected: 'Rechazado' };
+        redeemHistoryList.innerHTML = history.map(item => {
+            const dollars = formatCurrency(Number(item.coins || 0) / COINS_PER_DOLLAR);
+            const sl = String(item.status || 'pending').toLowerCase();
+            return `<div class="redemption-history-item">
+                <div>
+                    <strong>${esc(String(item.coins || 0))} monedas</strong>
+                    <small>${esc(dollars)} · ${esc(formatDateLong(item.createdAt))}</small>
+                </div>
+                <div>
+                    <span class="redemption-status ${sl}">${esc(statusLabel[sl] || sl)}</span>
+                </div>
+            </div>`;
+        }).join('');
+
+        const paid = history.filter(i => i.status === 'paid' || i.status === 'approved');
+        const totalDollars = paid.reduce((s, i) => s + Number(i.coins || 0) / COINS_PER_DOLLAR, 0);
+        if (redeemTotalPaid)  redeemTotalPaid.textContent  = formatCurrency(totalDollars);
+        if (redeemTotalCount) redeemTotalCount.textContent = String(history.length);
+    }
+
+    async function submitRedemption(uid, coinsStr, paymentInfo) {
+        const coins = parseInt(coinsStr, 10);
+        if (isNaN(coins) || coins < MIN_REDEEM_COINS) {
+            return { ok: false, msg: `Minimo ${MIN_REDEEM_COINS} monedas para canjear.` };
+        }
+        if (coins > Number(currentUserData?.coins || 0)) {
+            return { ok: false, msg: 'No tienes suficientes monedas.' };
+        }
+        if (!String(paymentInfo || '').trim()) {
+            return { ok: false, msg: 'Ingresa un metodo de pago.' };
+        }
+
+        const dollars = coins / COINS_PER_DOLLAR;
+        const now     = new Date().toISOString();
+        try {
+            await window.addDoc(window.collection(window.db, REDEEM_COLLECTION), {
+                uid,
+                email:       currentUser?.email || '',
+                username:    currentUserData?.username || currentUserData?.displayName || '',
+                coins,
+                dollars,
+                paymentInfo: String(paymentInfo).trim(),
+                status:      'pending',
+                createdAt:   now
+            });
+            const newCoins = Number(currentUserData.coins || 0) - coins;
+            await updateUserData(uid, { coins: newCoins });
+            await addActivity(uid, 'redemption', `Solicitud de canje: ${coins} monedas (${formatCurrency(dollars)})`, -coins);
+            currentUserData.coins = newCoins;
+            return { ok: true, msg: `Solicitud enviada. ${formatCurrency(dollars)} USD en proceso de revision.` };
+        } catch (err) {
+            console.error('Error enviando solicitud de canje:', err);
+            return { ok: false, msg: 'No se pudo enviar la solicitud. Intenta de nuevo.' };
+        }
     }
 
     function providerLabel(user) {
@@ -172,6 +278,47 @@
 
     function generateReferralCode(uid) {
         return String(uid || '').slice(0, 6).toUpperCase();
+    }
+
+    function normalizeReferralCode(code) {
+        return String(code || '').replace(/\s+/g, '').trim().toUpperCase().slice(0, 32);
+    }
+
+    function setPendingReferralCode(code) {
+        try {
+            const normalized = normalizeReferralCode(code);
+            if (normalized) {
+                localStorage.setItem(REFERRAL_STORAGE_KEY, normalized);
+                return normalized;
+            }
+            localStorage.removeItem(REFERRAL_STORAGE_KEY);
+        } catch {}
+        return '';
+    }
+
+    function getPendingReferralCode() {
+        let urlCode = '';
+        try {
+            const params = new URLSearchParams(window.location.search);
+            urlCode = normalizeReferralCode(
+                params.get('ref') || params.get('invite') || params.get('invitation') || params.get('codigo') || ''
+            );
+        } catch {}
+
+        if (urlCode) return setPendingReferralCode(urlCode);
+
+        try {
+            return normalizeReferralCode(localStorage.getItem(REFERRAL_STORAGE_KEY) || '');
+        } catch {
+            return '';
+        }
+    }
+
+    function prefillReferralField() {
+        const input = document.getElementById('registerReferral');
+        if (!input || input.value.trim()) return;
+        const pending = getPendingReferralCode();
+        if (pending) input.value = pending;
     }
 
     async function loadSettings() {
@@ -259,13 +406,14 @@
     }
 
     async function processReferral(refCode, newUserUid) {
-        if (!refCode) return;
-        const normalized = String(refCode).trim().toUpperCase();
-        if (!normalized) return;
+        if (!refCode) return { applied: false, reason: 'not-provided', reward: 0 };
+        const normalized = normalizeReferralCode(refCode);
+        if (!normalized) return { applied: false, reason: 'not-provided', reward: 0 };
         try {
             const snap = await window.getDocs(window.collection(window.db, 'users'));
             const referrer = snap.docs.find((doc) => String(doc.data()?.referralCode || '').toUpperCase() === normalized);
-            if (!referrer || referrer.id === newUserUid) return;
+            if (!referrer) return { applied: false, reason: 'invalid', reward: 0 };
+            if (referrer.id === newUserUid) return { applied: false, reason: 'self', reward: 0 };
             const reward = Number(settings.referralCoins || 50);
             const data = referrer.data() || {};
             await updateUserData(referrer.id, {
@@ -274,8 +422,10 @@
                 coins: Number(data.coins || 0) + reward
             });
             await addActivity(referrer.id, 'referral', 'Nuevo referido registrado', reward);
+            return { applied: true, reason: 'applied', reward };
         } catch (err) {
             console.warn('No se pudo procesar referido:', err);
+            return { applied: false, reason: 'error', reward: 0 };
         }
     }
 
@@ -516,6 +666,11 @@
         if (profileHeroSummary) profileHeroSummary.textContent = summaryBits.join(' ');
         if (profileCoins) profileCoins.textContent = String(Number(data.coins || 0));
         if (coinsDisplayLarge) coinsDisplayLarge.textContent = `${Number(data.coins || 0)} disponibles`;
+        if (profileCoinsDollars) profileCoinsDollars.textContent = coinsToUsd(data.coins || 0);
+        if (redeemCoinsAvailable) redeemCoinsAvailable.textContent = String(Number(data.coins || 0));
+        if (redeemDollars) redeemDollars.textContent = coinsToUsd(data.coins || 0);
+        const gamesPlayed = countGamesPlayedToday(currentUser.uid);
+        if (profileGamesPlayedToday) profileGamesPlayedToday.textContent = `${gamesPlayed} de 3`;
         if (profileLevel) profileLevel.textContent = getLevelName(data.level);
         if (profileJoinDate) profileJoinDate.textContent = formatDate(data.createdAt);
         if (profileUid) profileUid.textContent = `UID: ${String(currentUser.uid || '').slice(0, 12)}`;
@@ -557,12 +712,14 @@
 
     async function loadDashboardData() {
         if (!currentUser) return;
-        const [activity, updates] = await Promise.all([
+        const [activity, updates, redemptions] = await Promise.all([
             getActivity(currentUser.uid, 8),
-            loadProjectUpdates(5)
+            loadProjectUpdates(5),
+            loadRedemptionHistory(currentUser.uid)
         ]);
         renderActivity(activity);
         renderProjectFeed(updates);
+        renderRedemptionHistory(redemptions);
     }
 
     authTabs.forEach((tab) => {
@@ -594,14 +751,23 @@
         const name = String(document.getElementById('registerName')?.value || '').trim();
         const email = String(document.getElementById('registerEmail')?.value || '').trim();
         const password = String(document.getElementById('registerPassword')?.value || '');
-        const referral = String(document.getElementById('registerReferral')?.value || '').trim();
+        const referral = normalizeReferralCode(document.getElementById('registerReferral')?.value || getPendingReferralCode());
         try {
             const credential = await window.createUserWithEmailAndPassword(window.auth, email, password);
             await window.updateProfile(credential.user, { displayName: name });
             await createUserDoc(credential.user, { displayName: name, username: name, referredBy: referral || null });
-            if (referral) await processReferral(referral, credential.user.uid);
+            const referralResult = referral ? await processReferral(referral, credential.user.uid) : { applied: false, reason: 'not-provided', reward: 0 };
             await addActivity(credential.user.uid, 'register', 'Cuenta creada', 0);
-            setAuthMessage('Cuenta creada correctamente.', 'success');
+            setPendingReferralCode('');
+            if (referralResult.reason === 'invalid') {
+                setAuthMessage('Cuenta creada, pero el codigo de invitacion no existe.', 'success');
+            } else if (referralResult.reason === 'self') {
+                setAuthMessage('Cuenta creada. No puedes usar tu propio codigo de invitacion.', 'success');
+            } else if (referralResult.applied) {
+                setAuthMessage(`Cuenta creada correctamente. Codigo aplicado: +${referralResult.reward} para quien te invito.`, 'success');
+            } else {
+                setAuthMessage('Cuenta creada correctamente.', 'success');
+            }
         } catch (err) {
             setAuthMessage(getAuthErrorMessage(err), 'error');
         }
@@ -710,6 +876,30 @@
         } catch {}
     });
 
+    redeemBtn?.addEventListener('click', async () => {
+        if (!currentUser || !currentUserData) return;
+        if (redeemBtn) redeemBtn.disabled = true;
+        if (redeemMessage) { redeemMessage.textContent = 'Procesando...'; redeemMessage.className = 'mg-game-result'; }
+
+        const result = await submitRedemption(
+            currentUser.uid,
+            redeemAmountInput?.value || '0',
+            redeemPaypalInput?.value || ''
+        );
+
+        if (redeemMessage) {
+            redeemMessage.textContent = result.msg;
+            redeemMessage.className = `mg-game-result ${result.ok ? 'success' : 'error'}`;
+        }
+        if (result.ok) {
+            if (redeemAmountInput) redeemAmountInput.value = '';
+            if (redeemPaypalInput) redeemPaypalInput.value = '';
+            renderProfile();
+            await loadDashboardData();
+        }
+        if (redeemBtn) redeemBtn.disabled = false;
+    });
+
     editProfileBtn?.addEventListener('click', () => {
         if (!currentUserData || !editProfileModal) return;
         document.getElementById('editDisplayName').value = currentUserData.displayName || currentUser.displayName || '';
@@ -791,6 +981,7 @@
             setAuthMessage('No se pudo conectar con Firebase.', 'error');
             return;
         }
+        prefillReferralField();
         settings = await loadSettings();
         if (dailyBonusAmount) dailyBonusAmount.textContent = String(Number(settings.dailyBonusCoins || 10));
         window.onAuthStateChanged(window.auth, (user) => {

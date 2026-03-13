@@ -26,7 +26,7 @@
                 <a href="aplicaciones.html">Aplicaciones</a>
             </div>
         </div>
-        <a href="imagenes.html">Imagenes</a>
+        <a href="minijuegos.html">Minijuegos</a>
         <a href="actualizaciones.html">Actualizaciones</a>
         <a href="donaciones.html">Apoyanos</a>
         <a href="personal.html">Personal</a>
@@ -117,6 +117,11 @@
                     <strong id="profileCoins">0</strong>
                     <small id="coinsDisplayLarge">0 disponibles</small>
                 </article>
+                    <article class="profile-kpi-card">
+                        <span>Valor en dolares</span>
+                        <strong id="profileCoinsDollars">$0.00</strong>
+                        <small>a 5 000 🪙 por $1</small>
+                    </article>
                 <article class="profile-kpi-card">
                     <span>Nivel</span>
                     <strong id="profileLevel">Visitante</strong>
@@ -224,10 +229,59 @@
                             <h3>Actividad reciente</h3>
                             <span class="profile-card-tag">Historial</span>
                         </div>
-                        <ul class="activity-list profile-activity-list" id="activityList">
+                            <ul class="activity-list profile-activity-list" id="activityList" aria-live="polite">
                             <li>Cargando actividad...</li>
                         </ul>
                     </section>
+
+                        <section class="profile-card profile-card--wide" id="coinRedemptionSection">
+                            <div class="profile-card-head">
+                                <h3>Canjear Monedas</h3>
+                                <span class="profile-card-tag">Recompensas reales</span>
+                            </div>
+                            <div class="redemption-info-row">
+                                <div class="redemption-rate-card">
+                                    <span class="redemption-rate-icon">💱</span>
+                                    <div>
+                                        <strong>Tipo de cambio</strong>
+                                        <p>5 000 monedas = $1 USD</p>
+                                    </div>
+                                </div>
+                                <div class="redemption-rate-card">
+                                    <span class="redemption-rate-icon">🪙</span>
+                                    <div>
+                                        <strong>Tu saldo canjeaable</strong>
+                                        <p><span id="redeemCoinsAvailable">0</span> monedas = <span id="redeemDollars">$0.00</span></p>
+                                    </div>
+                                </div>
+                                <div class="redemption-rate-card">
+                                    <span class="redemption-rate-icon">📊</span>
+                                    <div>
+                                        <strong>Total canjeado</strong>
+                                        <p><span id="redeemTotalPaid">$0.00</span> en <span id="redeemTotalCount">0</span> solicitudes</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="redemption-form-row" id="redeemFormRow">
+                                <div>
+                                    <label for="redeemAmount">Monedas a canjear <small>(minimo 5 000)</small></label>
+                                    <input type="number" id="redeemAmount" class="mg-input" min="5000" step="1000" placeholder="5000">
+                                </div>
+                                <div>
+                                    <label for="redeemPaypal">Metodo de pago (correo PayPal, numero Nequi, etc.)</label>
+                                    <input type="text" id="redeemPaypal" class="mg-input" placeholder="tu@paypal.com">
+                                </div>
+                                <div>
+                                    <label>&nbsp;</label>
+                                    <button id="redeemBtn" class="btn">Solicitar Canje</button>
+                                </div>
+                            </div>
+                            <p id="redeemMessage" class="mg-game-result" style="margin-top:.6rem"></p>
+                            <div id="redeemHistory" hidden>
+                                <h4 class="redemption-history-title">Historial de canjes</h4>
+                                <div id="redeemHistoryList" class="redemption-history-list"></div>
+                            </div>
+                        </section>
                 </div>
 
                 <div class="profile-hub-side">
@@ -304,6 +358,16 @@
                             <a id="profileDevShortcut" class="btn btn-small" href="admin/panel-desarrollo.html">Abrir Dev Hub</a>
                         </div>
                     </section>
+
+                        <section class="profile-card">
+                            <div class="profile-card-head">
+                                <h3>Minijuegos</h3>
+                                <span class="profile-card-tag">Gana monedas</span>
+                            </div>
+                            <p class="profile-mini-text">Juega cada dia para acumular monedas y canjearlas por dinero real.</p>
+                            <p class="profile-mini-text">Jugados hoy: <strong id="profileGamesPlayedToday">0 de 3</strong></p>
+                            <a href="minijuegos.html" class="btn btn-small" style="margin-top:.6rem">Ir a Minijuegos</a>
+                        </section>
                 </div>
             </div>
 

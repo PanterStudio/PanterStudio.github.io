@@ -6416,6 +6416,415 @@ footer {
     color: #d4ebff;
 }
 
+/* =====================================================
+   MINIJUEGOS PAGE  (pages/minijuegos.html)
+   ===================================================== */
+
+/* Hero */
+.mg-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 2.5rem 2rem;
+    background: var(--card-bg, rgba(255,255,255,.04));
+    border: 1px solid var(--border, rgba(255,255,255,.1));
+    border-radius: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.mg-hero-tag {
+    display: inline-block;
+    background: var(--accent, #1e70c8);
+    color: #fff;
+    font-size: .7rem;
+    font-weight: 700;
+    padding: .25rem .75rem;
+    border-radius: 9999px;
+    letter-spacing: .08em;
+    margin-bottom: .5rem;
+}
+
+.mg-hero-text h2 { margin: .3rem 0 .7rem; font-size: clamp(1.4rem, 4vw, 2rem); }
+.mg-hero-text p  { margin: 0; font-size: .95rem; opacity: .8; max-width: 560px; }
+
+.mg-hero-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .8rem;
+}
+
+.mg-coin-display {
+    text-align: right;
+}
+
+.mg-coin-big {
+    display: block;
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--accent, #1e70c8);
+    line-height: 1;
+}
+
+.mg-coin-display small { font-size: .75rem; opacity: .65; }
+
+.mg-coin-usd {
+    display: block;
+    font-size: .85rem;
+    font-weight: 600;
+    color: #27ae60;
+    margin-top: .15rem;
+}
+
+.mg-hero-action { flex-shrink: 0; }
+
+/* Guest notice */
+.mg-guest-notice {
+    background: rgba(255,193,7,.1);
+    border: 1px solid rgba(255,193,7,.35);
+    border-radius: .6rem;
+    padding: .75rem 1rem;
+    margin-bottom: 1.5rem;
+    font-size: .88rem;
+}
+
+.mg-guest-notice a { color: var(--accent, #1e70c8); font-weight: 600; }
+
+/* Section titles */
+.mg-games-section h3,
+.mg-info-section h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0 0 1.2rem;
+}
+
+/* Games grid */
+.mg-games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(295px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+/* Game card */
+.mg-game-card {
+    background: var(--card-bg, rgba(255,255,255,.04));
+    border: 1px solid var(--border, rgba(255,255,255,.1));
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: border-color .2s;
+}
+
+.mg-game-card:hover { border-color: var(--accent, #1e70c8); }
+
+.mg-game-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem 1.2rem .9rem;
+    border-bottom: 1px solid var(--border, rgba(255,255,255,.08));
+}
+
+.mg-game-icon { font-size: 2rem; line-height: 1; flex-shrink: 0; }
+
+.mg-game-meta { flex: 1; }
+.mg-game-meta h4 { margin: 0 0 .15rem; font-size: .95rem; font-weight: 700; }
+.mg-game-meta p  { margin: 0; font-size: .75rem; opacity: .6; }
+
+.mg-daily-badge {
+    margin-left: auto;
+    white-space: nowrap;
+    font-size: .68rem;
+    font-weight: 700;
+    padding: .25rem .65rem;
+    border-radius: 9999px;
+    background: rgba(39,174,96,.18);
+    color: #2ecc71;
+}
+
+.mg-daily-badge--done {
+    background: rgba(180,180,180,.12);
+    color: #999;
+}
+
+/* Game area */
+.mg-game-area {
+    padding: 1rem 1.2rem;
+    flex: 1;
+}
+
+.mg-game-prompt  { font-size: .93rem; margin: 0 0 .8rem; }
+.mg-game-sub     { font-size: .8rem; opacity: .6; margin: .3rem 0; }
+
+.mg-game-controls {
+    display: flex;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-bottom: .6rem;
+}
+
+.mg-input {
+    background: var(--input-bg, rgba(255,255,255,.07));
+    border: 1px solid var(--border, rgba(255,255,255,.15));
+    border-radius: .5rem;
+    color: inherit;
+    padding: .5rem .85rem;
+    font-size: .93rem;
+    flex: 1;
+    min-width: 100px;
+    outline: none;
+    transition: border-color .18s;
+}
+
+.mg-input:focus { border-color: var(--accent, #1e70c8); }
+
+.mg-game-hint           { font-size: .88rem; margin: .35rem 0; font-weight: 600; }
+.mg-game-hint.success   { color: #2ecc71; }
+.mg-game-hint.error     { color: #e74c3c; }
+
+.mg-game-result {
+    font-size: .88rem;
+    font-weight: 700;
+    margin-top: .6rem;
+    padding: .45rem .8rem;
+    border-radius: .5rem;
+    background: rgba(255,255,255,.04);
+}
+
+.mg-game-result.success { color: #2ecc71;  background: rgba(39,174,96,.1); }
+.mg-game-result.error   { color: #e74c3c;  background: rgba(231,76,60,.1); }
+
+/* Game footer */
+.mg-game-footer {
+    padding: .85rem 1.2rem;
+    border-top: 1px solid var(--border, rgba(255,255,255,.08));
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    flex-wrap: wrap;
+}
+
+.mg-play-btn     { flex-shrink: 0; }
+.mg-cooldown-text { font-size: .75rem; opacity: .6; }
+
+/* Memory Match */
+.mg-memory-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .45rem;
+    margin: .7rem 0;
+}
+
+.mg-memory-card {
+    aspect-ratio: 1;
+    cursor: pointer;
+    perspective: 500px;
+    min-height: 48px;
+}
+
+.mg-card-inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform .32s ease;
+}
+
+.mg-memory-card.flipped .mg-card-inner,
+.mg-memory-card.matched .mg-card-inner { transform: rotateY(180deg); }
+
+.mg-card-front,
+.mg-card-back {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: .45rem;
+    font-size: 1.3rem;
+    backface-visibility: hidden;
+}
+
+.mg-card-front {
+    background: var(--accent, #1e70c8);
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.mg-card-back {
+    transform: rotateY(180deg);
+    background: var(--card-bg, #1a1a2e);
+    border: 1px solid var(--border, rgba(255,255,255,.15));
+}
+
+.mg-memory-card.matched .mg-card-back {
+    border-color: #27ae60;
+    background: rgba(39,174,96,.15);
+}
+
+/* Reflex Game */
+.mg-reflex-arena {
+    position: relative;
+    width: 100%;
+    height: 130px;
+    background: rgba(0,0,0,.15);
+    border-radius: .8rem;
+    overflow: hidden;
+    margin: .7rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mg-reflex-circle {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: #444;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    user-select: none;
+    transition: background .12s ease;
+}
+
+.mg-reflex-circle.active {
+    background: #27ae60;
+    display: flex;
+    animation: mg-pulse-green .55s ease infinite alternate;
+}
+
+@keyframes mg-pulse-green {
+    from { transform: scale(1);    box-shadow: 0 0 0  0  rgba(39,174,96,.5); }
+    to   { transform: scale(1.09); box-shadow: 0 0 0 12px rgba(39,174,96,0); }
+}
+
+/* Info grid */
+.mg-info-section { margin-top: 2rem; }
+
+.mg-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 1.1rem;
+}
+
+.mg-info-item {
+    background: var(--card-bg, rgba(255,255,255,.04));
+    border: 1px solid var(--border, rgba(255,255,255,.08));
+    border-radius: .8rem;
+    padding: 1.1rem;
+}
+
+.mg-info-icon { font-size: 1.8rem; display: block; margin-bottom: .5rem; }
+.mg-info-item h4 { margin: 0 0 .4rem; font-size: .9rem; font-weight: 700; }
+.mg-info-item p  { margin: 0; font-size: .8rem; opacity: .7; }
+
+/* =====================================================
+   COIN REDEMPTION  (pages/perfil.html)
+   ===================================================== */
+
+.redemption-info-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.2rem;
+}
+
+.redemption-rate-card {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--border, rgba(255,255,255,.1));
+    border-radius: .6rem;
+    padding: .8rem 1.1rem;
+    flex: 1;
+    min-width: 180px;
+}
+
+.redemption-rate-icon { font-size: 1.7rem; flex-shrink: 0; line-height: 1; }
+
+.redemption-rate-card strong { display: block; font-size: .82rem; margin-bottom: .15rem; }
+.redemption-rate-card p      { margin: 0; font-size: .8rem; opacity: .7; }
+
+.redemption-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: .8rem;
+    align-items: end;
+}
+
+.redemption-form-row label {
+    display: block;
+    font-size: .8rem;
+    margin-bottom: .3rem;
+    opacity: .8;
+}
+
+.redemption-history-title {
+    font-size: .88rem;
+    font-weight: 700;
+    margin: 1.2rem 0 .6rem;
+    opacity: .8;
+}
+
+.redemption-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+}
+
+.redemption-history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .6rem .9rem;
+    background: rgba(255,255,255,.04);
+    border-radius: .5rem;
+    font-size: .82rem;
+    flex-wrap: wrap;
+}
+
+.redemption-history-item strong { display: block; margin-bottom: .1rem; }
+.redemption-history-item small  { opacity: .6; }
+
+.redemption-status {
+    display: inline-block;
+    padding: .2rem .55rem;
+    border-radius: 9999px;
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    white-space: nowrap;
+}
+
+.redemption-status.pending   { background: rgba(255,193,7,.18);  color: #f1c40f; }
+.redemption-status.approved  { background: rgba(39,174,96,.18);  color: #2ecc71; }
+.redemption-status.paid      { background: rgba(30,112,200,.18); color: #5dade2; }
+.redemption-status.rejected  { background: rgba(231,76,60,.18);  color: #e74c3c; }
+
+/* Responsive */
+@media (max-width: 640px) {
+    .mg-hero         { flex-direction: column; }
+    .mg-hero-right   { align-items: flex-start; }
+
+    .mg-games-grid   { grid-template-columns: 1fr; }
+    .mg-info-grid    { grid-template-columns: 1fr 1fr; }
+    .mg-memory-grid  { grid-template-columns: repeat(4, 1fr); }
+
+    .redemption-form-row { grid-template-columns: 1fr; }
+    .redemption-info-row { flex-direction: column; }
+}
+
 .dev-studio-gate img {
     width: 90px;
     margin-bottom: 16px;
