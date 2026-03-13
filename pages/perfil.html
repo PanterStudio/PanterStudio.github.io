@@ -57,9 +57,6 @@
                 </form>
 
                 <form id="registerForm" class="profile-auth-form" hidden>
-                    <label for="registerName">Nombre de usuario</label>
-                    <input type="text" id="registerName" placeholder="TuNombre" required minlength="3" maxlength="24">
-
                     <label for="registerEmail">Correo electronico</label>
                     <input type="email" id="registerEmail" placeholder="tu@correo.com" required>
 
@@ -118,9 +115,9 @@
                     <small id="coinsDisplayLarge">0 disponibles</small>
                 </article>
                     <article class="profile-kpi-card">
-                        <span>Valor en dolares</span>
-                        <strong id="profileCoinsDollars">$0.00</strong>
-                        <small>a 5 000 🪙 por $1</small>
+                        <span>Esmeraldas</span>
+                        <strong id="profileCoinsDollars">0 💎</strong>
+                        <small>saldo interno de tu cuenta</small>
                     </article>
                 <article class="profile-kpi-card">
                     <span>Nivel</span>
@@ -237,28 +234,28 @@
                         <section class="profile-card profile-card--wide" id="coinRedemptionSection">
                             <div class="profile-card-head">
                                 <h3>Canjear Monedas</h3>
-                                <span class="profile-card-tag">Recompensas reales</span>
+                                <span class="profile-card-tag">Cambio interno</span>
                             </div>
                             <div class="redemption-info-row">
                                 <div class="redemption-rate-card">
                                     <span class="redemption-rate-icon">💱</span>
                                     <div>
                                         <strong>Tipo de cambio</strong>
-                                        <p>5 000 monedas = $1 USD</p>
+                                        <p>5 000 monedas = 50 esmeraldas</p>
                                     </div>
                                 </div>
                                 <div class="redemption-rate-card">
                                     <span class="redemption-rate-icon">🪙</span>
                                     <div>
                                         <strong>Tu saldo canjeaable</strong>
-                                        <p><span id="redeemCoinsAvailable">0</span> monedas = <span id="redeemDollars">$0.00</span></p>
+                                        <p><span id="redeemCoinsAvailable">0</span> monedas = <span id="redeemDollars">0 💎</span></p>
                                     </div>
                                 </div>
                                 <div class="redemption-rate-card">
                                     <span class="redemption-rate-icon">📊</span>
                                     <div>
                                         <strong>Total canjeado</strong>
-                                        <p><span id="redeemTotalPaid">$0.00</span> en <span id="redeemTotalCount">0</span> solicitudes</p>
+                                        <p><span id="redeemTotalPaid">0 💎</span> en <span id="redeemTotalCount">0</span> canjes</p>
                                     </div>
                                 </div>
                             </div>
@@ -268,12 +265,12 @@
                                     <input type="number" id="redeemAmount" class="mg-input" min="5000" step="1000" placeholder="5000">
                                 </div>
                                 <div>
-                                    <label for="redeemPaypal">Metodo de pago (correo PayPal, numero Nequi, etc.)</label>
-                                    <input type="text" id="redeemPaypal" class="mg-input" placeholder="tu@paypal.com">
+                                    <label>Cambio automatico</label>
+                                    <input type="text" class="mg-input" value="Se agrega directo a tu saldo de esmeraldas" readonly>
                                 </div>
                                 <div>
                                     <label>&nbsp;</label>
-                                    <button id="redeemBtn" class="btn">Solicitar Canje</button>
+                                    <button id="redeemBtn" class="btn">Canjear ahora</button>
                                 </div>
                             </div>
                             <p id="redeemMessage" class="mg-game-result" style="margin-top:.6rem"></p>
@@ -364,7 +361,7 @@
                                 <h3>Minijuegos</h3>
                                 <span class="profile-card-tag">Gana monedas</span>
                             </div>
-                            <p class="profile-mini-text">Juega cada dia para acumular monedas y canjearlas por dinero real.</p>
+                            <p class="profile-mini-text">Juega cada dia para acumular monedas y convertirlas en esmeraldas dentro de la pagina.</p>
                             <p class="profile-mini-text">Jugados hoy: <strong id="profileGamesPlayedToday">0 de 3</strong></p>
                             <a href="minijuegos.html" class="btn btn-small" style="margin-top:.6rem">Ir a Minijuegos</a>
                         </section>

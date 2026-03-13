@@ -1,7 +1,6 @@
 (function () {
     const SITE_ROOT = (document.body?.dataset.siteRoot || '.').replace(/\/$/, '');
     const REFERRAL_STORAGE_KEY = 'panterPendingReferralCode';
-    const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,24}$/;
     function toSitePath(path) {
         return `${SITE_ROOT}/${String(path || '').replace(/^\/+/, '')}`.replace(/\\/g, '/');
     }
@@ -95,15 +94,15 @@
     const redeemTotalPaid       = document.getElementById('redeemTotalPaid');
     const redeemTotalCount      = document.getElementById('redeemTotalCount');
     const redeemAmountInput     = document.getElementById('redeemAmount');
-    const redeemPaypalInput     = document.getElementById('redeemPaypal');
     const redeemBtn             = document.getElementById('redeemBtn');
     const redeemMessage         = document.getElementById('redeemMessage');
     const redeemHistory         = document.getElementById('redeemHistory');
     const redeemHistoryList     = document.getElementById('redeemHistoryList');
     const profileGamesPlayedToday = document.getElementById('profileGamesPlayedToday');
 
-    const COINS_PER_DOLLAR      = 5000;
-    const MIN_REDEEM_COINS      = 5000;
+    const COINS_PER_EXCHANGE     = 5000;
+    const EMERALDS_PER_EXCHANGE  = 50;
+    const MIN_REDEEM_COINS       = 5000;
     const REDEEM_COLLECTION     = 'coin_redemptions';
     const USERNAME_ADJ          = ['Veloz', 'Feroz', 'Astuto', 'Brillante', 'Salvaje', 'Sombrio', 'Rapido', 'Fuerte', 'Oscuro', 'Agil', 'Fiero', 'Noble'];
     const USERNAME_NOUN         = ['Pantera', 'Lobo', 'Aguila', 'Zorro', 'Leon', 'Tigre', 'Cobra', 'Halcon', 'Jaguar', 'Oso', 'Linx', 'Condor'];
@@ -141,8 +140,12 @@
         return `$${value.toFixed(2)}`;
     }
 
-    function coinsToUsd(coins) {
-        return `$${(Number(coins || 0) / COINS_PER_DOLLAR).toFixed(2)}`;
+    function coinsToEmeralds(coins) {
+        return Math.floor((Number(coins || 0) / COINS_PER_EXCHANGE) * EMERALDS_PER_EXCHANGE);
+    }
+
+    function formatEmeralds(value) {
+        return `${Number(value || 0)} 💎`;
     }
 
     function isPermissionDeniedError(err) {
@@ -225,28 +228,23 @@
         if (!redeemHistoryList || !redeemHistory) return;
         if (history.length === 0) { redeemHistory.hidden = true; return; }
         redeemHistory.hidden = false;
-        const statusLabel = { pending: 'Pendiente', approved: 'Aprobado', paid: 'Pagado', rejected: 'Rechazado' };
+
         redeemHistoryList.innerHTML = history.map(item => {
-            const dollars = formatCurrency(Number(item.coins || 0) / COINS_PER_DOLLAR);
-            const sl = String(item.status || 'pending').toLowerCase();
+            const emeralds = Number(item.emeralds || coinsToEmeralds(item.coins || 0));
             return `<div class="redemption-history-item">
                 <div>
                     <strong>${esc(String(item.coins || 0))} monedas</strong>
-                    <small>${esc(dollars)} · ${esc(formatDateLong(item.createdAt))}</small>
-                </div>
-                <div>
-                    <span class="redemption-status ${sl}">${esc(statusLabel[sl] || sl)}</span>
+                    <small>${esc(formatEmeralds(emeralds))} · ${esc(formatDateLong(item.createdAt))}</small>
                 </div>
             </div>`;
         }).join('');
 
-        const paid = history.filter(i => i.status === 'paid' || i.status === 'approved');
-        const totalDollars = paid.reduce((s, i) => s + Number(i.coins || 0) / COINS_PER_DOLLAR, 0);
-        if (redeemTotalPaid)  redeemTotalPaid.textContent  = formatCurrency(totalDollars);
+        const totalEmeralds = history.reduce((sum, item) => sum + Number(item.emeralds || coinsToEmeralds(item.coins || 0)), 0);
+        if (redeemTotalPaid) redeemTotalPaid.textContent = formatEmeralds(totalEmeralds);
         if (redeemTotalCount) redeemTotalCount.textContent = String(history.length);
     }
 
-    async function submitRedemption(uid, coinsStr, paymentInfo) {
+    async function submitRedemption(uid, coinsStr) {
         const coins = parseInt(coinsStr, 10);
         if (isNaN(coins) || coins < MIN_REDEEM_COINS) {
             return { ok: false, msg: `Minimo ${MIN_REDEEM_COINS} monedas para canjear.` };
@@ -254,31 +252,36 @@
         if (coins > Number(currentUserData?.coins || 0)) {
             return { ok: false, msg: 'No tienes suficientes monedas.' };
         }
-        if (!String(paymentInfo || '').trim()) {
-            return { ok: false, msg: 'Ingresa un metodo de pago.' };
+
+        const emeralds = coinsToEmeralds(coins);
+        if (emeralds <= 0) {
+            return { ok: false, msg: 'El monto no alcanza para convertir a esmeraldas.' };
         }
 
-        const dollars = coins / COINS_PER_DOLLAR;
-        const now     = new Date().toISOString();
+        const now = new Date().toISOString();
         try {
             await window.addDoc(window.collection(window.db, REDEEM_COLLECTION), {
                 uid,
-                email:       currentUser?.email || '',
-                username:    currentUserData?.username || currentUserData?.displayName || '',
+                email: currentUser?.email || '',
+                username: currentUserData?.username || currentUserData?.displayName || '',
                 coins,
-                dollars,
-                paymentInfo: String(paymentInfo).trim(),
-                status:      'pending',
-                createdAt:   now
+                emeralds,
+                status: 'completed',
+                createdAt: now
             });
+
             const newCoins = Number(currentUserData.coins || 0) - coins;
-            await updateUserData(uid, { coins: newCoins });
-            await addActivity(uid, 'redemption', `Solicitud de canje: ${coins} monedas (${formatCurrency(dollars)})`, -coins);
+            const newEmeralds = Number(currentUserData.emeralds || 0) + emeralds;
+            await updateUserData(uid, { coins: newCoins, emeralds: newEmeralds });
+            await addActivity(uid, 'exchange', `Canje completado: ${coins} monedas por ${emeralds} esmeraldas`, -coins);
+
             currentUserData.coins = newCoins;
-            return { ok: true, msg: `Solicitud enviada. ${formatCurrency(dollars)} USD en proceso de revision.` };
+            currentUserData.emeralds = newEmeralds;
+
+            return { ok: true, msg: `Canje exitoso: +${emeralds} esmeraldas.` };
         } catch (err) {
             console.error('Error enviando solicitud de canje:', err);
-            return { ok: false, msg: 'No se pudo enviar la solicitud. Intenta de nuevo.' };
+            return { ok: false, msg: 'No se pudo completar el canje. Intenta de nuevo.' };
         }
     }
 
@@ -414,6 +417,7 @@
             favoriteProject: 'Nuestra Tierra Job Simulator',
             country: 'Colombia',
             coins: 0,
+            emeralds: 0,
             level: 'visitor',
             referralCode: generateReferralCode(user.uid),
             referredBy: null,
@@ -654,7 +658,8 @@
             referral: '👥',
             spin: '🎰',
             daily: '📅',
-            profile: '📝'
+            profile: '📝',
+            exchange: '💎'
         };
         activityList.innerHTML = activities.map((item) => {
             const coins = Number(item.coins || 0);
@@ -681,6 +686,7 @@
                 projectType: String(item.projectType || 'juego')
             });
             const href = item.projectId ? `proyecto.html?${params.toString()}` : 'actualizaciones.html';
+
             return `<a class="profile-update-link" href="${esc(href)}">
                 <strong>${esc(item.title || 'Actualizacion')}</strong>
                 <span>${esc(item.projectTitle || 'Proyecto')}</span>
@@ -700,7 +706,6 @@
     function showDashboard() {
         if (authSection) authSection.hidden = true;
         if (dashboard) {
-            dashboard.hidden = false;
             dashboard.classList.add('active');
         }
     }
@@ -724,9 +729,9 @@
         if (profileHeroSummary) profileHeroSummary.textContent = summaryBits.join(' ');
         if (profileCoins) profileCoins.textContent = String(Number(data.coins || 0));
         if (coinsDisplayLarge) coinsDisplayLarge.textContent = `${Number(data.coins || 0)} disponibles`;
-        if (profileCoinsDollars) profileCoinsDollars.textContent = coinsToUsd(data.coins || 0);
+        if (profileCoinsDollars) profileCoinsDollars.textContent = formatEmeralds(data.emeralds || 0);
         if (redeemCoinsAvailable) redeemCoinsAvailable.textContent = String(Number(data.coins || 0));
-        if (redeemDollars) redeemDollars.textContent = coinsToUsd(data.coins || 0);
+        if (redeemDollars) redeemDollars.textContent = formatEmeralds(coinsToEmeralds(data.coins || 0));
         const gamesPlayed = countGamesPlayedToday(currentUser.uid);
         if (profileGamesPlayedToday) profileGamesPlayedToday.textContent = `${gamesPlayed} de 3`;
         if (profileLevel) profileLevel.textContent = getLevelName(data.level);
@@ -805,7 +810,6 @@
 
     registerForm?.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const name = String(document.getElementById('registerName')?.value || '').trim();
         const email = String(document.getElementById('registerEmail')?.value || '').trim();
         const password = String(document.getElementById('registerPassword')?.value || '');
         const referral = normalizeReferralCode(document.getElementById('registerReferral')?.value || getPendingReferralCode());
@@ -816,21 +820,12 @@
             return;
         }
 
-        if (!name) {
-            setAuthMessage('Ingresa un nombre de usuario.', 'error');
-            return;
-        }
-
-        if (!USERNAME_REGEX.test(name)) {
-            setAuthMessage('Nombre invalido. Usa solo letras, numeros y guion bajo (3-24 caracteres).', 'error');
-            return;
-        }
-
         try {
             setAuthMessage('Creando cuenta...');
             const credential = await window.createUserWithEmailAndPassword(window.auth, email, password);
-            const usernameResolution = await resolveAvailableUsername(name, credential.user.uid);
-            const finalUsername = usernameResolution.username || name;
+            const baseUsername = String(email || '').split('@')[0] || 'Jugador';
+            const usernameResolution = await resolveAvailableUsername(baseUsername, credential.user.uid);
+            const finalUsername = usernameResolution.username || baseUsername;
             await window.updateProfile(credential.user, { displayName: finalUsername });
             const usernameNotice = usernameResolution.changed
                 ? ` Tu nombre final es ${finalUsername}.`
@@ -973,8 +968,7 @@
 
         const result = await submitRedemption(
             currentUser.uid,
-            redeemAmountInput?.value || '0',
-            redeemPaypalInput?.value || ''
+            redeemAmountInput?.value || '0'
         );
 
         if (redeemMessage) {
@@ -983,7 +977,6 @@
         }
         if (result.ok) {
             if (redeemAmountInput) redeemAmountInput.value = '';
-            if (redeemPaypalInput) redeemPaypalInput.value = '';
             renderProfile();
             await loadDashboardData();
         }
@@ -1068,6 +1061,7 @@
                         favoriteProject: 'Nuestra Tierra Job Simulator',
                         country: 'No definido',
                         coins: 0,
+                        emeralds: 0,
                         level: 'visitor',
                         referralCode: generateReferralCode(user.uid),
                         referredBy: null,

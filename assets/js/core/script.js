@@ -653,31 +653,21 @@ document.addEventListener('DOMContentLoaded', () => {
         registerForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             if (!(await ensureAuthReady(true))) return;
-            const nameInput = document.getElementById('authRegisterName');
             const emailInput = document.getElementById('authRegisterEmail');
             const passInput = document.getElementById('authRegisterPassword');
             const referralInput = document.getElementById('authRegisterReferral');
-            const username = nameInput?.value.trim() || '';
             const email = emailInput?.value.trim() || '';
             const password = passInput?.value || '';
             const referralCode = normalizeReferralCode(referralInput?.value || getPendingReferralCode());
-
-            if (!username) {
-                message.textContent = 'Ingresa un nombre de usuario.';
-                return;
-            }
-            if (!USERNAME_REGEX.test(username)) {
-                message.textContent = 'Nombre invalido. Solo letras, numeros y guion bajo (3-24 caracteres).';
-                return;
-            }
 
             try {
                 message.textContent = 'Creando cuenta...';
                 const credential = await window.createUserWithEmailAndPassword(window.auth, email, password);
                 let canCloseModal = true;
                 if (credential?.user) {
+                    const generatedUsername = String(email || '').split('@')[0] || 'Jugador';
                     try {
-                        const referralResult = await saveUserProfile(credential.user, username, { referralCode });
+                        const referralResult = await saveUserProfile(credential.user, generatedUsername, { referralCode });
                         const usernameNotice = referralResult.usernameChanged
                             ? ` Tu nombre final es ${referralResult.username}.`
                             : '';

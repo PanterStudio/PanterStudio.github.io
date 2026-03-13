@@ -6,7 +6,8 @@
     'use strict';
 
     const COOLDOWN_HOURS = 24;
-    const COINS_PER_DOLLAR = 5000;
+    const COINS_PER_EXCHANGE = 5000;
+    const EMERALDS_PER_EXCHANGE = 50;
 
     // ── DOM ───────────────────────────────────────────────────────────────────
     const mgGuestNotice = document.getElementById('mgGuestNotice');
@@ -63,7 +64,10 @@
 
     function updateCoinDisplay() {
         if (mgCoinValue) mgCoinValue.textContent = String(userCoins);
-        if (mgCoinUsd)   mgCoinUsd.textContent   = `≈ $${(userCoins / COINS_PER_DOLLAR).toFixed(2)}`;
+        if (mgCoinUsd) {
+            const emeralds = Math.floor((userCoins / COINS_PER_EXCHANGE) * EMERALDS_PER_EXCHANGE);
+            mgCoinUsd.textContent = `≈ ${emeralds} 💎`;
+        }
         if (mgUserCoins) mgUserCoins.hidden = !currentUser;
     }
 
