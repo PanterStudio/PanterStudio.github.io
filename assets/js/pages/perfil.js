@@ -161,12 +161,35 @@
         return results;
     }
 
-    async function isUsernameTaken(username) {
+    async function isUsernameTaken(username, excludeUid = '') {
         if (!window.db || !window.getDocs || !window.query || !window.collection || !window.where) return false;
         const snap = await window.getDocs(
             window.query(window.collection(window.db, 'users'), window.where('username', '==', username))
         );
-        return !snap.empty;
+        return snap.docs.some((doc) => doc.id !== excludeUid);
+    }
+
+    async function resolveAvailableUsername(username, excludeUid = '') {
+        const desired = String(username || '').trim();
+        if (!desired) return { username: desired, changed: false };
+
+        try {
+            const taken = await isUsernameTaken(desired, excludeUid);
+            if (!taken) return { username: desired, changed: false };
+
+            const suggestions = generateSuggestions(desired);
+            for (const suggestion of suggestions) {
+                const suggestionTaken = await isUsernameTaken(suggestion, excludeUid);
+                if (!suggestionTaken) {
+                    return { username: suggestion, changed: true };
+                }
+            }
+        } catch (err) {
+            console.warn('No se pudo verificar disponibilidad del nombre de usuario:', err);
+        }
+
+        const fallback = `${desired.slice(0, 18) || 'Jugador'}${Math.floor(Math.random() * 9000) + 1000}`.slice(0, 24);
+        return { username: fallback, changed: fallback !== desired };
     }
 
     function countGamesPlayedToday(uid) {
@@ -298,7 +321,8 @@
             'auth/email-already-in-use': 'Ese correo ya esta registrado.',
             'auth/weak-password': 'La contrasena es muy debil. Usa al menos 6 caracteres.',
             'auth/network-request-failed': 'Error de red. Revisa tu conexion.',
-            'auth/too-many-requests': 'Demasiados intentos. Espera un momento.'
+            'auth/too-many-requests': 'Demasiados intentos. Espera un momento.',
+            'permission-denied': 'Firestore rechazo la operacion. Revisa las reglas para la coleccion users y que el usuario autenticado pueda crear su propio perfil.'
         };
         return map[code] || err?.message || 'Ocurrio un error inesperado.';
     }
@@ -797,29 +821,26 @@
         }
 
         try {
-            setAuthMessage('Verificando nombre de usuario...');
-            const taken = await isUsernameTaken(name);
-            if (taken) {
-                const suggestions = generateSuggestions(name);
-                setAuthMessage(`"${name}" ya esta en uso. Prueba: ${suggestions.slice(0, 3).join(', ')}`, 'error');
-                return;
-            }
-
             setAuthMessage('Creando cuenta...');
             const credential = await window.createUserWithEmailAndPassword(window.auth, email, password);
-            await window.updateProfile(credential.user, { displayName: name });
-            await createUserDoc(credential.user, { displayName: name, username: name });
+            const usernameResolution = await resolveAvailableUsername(name, credential.user.uid);
+            const finalUsername = usernameResolution.username || name;
+            await window.updateProfile(credential.user, { displayName: finalUsername });
+            await createUserDoc(credential.user, { displayName: finalUsername, username: finalUsername });
             const referralResult = referral ? await processReferral(referral, credential.user.uid) : { applied: false, reason: 'not-provided', reward: 0 };
             await addActivity(credential.user.uid, 'register', 'Cuenta creada', 0);
             setPendingReferralCode('');
+            const usernameNotice = usernameResolution.changed
+                ? ` Tu nombre final es ${finalUsername}.`
+                : '';
             if (referralResult.reason === 'invalid') {
-                setAuthMessage('Cuenta creada, pero el codigo de invitacion no existe.', 'success');
+                setAuthMessage(`Cuenta creada, pero el codigo de invitacion no existe.${usernameNotice}`, 'success');
             } else if (referralResult.reason === 'self') {
-                setAuthMessage('Cuenta creada. No puedes usar tu propio codigo de invitacion.', 'success');
+                setAuthMessage(`Cuenta creada. No puedes usar tu propio codigo de invitacion.${usernameNotice}`, 'success');
             } else if (referralResult.applied) {
-                setAuthMessage(`Cuenta creada correctamente. Codigo aplicado: +${referralResult.reward} para quien te invito.`, 'success');
+                setAuthMessage(`Cuenta creada correctamente. Codigo aplicado: +${referralResult.reward} para quien te invito.${usernameNotice}`, 'success');
             } else {
-                setAuthMessage('Cuenta creada correctamente.', 'success');
+                setAuthMessage(`Cuenta creada correctamente.${usernameNotice}`, 'success');
             }
             registerForm.reset();
         } catch (err) {

@@ -102,12 +102,35 @@ function generateSuggestions(base) {
     return results;
 }
 
-async function isUsernameTaken(username) {
+async function isUsernameTaken(username, excludeUid = '') {
     if (!window.db || !window.getDocs || !window.query || !window.collection || !window.where) return false;
     const snap = await window.getDocs(
         window.query(window.collection(window.db, 'users'), window.where('username', '==', username))
     );
-    return !snap.empty;
+    return snap.docs.some((doc) => doc.id !== excludeUid);
+}
+
+async function resolveAvailableUsername(username, excludeUid = '') {
+    const desired = String(username || '').trim();
+    if (!desired) return { username: desired, changed: false };
+
+    try {
+        const taken = await isUsernameTaken(desired, excludeUid);
+        if (!taken) return { username: desired, changed: false };
+
+        const suggestions = generateSuggestions(desired);
+        for (const suggestion of suggestions) {
+            const suggestionTaken = await isUsernameTaken(suggestion, excludeUid);
+            if (!suggestionTaken) {
+                return { username: suggestion, changed: true };
+            }
+        }
+    } catch (err) {
+        console.warn('No se pudo verificar disponibilidad del nombre de usuario:', err);
+    }
+
+    const fallback = `${desired.slice(0, 18) || 'Jugador'}${Math.floor(Math.random() * 9000) + 1000}`.slice(0, 24);
+    return { username: fallback, changed: fallback !== desired };
 }
 
 function normalizeReferralCode(code) {
@@ -199,10 +222,15 @@ async function saveUserProfile(user, username, options = {}) {
     const isFounder = email === FOUNDER_CEO_EMAIL;
     const now = new Date().toISOString();
     const pendingReferral = normalizeReferralCode(options.referralCode || getPendingReferralCode());
+    const usernameResolution = await resolveAvailableUsername(
+        username || existingProfile?.username || user.displayName || user.email?.split('@')[0] || 'Miembro',
+        user.uid
+    );
+    const finalUsername = usernameResolution.username || username;
 
     await window.setDoc(window.fsDoc(window.db, 'users', user.uid), {
-        username,
-        displayName: username,
+        username: finalUsername,
+        displayName: finalUsername,
         email: user.email || '',
         role: existingProfile?.role || (isFounder ? 'founder_ceo' : 'viewer'),
         isAdmin: typeof existingProfile?.isAdmin === 'boolean' ? existingProfile.isAdmin : isFounder,
@@ -211,14 +239,18 @@ async function saveUserProfile(user, username, options = {}) {
         createdAt: existingProfile?.createdAt || now,
         updatedAt: now
     }, { merge: true });
-    await window.updateProfile(user, { displayName: username });
+    await window.updateProfile(user, { displayName: finalUsername });
 
     let referralResult = { applied: false, reason: 'not-provided', reward: 0 };
     if (pendingReferral && !existingProfile?.referredBy) {
         referralResult = await applyReferralCode(pendingReferral, user.uid, existingProfile);
     }
     if (pendingReferral) setPendingReferralCode('');
-    return referralResult;
+    return {
+        ...referralResult,
+        username: finalUsername,
+        usernameChanged: finalUsername !== username
+    };
 }
 
 async function getUserProfile(uid) {
@@ -400,7 +432,8 @@ document.addEventListener('DOMContentLoaded', () => {
             'auth/invalid-email': 'El correo no tiene un formato valido.',
             'auth/email-already-in-use': 'Este correo ya esta registrado.',
             'auth/weak-password': 'La contrasena es muy debil. Usa al menos 6 caracteres.',
-            'auth/network-request-failed': 'Error de red. Revisa tu conexion e intenta de nuevo.'
+            'auth/network-request-failed': 'Error de red. Revisa tu conexion e intenta de nuevo.',
+            'permission-denied': 'Firestore rechazo la operacion. Revisa las reglas para la coleccion users y que el usuario autenticado pueda crear su propio perfil.'
         };
 
         const message = map[code] || 'No fue posible completar la autenticacion.';
@@ -633,25 +666,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
-                message.textContent = 'Verificando nombre de usuario...';
-                const taken = await isUsernameTaken(username);
-                if (taken) {
-                    const suggs = generateSuggestions(username);
-                    message.textContent = `"${username}" ya está en uso. Prueba: ${suggs.slice(0, 3).join(', ')}`;
-                    return;
-                }
                 message.textContent = 'Creando cuenta...';
                 const credential = await window.createUserWithEmailAndPassword(window.auth, email, password);
                 if (credential?.user) {
                     const referralResult = await saveUserProfile(credential.user, username, { referralCode });
+                    const usernameNotice = referralResult.usernameChanged
+                        ? ` Tu nombre final es ${referralResult.username}.`
+                        : '';
                     if (referralResult.reason === 'invalid') {
-                        message.textContent = 'Cuenta creada. El codigo de invitacion no existe, asi que no se aplico.';
+                        message.textContent = `Cuenta creada. El codigo de invitacion no existe, asi que no se aplico.${usernameNotice}`;
                     } else if (referralResult.reason === 'self') {
-                        message.textContent = 'Cuenta creada. No puedes usar tu propio codigo de invitacion.';
+                        message.textContent = `Cuenta creada. No puedes usar tu propio codigo de invitacion.${usernameNotice}`;
                     } else if (referralResult.applied) {
-                        message.textContent = `¡Cuenta creada! Codigo aplicado correctamente. +${referralResult.reward} para quien te invito.`;
+                        message.textContent = `¡Cuenta creada! Codigo aplicado correctamente. +${referralResult.reward} para quien te invito.${usernameNotice}`;
                     } else {
-                        message.textContent = '¡Cuenta creada! Bienvenido.';
+                        message.textContent = `¡Cuenta creada! Bienvenido.${usernameNotice}`;
                     }
                 }
                 registerForm.reset();
