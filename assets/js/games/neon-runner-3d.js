@@ -3,10 +3,66 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
 const mount = document.getElementById('gameMount');
 const scoreEl = document.getElementById('gScore');
 const speedEl = document.getElementById('gSpeed');
+const coinsEl = document.getElementById('gCoins');
+const earnedEl = document.getElementById('gEarned');
 const overlay = document.getElementById('gOverlay');
 const titleEl = document.getElementById('gTitle');
 const subEl = document.getElementById('gSubtitle');
 const startBtn = document.getElementById('gStartBtn');
+
+let authUser = null;
+let userCoins = 0;
+
+async function waitForFirebase(timeout = 7000) {
+    return new Promise((resolve) => {
+        const ready = () => window.auth && window.db && window.onAuthStateChanged && window.getDoc && window.fsDoc && window.setDoc && window.addDoc && window.collection;
+        if (ready()) return resolve(true);
+        const start = Date.now();
+        const timer = setInterval(() => {
+            if (ready()) {
+                clearInterval(timer);
+                resolve(true);
+            } else if (Date.now() - start >= timeout) {
+                clearInterval(timer);
+                resolve(false);
+            }
+        }, 100);
+    });
+}
+
+async function fetchCoins(uid) {
+    try {
+        const snap = await window.getDoc(window.fsDoc(window.db, 'users', uid));
+        return snap.exists() ? Number(snap.data()?.coins || 0) : 0;
+    } catch {
+        return 0;
+    }
+}
+
+async function awardCoins(amount) {
+    if (!authUser || amount <= 0) return;
+    try {
+        const now = new Date().toISOString();
+        const newTotal = userCoins + amount;
+        await window.setDoc(window.fsDoc(window.db, 'users', authUser.uid), {
+            coins: newTotal,
+            updatedAt: now
+        }, { merge: true });
+        await window.addDoc(window.collection(window.db, 'users', authUser.uid, 'activity'), {
+            type: 'minigame_3d',
+            description: `Neon Runner 3D: +${amount} monedas`,
+            coins: amount,
+            gameId: 'neon-runner-3d',
+            createdAt: now
+        });
+        userCoins = newTotal;
+    } catch {}
+}
+
+function updateCoinHud(earned = 0) {
+    coinsEl.textContent = `Monedas: ${userCoins}`;
+    earnedEl.textContent = `Ganadas: +${earned}`;
+}
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -21,9 +77,7 @@ const camera = new THREE.PerspectiveCamera(68, window.innerWidth / window.innerH
 camera.position.set(0, 7, 14);
 camera.lookAt(0, 1.8, -24);
 
-const hemi = new THREE.HemisphereLight(0x7ad1ff, 0x030712, 1.25);
-scene.add(hemi);
-
+scene.add(new THREE.HemisphereLight(0x7ad1ff, 0x030712, 1.25));
 const dir = new THREE.DirectionalLight(0x9ed9ff, 1.4);
 dir.position.set(7, 12, 4);
 scene.add(dir);
@@ -69,6 +123,7 @@ const obstacles = [];
 let spawnTimer = 0;
 let speed = 22;
 let score = 0;
+let earnedThisRun = 0;
 let running = false;
 let lastFrame = performance.now();
 
@@ -81,6 +136,10 @@ function spawnObstacle() {
     obs.position.set(laneXs[lane], 1.1, -90);
     scene.add(obs);
     obstacles.push(obs);
+}
+
+function rewardFromScore() {
+    return Math.max(10, Math.min(180, Math.floor(score / 35)));
 }
 
 function moveLeft() {
@@ -106,16 +165,25 @@ function startGame() {
     spawnTimer = 0;
     speed = 22;
     score = 0;
+    earnedThisRun = 0;
     running = true;
     currentLane = 1;
     targetX = laneXs[currentLane];
     player.position.x = targetX;
     overlay.hidden = true;
+    updateCoinHud(0);
 }
 
-function endGame() {
+async function endGame() {
+    if (!running) return;
     running = false;
-    setOverlay('Partida terminada', `Puntaje final: ${Math.floor(score)} · Toca para volver a correr`);
+    earnedThisRun = rewardFromScore();
+    await awardCoins(earnedThisRun);
+    updateCoinHud(earnedThisRun);
+    const authText = authUser
+        ? `Ganaste +${earnedThisRun} monedas.`
+        : `Ganarias +${earnedThisRun} monedas al iniciar sesion.`;
+    setOverlay('Partida terminada', `Puntaje final: ${Math.floor(score)} · ${authText}`);
 }
 
 function checkCollision(a, b) {
@@ -185,4 +253,16 @@ document.getElementById('moveRight')?.addEventListener('pointerdown', moveRight)
 startBtn.addEventListener('click', startGame);
 
 setOverlay('Neon Runner 3D', 'Esquiva obstaculos en una pista infinita. Compatible con movil y PC.', 'Empezar');
+updateCoinHud(0);
+
+(async () => {
+    const ready = await waitForFirebase();
+    if (!ready) return;
+    window.onAuthStateChanged(window.auth, async (user) => {
+        authUser = user || null;
+        userCoins = authUser ? await fetchCoins(authUser.uid) : 0;
+        updateCoinHud(0);
+    });
+})();
+
 requestAnimationFrame(tick);

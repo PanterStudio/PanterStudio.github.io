@@ -6898,6 +6898,8 @@ footer {
     border: 1px solid rgba(147,202,255,.35);
     border-radius: .55rem;
     padding: .34rem .58rem;
+    min-width: 102px;
+    text-align: center;
 }
 
 .g3d-overlay {
@@ -6912,6 +6914,10 @@ footer {
     text-align: center;
     padding: 1.1rem;
     gap: .85rem;
+}
+
+.g3d-overlay[hidden] {
+    display: none !important;
 }
 
 .g3d-overlay h2 {

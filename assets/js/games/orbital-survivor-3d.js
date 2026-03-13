@@ -4,10 +4,66 @@ const mount = document.getElementById('gameMount');
 const timerEl = document.getElementById('gTimer');
 const shieldEl = document.getElementById('gShield');
 const waveEl = document.getElementById('gWave');
+const coinsEl = document.getElementById('gCoins');
+const earnedEl = document.getElementById('gEarned');
 const overlay = document.getElementById('gOverlay');
 const titleEl = document.getElementById('gTitle');
 const subEl = document.getElementById('gSubtitle');
 const startBtn = document.getElementById('gStartBtn');
+
+let authUser = null;
+let userCoins = 0;
+
+async function waitForFirebase(timeout = 7000) {
+    return new Promise((resolve) => {
+        const ready = () => window.auth && window.db && window.onAuthStateChanged && window.getDoc && window.fsDoc && window.setDoc && window.addDoc && window.collection;
+        if (ready()) return resolve(true);
+        const start = Date.now();
+        const timer = setInterval(() => {
+            if (ready()) {
+                clearInterval(timer);
+                resolve(true);
+            } else if (Date.now() - start >= timeout) {
+                clearInterval(timer);
+                resolve(false);
+            }
+        }, 100);
+    });
+}
+
+async function fetchCoins(uid) {
+    try {
+        const snap = await window.getDoc(window.fsDoc(window.db, 'users', uid));
+        return snap.exists() ? Number(snap.data()?.coins || 0) : 0;
+    } catch {
+        return 0;
+    }
+}
+
+async function awardCoins(amount) {
+    if (!authUser || amount <= 0) return;
+    try {
+        const now = new Date().toISOString();
+        const newTotal = userCoins + amount;
+        await window.setDoc(window.fsDoc(window.db, 'users', authUser.uid), {
+            coins: newTotal,
+            updatedAt: now
+        }, { merge: true });
+        await window.addDoc(window.collection(window.db, 'users', authUser.uid, 'activity'), {
+            type: 'minigame_3d',
+            description: `Orbital Survivor 3D: +${amount} monedas`,
+            coins: amount,
+            gameId: 'orbital-survivor-3d',
+            createdAt: now
+        });
+        userCoins = newTotal;
+    } catch {}
+}
+
+function updateCoinHud(earned = 0) {
+    coinsEl.textContent = `Monedas: ${userCoins}`;
+    earnedEl.textContent = `Ganadas: +${earned}`;
+}
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -56,6 +112,7 @@ let turn = 0;
 let boost = false;
 let boostCooldown = 0;
 let spawnTimer = 0;
+let earnedThisRun = 0;
 let lastFrame = performance.now();
 
 function setOverlay(title, subtitle, buttonText = 'Reintentar') {
@@ -69,6 +126,12 @@ function updateHud() {
     timerEl.textContent = `Tiempo: ${Math.ceil(timeLeft)}`;
     shieldEl.textContent = `Escudos: ${shields}`;
     waveEl.textContent = `Oleada: ${wave}`;
+}
+
+function rewardFromResult() {
+    const survived = 75 - Math.max(0, timeLeft);
+    const raw = Math.floor(survived * 1.8) + wave * 8 + shields * 4;
+    return Math.max(14, Math.min(240, raw));
 }
 
 function resetPlayer() {
@@ -88,16 +151,25 @@ function startGame() {
     boost = false;
     boostCooldown = 0;
     spawnTimer = 0;
+    earnedThisRun = 0;
     resetPlayer();
     overlay.hidden = true;
     updateHud();
+    updateCoinHud(0);
 }
 
-function endGame(victory) {
+async function endGame(victory) {
+    if (!running) return;
     running = false;
+    earnedThisRun = rewardFromResult();
+    await awardCoins(earnedThisRun);
+    updateCoinHud(earnedThisRun);
+    const authText = authUser
+        ? `Ganaste +${earnedThisRun} monedas.`
+        : `Ganarias +${earnedThisRun} monedas al iniciar sesion.`;
     setOverlay(
         victory ? 'Sobreviviste la orbita' : 'Escudos agotados',
-        `Resultado: ${victory ? 'Victoria' : 'Derrota'} · Oleada alcanzada ${wave}`,
+        `Resultado: ${victory ? 'Victoria' : 'Derrota'} · Oleada ${wave} · ${authText}`,
         'Jugar otra vez'
     );
 }
@@ -236,4 +308,16 @@ document.getElementById('boost')?.addEventListener('pointerdown', triggerBoost);
 startBtn.addEventListener('click', startGame);
 setOverlay('Orbital Survivor 3D', 'Rota alrededor del nucleo y evita drones en oleadas.', 'Empezar');
 updateHud();
+updateCoinHud(0);
+
+(async () => {
+    const ready = await waitForFirebase();
+    if (!ready) return;
+    window.onAuthStateChanged(window.auth, async (user) => {
+        authUser = user || null;
+        userCoins = authUser ? await fetchCoins(authUser.uid) : 0;
+        updateCoinHud(0);
+    });
+})();
+
 requestAnimationFrame(tick);

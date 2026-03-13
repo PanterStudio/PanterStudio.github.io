@@ -4,10 +4,66 @@ const mount = document.getElementById('gameMount');
 const scoreEl = document.getElementById('gScore');
 const shieldEl = document.getElementById('gShield');
 const timerEl = document.getElementById('gTimer');
+const coinsEl = document.getElementById('gCoins');
+const earnedEl = document.getElementById('gEarned');
 const overlay = document.getElementById('gOverlay');
 const titleEl = document.getElementById('gTitle');
 const subEl = document.getElementById('gSubtitle');
 const startBtn = document.getElementById('gStartBtn');
+
+let authUser = null;
+let userCoins = 0;
+
+async function waitForFirebase(timeout = 7000) {
+    return new Promise((resolve) => {
+        const ready = () => window.auth && window.db && window.onAuthStateChanged && window.getDoc && window.fsDoc && window.setDoc && window.addDoc && window.collection;
+        if (ready()) return resolve(true);
+        const start = Date.now();
+        const timer = setInterval(() => {
+            if (ready()) {
+                clearInterval(timer);
+                resolve(true);
+            } else if (Date.now() - start >= timeout) {
+                clearInterval(timer);
+                resolve(false);
+            }
+        }, 100);
+    });
+}
+
+async function fetchCoins(uid) {
+    try {
+        const snap = await window.getDoc(window.fsDoc(window.db, 'users', uid));
+        return snap.exists() ? Number(snap.data()?.coins || 0) : 0;
+    } catch {
+        return 0;
+    }
+}
+
+async function awardCoins(amount) {
+    if (!authUser || amount <= 0) return;
+    try {
+        const now = new Date().toISOString();
+        const newTotal = userCoins + amount;
+        await window.setDoc(window.fsDoc(window.db, 'users', authUser.uid), {
+            coins: newTotal,
+            updatedAt: now
+        }, { merge: true });
+        await window.addDoc(window.collection(window.db, 'users', authUser.uid, 'activity'), {
+            type: 'minigame_3d',
+            description: `Sky Collector 3D: +${amount} monedas`,
+            coins: amount,
+            gameId: 'sky-collector-3d',
+            createdAt: now
+        });
+        userCoins = newTotal;
+    } catch {}
+}
+
+function updateCoinHud(earned = 0) {
+    coinsEl.textContent = `Monedas: ${userCoins}`;
+    earnedEl.textContent = `Ganadas: +${earned}`;
+}
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -35,10 +91,7 @@ player.rotation.x = Math.PI / 2;
 player.position.set(0, 0, 8);
 scene.add(player);
 
-const stars = new THREE.Points(
-    new THREE.BufferGeometry(),
-    new THREE.PointsMaterial({ color: 0x98c8ff, size: 0.14 })
-);
+const stars = new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial({ color: 0x98c8ff, size: 0.14 }));
 {
     const count = 900;
     const points = new Float32Array(count * 3);
@@ -57,6 +110,7 @@ let shield = 3;
 let timeLeft = 60;
 let spawnTimer = 0;
 let move = { x: 0, y: 0 };
+let earnedThisRun = 0;
 let lastFrame = performance.now();
 
 const crystals = [];
@@ -69,6 +123,11 @@ function setOverlay(title, subtitle, buttonText = 'Reintentar') {
     overlay.hidden = false;
 }
 
+function rewardFromResult() {
+    const raw = score * 3 + shield * 6 + Math.floor(timeLeft * 0.5);
+    return Math.max(12, Math.min(220, raw));
+}
+
 function startGame() {
     [...crystals, ...mines].forEach((item) => scene.remove(item));
     crystals.length = 0;
@@ -77,15 +136,24 @@ function startGame() {
     shield = 3;
     timeLeft = 60;
     spawnTimer = 0;
+    earnedThisRun = 0;
     player.position.set(0, 0, 8);
     running = true;
     overlay.hidden = true;
     updateHud();
+    updateCoinHud(0);
 }
 
-function endGame(won) {
+async function endGame(won) {
+    if (!running) return;
     running = false;
-    setOverlay(won ? 'Ronda completada' : 'Nave destruida', `Cristales recolectados: ${score}`, 'Jugar otra vez');
+    earnedThisRun = rewardFromResult();
+    await awardCoins(earnedThisRun);
+    updateCoinHud(earnedThisRun);
+    const authText = authUser
+        ? `Ganaste +${earnedThisRun} monedas.`
+        : `Ganarias +${earnedThisRun} monedas al iniciar sesion.`;
+    setOverlay(won ? 'Ronda completada' : 'Nave destruida', `Cristales recolectados: ${score} · ${authText}`, 'Jugar otra vez');
 }
 
 function updateHud() {
@@ -174,8 +242,6 @@ function tick(now) {
             updateHud();
             if (shield <= 0) endGame(false);
         });
-
-        updateHud();
     }
 
     renderer.render(scene, camera);
@@ -223,4 +289,16 @@ bindTouchButton('moveDown', 'y', -1);
 startBtn.addEventListener('click', startGame);
 setOverlay('Sky Collector 3D', 'Recoge cristales azules y evita minas rojas en 60 segundos.', 'Empezar');
 updateHud();
+updateCoinHud(0);
+
+(async () => {
+    const ready = await waitForFirebase();
+    if (!ready) return;
+    window.onAuthStateChanged(window.auth, async (user) => {
+        authUser = user || null;
+        userCoins = authUser ? await fetchCoins(authUser.uid) : 0;
+        updateCoinHud(0);
+    });
+})();
+
 requestAnimationFrame(tick);
