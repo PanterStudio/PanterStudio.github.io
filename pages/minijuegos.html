@@ -60,79 +60,62 @@
 
         <!-- Games -->
         <section class="mg-games-section">
-            <h3>Juegos del dia</h3>
+            <h3>Juegos 3D Disponibles</h3>
             <div class="mg-games-grid">
 
-                <!-- ── Game 1: Adivina el numero ── -->
-                <div class="mg-game-card" id="gameCard1">
+                <article class="mg-game-card">
                     <div class="mg-game-header">
-                        <span class="mg-game-icon">🎯</span>
+                        <span class="mg-game-icon">🏎️</span>
                         <div class="mg-game-meta">
-                            <h4>Adivina el Numero</h4>
-                            <p>1 al 100 · 7 intentos · hasta <strong>50 🪙</strong></p>
+                            <h4>Neon Runner 3D</h4>
+                            <p>Esquiva obstaculos en una pista infinita con velocidad creciente.</p>
                         </div>
-                        <span class="mg-daily-badge" id="game1Badge">Disponible</span>
                     </div>
-                    <div class="mg-game-area" id="gameArea1" hidden>
-                        <p class="mg-game-prompt">Adivina un numero entre <strong>1</strong> y <strong>100</strong></p>
-                        <div class="mg-game-controls">
-                            <input type="number" id="guessInput" min="1" max="100" placeholder="Tu numero..." class="mg-input">
-                            <button class="btn" id="guessBtn">Adivinar</button>
-                        </div>
-                        <p id="guessHint" class="mg-game-hint"></p>
-                        <p class="mg-game-sub">Intentos restantes: <strong id="guessAttemptsLeft">7</strong></p>
-                        <p id="guessResult" class="mg-game-result"></p>
+                    <div class="mg-game-area">
+                        <p class="mg-game-prompt">Controles PC: <strong>A / D</strong> o <strong>← / →</strong> · Movil: botones tactiles.</p>
+                        <p class="mg-game-sub">Objetivo: sobrevivir el mayor tiempo posible.</p>
                     </div>
                     <div class="mg-game-footer">
-                        <button class="btn mg-play-btn" id="playGame1">Jugar</button>
-                        <span class="mg-cooldown-text" id="cooldown1">Ganas monedas al jugar</span>
+                        <a class="btn mg-play-btn" href="games/neon-runner-3d.html" target="_blank" rel="noopener noreferrer">Abrir juego</a>
+                        <span class="mg-cooldown-text">Se abre en una pestaña nueva</span>
                     </div>
-                </div>
+                </article>
 
-                <!-- ── Game 2: Memory Match ── -->
-                <div class="mg-game-card" id="gameCard2">
+                <article class="mg-game-card">
                     <div class="mg-game-header">
-                        <span class="mg-game-icon">🃏</span>
+                        <span class="mg-game-icon">🚀</span>
                         <div class="mg-game-meta">
-                            <h4>Memoria</h4>
-                            <p>6 pares de cartas · tiempo · hasta <strong>60 🪙</strong></p>
+                            <h4>Sky Collector 3D</h4>
+                            <p>Recoge cristales y evita minas en una zona aerea de alta densidad.</p>
                         </div>
-                        <span class="mg-daily-badge" id="game2Badge">Disponible</span>
                     </div>
-                    <div class="mg-game-area" id="gameArea2" hidden>
-                        <p class="mg-game-sub">Tiempo: <strong id="memoryTimer">0</strong>s &nbsp;·&nbsp; Pares: <strong id="memoryPairs">0</strong>/6</p>
-                        <div class="mg-memory-grid" id="memoryGrid"></div>
-                        <p id="memoryResult" class="mg-game-result"></p>
+                    <div class="mg-game-area">
+                        <p class="mg-game-prompt">Controles PC: <strong>WASD</strong> · Movil: cruceta tactil.</p>
+                        <p class="mg-game-sub">Objetivo: sumar la mayor cantidad de cristales en 60 segundos.</p>
                     </div>
                     <div class="mg-game-footer">
-                        <button class="btn mg-play-btn" id="playGame2">Jugar</button>
-                        <span class="mg-cooldown-text" id="cooldown2">Ganas monedas al jugar</span>
+                        <a class="btn mg-play-btn" href="games/sky-collector-3d.html" target="_blank" rel="noopener noreferrer">Abrir juego</a>
+                        <span class="mg-cooldown-text">Se abre en una pestaña nueva</span>
                     </div>
-                </div>
+                </article>
 
-                <!-- ── Game 3: Reflejos ── -->
-                <div class="mg-game-card" id="gameCard3">
+                <article class="mg-game-card">
                     <div class="mg-game-header">
-                        <span class="mg-game-icon">⚡</span>
+                        <span class="mg-game-icon">🛡️</span>
                         <div class="mg-game-meta">
-                            <h4>Reflejos</h4>
-                            <p>5 rondas · reaccion · hasta <strong>40 🪙</strong></p>
+                            <h4>Orbital Survivor 3D</h4>
+                            <p>Sobrevive a oleadas de drones que se acercan desde el anillo orbital.</p>
                         </div>
-                        <span class="mg-daily-badge" id="game3Badge">Disponible</span>
                     </div>
-                    <div class="mg-game-area" id="gameArea3" hidden>
-                        <p class="mg-game-prompt" id="reflexPrompt">Toca el circulo cuando se ponga verde</p>
-                        <div class="mg-reflex-arena">
-                            <div class="mg-reflex-circle" id="reflexCircle"></div>
-                        </div>
-                        <p id="reflexStatus" class="mg-game-sub"></p>
-                        <p id="reflexResult" class="mg-game-result"></p>
+                    <div class="mg-game-area">
+                        <p class="mg-game-prompt">Controles PC: <strong>A / D</strong> para orbitar · <strong>Espacio</strong> para impulso.</p>
+                        <p class="mg-game-sub">Objetivo: mantener tus escudos activos hasta el final de la cuenta regresiva.</p>
                     </div>
                     <div class="mg-game-footer">
-                        <button class="btn mg-play-btn" id="playGame3">Jugar</button>
-                        <span class="mg-cooldown-text" id="cooldown3">Ganas monedas al jugar</span>
+                        <a class="btn mg-play-btn" href="games/orbital-survivor-3d.html" target="_blank" rel="noopener noreferrer">Abrir juego</a>
+                        <span class="mg-cooldown-text">Se abre en una pestaña nueva</span>
                     </div>
-                </div>
+                </article>
 
             </div>
         </section>
@@ -143,23 +126,23 @@
             <div class="mg-info-grid">
                 <div class="mg-info-item">
                     <span class="mg-info-icon">🎮</span>
-                    <h4>Juega cada dia</h4>
-                    <p>Cada minijuego da monedas una vez cada 24 horas. Mejor rendimiento = mas monedas.</p>
+                    <h4>Juegos 3D reales</h4>
+                    <p>Ahora cada experiencia corre en su propia pagina con escena 3D en tiempo real.</p>
                 </div>
                 <div class="mg-info-item">
-                    <span class="mg-info-icon">🪙</span>
-                    <h4>Tambien en tu perfil</h4>
-                    <p>Gana mas monedas con la ruleta diaria, bonus de racha y por referir nuevos miembros.</p>
+                    <span class="mg-info-icon">📱</span>
+                    <h4>Optimizados para movil</h4>
+                    <p>Todos incluyen controles tactiles para jugar en celular sin teclado.</p>
                 </div>
                 <div class="mg-info-item">
-                    <span class="mg-info-icon">💱</span>
-                    <h4>5 000 = 50 esmeraldas</h4>
-                    <p>Cuando acumules al menos 5 000 monedas puedes canjearlas al instante desde tu perfil.</p>
+                    <span class="mg-info-icon">🆕</span>
+                    <h4>Pestana nueva</h4>
+                    <p>Al abrir un juego no pierdes esta pagina; se ejecuta en otra pestana.</p>
                 </div>
                 <div class="mg-info-item">
-                    <span class="mg-info-icon">💎</span>
-                    <h4>Canje interno</h4>
-                    <p>El canje se hace dentro de la pagina. Tus esmeraldas se suman directamente a tu cuenta.</p>
+                    <span class="mg-info-icon">⚙️</span>
+                    <h4>Desarrollo activo</h4>
+                    <p>Seguiremos agregando mas juegos 3D y eventos especiales para la comunidad.</p>
                 </div>
             </div>
         </section>

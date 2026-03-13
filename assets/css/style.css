@@ -6825,6 +6825,178 @@ footer {
     .redemption-info-row { flex-direction: column; }
 }
 
+.mg-play-btn.is-ready {
+    box-shadow: 0 0 0 1px rgba(255,255,255,.1), 0 10px 28px rgba(30,112,200,.34);
+    transform: translateY(0);
+}
+
+.mg-play-btn {
+    text-decoration: none;
+}
+
+/* =====================================================
+   3D GAMES PAGES
+   ===================================================== */
+
+.g3d-body {
+    margin: 0;
+    min-height: 100vh;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 12% 18%, rgba(36,139,245,.27), transparent 30%),
+        radial-gradient(circle at 88% 82%, rgba(96,46,198,.25), transparent 34%),
+        #040811;
+    color: #e7f5ff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.g3d-mount {
+    position: fixed;
+    inset: 0;
+}
+
+.g3d-hud {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    right: 14px;
+    z-index: 20;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.g3d-back {
+    pointer-events: auto;
+    color: #d6edff;
+    text-decoration: none;
+    font-size: .84rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 999px;
+    padding: .38rem .78rem;
+    background: rgba(5,12,27,.58);
+    backdrop-filter: blur(4px);
+}
+
+.g3d-stats {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.g3d-stats span {
+    font-size: .76rem;
+    font-weight: 700;
+    background: rgba(6,14,31,.7);
+    border: 1px solid rgba(147,202,255,.35);
+    border-radius: .55rem;
+    padding: .34rem .58rem;
+}
+
+.g3d-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 25;
+    background: rgba(3, 8, 18, .78);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1.1rem;
+    gap: .85rem;
+}
+
+.g3d-overlay h2 {
+    margin: 0;
+    font-size: clamp(1.35rem, 4vw, 2rem);
+}
+
+.g3d-overlay p {
+    margin: 0;
+    max-width: 680px;
+    font-size: .96rem;
+    opacity: .86;
+}
+
+.g3d-controls {
+    position: fixed;
+    left: 50%;
+    bottom: max(18px, env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    z-index: 22;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+}
+
+.g3d-controls-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 52px);
+    grid-template-rows: repeat(2, 52px);
+    grid-template-areas:
+        '. up .'
+        'left down right';
+}
+
+#moveUp { grid-area: up; }
+#moveLeft { grid-area: left; }
+#moveDown { grid-area: down; }
+#moveRight { grid-area: right; }
+
+.g3d-controls-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(54px, 90px));
+}
+
+.g3d-btn {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: 1px solid rgba(177,219,255,.42);
+    background: rgba(8,20,42,.72);
+    color: #e8f5ff;
+    font-size: 1.14rem;
+    font-weight: 700;
+    box-shadow: 0 7px 16px rgba(0,0,0,.36);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.g3d-btn:active {
+    transform: scale(.95);
+}
+
+.g3d-btn-accent {
+    width: auto;
+    border-radius: 999px;
+    padding: 0 1rem;
+    font-size: .77rem;
+    letter-spacing: .08em;
+    color: #04111f;
+    background: linear-gradient(130deg, #79d7ff, #7fb5ff);
+    border-color: rgba(255,255,255,.5);
+}
+
+@media (min-width: 900px) {
+    .g3d-controls {
+        bottom: 20px;
+    }
+
+    .g3d-btn {
+        width: 50px;
+        height: 50px;
+        opacity: .92;
+    }
+}
+
 .dev-studio-gate img {
     width: 90px;
     margin-bottom: 16px;

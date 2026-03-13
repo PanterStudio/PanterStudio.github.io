@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#1e70c8">
+    <title>Sky Collector 3D - Panter Studio</title>
+    <link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body class="g3d-body">
+    <div id="gameMount" class="g3d-mount"></div>
+
+    <div class="g3d-hud">
+        <a href="../minijuegos.html" class="g3d-back">← Volver</a>
+        <div class="g3d-stats">
+            <span id="gScore">Cristales: 0</span>
+            <span id="gShield">Escudo: 3</span>
+            <span id="gTimer">Tiempo: 60</span>
+        </div>
+    </div>
+
+    <div id="gOverlay" class="g3d-overlay" hidden>
+        <h2 id="gTitle">Sky Collector 3D</h2>
+        <p id="gSubtitle">Recoge cristales azules y evita las minas rojas.</p>
+        <button id="gStartBtn" class="btn">Iniciar partida</button>
+    </div>
+
+    <div class="g3d-controls g3d-controls-grid">
+        <button id="moveUp" class="g3d-btn">▲</button>
+        <button id="moveLeft" class="g3d-btn">◀</button>
+        <button id="moveDown" class="g3d-btn">▼</button>
+        <button id="moveRight" class="g3d-btn">▶</button>
+    </div>
+
+    <script type="module" src="../../assets/js/games/sky-collector-3d.js"></script>
+</body>
+</html>
