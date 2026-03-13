@@ -3,9 +3,12 @@
     const summaryEl = document.getElementById('projectSummary');
     const typeTagEl = document.getElementById('projectTypeTag');
     const statusEl = document.getElementById('projectStatus');
+    const progressEl = document.getElementById('projectProgress');
+    const platformEl = document.getElementById('projectPlatform');
     const updatesCountEl = document.getElementById('projectUpdatesCount');
     const lastUpdateEl = document.getElementById('projectLastUpdate');
     const actionAreaEl = document.getElementById('projectActionArea');
+    const metaTagsEl = document.getElementById('projectMetaTags');
     const heroCardEl = document.getElementById('projectHeroCard');
     const updatesListEl = document.getElementById('projectUpdatesList');
 
@@ -58,10 +61,19 @@
         summaryEl.textContent = project.summary || 'Sin resumen disponible.';
         typeTagEl.textContent = project.type === 'juego' ? 'VIDEOJUEGO' : 'APLICACION';
         statusEl.textContent = String(project.status || 'development').toUpperCase();
+        progressEl.textContent = `${Math.max(0, Math.min(100, Number(project.progress || 0) || 0))}%`;
+        platformEl.textContent = String(project.platform || 'General');
 
         const tags = asArrayTags(project.tags)
             .map(tag => `<span class="juego-tag">${esc(tag)}</span>`)
             .join('');
+        const metaTags = [
+            project.platform ? `<span class="juego-tag">${esc(project.platform)}</span>` : '',
+            project.featuredPublic ? '<span class="juego-tag">Destacado</span>' : '',
+            project.externalUrl ? '<span class="juego-tag">Enlace externo</span>' : '',
+            project.discordUrl ? '<span class="juego-tag">Comunidad</span>' : '',
+            tags
+        ].filter(Boolean).join('');
 
         heroCardEl.innerHTML = `
             <article class="juego-featured-card">
@@ -81,8 +93,15 @@
         if (project.preregisterUrl) {
             actions.push(`<a href="${esc(project.preregisterUrl)}" class="btn">Pre-registro</a>`);
         }
+        if (project.externalUrl) {
+            actions.push(`<a href="${esc(project.externalUrl)}" class="btn" target="_blank" rel="noopener">Abrir enlace</a>`);
+        }
+        if (project.discordUrl) {
+            actions.push(`<a href="${esc(project.discordUrl)}" class="btn btn-ghost" target="_blank" rel="noopener">Comunidad</a>`);
+        }
         actions.push('<a href="actualizaciones.html" class="btn btn-ghost">Ver todas las novedades</a>');
         actionAreaEl.innerHTML = actions.join('');
+        if (metaTagsEl) metaTagsEl.innerHTML = metaTags;
     }
 
     function renderUpdates(updates) {

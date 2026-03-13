@@ -172,10 +172,38 @@
                         <label for="devCreateProjectImage" class="dev-muted">Imagen (URL)</label>
                         <input id="devCreateProjectImage" type="url" placeholder="https://..." style="width:100%;">
                     </div>
+                    <div class="dev-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+                        <div>
+                            <label for="devCreateProjectPlatform" class="dev-muted">Plataforma</label>
+                            <input id="devCreateProjectPlatform" type="text" placeholder="PC, Móvil, Web" style="width:100%;">
+                        </div>
+                        <div>
+                            <label for="devCreateProjectProgress" class="dev-muted">Progreso (%)</label>
+                            <input id="devCreateProjectProgress" type="number" min="0" max="100" step="1" placeholder="35" style="width:100%;">
+                        </div>
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label for="devCreateProjectPreregUrl" class="dev-muted">URL de pre-registro</label>
+                        <input id="devCreateProjectPreregUrl" type="url" placeholder="https://... o ../pages/preregistro.html" style="width:100%;">
+                    </div>
+                    <div class="dev-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+                        <div>
+                            <label for="devCreateProjectExternalUrl" class="dev-muted">URL externa / descarga</label>
+                            <input id="devCreateProjectExternalUrl" type="url" placeholder="https://..." style="width:100%;">
+                        </div>
+                        <div>
+                            <label for="devCreateProjectDiscordUrl" class="dev-muted">Discord / comunidad</label>
+                            <input id="devCreateProjectDiscordUrl" type="url" placeholder="https://discord.gg/..." style="width:100%;">
+                        </div>
+                    </div>
                     <div style="margin-top:8px;">
                         <label for="devCreateProjectTags" class="dev-muted">Tags (coma separada)</label>
                         <input id="devCreateProjectTags" type="text" placeholder="simulacion, movil, narrativa" style="width:100%;">
                     </div>
+                    <label style="display:flex;align-items:center;gap:8px;margin-top:10px;color:#9dcbe0;font-size:.8rem;">
+                        <input id="devCreateProjectFeatured" type="checkbox">
+                        Marcar como destacado público
+                    </label>
                     <label style="display:flex;align-items:center;gap:8px;margin-top:10px;color:#9dcbe0;font-size:.8rem;">
                         <input id="devCreateProjectPublished" type="checkbox" checked>
                         Mostrar públicamente en Juegos/Aplicaciones
@@ -218,6 +246,38 @@
                         <button class="dev-btn dev-btn-primary" id="devCreateUpdateBtn">Publicar actualización</button>
                     </div>
                     <p id="devCreateUpdateMsg" class="dev-msg" style="margin-top:8px;"></p>
+                </section>
+
+                <section class="dev-card">
+                    <h3 style="margin:.2rem 0 .7rem;">⚙️ Configuración rápida</h3>
+                    <div>
+                        <label for="devSiteAnnouncement" class="dev-muted">Anuncio global del sitio</label>
+                        <textarea id="devSiteAnnouncement" rows="4" placeholder="Mensaje visible en novedades o secciones públicas" style="width:100%;"></textarea>
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label for="devFeaturedProject" class="dev-muted">Proyecto destacado</label>
+                        <select id="devFeaturedProject" class="dev-select" style="width:100%;">
+                            <option value="">Ninguno</option>
+                        </select>
+                    </div>
+                    <div class="dev-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+                        <label style="display:flex;align-items:center;gap:8px;color:#9dcbe0;font-size:.8rem;">
+                            <input id="devEnableNewsPage" type="checkbox" checked>
+                            Habilitar página de novedades
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;color:#9dcbe0;font-size:.8rem;">
+                            <input id="devShowFeaturedFirst" type="checkbox" checked>
+                            Mostrar destacado primero
+                        </label>
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label for="devHomePromoText" class="dev-muted">Texto corto destacado</label>
+                        <input id="devHomePromoText" type="text" placeholder="Ej: Sigue el desarrollo semanal en vivo" style="width:100%;">
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                        <button class="dev-btn dev-btn-primary" id="devSaveSiteConfigBtn">Guardar configuración</button>
+                    </div>
+                    <p id="devSaveSiteConfigMsg" class="dev-msg" style="margin-top:8px;"></p>
                 </section>
             </div>
 

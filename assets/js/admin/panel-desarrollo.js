@@ -50,7 +50,13 @@ const createProjectStatusEl = document.getElementById('devCreateProjectStatus');
 const createProjectTitleEl = document.getElementById('devCreateProjectTitle');
 const createProjectSummaryEl = document.getElementById('devCreateProjectSummary');
 const createProjectImageEl = document.getElementById('devCreateProjectImage');
+const createProjectPlatformEl = document.getElementById('devCreateProjectPlatform');
+const createProjectProgressEl = document.getElementById('devCreateProjectProgress');
+const createProjectPreregUrlEl = document.getElementById('devCreateProjectPreregUrl');
+const createProjectExternalUrlEl = document.getElementById('devCreateProjectExternalUrl');
+const createProjectDiscordUrlEl = document.getElementById('devCreateProjectDiscordUrl');
 const createProjectTagsEl = document.getElementById('devCreateProjectTags');
+const createProjectFeaturedEl = document.getElementById('devCreateProjectFeatured');
 const createProjectPublishedEl = document.getElementById('devCreateProjectPublished');
 const createProjectBtn = document.getElementById('devCreateProjectBtn');
 const createProjectMsgEl = document.getElementById('devCreateProjectMsg');
@@ -64,10 +70,19 @@ const createUpdatePublishedEl = document.getElementById('devCreateUpdatePublishe
 const createUpdateBtn = document.getElementById('devCreateUpdateBtn');
 const createUpdateMsgEl = document.getElementById('devCreateUpdateMsg');
 
+const siteAnnouncementEl = document.getElementById('devSiteAnnouncement');
+const featuredProjectEl = document.getElementById('devFeaturedProject');
+const enableNewsPageEl = document.getElementById('devEnableNewsPage');
+const showFeaturedFirstEl = document.getElementById('devShowFeaturedFirst');
+const homePromoTextEl = document.getElementById('devHomePromoText');
+const saveSiteConfigBtn = document.getElementById('devSaveSiteConfigBtn');
+const saveSiteConfigMsgEl = document.getElementById('devSaveSiteConfigMsg');
+
 let projects = [];
 let currentUser = null;
 let accessResolved = false;
 let accessTimeoutId = null;
+let siteSettings = {};
 
 function escHtml(str) {
     return String(str || '')
@@ -200,11 +215,32 @@ function toProject(item, type, collectionName) {
         collection: collectionName,
         status,
         published: item?.published !== false,
+        featuredPublic: item?.featuredPublic === true,
         description: String(item?.description || item?.summary || ''),
         image: String(item?.image || item?.cover || ''),
+        platform: String(item?.platform || ''),
+        progress: Number(item?.progress || 0),
+        preregisterUrl: String(item?.preregisterUrl || ''),
+        externalUrl: String(item?.externalUrl || item?.downloadUrl || ''),
+        discordUrl: String(item?.discordUrl || ''),
         tags,
         isInDevelopment: DEV_STATUSES.has(status)
     };
+}
+
+async function loadSiteSettings() {
+    try {
+        const snap = await window.getDoc(window.fsDoc(window.db, 'settings', 'site'));
+        siteSettings = snap.exists() ? snap.data() || {} : {};
+    } catch (err) {
+        console.warn('No se pudo leer settings/site:', err);
+        siteSettings = {};
+    }
+
+    if (siteAnnouncementEl) siteAnnouncementEl.value = String(siteSettings.announcement || '');
+    if (enableNewsPageEl) enableNewsPageEl.checked = siteSettings.enableNewsPage !== false;
+    if (showFeaturedFirstEl) showFeaturedFirstEl.checked = siteSettings.showFeaturedFirst !== false;
+    if (homePromoTextEl) homePromoTextEl.value = String(siteSettings.homePromoText || '');
 }
 
 async function ensureNuestraTierraSeed() {
@@ -221,9 +257,12 @@ async function ensureNuestraTierraSeed() {
         description: 'Simulador colombiano de oficios con progresion por habilidades y economia local.',
         image: 'https://i.imgur.com/tWQ3svn.jpeg',
         tags: ['simulacion', 'movil', 'narrativa', 'comunidad'],
+        platform: 'Movil',
+        progress: 35,
         type: 'juego',
         status: 'development',
         published: true,
+        featuredPublic: true,
         preregisterUrl: toSitePath('pages/preregistro.html'),
         createdAt: now,
         updatedAt: now,
@@ -293,6 +332,9 @@ function renderProjects() {
             <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:.6rem;">
                 <span class="dev-badge ${statusBadge}">${escHtml(project.status)}</span>
                 ${project.published ? '<span class="dev-badge dev-badge-green">publico</span>' : '<span class="dev-badge dev-badge-gray">oculto</span>'}
+                ${project.featuredPublic ? '<span class="dev-badge dev-badge-yellow">destacado</span>' : ''}
+                ${project.platform ? `<span class="dev-badge dev-badge-purple">${escHtml(project.platform)}</span>` : ''}
+                ${project.progress ? `<span class="dev-badge dev-badge-green">${escHtml(project.progress)}%</span>` : ''}
                 ${tags}
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:6px;">
@@ -316,6 +358,20 @@ function populateProjectSelect() {
     createUpdateProjectEl.innerHTML = '<option value="">Selecciona un proyecto...</option>' + options;
     if (previous && Array.from(createUpdateProjectEl.options).some(option => option.value === previous)) {
         createUpdateProjectEl.value = previous;
+    }
+
+    if (featuredProjectEl) {
+        const featuredPrevious = featuredProjectEl.value;
+        featuredProjectEl.innerHTML = '<option value="">Ninguno</option>' + projects.map(project =>
+            `<option value="${escHtml(project.id)}">${escHtml(project.title)} (${escHtml(project.type)})</option>`
+        ).join('');
+        const preferredValue = String(siteSettings.featuredProjectId || '');
+        const nextValue = Array.from(featuredProjectEl.options).some(option => option.value === preferredValue)
+            ? preferredValue
+            : featuredPrevious;
+        if (nextValue && Array.from(featuredProjectEl.options).some(option => option.value === nextValue)) {
+            featuredProjectEl.value = nextValue;
+        }
     }
 }
 
@@ -435,7 +491,8 @@ async function loadProjects() {
     renderStats(projects);
     renderProjects();
     populateProjectSelect();
-    await Promise.all([loadGlobalKpis(), loadRecentActivity()]);
+    await Promise.all([loadSiteSettings(), loadGlobalKpis(), loadRecentActivity()]);
+    populateProjectSelect();
     setMessage(projects.length ? `${projects.length} proyectos en desarrollo` : 'No hay proyectos en desarrollo por ahora.');
 }
 
@@ -445,10 +502,16 @@ async function createProject() {
     const title = String(createProjectTitleEl?.value || '').trim();
     const summary = String(createProjectSummaryEl?.value || '').trim();
     const image = String(createProjectImageEl?.value || '').trim();
+    const platform = String(createProjectPlatformEl?.value || '').trim();
+    const progress = Math.max(0, Math.min(100, Number(createProjectProgressEl?.value || 0) || 0));
+    const preregisterUrl = String(createProjectPreregUrlEl?.value || '').trim();
+    const externalUrl = String(createProjectExternalUrlEl?.value || '').trim();
+    const discordUrl = String(createProjectDiscordUrlEl?.value || '').trim();
     const tags = String(createProjectTagsEl?.value || '')
         .split(',')
         .map(tag => tag.trim())
         .filter(Boolean);
+    const featuredPublic = Boolean(createProjectFeaturedEl?.checked);
     const published = Boolean(createProjectPublishedEl?.checked);
 
     if (!title) {
@@ -459,6 +522,17 @@ async function createProject() {
     if (image && !/^https?:\/\//i.test(image)) {
         setInlineMessage(createProjectMsgEl, 'La imagen debe empezar por http:// o https://', true);
         return;
+    }
+    const urlChecks = [
+        { value: preregisterUrl, label: 'La URL de pre-registro' },
+        { value: externalUrl, label: 'La URL externa' },
+        { value: discordUrl, label: 'La URL de Discord' }
+    ];
+    for (const check of urlChecks) {
+        if (check.value && !/^(https?:\/\/|\.\.\/|\.\/|\/)/i.test(check.value)) {
+            setInlineMessage(createProjectMsgEl, `${check.label} debe ser valida.`, true);
+            return;
+        }
     }
 
     const collectionName = type === 'juego' ? 'games' : 'applications';
@@ -472,9 +546,15 @@ async function createProject() {
         type,
         status,
         published,
+        featuredPublic,
         summary,
         description: summary,
         image,
+        platform,
+        progress,
+        preregisterUrl,
+        externalUrl,
+        discordUrl,
         tags,
         createdAt: now,
         updatedAt: now,
@@ -489,12 +569,40 @@ async function createProject() {
         if (createProjectTitleEl) createProjectTitleEl.value = '';
         if (createProjectSummaryEl) createProjectSummaryEl.value = '';
         if (createProjectImageEl) createProjectImageEl.value = '';
+        if (createProjectPlatformEl) createProjectPlatformEl.value = '';
+        if (createProjectProgressEl) createProjectProgressEl.value = '';
+        if (createProjectPreregUrlEl) createProjectPreregUrlEl.value = '';
+        if (createProjectExternalUrlEl) createProjectExternalUrlEl.value = '';
+        if (createProjectDiscordUrlEl) createProjectDiscordUrlEl.value = '';
         if (createProjectTagsEl) createProjectTagsEl.value = '';
+        if (createProjectFeaturedEl) createProjectFeaturedEl.checked = false;
 
         await loadProjects();
     } catch (err) {
         console.error('Error creando proyecto:', err);
         setInlineMessage(createProjectMsgEl, 'No se pudo guardar el proyecto.', true);
+    }
+}
+
+async function saveSiteConfig() {
+    const payload = {
+        announcement: String(siteAnnouncementEl?.value || '').trim(),
+        featuredProjectId: String(featuredProjectEl?.value || '').trim(),
+        enableNewsPage: Boolean(enableNewsPageEl?.checked),
+        showFeaturedFirst: Boolean(showFeaturedFirstEl?.checked),
+        homePromoText: String(homePromoTextEl?.value || '').trim(),
+        updatedAt: new Date().toISOString(),
+        updatedByUid: currentUser?.uid || ''
+    };
+
+    try {
+        setInlineMessage(saveSiteConfigMsgEl, 'Guardando configuracion...');
+        await window.setDoc(window.fsDoc(window.db, 'settings', 'site'), payload, { merge: true });
+        siteSettings = { ...siteSettings, ...payload };
+        setInlineMessage(saveSiteConfigMsgEl, 'Configuracion guardada.');
+    } catch (err) {
+        console.error('Error guardando settings/site:', err);
+        setInlineMessage(saveSiteConfigMsgEl, 'No se pudo guardar la configuracion.', true);
     }
 }
 
@@ -609,6 +717,7 @@ function bindEvents() {
 
     createProjectBtn?.addEventListener('click', createProject);
     createUpdateBtn?.addEventListener('click', createProjectUpdate);
+    saveSiteConfigBtn?.addEventListener('click', saveSiteConfig);
 }
 
 async function onAuthStateResolved(user) {
