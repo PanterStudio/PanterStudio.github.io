@@ -145,6 +145,12 @@
         return `$${(Number(coins || 0) / COINS_PER_DOLLAR).toFixed(2)}`;
     }
 
+    function isPermissionDeniedError(err) {
+        const code = String(err?.code || '').toLowerCase();
+        const message = String(err?.message || '').toLowerCase();
+        return code.includes('permission-denied') || message.includes('permission-denied');
+    }
+
     function generateSuggestions(base) {
         const clean = String(base || '').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 18) || 'Jugador';
         const results = [];
@@ -826,21 +832,30 @@
             const usernameResolution = await resolveAvailableUsername(name, credential.user.uid);
             const finalUsername = usernameResolution.username || name;
             await window.updateProfile(credential.user, { displayName: finalUsername });
-            await createUserDoc(credential.user, { displayName: finalUsername, username: finalUsername });
-            const referralResult = referral ? await processReferral(referral, credential.user.uid) : { applied: false, reason: 'not-provided', reward: 0 };
-            await addActivity(credential.user.uid, 'register', 'Cuenta creada', 0);
-            setPendingReferralCode('');
             const usernameNotice = usernameResolution.changed
                 ? ` Tu nombre final es ${finalUsername}.`
                 : '';
-            if (referralResult.reason === 'invalid') {
-                setAuthMessage(`Cuenta creada, pero el codigo de invitacion no existe.${usernameNotice}`, 'success');
-            } else if (referralResult.reason === 'self') {
-                setAuthMessage(`Cuenta creada. No puedes usar tu propio codigo de invitacion.${usernameNotice}`, 'success');
-            } else if (referralResult.applied) {
-                setAuthMessage(`Cuenta creada correctamente. Codigo aplicado: +${referralResult.reward} para quien te invito.${usernameNotice}`, 'success');
-            } else {
-                setAuthMessage(`Cuenta creada correctamente.${usernameNotice}`, 'success');
+
+            try {
+                await createUserDoc(credential.user, { displayName: finalUsername, username: finalUsername });
+                const referralResult = referral ? await processReferral(referral, credential.user.uid) : { applied: false, reason: 'not-provided', reward: 0 };
+                await addActivity(credential.user.uid, 'register', 'Cuenta creada', 0);
+                setPendingReferralCode('');
+                if (referralResult.reason === 'invalid') {
+                    setAuthMessage(`Cuenta creada, pero el codigo de invitacion no existe.${usernameNotice}`, 'success');
+                } else if (referralResult.reason === 'self') {
+                    setAuthMessage(`Cuenta creada. No puedes usar tu propio codigo de invitacion.${usernameNotice}`, 'success');
+                } else if (referralResult.applied) {
+                    setAuthMessage(`Cuenta creada correctamente. Codigo aplicado: +${referralResult.reward} para quien te invito.${usernameNotice}`, 'success');
+                } else {
+                    setAuthMessage(`Cuenta creada correctamente.${usernameNotice}`, 'success');
+                }
+            } catch (profileErr) {
+                if (isPermissionDeniedError(profileErr)) {
+                    setAuthMessage('La cuenta SI se creo en Authentication, pero Firestore bloqueo crear el perfil (permission-denied). Inicia sesion y ajusta reglas de users.', 'error');
+                } else {
+                    throw profileErr;
+                }
             }
             registerForm.reset();
         } catch (err) {
@@ -1040,7 +1055,36 @@
 
         currentUserData = await getUserData(user.uid);
         if (!currentUserData) {
-            currentUserData = await createUserDoc(user, { displayName: user.displayName || user.email?.split('@')[0] || 'Miembro' });
+            try {
+                currentUserData = await createUserDoc(user, { displayName: user.displayName || user.email?.split('@')[0] || 'Miembro' });
+            } catch (err) {
+                if (isPermissionDeniedError(err)) {
+                    currentUserData = {
+                        displayName: user.displayName || user.email?.split('@')[0] || 'Miembro',
+                        username: user.displayName || user.email?.split('@')[0] || 'Miembro',
+                        email: user.email || '',
+                        avatar: '😊',
+                        bio: '',
+                        favoriteProject: 'Nuestra Tierra Job Simulator',
+                        country: 'No definido',
+                        coins: 0,
+                        level: 'visitor',
+                        referralCode: generateReferralCode(user.uid),
+                        referredBy: null,
+                        referralCount: 0,
+                        referralCoins: 0,
+                        streak: 0,
+                        lastDaily: null,
+                        lastSpin: null,
+                        role: 'viewer',
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    };
+                    setAuthMessage('Tu cuenta existe, pero Firestore no permite guardar perfil. Ajusta reglas de users para habilitar monedas e historial.', 'error');
+                } else {
+                    throw err;
+                }
+            }
         }
 
         supportSnapshot = await loadSupportSnapshot(user);

@@ -171,6 +171,12 @@ function generateReferralCode(uid) {
     return String(uid || '').slice(0, 6).toUpperCase();
 }
 
+function isPermissionDeniedError(err) {
+    const code = String(err?.code || '').toLowerCase();
+    const message = String(err?.message || '').toLowerCase();
+    return code.includes('permission-denied') || message.includes('permission-denied');
+}
+
 async function findReferrerByCode(refCode) {
     const normalized = normalizeReferralCode(refCode);
     if (!normalized || !window.db || !window.getDocs || !window.collection) return null;
@@ -668,24 +674,36 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 message.textContent = 'Creando cuenta...';
                 const credential = await window.createUserWithEmailAndPassword(window.auth, email, password);
+                let canCloseModal = true;
                 if (credential?.user) {
-                    const referralResult = await saveUserProfile(credential.user, username, { referralCode });
-                    const usernameNotice = referralResult.usernameChanged
-                        ? ` Tu nombre final es ${referralResult.username}.`
-                        : '';
-                    if (referralResult.reason === 'invalid') {
-                        message.textContent = `Cuenta creada. El codigo de invitacion no existe, asi que no se aplico.${usernameNotice}`;
-                    } else if (referralResult.reason === 'self') {
-                        message.textContent = `Cuenta creada. No puedes usar tu propio codigo de invitacion.${usernameNotice}`;
-                    } else if (referralResult.applied) {
-                        message.textContent = `¡Cuenta creada! Codigo aplicado correctamente. +${referralResult.reward} para quien te invito.${usernameNotice}`;
-                    } else {
-                        message.textContent = `¡Cuenta creada! Bienvenido.${usernameNotice}`;
+                    try {
+                        const referralResult = await saveUserProfile(credential.user, username, { referralCode });
+                        const usernameNotice = referralResult.usernameChanged
+                            ? ` Tu nombre final es ${referralResult.username}.`
+                            : '';
+                        if (referralResult.reason === 'invalid') {
+                            message.textContent = `Cuenta creada. El codigo de invitacion no existe, asi que no se aplico.${usernameNotice}`;
+                        } else if (referralResult.reason === 'self') {
+                            message.textContent = `Cuenta creada. No puedes usar tu propio codigo de invitacion.${usernameNotice}`;
+                        } else if (referralResult.applied) {
+                            message.textContent = `¡Cuenta creada! Codigo aplicado correctamente. +${referralResult.reward} para quien te invito.${usernameNotice}`;
+                        } else {
+                            message.textContent = `¡Cuenta creada! Bienvenido.${usernameNotice}`;
+                        }
+                    } catch (profileErr) {
+                        if (isPermissionDeniedError(profileErr)) {
+                            canCloseModal = false;
+                            message.textContent = 'La cuenta SI se creo en Authentication, pero Firestore bloqueo crear el perfil (permission-denied). Inicia sesion y ajusta reglas de la coleccion users.';
+                        } else {
+                            throw profileErr;
+                        }
                     }
                 }
                 registerForm.reset();
-                if (modal) modal.hidden = true;
-                document.body.style.overflow = 'auto';
+                if (canCloseModal) {
+                    if (modal) modal.hidden = true;
+                    document.body.style.overflow = 'auto';
+                }
             } catch (err) {
                 console.error('Error en registro:', err);
                 message.textContent = `Error: ${getAuthErrorMessage(err)}`;
