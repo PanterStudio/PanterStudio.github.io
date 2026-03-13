@@ -1,6 +1,7 @@
 (function () {
     const SITE_ROOT = (document.body?.dataset.siteRoot || '.').replace(/\/$/, '');
     const REFERRAL_STORAGE_KEY = 'panterPendingReferralCode';
+    const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,24}$/;
     function toSitePath(path) {
         return `${SITE_ROOT}/${String(path || '').replace(/^\/+/, '')}`.replace(/\\/g, '/');
     }
@@ -104,6 +105,8 @@
     const COINS_PER_DOLLAR      = 5000;
     const MIN_REDEEM_COINS      = 5000;
     const REDEEM_COLLECTION     = 'coin_redemptions';
+    const USERNAME_ADJ          = ['Veloz', 'Feroz', 'Astuto', 'Brillante', 'Salvaje', 'Sombrio', 'Rapido', 'Fuerte', 'Oscuro', 'Agil', 'Fiero', 'Noble'];
+    const USERNAME_NOUN         = ['Pantera', 'Lobo', 'Aguila', 'Zorro', 'Leon', 'Tigre', 'Cobra', 'Halcon', 'Jaguar', 'Oso', 'Linx', 'Condor'];
 
     let currentUser = null;
     let currentUserData = null;
@@ -140,6 +143,30 @@
 
     function coinsToUsd(coins) {
         return `$${(Number(coins || 0) / COINS_PER_DOLLAR).toFixed(2)}`;
+    }
+
+    function generateSuggestions(base) {
+        const clean = String(base || '').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 18) || 'Jugador';
+        const results = [];
+        const used = new Set([clean]);
+        while (results.length < 4) {
+            const n = Math.floor(Math.random() * 900) + 100;
+            const candidate = clean + n;
+            if (!used.has(candidate)) {
+                used.add(candidate);
+                results.push(candidate);
+            }
+        }
+        results.push(clean + '_GG');
+        return results;
+    }
+
+    async function isUsernameTaken(username) {
+        if (!window.db || !window.getDocs || !window.query || !window.collection || !window.where) return false;
+        const snap = await window.getDocs(
+            window.query(window.collection(window.db, 'users'), window.where('username', '==', username))
+        );
+        return !snap.empty;
     }
 
     function countGamesPlayedToday(uid) {
@@ -359,7 +386,7 @@
             coins: 0,
             level: 'visitor',
             referralCode: generateReferralCode(user.uid),
-            referredBy: extras.referredBy || null,
+            referredBy: null,
             referralCount: 0,
             referralCoins: 0,
             streak: 0,
@@ -421,6 +448,7 @@
                 referralCoins: Number(data.referralCoins || 0) + reward,
                 coins: Number(data.coins || 0) + reward
             });
+            await updateUserData(newUserUid, { referredBy: normalized });
             await addActivity(referrer.id, 'referral', 'Nuevo referido registrado', reward);
             return { applied: true, reason: 'applied', reward };
         } catch (err) {
@@ -747,15 +775,40 @@
 
     registerForm?.addEventListener('submit', async (event) => {
         event.preventDefault();
-        setAuthMessage('Creando cuenta...');
         const name = String(document.getElementById('registerName')?.value || '').trim();
         const email = String(document.getElementById('registerEmail')?.value || '').trim();
         const password = String(document.getElementById('registerPassword')?.value || '');
         const referral = normalizeReferralCode(document.getElementById('registerReferral')?.value || getPendingReferralCode());
+
+        const ready = await waitForFirebase();
+        if (!ready) {
+            setAuthMessage('Firebase aun no esta listo. Recarga la pagina e intenta nuevamente.', 'error');
+            return;
+        }
+
+        if (!name) {
+            setAuthMessage('Ingresa un nombre de usuario.', 'error');
+            return;
+        }
+
+        if (!USERNAME_REGEX.test(name)) {
+            setAuthMessage('Nombre invalido. Usa solo letras, numeros y guion bajo (3-24 caracteres).', 'error');
+            return;
+        }
+
         try {
+            setAuthMessage('Verificando nombre de usuario...');
+            const taken = await isUsernameTaken(name);
+            if (taken) {
+                const suggestions = generateSuggestions(name);
+                setAuthMessage(`"${name}" ya esta en uso. Prueba: ${suggestions.slice(0, 3).join(', ')}`, 'error');
+                return;
+            }
+
+            setAuthMessage('Creando cuenta...');
             const credential = await window.createUserWithEmailAndPassword(window.auth, email, password);
             await window.updateProfile(credential.user, { displayName: name });
-            await createUserDoc(credential.user, { displayName: name, username: name, referredBy: referral || null });
+            await createUserDoc(credential.user, { displayName: name, username: name });
             const referralResult = referral ? await processReferral(referral, credential.user.uid) : { applied: false, reason: 'not-provided', reward: 0 };
             await addActivity(credential.user.uid, 'register', 'Cuenta creada', 0);
             setPendingReferralCode('');
@@ -768,6 +821,7 @@
             } else {
                 setAuthMessage('Cuenta creada correctamente.', 'success');
             }
+            registerForm.reset();
         } catch (err) {
             setAuthMessage(getAuthErrorMessage(err), 'error');
         }
