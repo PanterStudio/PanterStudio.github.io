@@ -32,6 +32,7 @@
 
   // ── INIT ─────────────────────────────────────────────────
   function init() {
+    console.log('[2048] init()');
     grid     = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
     score    = 0;
     moves    = 0;
@@ -53,6 +54,17 @@
     updatePUButtons();
   }
 
+  function fatalError(msg, err) {
+    try {
+      console.error('[2048] FATAL:', msg, err);
+      if (overlayTitle) overlayTitle.textContent = 'Error cargando el juego';
+      if (overlayScore) overlayScore.textContent = String(msg || '') + (err ? ' - ' + (err.message || '') : '');
+      if (overlay) overlay.classList.remove('hidden');
+    } catch (e) {
+      console.error('[2048] fatalError fallback', e);
+    }
+  }
+
   // ── TABLERO CSS ─────────────────────────────────────────
   function updateBoardCSS() {
     const w = Math.min(340, window.innerWidth - 32);
@@ -67,6 +79,11 @@
 
   // ── RENDER ───────────────────────────────────────────────
   function renderAll(newPos = [], mergePos = []) {
+    if (!container) {
+      console.error('[2048] renderAll: container not found');
+      fatalError('Elemento del tablero no encontrado en la página.');
+      return;
+    }
     container.innerHTML = '';
     for (let r = 0; r < SIZE; r++) {
       for (let c = 0; c < SIZE; c++) {
@@ -415,7 +432,15 @@
   });
 
   // ── ARRANCAR ─────────────────────────────────────────────
-  bestEl.textContent = best;
-  init();
+  try {
+    if (bestEl) bestEl.textContent = best;
+    init();
+  } catch (err) {
+    fatalError('No se pudo inicializar el juego', err);
+  }
+
+  window.addEventListener('error', (e) => {
+    fatalError('Error no capturado', e.error || e.message || e);
+  });
 
 })();
