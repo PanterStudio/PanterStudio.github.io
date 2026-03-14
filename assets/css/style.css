@@ -5477,6 +5477,44 @@ footer {
     z-index: 2;
 }
 
+/* Label segments positioned around the wheel */
+.spin-wheel .spin-segment {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 40%;
+    transform-origin: 50% 50%;
+    font-weight: 700;
+    color: #fff;
+    pointer-events: none;
+    user-select: none;
+    mix-blend-mode: screen;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+}
+
+.spin-segment.winner {
+    animation: spin-winner-pulse 900ms ease-in-out 1;
+    text-shadow: 0 0 18px rgba(255,223,80,0.95), 0 6px 20px rgba(0,0,0,0.6);
+}
+
+@keyframes spin-winner-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.18); }
+    100% { transform: scale(1); }
+}
+
+/* Pointer click animation */
+.spin-pointer { transition: transform 180ms ease; }
+.spin-pointer.click { transform: translateX(-50%) rotate(-12deg); }
+
+/* Particles overlay within the wheel */
+.spin-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+}
+
 .spin-pointer {
     position: absolute;
     top: -15px;

@@ -70,6 +70,42 @@
     const spinMessage = document.getElementById('spinMessage');
     const spinCooldown = document.getElementById('spinCooldown');
 
+    const spinPointer = document.querySelector('.spin-pointer');
+    const spinParticlesContainer = document.getElementById('spinParticles');
+    const audioCtx = (function(){
+        try { return new (window.AudioContext || window.webkitAudioContext)(); } catch { return null; }
+    })();
+
+    function playClickSound() {
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(900, now);
+        g.gain.setValueAtTime(0, now);
+        g.gain.linearRampToValueAtTime(0.15, now + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(now); o.stop(now + 0.3);
+    }
+
+    function playWinSound() {
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        const o1 = audioCtx.createOscillator();
+        const o2 = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o1.type = 'triangle'; o2.type = 'sine';
+        o1.frequency.setValueAtTime(600, now);
+        o2.frequency.setValueAtTime(980, now);
+        g.gain.setValueAtTime(0.001, now);
+        g.gain.linearRampToValueAtTime(0.25, now + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+        o1.connect(g); o2.connect(g); g.connect(audioCtx.destination);
+        o1.start(now); o2.start(now); o1.stop(now + 0.8); o2.stop(now + 0.8);
+    }
+
     const claimDailyBtn = document.getElementById('claimDailyBtn');
     const dailyBonusMessage = document.getElementById('dailyBonusMessage');
     const dailyBonusAmount = document.getElementById('dailyBonusAmount');
@@ -647,6 +683,30 @@
         profileBadges.innerHTML = badges.join('');
     }
 
+    // Build visual labels around the wheel (position each .spin-segment element)
+    function buildSpinLabels() {
+        if (!spinWheel) return;
+        const segments = Array.from(spinWheel.querySelectorAll('.spin-segment'));
+        const n = segments.length || 1;
+        const angle = 360 / n;
+        segments.forEach((el, i) => {
+            const rot = i * angle;
+            // place element rotated around center, then counter-rotate text so it's upright
+            el.style.position = 'absolute';
+            el.style.left = '50%';
+            el.style.top = '50%';
+            el.style.transform = `rotate(${rot}deg) translate(0, -44%) rotate(${ -rot }deg)`;
+            el.style.transformOrigin = '50% 50%';
+            el.style.textAlign = 'center';
+            el.style.fontSize = '0.95rem';
+            el.style.lineHeight = '1';
+        });
+    }
+
+    window.addEventListener('resize', () => {
+        buildSpinLabels();
+    });
+
     function renderActivity(activities) {
         if (!activityList) return;
         if (!activities.length) {
@@ -885,6 +945,7 @@
         if (!currentUser || !currentUserData || spinBtn.disabled) return;
         spinBtn.disabled = true;
         if (spinMessage) spinMessage.textContent = '';
+        playClickSound();
         const rotation = 1800 + Math.floor(Math.random() * 360);
         spinWheel.style.transition = 'transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
         spinWheel.style.transform = `rotate(${rotation}deg)`;
@@ -894,6 +955,34 @@
         const normalizedRotation = rotation % 360;
         const prizeIndex = Math.floor((360 - normalizedRotation + segmentAngle / 2) / segmentAngle) % spinPrizes.length;
         const prize = spinPrizes[prizeIndex];
+        // Visual: mark winning label and animate pointer click
+        try {
+            const segments = Array.from(spinWheel.querySelectorAll('.spin-segment'));
+            segments.forEach(s => s.classList.remove('winner'));
+            const winnerEl = segments[prizeIndex];
+            if (winnerEl) winnerEl.classList.add('winner');
+            if (spinPointer) {
+                playWinSound();
+                try {
+                    if (window.tsParticles && spinParticlesContainer) {
+                        window.tsParticles.load(spinParticlesContainer.id, {
+                            particles: {
+                                number: { value: 0 },
+                                move: { enable: true, gravity: { enable: true, acceleration: 9 }, speed: 10, outModes: { default: 'destroy' } },
+                                size: { value: { min: 6, max: 12 } },
+                                color: { value: ['#f97316', '#f0c419', '#4ade80', '#06b6d4', '#a855f7', '#ec4899'] },
+                                shape: { type: ['circle', 'square'] }
+                            },
+                            emitters: [{
+                                direction: 'top', life: { count: 1, duration: 0.4 }, rate: { quantity: 40, delay: 0 }, size: { width: 0, height: 0 }, position: { x: 50, y: 50 }
+                            }]
+                        });
+                    }
+                } catch (err) { /* ignore particles errors */ }
+                spinPointer.classList.add('click');
+                setTimeout(() => spinPointer.classList.remove('click'), 900);
+            }
+        } catch (err) { /* ignore visual errors */ }
         const newCoins = Number(currentUserData.coins || 0) + prize;
         const now = new Date().toISOString();
 
@@ -1097,6 +1186,7 @@
         prefillReferralField();
         settings = await loadSettings();
         if (dailyBonusAmount) dailyBonusAmount.textContent = String(Number(settings.dailyBonusCoins || 10));
+        buildSpinLabels();
         window.onAuthStateChanged(window.auth, (user) => {
             handleAuthStateChange(user).catch((err) => {
                 console.error('Perfil auth error:', err);
