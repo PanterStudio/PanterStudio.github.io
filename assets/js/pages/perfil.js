@@ -71,6 +71,8 @@
     const spinCooldown = document.getElementById('spinCooldown');
 
     const spinPointer = document.querySelector('.spin-pointer');
+    // Feature flag: set to true to disable daily cooldown for testing
+    const DISABLE_SPIN_COOLDOWN = true;
     const spinParticlesContainer = document.getElementById('spinParticles');
     const audioCtx = (function(){
         try { return new (window.AudioContext || window.webkitAudioContext)(); } catch { return null; }
@@ -636,6 +638,11 @@
     }
 
     function checkSpinCooldown(lastSpin) {
+        if (DISABLE_SPIN_COOLDOWN) {
+            if (spinBtn) spinBtn.disabled = false;
+            if (spinCooldown) spinCooldown.textContent = '';
+            return;
+        }
         if (!lastSpin) {
             if (spinBtn) spinBtn.disabled = false;
             if (spinCooldown) spinCooldown.textContent = '';
