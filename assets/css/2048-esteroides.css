@@ -1,0 +1,33 @@
+/* Estilos base para 2048 con esteroides */
+#game-container {
+    width: 320px;
+    height: 320px;
+    margin: 40px auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 8px;
+    background: #bbada0;
+    border-radius: 8px;
+    padding: 8px;
+}
+.tile {
+    background: #eee4da;
+    font-size: 2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+#restart-btn {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    font-size: 1em;
+    border-radius: 4px;
+    border: none;
+    background: #8f7a66;
+    color: #fff;
+    cursor: pointer;
+}
