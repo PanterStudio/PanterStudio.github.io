@@ -65,6 +65,32 @@ const ceoUsersMessageEl = document.getElementById('adminCeoUsersMessage');
 const ceoUsersTableBody = document.getElementById('adminCeoUsersTableBody');
 const ceoEmailSearchInput = document.getElementById('adminCeoEmailSearch');
 const ceoRefreshUsersBtn = document.getElementById('adminCeoRefreshUsersBtn');
+const founderAddAmountInput = document.getElementById('founderAddAmount');
+const founderAddNoteInput = document.getElementById('founderAddNote');
+const founderAddBtn = document.getElementById('founderAddBtn');
+const founderAddMessage = document.getElementById('founderAddMessage');
+const founderRemoveAmountInput = document.getElementById('founderRemoveAmount');
+const founderRemoveNoteInput = document.getElementById('founderRemoveNote');
+const founderRemoveBtn = document.getElementById('founderRemoveBtn');
+const founderRemoveMessage = document.getElementById('founderRemoveMessage');
+const adminToggleDonationsConfigBtn = document.getElementById('adminToggleDonationsConfigBtn');
+const adminDonationsConfigContainer = document.getElementById('adminDonationsConfigContainer');
+const donConfigGoalInput = document.getElementById('donConfigGoal');
+const donConfigPaypalInput = document.getElementById('donConfigPaypal');
+const donConfigNequiInput = document.getElementById('donConfigNequi');
+const donConfigBreveInput = document.getElementById('donConfigBreve');
+const donConfigPatreonInput = document.getElementById('donConfigPatreon');
+const donConfigPublicMessageInput = document.getElementById('donConfigPublicMessage');
+const donConfigSaveBtn = document.getElementById('donConfigSaveBtn');
+const donConfigResetBtn = document.getElementById('donConfigResetBtn');
+const donConfigMessage = document.getElementById('donConfigMessage');
+const previewProgressFill = document.getElementById('previewProgressFill');
+const previewPercent = document.getElementById('previewPercent');
+const previewGoalText = document.getElementById('previewGoalText');
+const previewCurrentText = document.getElementById('previewCurrentText');
+const previewPaypalBtn = document.getElementById('previewPaypalBtn');
+const previewNequiBtn = document.getElementById('previewNequiBtn');
+const previewBreveBtn = document.getElementById('previewBreveBtn');
 
 const logoutBtn = document.getElementById('adminLogoutBtn');
 const goHomeBtn = document.getElementById('adminGoHomeBtn');
@@ -369,6 +395,306 @@ function setupCeoTools(user, role) {
 
     ceoToolsSection.hidden = false;
     loadCeoUsers();
+    // bind founder funds action if UI present
+    if (founderAddBtn) {
+        founderAddBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await handleFounderAddFunds();
+        });
+    }
+    if (founderRemoveBtn) {
+        founderRemoveBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await handleFounderRemoveFunds();
+        });
+    }
+    // Donations config toggle and bindings (only for founder)
+    if (adminToggleDonationsConfigBtn && adminDonationsConfigContainer) {
+        adminToggleDonationsConfigBtn.addEventListener('click', () => {
+            try {
+                const isHidden = adminDonationsConfigContainer.hasAttribute('hidden');
+                if (isHidden) {
+                    // show immediately for better UX
+                    adminDonationsConfigContainer.removeAttribute('hidden');
+                    if (donConfigMessage) donConfigMessage.textContent = 'Cargando...';
+                    // load settings asynchronously, but don't block the UI
+                    loadDonationsAdminSettings().catch((err) => {
+                        console.warn('Error cargando settings donations:', err);
+                        if (donConfigMessage) donConfigMessage.textContent = 'No se pudo cargar configuración (ver consola).';
+                        updateDonationsPreview();
+                    });
+                } else {
+                    adminDonationsConfigContainer.setAttribute('hidden', '');
+                }
+            } catch (err) {
+                console.error('Error toggling donations config container:', err);
+            }
+        });
+    }
+    if (donConfigSaveBtn) {
+        donConfigSaveBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await saveDonationsAdminSettings();
+            updateDonationsPreview();
+        });
+    }
+    if (donConfigResetBtn) {
+        donConfigResetBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            fillDonationsConfigUI(getDefaultDonationsConfig());
+            updateDonationsPreview();
+        });
+    }
+
+    // Live preview updates when inputs change
+    [donConfigGoalInput, donConfigPaypalInput, donConfigNequiInput, donConfigBreveInput, donConfigPatreonInput].forEach((el) => {
+        if (!el) return;
+        el.addEventListener('input', () => {
+            updateDonationsPreview();
+        });
+    });
+}
+
+async function handleFounderAddFunds() {
+    if (!founderAddAmountInput || !founderAddBtn) return;
+    const raw = founderAddAmountInput.value;
+    const note = String(founderAddNoteInput?.value || '').trim();
+    const amount = parseFloat(String(raw).replace(',', '.'));
+    const rounded = Math.round((Number.isFinite(amount) ? amount : 0) * 100) / 100;
+    if (Number.isNaN(rounded) || rounded <= 0) {
+        if (founderAddMessage) founderAddMessage.textContent = 'Ingresa un monto valido mayor que 0.';
+        return;
+    }
+
+    if (founderAddBtn) founderAddBtn.disabled = true;
+    if (founderAddMessage) founderAddMessage.textContent = 'Procesando...';
+
+    // Preferred: add a donation document to 'donations' collection so progress sums include it
+    try {
+        if (window.db && window.collection && window.addDoc) {
+            const payload = {
+                amount: rounded,
+                donorEmail: currentUser?.email || FOUNDER_CEO_EMAIL,
+                note: note || 'Fondos agregados manualmente por founder',
+                createdAt: new Date().toISOString(),
+                source: 'founder_manual'
+            };
+            const docRef = await window.addDoc(window.collection(window.db, 'donations'), payload);
+            if (founderAddMessage) founderAddMessage.textContent = 'Fondos agregados correctamente (Firestore).';
+            founderAddAmountInput.value = '';
+            if (founderAddNoteInput) founderAddNoteInput.value = '';
+            // dispatch event with doc id and payload so listeners can refresh
+            try { document.dispatchEvent(new CustomEvent('donationAdded', { detail: { id: docRef.id, ...payload } })); } catch(e){}
+            return;
+        }
+
+        // Fallback: persist to localStorage for offline/dev
+        const key = 'donations_local_pending_v1';
+        const existing = JSON.parse(localStorage.getItem(key) || '[]');
+        const payloadLocal = { amount: rounded, donorEmail: currentUser?.email || FOUNDER_CEO_EMAIL, note, createdAt: new Date().toISOString(), source: 'founder_local' };
+        existing.push(payloadLocal);
+        localStorage.setItem(key, JSON.stringify(existing));
+        if (founderAddMessage) founderAddMessage.textContent = 'Fondos guardados localmente (offline).';
+        founderAddAmountInput.value = '';
+        if (founderAddNoteInput) founderAddNoteInput.value = '';
+        try { document.dispatchEvent(new CustomEvent('donationAddedLocal', { detail: payloadLocal })); } catch(e){}
+    } catch (err) {
+        console.error('Error agregando fondos founder:', err);
+        if (founderAddMessage) founderAddMessage.textContent = 'Error al agregar fondos. Revisa la consola.';
+    } finally {
+        if (founderAddBtn) founderAddBtn.disabled = false;
+    }
+}
+
+async function handleFounderRemoveFunds() {
+    if (!founderRemoveAmountInput || !founderRemoveBtn) return;
+    const raw = founderRemoveAmountInput.value;
+    const note = String(founderRemoveNoteInput?.value || '').trim();
+    const amount = parseFloat(String(raw).replace(',', '.'));
+    const rounded = Math.round((Number.isFinite(amount) ? amount : 0) * 100) / 100;
+    if (Number.isNaN(rounded) || rounded <= 0) {
+        if (founderRemoveMessage) founderRemoveMessage.textContent = 'Ingresa un monto valido mayor que 0.';
+        return;
+    }
+
+    if (founderRemoveBtn) founderRemoveBtn.disabled = true;
+    if (founderRemoveMessage) founderRemoveMessage.textContent = 'Procesando eliminación...';
+
+    try {
+        if (window.db && window.collection && window.addDoc) {
+            const payload = {
+                amount: -rounded,
+                donorEmail: currentUser?.email || FOUNDER_CEO_EMAIL,
+                note: note || 'Fondos eliminados manualmente por founder',
+                createdAt: new Date().toISOString(),
+                source: 'founder_manual_remove'
+            };
+            const docRef = await window.addDoc(window.collection(window.db, 'donations'), payload);
+            if (founderRemoveMessage) founderRemoveMessage.textContent = 'Saldo eliminado correctamente (Firestore).';
+            founderRemoveAmountInput.value = '';
+            if (founderRemoveNoteInput) founderRemoveNoteInput.value = '';
+            try { document.dispatchEvent(new CustomEvent('donationAdded', { detail: { id: docRef.id, ...payload } })); } catch(e){}
+            return;
+        }
+
+        // Fallback local
+        const key = 'donations_local_pending_v1';
+        const existing = JSON.parse(localStorage.getItem(key) || '[]');
+        const payloadLocal = { amount: -rounded, donorEmail: currentUser?.email || FOUNDER_CEO_EMAIL, note, createdAt: new Date().toISOString(), source: 'founder_local_remove' };
+        existing.push(payloadLocal);
+        localStorage.setItem(key, JSON.stringify(existing));
+        if (founderRemoveMessage) founderRemoveMessage.textContent = 'Cambio guardado localmente (offline).';
+        founderRemoveAmountInput.value = '';
+        if (founderRemoveNoteInput) founderRemoveNoteInput.value = '';
+        try { document.dispatchEvent(new CustomEvent('donationAddedLocal', { detail: payloadLocal })); } catch(e){}
+    } catch (err) {
+        console.error('Error eliminando fondos founder:', err);
+        if (founderRemoveMessage) founderRemoveMessage.textContent = 'Error al eliminar saldo. Revisa la consola.';
+    } finally {
+        if (founderRemoveBtn) founderRemoveBtn.disabled = false;
+    }
+}
+
+function getDefaultDonationsConfig() {
+    return {
+        donationGoal: 500,
+        paypalLink: 'https://www.paypal.com/donate/?hosted_button_id=9LJTEL67CKJP4',
+        nequiLink: 'tel:+573102987151',
+        breveLink: '',
+        patreonLink: '',
+        
+        publicMessage: 'Gracias por tu apoyo. Cada aporte impulsa el desarrollo.'
+    };
+}
+
+function fillDonationsConfigUI(obj) {
+    if (!obj) obj = getDefaultDonationsConfig();
+    if (donConfigGoalInput) donConfigGoalInput.value = Number(obj.donationGoal || 0);
+    if (donConfigPaypalInput) donConfigPaypalInput.value = obj.paypalLink || '';
+    if (donConfigNequiInput) donConfigNequiInput.value = obj.nequiLink || '';
+    if (donConfigBreveInput) donConfigBreveInput.value = obj.breveLink || '';
+    if (donConfigPatreonInput) donConfigPatreonInput.value = obj.patreonLink || '';
+    if (donConfigPublicMessageInput) donConfigPublicMessageInput.value = obj.publicMessage || '';
+}
+
+function updateDonationsPreview() {
+    try {
+        const goal = Number(donConfigGoalInput?.value || 500);
+        const current = Math.round((goal || 0) * 0.4 * 100) / 100; // sample preview at 40%
+        const percent = goal ? Math.min(Math.round((current / goal) * 100), 100) : 0;
+        if (previewProgressFill) {
+            previewProgressFill.style.setProperty('--progress', `${percent}%`);
+            previewProgressFill.setAttribute('aria-valuenow', String(percent));
+            try {
+                previewProgressFill.setAttribute('data-animate', 'false');
+                // force reflow to restart animation
+                // eslint-disable-next-line no-unused-expressions
+                previewProgressFill.offsetWidth;
+                previewProgressFill.setAttribute('data-animate', 'true');
+            } catch (e) { /* ignore */ }
+        }
+        if (previewPercent) previewPercent.textContent = `${percent}%`;
+        if (previewGoalText) previewGoalText.textContent = `Meta: $${goal}`;
+        if (previewCurrentText) previewCurrentText.textContent = `Recaudado: $${current.toFixed(2)}`;
+
+        // Buttons
+        if (previewPaypalBtn) {
+            const href = String(donConfigPaypalInput?.value || previewPaypalBtn.getAttribute('href') || '#').trim();
+            if (href) previewPaypalBtn.href = href;
+        }
+        if (previewNequiBtn) {
+            const href = String(donConfigNequiInput?.value || previewNequiBtn.getAttribute('href') || '#').trim();
+            if (href) previewNequiBtn.href = href;
+        }
+        if (previewBreveBtn) {
+            const href = String(donConfigBreveInput?.value || previewBreveBtn.getAttribute('href') || '#').trim();
+            if (href) previewBreveBtn.href = href;
+        }
+    } catch (err) {
+        console.warn('Error actualizando preview donations:', err);
+    }
+}
+
+async function loadDonationsAdminSettings() {
+    // Try Firestore first
+    try {
+        if (window.db && window.fsDoc && window.getDoc) {
+            const docRef = window.fsDoc(window.db, 'settings', 'donations');
+            const snap = await window.getDoc(docRef);
+            if (snap && snap.exists && snap.exists()) {
+                const data = snap.data() || {};
+                fillDonationsConfigUI(data);
+                if (donConfigMessage) donConfigMessage.textContent = 'Configuración cargada (Firestore).';
+                updateDonationsPreview();
+                return;
+            }
+        }
+    } catch (err) {
+        console.warn('No se pudo leer settings donations desde Firestore:', err);
+    }
+
+    // Fallback localStorage
+    try {
+        const key = 'donations_settings_v1';
+        const raw = localStorage.getItem(key);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            fillDonationsConfigUI(parsed);
+            if (donConfigMessage) donConfigMessage.textContent = 'Configuración cargada (local).';
+            return;
+        }
+    } catch (err) {
+        console.warn('No se pudo leer configuración local donations:', err);
+    }
+
+    // Default
+    fillDonationsConfigUI(getDefaultDonationsConfig());
+    if (donConfigMessage) donConfigMessage.textContent = 'Usando configuración por defecto.';
+}
+
+async function saveDonationsAdminSettings() {
+    if (donConfigSaveBtn) donConfigSaveBtn.disabled = true;
+    if (donConfigMessage) donConfigMessage.textContent = 'Guardando...';
+
+    const payload = {
+        donationGoal: Number(donConfigGoalInput?.value || 0),
+        paypalLink: String(donConfigPaypalInput?.value || '').trim(),
+        nequiLink: String(donConfigNequiInput?.value || '').trim(),
+        breveLink: String(donConfigBreveInput?.value || '').trim(),
+        patreonLink: String(donConfigPatreonInput?.value || '').trim(),
+        
+        publicMessage: String(donConfigPublicMessageInput?.value || '').trim(),
+        updatedAt: new Date().toISOString(),
+        updatedBy: currentUser?.uid || ''
+    };
+
+    try {
+        if (window.db && window.fsDoc && window.setDoc) {
+            await window.setDoc(window.fsDoc(window.db, 'settings', 'donations'), payload, { merge: true });
+            if (donConfigMessage) donConfigMessage.textContent = 'Configuración guardada en Firestore.';
+            // notify listeners that donations config changed
+            try { document.dispatchEvent(new CustomEvent('donationsConfigSaved', { detail: payload })); } catch(e){}
+            updateDonationsPreview();
+            return;
+        }
+    } catch (err) {
+        console.error('Error guardando configuración donations en Firestore:', err);
+        if (donConfigMessage) donConfigMessage.textContent = 'Error guardando en Firestore. Se intentará guardar localmente.';
+    }
+
+    // Fallback localStorage
+    try {
+        const key = 'donations_settings_v1';
+        localStorage.setItem(key, JSON.stringify(payload));
+        if (donConfigMessage) donConfigMessage.textContent = 'Configuración guardada localmente.';
+        try { document.dispatchEvent(new CustomEvent('donationsConfigSaved', { detail: payload })); } catch(e){}
+        updateDonationsPreview();
+    } catch (err) {
+        console.error('No se pudo guardar configuración donations localmente:', err);
+        if (donConfigMessage) donConfigMessage.textContent = 'Error guardando configuración.';
+    } finally {
+        if (donConfigSaveBtn) donConfigSaveBtn.disabled = false;
+    }
 }
 
 function getAdminEmails() {

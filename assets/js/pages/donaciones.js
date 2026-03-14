@@ -3,10 +3,8 @@
     const tiersGrid = document.getElementById('donationsTiersGrid');
     const sponsorsWall = document.getElementById('sponsorsWall');
     const paypalLink = document.getElementById('paypalLink');
-    const kofiLink = document.getElementById('kofiLink');
     const patreonLink = document.getElementById('patreonLink');
-    const mercadopagoLink = document.getElementById('mercadopagoLink');
-    const progressCircle = document.getElementById('donationProgressCircle');
+    const progressFill = document.getElementById('donationProgressFill');
     const progressPercent = document.getElementById('donationProgressPercent');
     const goalAmount = document.getElementById('donationGoalAmount');
     const currentAmount = document.getElementById('donationCurrentAmount');
@@ -91,6 +89,7 @@
     }
 
     function renderTiers(tiers) {
+        if (!tiersGrid) return;
         if (!tiers.length) {
             tiersGrid.innerHTML = `
                 <div class="donation-tier-card tier-default">
@@ -137,6 +136,7 @@
     }
 
     function renderSponsors(sponsors) {
+        if (!sponsorsWall) return;
         if (!sponsors.length) {
             sponsorsWall.innerHTML = '<p>Se el primero en apoyar el desarrollo y aparecer aqui!</p>';
             return;
@@ -164,12 +164,10 @@
         const total = donations.reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
         const goalVal = Number(goal) || 500;
         const percent = Math.min((total / goalVal) * 100, 100);
-        const circumference = 2 * Math.PI * 45; // r=45
-        const offset = circumference - (percent / 100) * circumference;
-
-        if (progressCircle) {
-            progressCircle.style.strokeDasharray = circumference;
-            progressCircle.style.strokeDashoffset = offset;
+        if (progressFill) {
+            progressFill.style.setProperty('--progress', `${percent}%`);
+            progressFill.setAttribute('data-animate', 'true');
+            progressFill.setAttribute('aria-valuenow', String(Math.round(percent)));
         }
         if (progressPercent) progressPercent.textContent = `${Math.round(percent)}%`;
         if (goalAmount) goalAmount.textContent = `$${goalVal}`;
@@ -177,33 +175,32 @@
     }
 
     function updatePaymentLinks(settings) {
-        if (settings.paypalLink && paypalLink) {
+        // Only override links or classes if a setting is explicitly provided.
+        // This preserves any hrefs already present in the HTML (defaults).
+        if (paypalLink && settings.paypalLink) {
             paypalLink.href = settings.paypalLink;
             paypalLink.classList.remove('disabled');
-        } else if (paypalLink) {
-            paypalLink.classList.add('disabled');
         }
 
-        if (settings.kofiLink && kofiLink) {
-            kofiLink.href = settings.kofiLink;
-            kofiLink.classList.remove('disabled');
-        } else if (kofiLink) {
-            kofiLink.classList.add('disabled');
-        }
-
-        if (settings.patreonLink && patreonLink) {
+        if (patreonLink && settings.patreonLink) {
             patreonLink.href = settings.patreonLink;
             patreonLink.classList.remove('disabled');
-        } else if (patreonLink) {
-            patreonLink.classList.add('disabled');
         }
 
-        if (settings.mercadopagoLink && mercadopagoLink) {
-            mercadopagoLink.href = settings.mercadopagoLink;
-            mercadopagoLink.classList.remove('disabled');
-        } else if (mercadopagoLink) {
-            mercadopagoLink.classList.add('disabled');
-        }
+        const nequiLinkEl = document.getElementById('nequiLink');
+        const breveLinkEl = document.getElementById('breveLink');
+        const paypalBtn = document.getElementById('paypalBtn');
+        const patreonBtn = document.getElementById('patreonBtn');
+        const nequiBtn = document.getElementById('nequiBtn');
+        const breveBtn = document.getElementById('breveBtn');
+
+        if (nequiLinkEl && settings.nequiLink) { nequiLinkEl.href = settings.nequiLink; nequiLinkEl.classList.remove('disabled'); }
+        if (breveLinkEl && settings.breveLink) { breveLinkEl.href = settings.breveLink; breveLinkEl.classList.remove('disabled'); }
+
+        if (paypalBtn && settings.paypalLink) { paypalBtn.href = settings.paypalLink; paypalBtn.classList.remove('disabled'); }
+        if (patreonBtn && settings.patreonLink) { patreonBtn.href = settings.patreonLink; patreonBtn.classList.remove('disabled'); }
+        if (nequiBtn && settings.nequiLink) { nequiBtn.href = settings.nequiLink; nequiBtn.classList.remove('disabled'); }
+        if (breveBtn && settings.breveLink) { breveBtn.href = settings.breveLink; breveBtn.classList.remove('disabled'); }
     }
 
     async function init() {
@@ -212,22 +209,65 @@
             if (tiersGrid) tiersGrid.innerHTML = '<p>No se pudo conectar con la base de datos.</p>';
             return;
         }
+        await refreshAll();
 
-        const [settings, donationSettings, tiers, donations, sponsors] = await Promise.all([
-            loadSettings(),
-            loadDonationSettings(),
-            loadTiers(),
-            loadDonations(),
-            loadSponsors()
-        ]);
+        // Attach real-time listeners if available to auto-update the page
+        try {
+            if (window.db && window.fsDoc && window.collection && window.onSnapshot) {
+                // Listen for settings changes
+                try {
+                    const settingsRef = window.fsDoc(window.db, 'settings', 'donations');
+                    window.onSnapshot(settingsRef, (snap) => {
+                        try { if (snap && snap.exists && snap.exists()) refreshAll(); } catch (e) { console.warn(e); }
+                    });
+                } catch (err) {
+                    console.warn('No se pudo subscribir a settings/donations:', err);
+                }
 
-        const mergedSettings = { ...settings, ...donationSettings };
+                // Listen for new/changed donations
+                try {
+                    const donationsRef = window.collection(window.db, 'donations');
+                    window.onSnapshot(donationsRef, (snap) => {
+                        try { refreshAll(); } catch (e) { console.warn(e); }
+                    });
+                } catch (err) {
+                    console.warn('No se pudo subscribir a donations collection:', err);
+                }
+            }
+        } catch (err) {
+            console.warn('Error configuring realtime listeners:', err);
+        }
+    }
 
-        renderTiers(tiers);
-        renderSponsors(sponsors);
-        updateProgress(donations, mergedSettings.donationGoal || 500);
-        updatePaymentLinks(mergedSettings);
+    async function refreshAll() {
+        try {
+            const [settings, donationSettings, tiers, donations, sponsors] = await Promise.all([
+                loadSettings(),
+                loadDonationSettings(),
+                loadTiers(),
+                loadDonations(),
+                loadSponsors()
+            ]);
+
+            const mergedSettings = { ...settings, ...donationSettings };
+
+            renderTiers(tiers);
+            renderSponsors(sponsors);
+            updateProgress(donations, mergedSettings.donationGoal || 500);
+            updatePaymentLinks(mergedSettings);
+        } catch (err) {
+            console.error('Error refreshing donations data:', err);
+        }
     }
 
     init();
+
+    // Listen for admin events to refresh totals immediately
+    try {
+        document.addEventListener('donationAdded', (e) => { try { refreshAll(); } catch(e){} });
+        document.addEventListener('donationAddedLocal', (e) => { try { refreshAll(); } catch(e){} });
+        document.addEventListener('donationsConfigSaved', (e) => { try { refreshAll(); } catch(e){} });
+    } catch (err) {
+        console.warn('Could not bind donation events:', err);
+    }
 })();

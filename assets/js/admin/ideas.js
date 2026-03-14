@@ -20,84 +20,55 @@ const ROLE_ALIASES = {
 };
 const ALLOWED = new Set(['founder_ceo', 'administrador', 'programador', 'modelador', 'artista']);
 
-// ── Colour palette for nodes ──────────────────────────────────────────────────
-const NODE_COLORS = [
-    '#1e70c8', '#27ae60', '#e74c3c', '#f39c12',
-    '#8e44ad', '#16a085', '#2980b9', '#d35400',
+
+// ── Node types and palette (Godot-style) ──
+const NODE_TYPES = [
+    { type: 'logic', label: 'Lógica', icon:'🔀', color: '#1e70c8', desc: 'Nodo de lógica/flujo (if, switch, etc.)', fields: [{key:'cond',label:'Condición',type:'text',placeholder:'Ej: vida < 50'}] },
+    { type: 'system', label: 'Sistema', icon:'🛠️', color: '#00b894', desc: 'Nodo de sistema (input, render, audio, etc.)', fields: [{key:'subsystem',label:'Subsistema',type:'text',placeholder:'Ej: render, audio'}] },
+    { type: 'mechanic', label: 'Mecánica', icon:'🎮', color: '#fdcb6e', desc: 'Nodo de mecánica de juego', fields: [{key:'goal',label:'Objetivo',type:'text',placeholder:'Ej: saltar, disparar'}] },
+    { type: 'physics', label: 'Física', icon:'⚙️', color: '#e74c3c', desc: 'Nodo de física/colisión', fields: [{key:'shape',label:'Forma',type:'text',placeholder:'Ej: caja, círculo'}] },
+    { type: 'light', label: 'Luz', icon:'💡', color: '#ffe066', desc: 'Nodo de luz/iluminación', fields: [{key:'intensity',label:'Intensidad',type:'number',placeholder:'Ej: 1.0'}] },
+    { type: 'graphics', label: 'Gráficos', icon:'🖼️', color: '#0984e3', desc: 'Nodo de gráficos/visual', fields: [{key:'asset',label:'Recurso',type:'text',placeholder:'sprite, modelo'}] },
+    { type: 'audio', label: 'Audio', icon:'🔊', color: '#6c5ce7', desc: 'Nodo de audio/sonido', fields: [{key:'clip',label:'Clip',type:'text',placeholder:'nombre.mp3'}] },
+    { type: 'ai', label: 'IA', icon:'🤖', color: '#00cec9', desc: 'Nodo de inteligencia artificial', fields: [{key:'behavior',label:'Comportamiento',type:'text',placeholder:'patrullar, seguir'}] },
+    { type: 'animation', label: 'Animación', icon:'🎬', color: '#e17055', desc: 'Nodo de animación', fields: [{key:'anim',label:'Animación',type:'text',placeholder:'idle, run'}] },
+    { type: 'ui', label: 'UI', icon:'🖱️', color: '#f39c12', desc: 'Nodo de interfaz/visual', fields: [{key:'element',label:'Elemento',type:'text',placeholder:'botón, panel'}] },
+    { type: 'signal', label: 'Señal', icon:'📶', color: '#8e44ad', desc: 'Nodo de señal/evento', fields: [{key:'event',label:'Evento',type:'text',placeholder:'onHit, onClick'}] },
+    { type: 'script', label: 'Script', icon:'💻', color: '#16a085', desc: 'Nodo de código/script', fields: [{key:'lang',label:'Lenguaje',type:'text',placeholder:'GDScript, JS'}] },
+    { type: 'resource', label: 'Recurso', icon:'📦', color: '#2980b9', desc: 'Nodo de recurso/asset', fields: [{key:'path',label:'Ruta',type:'text',placeholder:'res://...'}] },
+    { type: 'camera', label: 'Cámara', icon:'📷', color: '#6ab04c', desc: 'Nodo de cámara/viewport', fields: [{key:'mode',label:'Modo',type:'text',placeholder:'perspectiva, ortográfica'}] },
+    { type: 'particles', label: 'Partículas', icon:'✨', color: '#f6e58d', desc: 'Nodo de sistema de partículas', fields: [{key:'effect',label:'Efecto',type:'text',placeholder:'fuego, polvo'}] },
+    { type: 'network', label: 'Red', icon:'🌐', color: '#00b894', desc: 'Nodo de red/multiplayer', fields: [{key:'role',label:'Rol',type:'text',placeholder:'servidor, cliente'}] },
+    { type: 'inventory', label: 'Inventario', icon:'🎒', color: '#b2bec3', desc: 'Nodo de inventario', fields: [{key:'slots',label:'Slots',type:'number',placeholder:'20'}] },
+    { type: 'economy', label: 'Economía', icon:'💰', color: '#fdcb6e', desc: 'Nodo de economía/moneda', fields: [{key:'currency',label:'Moneda',type:'text',placeholder:'oro, gemas'}] },
+    { type: 'progress', label: 'Progreso', icon:'📈', color: '#00b894', desc: 'Nodo de progreso/XP', fields: [{key:'level',label:'Nivel',type:'number',placeholder:'1'}] },
+    { type: 'narrative', label: 'Narrativa', icon:'📖', color: '#e17055', desc: 'Nodo de narrativa/diálogo', fields: [{key:'line',label:'Línea',type:'text',placeholder:'Texto...'}] },
+    { type: 'cinematic', label: 'Cinemática', icon:'🎥', color: '#636e72', desc: 'Nodo de cinemática', fields: [{key:'scene',label:'Escena',type:'text',placeholder:'intro, final'}] },
+    { type: 'touch', label: 'Input Touch', icon:'🤚', color: '#fab1a0', desc: 'Nodo de entrada táctil', fields: [{key:'gesture',label:'Gesto',type:'text',placeholder:'swipe, tap'}] },
+    { type: 'vr', label: 'VR/AR', icon:'🕶️', color: '#00b894', desc: 'Nodo de VR/AR', fields: [{key:'device',label:'Dispositivo',type:'text',placeholder:'Oculus, ARKit'}] },
+    { type: 'test', label: 'Test', icon:'🧪', color: '#636e72', desc: 'Nodo de test/QA', fields: [{key:'result',label:'Resultado',type:'text',placeholder:'ok, fail'}] },
+    { type: 'doc', label: 'Doc', icon:'📄', color: '#b2bec3', desc: 'Nodo de documentación', fields: [{key:'url',label:'URL',type:'text',placeholder:'https://...'}] },
+    { type: 'milestone', label: 'Milestone', icon:'🏁', color: '#00b894', desc: 'Nodo de hito/entrega', fields: [{key:'date',label:'Fecha',type:'date',placeholder:''}] },
+    { type: 'feedback', label: 'Feedback', icon:'💬', color: '#00b894', desc: 'Nodo de feedback/retro', fields: [{key:'from',label:'De',type:'text',placeholder:'QA, usuario'}] },
+    { type: 'opt', label: 'Optimización', icon:'⚡', color: '#fdcb6e', desc: 'Nodo de optimización', fields: [{key:'target',label:'Objetivo',type:'text',placeholder:'fps, memoria'}] },
+    { type: 'shader', label: 'Shader', icon:'🎨', color: '#6c5ce7', desc: 'Nodo de shader', fields: [{key:'type',label:'Tipo',type:'text',placeholder:'vertex, fragment'}] },
+    { type: 'plugin', label: 'Plugin', icon:'🔌', color: '#636e72', desc: 'Nodo de plugin/extensión', fields: [{key:'name',label:'Nombre',type:'text',placeholder:'nombre'}] },
+    { type: 'integration', label: 'Integración', icon:'🔗', color: '#00b894', desc: 'Nodo de integración externa', fields: [{key:'api',label:'API',type:'text',placeholder:'Discord, Steam'}] },
+    { type: 'build', label: 'Build', icon:'🏗️', color: '#636e72', desc: 'Nodo de build/compilación', fields: [{key:'platform',label:'Plataforma',type:'text',placeholder:'Windows, Web'}] },
+    { type: 'deploy', label: 'Deploy', icon:'🚀', color: '#00b894', desc: 'Nodo de despliegue', fields: [{key:'env',label:'Entorno',type:'text',placeholder:'prod, staging'}] },
+    { type: 'task', label: 'Tarea', icon:'✅', color: '#636e72', desc: 'Nodo de tarea/pendiente', fields: [{key:'status',label:'Estado',type:'text',placeholder:'pendiente, hecho'}] },
+    { type: 'bug', label: 'Bug', icon:'🐞', color: '#d63031', desc: 'Nodo de bug/error', fields: [{key:'severity',label:'Severidad',type:'text',placeholder:'alta, baja'}] },
+    { type: 'custom', label: 'Personalizado', icon:'📝', color: '#d35400', desc: 'Nodo libre', fields: [] },
 ];
-
-// ── State ─────────────────────────────────────────────────────────────────────
-let db, auth;
-let currentUser = null;
-let boardId      = 'global';
-let boardName    = 'Global';
-let accessResolved = false;
-let accessTimeoutId = null;
-
-let nodes       = [];   // { id, title, body, color, x, y }
-let connections = [];   // { id, from, to }
-let viewport    = { x: 0, y: 0, scale: 1 };
-
-let selectedNodeId  = null;
-let connectMode     = false;
-let connectingFrom  = null;   // nodeId of first node chosen for a connection
-
-// Drag state
-let dragState = null;  // { nodeId, startX, startY, origX, origY }
-// Pan state
-let panState  = null;  // { startX, startY, origVx, origVy }
-
-// ── DOM refs ──────────────────────────────────────────────────────────────────
-const $ = id => document.getElementById(id);
-
-// Filled after DOMContentLoaded
-let gateEl, gateMsg, panelEl;
-let userLabel, logoutBtn, sidebarToggle, sidebar;
-let canvasWrap, viewport_el, svgEl, nodeContainer;
-let connPreviewLine;
-let statusBar, connHint;
-let addNodeBtn, connectModeBtn, zoomInBtn, zoomOutBtn, resetViewBtn;
-let saveBtnEl, clearBtnEl;
-let editPanel, editTitle, editBody, colorPickerEl, editApplyBtn, editDeleteBtn, editCloseBtn;
-let boardSelect, newBoardBtn, boardTitleEl;
-
-// ── Firestore helpers ─────────────────────────────────────────────────────────
-function boardDoc() {
-    return window.fsDoc(window.db, IDEA_BOARDS_COLLECTION, boardId);
-}
-
-// ── Persistence ───────────────────────────────────────────────────────────────
-function localKey() { return 'panterIdeas__' + boardId; }
-
-function normalizeRole(role) {
-    const value = String(role || '').trim().toLowerCase();
-    return ROLE_ALIASES[value] || value || 'usuario';
-}
-
-function getAdminEmails() {
-    try {
-        const stored = JSON.parse(localStorage.getItem(ADMIN_EMAILS_LS_KEY) || '[]');
-        const list = Array.isArray(stored) ? stored : String(stored).split(',');
-        return [...new Set([...DEFAULT_ADMIN_EMAILS, ...list].map(email => String(email).trim().toLowerCase()).filter(Boolean))];
-    } catch {
-        return [...DEFAULT_ADMIN_EMAILS];
-    }
-}
-
-function showGateError(text) {
-    if (gateMsg) {
-        gateMsg.textContent = text;
-        gateMsg.className = 'dev-msg error';
-    }
-    if (gateEl) gateEl.hidden = false;
-    if (panelEl) panelEl.hidden = true;
-}
-
-function clearAccessTimeout() {
-    if (accessTimeoutId) {
-        clearTimeout(accessTimeoutId);
-        accessTimeoutId = null;
-    }
+// Búsqueda y filtro de nodos
+let nodeSearchTerm = '';
+function filterNodes() {
+    const term = nodeSearchTerm.trim().toLowerCase();
+    nodeContainer.querySelectorAll('.dev-idea-node').forEach(el => {
+        const title = (el.querySelector('.dev-idea-node-title')?.textContent||'').toLowerCase();
+        const type = (el.querySelector('.dev-idea-node-type')?.textContent||'').toLowerCase();
+        el.style.display = (!term || title.includes(term) || type.includes(term)) ? '' : 'none';
+    });
 }
 
 function startAccessTimeout() {
@@ -123,8 +94,13 @@ function saveLocal() {
     } catch (_) { /* quota exceeded — ignore */ }
 }
 
+
 async function saveToFirestore() {
-    if (!currentUser) return;
+    if (!currentUser) {
+        flashStatus('No autenticado. Guardado solo local.');
+        saveLocal();
+        return;
+    }
     try {
         const now = new Date().toISOString();
         await window.setDoc(boardDoc(), {
@@ -134,10 +110,11 @@ async function saveToFirestore() {
             updatedAt: now,
             updatedByUid: currentUser.uid,
         }, { merge: true });
-        flashStatus('✓ Guardado');
+        flashStatus('✓ Guardado en la nube');
     } catch (e) {
         console.error('saveToFirestore:', e);
-        flashStatus('Error al guardar');
+        saveLocal();
+        flashStatus('Error al guardar en la nube. Guardado local.');
     }
 }
 
@@ -289,16 +266,35 @@ function createNodeEl(node) {
     el.style.left = node.x + 'px';
     el.style.top  = node.y + 'px';
     if (node.color) el.style.borderColor = node.color + 'aa';
+    // Fondo según tipo
+    el.style.background = `linear-gradient(180deg,${node.color}22,rgba(0,0,0,0.7))`;
+
+    // Show type, icon and fields summary
+    let typeObj = NODE_TYPES.find(t=>t.type===node.type)||{};
+    let typeLabel = typeObj.label||'Personalizado';
+    let icon = typeObj.icon||'📝';
+    let fieldsSummary = '';
+    const t = typeObj;
+    if (t && t.fields && node.fields) {
+        fieldsSummary = Object.entries(node.fields).filter(([k,v])=>v).map(([k,v])=>{
+            const f = t.fields.find(f=>f.key===k);
+            return f?`<div style='font-size:.75em;color:#bfe4fb;'><b>${f.label}:</b> ${escHtml(v)}</div>`:'';
+        }).join('');
+    }
 
     el.innerHTML = `
         <div class="dev-idea-node-header">
+            <span class="dev-idea-node-type" style="font-size:1.2em;margin-right:6px;">${icon}</span>
             <span class="dev-idea-node-title">${escHtml(node.title || 'Nodo')}</span>
+            <span class="dev-idea-node-type" style="font-size:.7em;color:${lightenColor(node.color||'#1e70c8',0.5)};margin-left:8px;">${escHtml(typeLabel)}</span>
         </div>
+        ${fieldsSummary}
         ${node.body ? `<div class="dev-idea-node-body">${escHtml(node.body)}</div>` : ''}
         <div class="dev-idea-node-footer">
             <button class="dev-idea-node-btn connect-btn" title="Conectar">⇢</button>
             <button class="dev-idea-node-btn edit-btn"    title="Editar">✎</button>
             <button class="dev-idea-node-btn delete-btn"  title="Eliminar">✕</button>
+            <button class="dev-idea-node-btn copy-btn" title="Duplicar">⧉</button>
         </div>`;
 
     if (node.color) {
@@ -345,82 +341,19 @@ function createNodeEl(node) {
         deleteNode(node.id);
     });
 
+    // ── Copy/duplicate button ─────────────────────────────────────────────────
+    el.querySelector('.copy-btn').addEventListener('click', e => {
+        e.stopPropagation();
+        const copy = JSON.parse(JSON.stringify(node));
+        copy.id = uid();
+        copy.x += 40; copy.y += 40;
+        nodes.push(copy);
+        nodeContainer.appendChild(createNodeEl(copy));
+        updateStatusBar();
+        autoSave();
+    });
+
     return el;
-}
-
-function renderNodes() {
-    nodeContainer.innerHTML = '';
-    nodes.forEach(n => nodeContainer.appendChild(createNodeEl(n)));
-}
-
-// ── SVG lines ─────────────────────────────────────────────────────────────────
-function renderLines() {
-    svgEl.innerHTML = '';
-    connections.forEach(conn => {
-        const fromEl = nodeContainer.querySelector(`[data-node-id="${conn.from}"]`);
-        const toEl   = nodeContainer.querySelector(`[data-node-id="${conn.to}"]`);
-        if (!fromEl || !toEl) return;
-        const line = buildLine(conn, fromEl, toEl);
-        svgEl.appendChild(line);
-    });
-}
-
-function buildLine(conn, fromEl, toEl) {
-    const fromNode = nodes.find(n => n.id === conn.from);
-    const toNode   = nodes.find(n => n.id === conn.to);
-    if (!fromNode || !toNode) return document.createElementNS('http://www.w3.org/2000/svg','line');
-
-    // SVG lives inside the transformed viewport, so lines must use world coords.
-    const x1 = fromNode.x + (fromEl.offsetWidth || 0) / 2;
-    const y1 = fromNode.y + (fromEl.offsetHeight || 0) / 2;
-    const x2 = toNode.x + (toEl.offsetWidth || 0) / 2;
-    const y2 = toNode.y + (toEl.offsetHeight || 0) / 2;
-
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', x1); line.setAttribute('y1', y1);
-    line.setAttribute('x2', x2); line.setAttribute('y2', y2);
-    line.classList.add('conn-line');
-    line.dataset.connId = conn.id;
-    line.title = 'Clic para eliminar conexión';
-
-    line.addEventListener('click', () => {
-        if (confirm('¿Eliminar esta conexión?')) {
-            connections = connections.filter(c => c.id !== conn.id);
-            renderLines();
-            autoSave();
-        }
-    });
-    return line;
-}
-
-function renderAll() {
-    renderNodes();
-    renderLines();
-}
-
-function updateLinesForNode(nodeId) {
-    // Re-render only lines that involve this node (cheaper than full re-render)
-    svgEl.querySelectorAll('.conn-line').forEach(ln => {
-        const conn = connections.find(c => c.id === ln.dataset.connId);
-        if (!conn) { ln.remove(); return; }
-        if (conn.from !== nodeId && conn.to !== nodeId) return;
-        const fromEl = nodeContainer.querySelector(`[data-node-id="${conn.from}"]`);
-        const toEl   = nodeContainer.querySelector(`[data-node-id="${conn.to}"]`);
-        if (!fromEl || !toEl) { ln.remove(); return; }
-        const fromNode = nodes.find(n => n.id === conn.from);
-        const toNode   = nodes.find(n => n.id === conn.to);
-        if (!fromNode || !toNode) { ln.remove(); return; }
-        ln.setAttribute('x1', fromNode.x + (fromEl.offsetWidth || 0) / 2);
-        ln.setAttribute('y1', fromNode.y + (fromEl.offsetHeight || 0) / 2);
-        ln.setAttribute('x2', toNode.x + (toEl.offsetWidth || 0) / 2);
-        ln.setAttribute('y2', toNode.y + (toEl.offsetHeight || 0) / 2);
-    });
-}
-
-// ── Status bar ────────────────────────────────────────────────────────────────
-function updateStatusBar() {
-    statusBar.innerHTML =
-        `Nodos: ${nodes.length} &nbsp;|&nbsp; Conexiones: ${connections.length} &nbsp;|&nbsp; Zoom: ${Math.round(viewport.scale * 100)}%`;
 }
 
 function flashStatus(msg) {
@@ -480,11 +413,17 @@ function addNode(options = {}) {
     const cy     = rect.height / 2;
     const worldC = clientToWorld(rect.left + cx, rect.top + cy);
 
+    // Node type
+    let type = options.type || 'logic';
+    if (!NODE_TYPES.some(n=>n.type===type)) type = 'custom';
+    const typeObj = NODE_TYPES.find(n=>n.type===type) || NODE_TYPES[NODE_TYPES.length-1];
+
     const node = {
         id:    uid(),
-        title: options.title || 'Nueva idea',
+        title: options.title || typeObj.label,
         body:  options.body  || '',
-        color: options.color || NODE_COLORS[nodes.length % NODE_COLORS.length],
+        color: options.color || typeObj.color,
+        type,
         x:     options.x !== undefined ? options.x : worldC.x - 80,
         y:     options.y !== undefined ? options.y : worldC.y - 40,
     };
@@ -511,6 +450,28 @@ function deleteNode(nodeId) {
 // ── Edit panel ────────────────────────────────────────────────────────────────
 function buildColorPicker(node) {
     colorPickerEl.innerHTML = '';
+    // Node type selector
+    const typeSel = document.createElement('select');
+    typeSel.style.marginBottom = '8px';
+    NODE_TYPES.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.type;
+        opt.textContent = t.label + ' — ' + t.desc;
+        if (node.type === t.type) opt.selected = true;
+        typeSel.appendChild(opt);
+    });
+    typeSel.addEventListener('change', () => {
+        node.type = typeSel.value;
+        const t = NODE_TYPES.find(n=>n.type===node.type) || NODE_TYPES[NODE_TYPES.length-1];
+        node.color = t.color;
+        // reset fields for new type
+        if (!node.fields) node.fields = {};
+        for (const k in node.fields) delete node.fields[k];
+        buildColorPicker(node);
+        applyEditPanel();
+    });
+    colorPickerEl.appendChild(typeSel);
+    // Color swatches
     NODE_COLORS.forEach(c => {
         const dot = document.createElement('div');
         dot.className = 'idea-color-swatch';
@@ -520,9 +481,34 @@ function buildColorPicker(node) {
         dot.addEventListener('click', () => {
             colorPickerEl.querySelectorAll('.idea-color-swatch').forEach(d => d.classList.remove('active'));
             dot.classList.add('active');
+            node.color = c;
+            applyEditPanel();
         });
         colorPickerEl.appendChild(dot);
     });
+
+    // Dynamic fields for node type
+    const t = NODE_TYPES.find(n=>n.type===node.type);
+    if (t && t.fields && t.fields.length) {
+        const fieldsDiv = document.createElement('div');
+        fieldsDiv.style.marginTop = '10px';
+        if (!node.fields) node.fields = {};
+        t.fields.forEach(f => {
+            const label = document.createElement('label');
+            label.textContent = f.label;
+            const input = document.createElement('input');
+            input.type = f.type;
+            input.placeholder = f.placeholder||'';
+            input.value = node.fields[f.key]||'';
+            input.addEventListener('input',()=>{
+                node.fields[f.key]=input.value;
+                applyEditPanel();
+            });
+            fieldsDiv.appendChild(label);
+            fieldsDiv.appendChild(input);
+        });
+        colorPickerEl.appendChild(fieldsDiv);
+    }
 }
 
 function openEditPanel(nodeId) {
@@ -552,71 +538,15 @@ function applyEditPanel() {
     // Update rendered node
     const el = nodeContainer.querySelector(`[data-node-id="${node.id}"]`);
     if (el) {
-        el.querySelector('.dev-idea-node-title').textContent = node.title;
-        const bodyEl = el.querySelector('.dev-idea-node-body');
-        if (node.body) {
-            if (bodyEl) { bodyEl.textContent = node.body; }
-            else {
-                const newBody = document.createElement('div');
-                newBody.className = 'dev-idea-node-body';
-                newBody.textContent = node.body;
-                el.querySelector('.dev-idea-node-header').after(newBody);
-            }
-        } else {
-            bodyEl?.remove();
-        }
-        if (node.color) {
-            el.style.borderColor = node.color + 'aa';
-            el.querySelector('.dev-idea-node-title').style.color = lightenColor(node.color, 0.7);
-        }
-        // Body/title changes can resize the card and shift the center points.
-        updateLinesForNode(node.id);
+        const newEl = createNodeEl(node);
+        el.replaceWith(newEl);
     }
-    autoSave();
-}
-
-function closeEditPanel() {
-    selectedNodeId = null;
-    editPanel.classList.add('hidden');
-    nodeContainer.querySelectorAll('.dev-idea-node').forEach(el => el.classList.remove('selected'));
-}
-
-// ── Color utility ─────────────────────────────────────────────────────────────
-function lightenColor(hex, amount) {
-    // Very simple: parse hex, blend toward white
-    const n = parseInt(hex.replace('#', ''), 16);
-    const r = (n >> 16) & 0xff;
-    const g = (n >>  8) & 0xff;
-    const b =  n        & 0xff;
-    const lr = Math.min(255, Math.round(r + (255 - r) * amount));
-    const lg = Math.min(255, Math.round(g + (255 - g) * amount));
-    const lb = Math.min(255, Math.round(b + (255 - b) * amount));
-    return `rgb(${lr},${lg},${lb})`;
-}
-
-// ── Clear all ─────────────────────────────────────────────────────────────────
-function clearAll() {
-    if (!confirm(`¿Eliminar todos los nodos y conexiones del tablero "${boardName}"? Esta acción no se puede deshacer.`)) return;
-    nodes       = [];
-    connections = [];
-    selectedNodeId = null;
-    closeEditPanel();
-    setConnectMode(false);
-    renderAll();
+    renderLines();
     updateStatusBar();
     autoSave();
 }
 
-// ── Canvas pointer events (pan + drag) ───────────────────────────────────────
-function onCanvasPointerDown(e) {
-    // Only pan if clicking directly on the wrap or viewport background
-    if (e.target !== canvasWrap && e.target !== viewport_el && e.target !== svgEl && e.target !== nodeContainer) return;
-    if (connectMode) return;
-    panState = { startX: e.clientX, startY: e.clientY, origVx: viewport.x, origVy: viewport.y };
-    canvasWrap.setPointerCapture(e.pointerId);
-    canvasWrap.style.cursor = 'grabbing';
-}
-
+// ── Canvas events ──────────────────────────────────────────────────────────
 function onCanvasPointerMove(e) {
     // ── Node drag ──────────────────────────────────────────────────────────────
     if (dragState) {
@@ -873,5 +803,3 @@ function init() {
         if (!accessResolved && window.auth?.currentUser) handleAuth(window.auth.currentUser).catch(() => {});
     }, 2200);
 }
-
-document.addEventListener('DOMContentLoaded', init);

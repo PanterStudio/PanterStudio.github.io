@@ -14,7 +14,7 @@ import("https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js").then(({ init
     import("https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"),
     import("https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"),
     import("https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js")
-  ]).then(([{ getFirestore, collection, addDoc, getDocs, getDoc, query, where, setDoc, doc, deleteDoc, updateDoc, orderBy, limit }, { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult }, { getAnalytics }]) => {
+  ]).then(([{ getFirestore, collection, addDoc, getDocs, getDoc, onSnapshot, query, where, setDoc, doc, deleteDoc, updateDoc, orderBy, limit }, { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult }, { getAnalytics }]) => {
     const app = initializeApp(firebaseConfig);
     window.db         = getFirestore(app);
     window.auth       = getAuth(app);
@@ -22,6 +22,7 @@ import("https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js").then(({ init
     window.addDoc     = addDoc;
     window.getDocs    = getDocs;
     window.getDoc     = getDoc;
+    window.onSnapshot = onSnapshot;
     window.query      = query;
     window.where      = where;
     window.setDoc     = setDoc;

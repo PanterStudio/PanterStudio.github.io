@@ -35,6 +35,7 @@
                 </div>
                 <div class="admin-top-actions">
                     <button id="adminDevPanelBtn" class="btn">Panel Desarrollo</button>
+                    <button id="adminVisibilityBtn" class="btn">Visibilidad Páginas</button>
                     <button id="adminGoHomeBtn" class="btn">Ir al inicio</button>
                     <button id="adminLogoutBtn" class="btn">Cerrar sesion</button>
                 </div>
@@ -67,6 +68,82 @@
                     <h3>Gestión de Cuentas (CEO)</h3>
                     <button id="adminCeoRefreshUsersBtn" class="btn">Actualizar lista</button>
                 </header>
+                <div class="admin-section-intro">
+                    <p>Herramientas especiales para el Fundador/CEO: agregar fondos manuales a la sección de Apóyanos, administrar patrocinadores y ajustar metas.</p>
+                </div>
+
+                <div class="admin-ceo-funds" style="margin-top:16px;">
+                    <h4>Agregar fondos - Apóyanos</h4>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
+                        <input id="founderAddAmount" type="number" placeholder="Monto (USD)" min="0" step="0.01" style="padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
+                        <input id="founderAddNote" type="text" placeholder="Nota / Descripción (opcional)" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
+                        <button id="founderAddBtn" class="btn">Agregar fondos</button>
+                    </div>
+                    <p id="founderAddMessage" class="admin-message" style="margin-top:8px;"></p>
+                </div>
+
+                <div style="margin-top:12px;">
+                    <h4>Eliminar saldo - Apóyanos</h4>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
+                        <input id="founderRemoveAmount" type="number" placeholder="Monto a quitar (USD)" min="0" step="0.01" style="padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
+                        <input id="founderRemoveNote" type="text" placeholder="Nota / Motivo (opcional)" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
+                        <button id="founderRemoveBtn" class="btn">Eliminar saldo</button>
+                    </div>
+                    <p id="founderRemoveMessage" class="admin-message" style="margin-top:8px;"></p>
+                </div>
+
+                <div style="margin-top:18px;">
+                    <button id="adminToggleDonationsConfigBtn" class="btn" onclick="(function(){const c=document.getElementById('adminDonationsConfigContainer'); if(!c) return; if(c.hasAttribute('hidden')){c.removeAttribute('hidden');} else {c.setAttribute('hidden','');}})()">Configurar Apóyanos</button>
+                </div>
+
+                <div id="adminDonationsConfigContainer" class="admin-panel" hidden style="margin-top:12px;padding:12px;">
+                    <h4>Configuración - Apóyanos</h4>
+                    <div id="donationsPreview" style="margin-bottom:12px;padding:12px;border-radius:8px;background:rgba(255,255,255,0.02);">
+                        <div style="margin-bottom:8px;">
+                            <div class="donaciones-progress" style="margin-bottom:8px;">
+                                <div class="progress-track" aria-hidden="true">
+                                    <div id="previewProgressFill" class="progress-fill" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" style="--progress:40%;"></div>
+                                </div>
+                                <div style="display:flex;gap:8px;align-items:center;margin-top:6px;">
+                                    <strong id="previewPercent">40%</strong>
+                                    <span id="previewGoalText">Meta: $500</span>
+                                    <span id="previewCurrentText" style="margin-left:auto;">Recaudado: $200</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="donationsPreviewButtons" style="display:flex;gap:8px;margin-top:8px;">
+                            <a id="previewPaypalBtn" class="btn-payment" href="#" target="_blank" rel="noopener">Apoyar — PayPal</a>
+                            <a id="previewNequiBtn" class="btn-payment" href="#" rel="noopener">Apoyar — Nequi</a>
+                            <a id="previewBreveBtn" class="btn-payment" href="#" rel="noopener">Apoyar — Breve</a>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr;gap:10px;margin-top:8px;">
+                        <label>Meta de donación (USD)
+                            <input id="donConfigGoal" type="number" min="0" step="0.01" placeholder="500" style="width:180px;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
+                        </label>
+                        <label>Enlace PayPal
+                            <input id="donConfigPaypal" type="url" placeholder="https://paypal.me/..." style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
+                        </label>
+                        <label>Enlace Nequi
+                            <input id="donConfigNequi" type="url" placeholder="https://nequi.com/..." style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
+                        </label>
+                        <label>Enlace Breve
+                            <input id="donConfigBreve" type="url" placeholder="https://tu.link/breve" style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
+                        </label>
+                        <label>Enlace Patreon
+                            <input id="donConfigPatreon" type="url" placeholder="https://patreon.com/..." style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
+                        </label>
+                        
+                        <label>Mensaje público (texto mostrado en la página)
+                            <textarea id="donConfigPublicMessage" rows="3" style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);"></textarea>
+                        </label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <button id="donConfigSaveBtn" class="btn">Guardar configuración</button>
+                            <button id="donConfigResetBtn" class="btn">Restablecer</button>
+                            <span id="donConfigMessage" class="admin-message" style="margin-left:8px;"></span>
+                        </div>
+                    </div>
+                </div>
                 <p class="admin-section-intro">Analiza correos de toda la base disponible (users, preregistros, donations y sponsors), filtra por búsqueda y asigna roles del equipo. Acceso al panel: administrador, programador y modelador (además del CEO).</p>
 
                 <div class="admin-filter-row">
@@ -100,5 +177,11 @@
     </main>
 
     <script src="../../assets/js/admin/admin.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', ()=>{
+        const btn = document.getElementById('adminVisibilityBtn');
+        if (btn) btn.addEventListener('click', ()=>{ window.location.href = 'visibility.html'; });
+    });
+    </script>
 </body>
 </html>

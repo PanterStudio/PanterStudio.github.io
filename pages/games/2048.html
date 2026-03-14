@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>2048 — Panter Studio</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <script src="../../assets/js/core/firebase-config.js"></script>
+    <style>
+        .game-header { display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px; }
+        .game-title { font-weight:800;color:#e6f6ff; }
+        .game-score { color:#a8def8; }
+    </style>
+</head>
+<body class="dev-studio-page" data-site-root="../..">
+    <div class="dev-main-content">
+        <div class="game-header">
+            <div>
+                <h2 class="game-title">2048 — Panter Studio</h2>
+                <div class="game-score">Combina fichas hasta 2048. Usa flechas o WASD.</div>
+            </div>
+            <div>
+                <button class="dev-btn" id="btnNew">Nueva partida</button>
+                <button class="dev-btn" id="btnUndo">Deshacer</button>
+            </div>
+        </div>
+
+        <div class="game-2048-wrap">
+            <div class="game-2048">
+                <div id="grid" class="grid"></div>
+                <div class="game-controls">
+                    <div style="color:#9ecbf0">Puntuación: <span id="score">0</span></div>
+                    <div style="color:#9ecbf0">Mejor: <span id="best">0</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../assets/js/games/2048.js"></script>
+</body>
+</html>

@@ -70,6 +70,31 @@ const createUpdatePublishedEl = document.getElementById('devCreateUpdatePublishe
 const createUpdateBtn = document.getElementById('devCreateUpdateBtn');
 const createUpdateMsgEl = document.getElementById('devCreateUpdateMsg');
 
+const createAdvanceProjectEl = document.getElementById('devAdvanceProject');
+const createAdvanceTitleEl = document.getElementById('devAdvanceTitle');
+const createAdvanceSummaryEl = document.getElementById('devAdvanceSummary');
+const createAdvanceParamsEl = document.getElementById('devAdvanceParams');
+const createAdvanceDateEl = document.getElementById('devAdvanceDate');
+const createAdvancePublishedEl = document.getElementById('devAdvancePublished');
+const createAdvanceBtn = document.getElementById('devCreateAdvanceBtn');
+const refreshAdvancesBtn = document.getElementById('devRefreshAdvancesBtn');
+const createAdvanceMsgEl = document.getElementById('devCreateAdvanceMsg');
+const advancesListEl = document.getElementById('devAdvancesList');
+const advCalendarEl = document.getElementById('advCalendar');
+const advCalMonthLabel = document.getElementById('advCalMonthLabel');
+const advCalPrev = document.getElementById('advCalPrev');
+const advCalNext = document.getElementById('advCalNext');
+const advDayEntriesEl = document.getElementById('advDayEntries');
+
+// Modal controls
+const devAdvancesModal = document.getElementById('devAdvancesModal');
+const devAdvancesBackdrop = document.getElementById('devAdvancesBackdrop');
+const devOpenAdvancesBtn = document.getElementById('devOpenAdvancesBtn');
+const devAdvancesModalCloseBtn = document.getElementById('devAdvancesModalClose');
+
+let advances = [];
+let advCurrentMonth = new Date();
+
 const siteAnnouncementEl = document.getElementById('devSiteAnnouncement');
 const featuredProjectEl = document.getElementById('devFeaturedProject');
 const enableNewsPageEl = document.getElementById('devEnableNewsPage');
@@ -493,6 +518,7 @@ async function loadProjects() {
     populateProjectSelect();
     await Promise.all([loadSiteSettings(), loadGlobalKpis(), loadRecentActivity()]);
     populateProjectSelect();
+    try { await loadAdvances(); } catch {};
     setMessage(projects.length ? `${projects.length} proyectos en desarrollo` : 'No hay proyectos en desarrollo por ahora.');
 }
 
@@ -718,6 +744,34 @@ function bindEvents() {
     createProjectBtn?.addEventListener('click', createProject);
     createUpdateBtn?.addEventListener('click', createProjectUpdate);
     saveSiteConfigBtn?.addEventListener('click', saveSiteConfig);
+    // Avances events
+    createAdvanceBtn?.addEventListener('click', createAdvance);
+    refreshAdvancesBtn?.addEventListener('click', () => { loadAdvances().catch(() => {}); });
+    advCalPrev?.addEventListener('click', () => { advCurrentMonth = new Date(advCurrentMonth.getFullYear(), advCurrentMonth.getMonth() - 1, 1); buildAdvCalendar(); });
+    advCalNext?.addEventListener('click', () => { advCurrentMonth = new Date(advCurrentMonth.getFullYear(), advCurrentMonth.getMonth() + 1, 1); buildAdvCalendar(); });
+
+    // Modal open/close handlers
+    devOpenAdvancesBtn?.addEventListener('click', () => {
+        if (!devAdvancesModal) return;
+        devAdvancesModal.hidden = false;
+        document.body.classList.add('modal-open');
+        // set default date to now
+        if (createAdvanceDateEl && !createAdvanceDateEl.value) {
+            const now = new Date();
+            const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0,16);
+            createAdvanceDateEl.value = local;
+        }
+        advCurrentMonth = new Date();
+        loadAdvances().catch(() => {});
+    });
+
+    devAdvancesModalCloseBtn?.addEventListener('click', () => {
+        if (!devAdvancesModal) return;
+        devAdvancesModal.hidden = true;
+        document.body.classList.remove('modal-open');
+    });
+    devAdvancesBackdrop?.addEventListener('click', () => { devAdvancesModal.hidden = true; document.body.classList.remove('modal-open'); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && devAdvancesModal && !devAdvancesModal.hidden) { devAdvancesModal.hidden = true; document.body.classList.remove('modal-open'); } });
 }
 
 async function onAuthStateResolved(user) {

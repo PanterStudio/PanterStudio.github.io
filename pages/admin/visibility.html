@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Visibilidad de Páginas - Admin</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <script src="../../assets/js/core/firebase-config.js"></script>
+    <style>
+        .visibility-grid{ display:grid; gap:12px; max-width:900px; margin:18px auto; }
+        .visibility-card{ padding:12px; border-radius:10px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04)); border:1px solid rgba(255,255,255,0.03); }
+        label{ display:block; font-weight:600; margin-bottom:6px }
+        input[type=text], textarea{ width:100%; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:inherit }
+    </style>
+</head>
+<body class="admin-page" data-site-root="../..">
+    <main class="admin-shell">
+        <section class="admin-gate" id="adminGate">
+            <h1>Gestión de Visibilidad</h1>
+            <p id="adminGateMessage">Verificando permisos...</p>
+        </section>
+        <section id="visibilityPanel" class="admin-panel" hidden>
+            <header style="max-width:900px;margin:18px auto;">
+                <label style="display:flex;align-items:center;gap:10px">
+                    <input id="globalMaintenanceChk" type="checkbox" />
+                    <strong>Modo mantenimiento global</strong>
+                </label>
+                <p style="margin:6px 0 12px 0;opacity:.9">Cuando esté activado, se mostrará un aviso de mantenimiento en todas las páginas. Las páginas seguirán siendo accesibles desde el menú; activa esto solo cuando quieras mostrar el aviso globalmente.</p>
+            </header>
+            <header class="admin-topbar">
+                <div><h2>Visibilidad y mantenimiento</h2><p>Configura qué páginas están visibles y para quién.</p></div>
+                <div class="admin-top-actions"><button id="visBackBtn" class="btn">Volver</button></div>
+            </header>
+
+            <div class="visibility-grid" id="visibilityGrid"></div>
+            <div style="max-width:900px;margin:12px auto;text-align:right">
+                <button id="saveVisibilityBtn" class="btn">Guardar cambios</button>
+            </div>
+            <section style="max-width:900px;margin:18px auto;padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(0,0,0,0.03), rgba(0,0,0,0.05));">
+                <h3>Overrides de desarrollo</h3>
+                <p style="margin:6px 0 12px 0;opacity:.9">Usa overrides locales cuando Firebase no esté disponible (solo para desarrollo).</p>
+                <div style="display:flex;gap:8px;align-items:center">
+                    <button id="devForceAllowBtn" class="btn">Forzar: permitir todas las páginas</button>
+                    <button id="devClearOverrideBtn" class="btn secondary">Borrar override</button>
+                    <div id="devOverrideStatus" style="margin-left:auto;opacity:.9"></div>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <script src="../../assets/js/admin/visibility-admin.js"></script>
+</body>
+</html>

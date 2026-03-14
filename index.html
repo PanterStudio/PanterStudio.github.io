@@ -270,7 +270,26 @@
         <section>
             <div class="index-preregistro-highlight index-minijuegos-highlight">
                 <div class="index-preregistro-media">
-                    <img src="https://i.imgur.com/3Qk1yZB.jpeg" alt="Minijuegos Panter Studio" loading="lazy">
+                    <div class="minijuegos-visual" aria-hidden="true">
+                        <div id="minigamesParticles" class="minigames-particles" aria-hidden="true"></div>
+                        <!-- SVG icons (decorative) -->
+                        <svg class="icon icon-game" viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill="#fff" d="M6 10h2v2H6zM4 6h16v12H4z" opacity="0.9"></path>
+                        </svg>
+                        <svg class="icon icon-coin" viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="12" cy="12" r="8" fill="#ffd700" />
+                            <path d="M8 12h8" stroke="#b88600" stroke-width="1.2" stroke-linecap="round" />
+                        </svg>
+                        <svg class="icon icon-star" viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill="#fff7b0" d="M12 2l2.6 6.8L22 10l-5 3.8L18 22l-6-3.6L6 22l1-8.2L2 10l7.4-1.2z"/>
+                        </svg>
+                        <svg class="icon icon-flash" viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill="#fff" d="M13 2L3 14h7l-1 8 10-12h-7z" opacity="0.95"/>
+                        </svg>
+                        <svg class="icon icon-trophy" viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill="#ffe6a7" d="M6 3h12v2a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4V3zM8 13h8v2H8z"/>
+                        </svg>
+                    </div>
                 </div>
                 <div class="index-preregistro-copy">
                     <span class="highlight-tag">MINIJUEGOS</span>
@@ -280,28 +299,14 @@
                         Ideal para sesiones cortas y desafíos diarios.
                     </p>
                     <div class="index-preregistro-actions">
-                        <a href="pages/minijuegos.html" class="btn">Ver Minijuegos</a>
+                        <a href="pages/minijuegos.html" class="btn btn-cta">Ver Minijuegos</a>
                         <p class="highlight-note">Compite, gana recompensas y sube en la tabla de líderes.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Banner promocional existente (se mantiene debajo) -->
-        <section class="mini-games-banner">
-            <div class="mini-games-inner">
-                <div class="mini-games-text">
-                    <span class="highlight-tag">GANA MONEDAS</span>
-                    <h3>Juega Minijuegos y gana monedas diarias</h3>
-                    <p>Participa en minijuegos todos los dias para acumular monedas que puedes canjear por esmeraldas dentro de tu cuenta.</p>
-                    <div class="mini-games-actions">
-                        <a href="pages/minijuegos.html" class="btn">Jugar ahora</a>
-                        <a href="pages/perfil.html" class="btn btn-ghost">Ver mi perfil</a>
-                    </div>
-                </div>
-                <div class="mini-games-art" aria-hidden="true">🎮🪙</div>
-            </div>
-        </section>
+        <!-- Banner promocional eliminado a petición del usuario -->
 
         <section>
             <div class="index-value-points" aria-label="Beneficios de la lista de espera">
@@ -342,6 +347,9 @@
     </footer>
 
     <script src="assets/js/core/firebase-config.js"></script>
+    <script src="assets/js/minijuegos-enhancements.js"></script>
+    <script src="assets/js/ui-enhancements.js"></script>
+    <script src="assets/js/site-visibility.js"></script>
     <script src="assets/js/core/script.js"></script>
 </body>
 </html>

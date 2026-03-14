@@ -1,0 +1,1073 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#fbbf24;--green:#4ade80;--red:#f87171;--blue:#60a5fa;
+  --purple:#a78bfa;--bg:#080c12;--card:#0e1420;--border:rgba(255,255,255,.07);
+}
+body{background:var(--bg);font-family:'Nunito',system-ui,sans-serif;display:flex;justify-content:center;min-height:100vh}
+.app{width:100%;max-width:440px;display:flex;flex-direction:column;min-height:100vh}
+
+/* ── HEADER ── */
+.hdr{background:linear-gradient(180deg,#0a1a0e,#060d0a);padding:14px 16px 11px;border-bottom:1px solid rgba(74,222,128,.1);position:relative;overflow:hidden}
+.hdr::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% -20%,rgba(74,222,128,.08),transparent 70%)}
+.hdr-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;position:relative}
+.brand{display:flex;flex-direction:column;gap:2px}
+.brand-name{font-size:20px;font-weight:900;color:#fff;letter-spacing:-.3px}
+.brand-name em{font-style:normal;color:var(--green)}
+.brand-sub{font-size:11px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.3px}
+.day-badge{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.25);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:800;color:var(--gold);margin-top:2px;display:inline-block}
+.money-stack{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.money-main{display:flex;align-items:baseline;gap:4px}
+.money-lbl{font-size:9px;font-weight:800;color:rgba(74,222,128,.5);text-transform:uppercase;letter-spacing:.7px}
+.money-val{font-size:22px;font-weight:900;color:var(--green);line-height:1}
+.money-change{font-size:11px;font-weight:800;color:rgba(74,222,128,.6)}
+.kpis{display:flex;gap:8px}
+.kpi{flex:1;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:7px 10px}
+.kpi-lbl{font-size:9px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.kpi-bar{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-bottom:3px}
+.kpi-fill{height:100%;border-radius:2px;transition:width .5s}
+.kpi-val{font-size:11px;font-weight:800;color:rgba(255,255,255,.6)}
+.kfi-green{background:linear-gradient(90deg,#34d399,#6ee7b7)}
+.kfi-gold{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.kfi-blue{background:linear-gradient(90deg,#3b82f6,#60a5fa)}
+.kfi-red{background:linear-gradient(90deg,#ef4444,#f87171)}
+
+/* ── TABS ── */
+.tabs{display:flex;background:#06090f;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.tab{flex:1;padding:10px 2px;font-size:11px;font-weight:800;color:rgba(255,255,255,.28);text-align:center;cursor:pointer;transition:all .2s;border-bottom:2px solid transparent;font-family:inherit;background:none;border-left:none;border-right:none;border-top:none}
+.tab.on{color:var(--gold);border-bottom-color:var(--gold);background:rgba(251,191,36,.04)}
+.tab-notif{display:inline-block;background:#ef4444;color:#fff;border-radius:50%;width:14px;height:14px;font-size:8px;line-height:14px;text-align:center;margin-left:3px;font-weight:900;vertical-align:middle}
+
+/* ── PANELS ── */
+.panel{display:none;padding:12px 14px 80px;flex-direction:column;gap:10px}
+.panel.on{display:flex}
+
+/* ── SCENE ── */
+.scene-wrap{width:100%;border-radius:18px;overflow:hidden;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.7)}
+.scene-wrap svg{display:block;width:100%}
+.hbox{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.fp{position:absolute;font-size:18px;font-weight:900;animation:fpAnim 1.1s ease forwards;pointer-events:none;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+@keyframes fpAnim{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-80px) scale(.15);opacity:0}}
+
+/* ── SECTION LABEL ── */
+.sec-lbl{font-size:10px;font-weight:800;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.8px;display:flex;align-items:center;gap:6px}
+.sec-lbl::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── TRUCK CARDS ── */
+.truck-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px 14px;display:flex;flex-direction:column;gap:10px;transition:border-color .2s}
+.truck-card:hover{border-color:rgba(251,191,36,.2)}
+.tc-top{display:flex;align-items:center;gap:10px}
+.tc-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.tc-meta{flex:1;min-width:0}
+.tc-model{font-size:14px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tc-plate{font-family:monospace;font-size:11px;font-weight:700;color:rgba(255,255,255,.35);background:rgba(255,255,255,.06);border-radius:5px;padding:1px 7px;margin-top:2px;display:inline-block}
+.tc-badges{display:flex;gap:5px;align-items:center;margin-top:3px;flex-wrap:wrap}
+.badge-sm{font-size:10px;font-weight:800;border-radius:8px;padding:2px 8px}
+.b-en-ruta{background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.22)}
+.b-garage{background:rgba(251,191,36,.1);color:var(--gold);border:1px solid rgba(251,191,36,.2)}
+.b-maint{background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.2)}
+.b-cargando{background:rgba(96,165,250,.1);color:var(--blue);border:1px solid rgba(96,165,250,.2)}
+.tc-stars{display:flex;gap:2px}
+.tc-star{font-size:10px}
+/* bars */
+.tc-bars{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tc-bar-row{display:flex;flex-direction:column;gap:3px}
+.tb-top{display:flex;justify-content:space-between;align-items:center}
+.tb-lbl{font-size:9px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.4px}
+.tb-val{font-size:10px;font-weight:900;color:rgba(255,255,255,.6)}
+.tb-bw{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.tb-bf{height:100%;border-radius:2px;transition:width .4s}
+/* progress route */
+.route-progress{display:flex;flex-direction:column;gap:4px}
+.rp-row{display:flex;justify-content:space-between;align-items:center}
+.rp-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.5)}
+.rp-val{font-size:11px;font-weight:800;color:var(--green)}
+.rp-bar{height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.rp-fill{height:100%;background:linear-gradient(90deg,var(--green),#6ee7b7);border-radius:3px;transition:width .5s}
+/* truck buttons */
+.tc-btns{display:flex;gap:6px}
+.tc-btn{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:7px 4px;font-size:11px;font-weight:800;color:rgba(255,255,255,.55);cursor:pointer;font-family:inherit;transition:all .15s;text-align:center;line-height:1.3}
+.tc-btn:hover{background:rgba(255,255,255,.09)}
+.tc-btn:active{transform:scale(.93)}
+.tc-btn:disabled{opacity:.25;cursor:not-allowed;transform:none}
+.tc-btn.g{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.22);color:var(--green)}
+.tc-btn.g:hover{background:rgba(74,222,128,.18)}
+.tc-btn.y{background:rgba(251,191,36,.09);border-color:rgba(251,191,36,.2);color:var(--gold)}
+.tc-btn.r{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.18);color:var(--red)}
+.tc-btn.b{background:rgba(96,165,250,.09);border-color:rgba(96,165,250,.2);color:var(--blue)}
+
+/* ── ROUTE CARDS ── */
+.route-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px 14px;display:flex;flex-direction:column;gap:10px;transition:border-color .2s;cursor:pointer}
+.route-card:hover{border-color:rgba(251,191,36,.25)}
+.rc-top{display:flex;justify-content:space-between;align-items:flex-start}
+.rc-left{display:flex;flex-direction:column;gap:3px}
+.rc-route{font-size:14px;font-weight:900;color:#fff}
+.rc-cargo{font-size:11px;font-weight:700;color:rgba(255,255,255,.4)}
+.rc-right{text-align:right}
+.rc-earn{font-size:17px;font-weight:900;color:var(--green)}
+.rc-net{font-size:10px;font-weight:700;color:rgba(74,222,128,.6)}
+.rc-tags{display:flex;gap:5px;flex-wrap:wrap}
+.rtag{font-size:10px;font-weight:800;border-radius:7px;padding:2px 8px}
+.rt-green{background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.rt-gold{background:rgba(251,191,36,.1);color:var(--gold);border:1px solid rgba(251,191,36,.2)}
+.rt-red{background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.2)}
+.rt-blue{background:rgba(96,165,250,.1);color:var(--blue);border:1px solid rgba(96,165,250,.2)}
+.rc-trucks{display:flex;gap:6px}
+.rc-truck-btn{flex:1;border-radius:10px;padding:8px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .15s;text-align:center;border:1px solid var(--border);background:rgba(74,222,128,.08);color:var(--green);border-color:rgba(74,222,128,.2)}
+.rc-truck-btn:hover{background:rgba(74,222,128,.15)}
+.rc-truck-btn:disabled{opacity:.3;cursor:not-allowed}
+
+/* ── SHOP ── */
+.shop-grid{display:flex;flex-direction:column;gap:8px}
+.shop-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px;transition:border-color .2s}
+.shop-card:hover{border-color:rgba(251,191,36,.2)}
+.shop-ico-wrap{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;background:rgba(255,255,255,.04);border:1px solid var(--border)}
+.shop-info{flex:1;min-width:0}
+.shop-name{font-size:13px;font-weight:900;color:#fff;margin-bottom:2px}
+.shop-desc{font-size:11px;font-weight:600;color:rgba(255,255,255,.35);line-height:1.4}
+.shop-foot{display:flex;align-items:center;justify-content:space-between;margin-top:5px}
+.shop-price{font-size:13px;font-weight:900;color:var(--green)}
+.shop-btn{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.22);border-radius:9px;padding:6px 14px;font-size:12px;font-weight:800;color:var(--green);cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.shop-btn:hover{background:rgba(74,222,128,.18)}
+.shop-btn:disabled{opacity:.25;cursor:not-allowed}
+.shop-btn.gold{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.25);color:var(--gold)}
+.shop-btn.gold:hover{background:rgba(251,191,36,.18)}
+
+/* ── EVENTS ── */
+.event-banner{background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(251,191,36,.03));border:1px solid rgba(251,191,36,.25);border-radius:16px;padding:14px 15px;position:relative;overflow:hidden}
+.event-banner::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.ev-title{font-size:14px;font-weight:900;color:var(--gold);margin-bottom:5px}
+.ev-desc{font-size:12px;font-weight:600;color:rgba(255,255,255,.65);line-height:1.55;margin-bottom:12px}
+.ev-btns{display:flex;gap:8px}
+.ev-yes{flex:1;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.28);border-radius:11px;padding:9px;font-size:12px;font-weight:800;color:var(--green);cursor:pointer;font-family:inherit;transition:all .15s}
+.ev-yes:hover{background:rgba(74,222,128,.2)}
+.ev-no{flex:1;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:11px;padding:9px;font-size:12px;font-weight:800;color:var(--red);cursor:pointer;font-family:inherit;transition:all .15s}
+.ev-no:hover{background:rgba(248,113,113,.15)}
+
+/* ── STATS PANEL ── */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 13px}
+.stat-card-lbl{font-size:9px;font-weight:800;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.stat-card-val{font-size:22px;font-weight:900;color:#fff;line-height:1}
+.stat-card-sub{font-size:11px;font-weight:700;color:rgba(255,255,255,.35);margin-top:2px}
+
+/* ── TICKER ── */
+.ticker-wrap{background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.13);border-radius:10px;padding:7px 12px;overflow:hidden}
+.ticker-inner{font-size:12px;font-weight:700;color:var(--gold);white-space:nowrap;animation:tickerMove 18s linear infinite}
+@keyframes tickerMove{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ── QUICK ACTIONS ── */
+.qa-row{display:flex;gap:7px}
+.qa-btn{flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 8px;font-size:11px;font-weight:800;color:rgba(255,255,255,.6);cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s}
+.qa-btn:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14)}
+.qa-btn:active{transform:scale(.93)}
+.qa-ico{font-size:20px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#161f2a;border:1px solid rgba(74,222,128,.3);border-radius:12px;padding:10px 18px;font-size:13px;font-weight:700;color:#fff;z-index:999;opacity:0;transition:all .3s;max-width:320px;text-align:center;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.bad{border-color:rgba(248,113,113,.35);color:var(--red)}
+.toast.good{border-color:rgba(74,222,128,.35);color:var(--green)}
+.toast.warn{border-color:rgba(251,191,36,.35);color:var(--gold)}
+
+/* ── LEVEL BAR ── */
+.lvl-row{display:flex;align-items:center;gap:8px;margin-top:2px}
+.lvl-lbl{font-size:10px;font-weight:800;color:rgba(255,255,255,.3);white-space:nowrap}
+.lvl-bw{flex:1;height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.lvl-bf{height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:2px;transition:width .6s}
+.lvl-val{font-size:10px;font-weight:800;color:var(--purple);white-space:nowrap}
+
+/* ── ACHIEVEMENT ── */
+.ach-pop{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:linear-gradient(135deg,#1a1200,#0f0e00);border:1px solid var(--gold);border-radius:14px;padding:12px 20px;font-size:13px;font-weight:800;color:var(--gold);z-index:1000;opacity:0;transition:all .35s;display:flex;align-items:center;gap:10px;box-shadow:0 8px 40px rgba(251,191,36,.2)}
+.ach-pop.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+
+<div class="toast" id="toast"></div>
+<div class="ach-pop" id="achPop">🏆 <span id="achTxt"></span></div>
+
+<div class="app">
+
+<!-- ══ HEADER ══ -->
+<div class="hdr">
+  <div class="hdr-top">
+    <div class="brand">
+      <div class="brand-name">🚛 <em>El Paisa</em> Trans.</div>
+      <div class="brand-sub">Bogotá · Colombia 🇨🇴</div>
+      <div class="day-badge" id="dayBadge">Día 1 · Nivel 1</div>
+    </div>
+    <div class="money-stack">
+      <div class="money-lbl">Caja</div>
+      <div class="money-main">
+        <div class="money-val" id="moneyVal">$4.800.000</div>
+      </div>
+      <div class="money-change" id="moneyChange">+$0 hoy</div>
+    </div>
+  </div>
+  <div class="lvl-row">
+    <span class="lvl-lbl">XP</span>
+    <div class="lvl-bw"><div class="lvl-bf" id="xpBar" style="width:0%"></div></div>
+    <span class="lvl-val" id="xpVal">0/100</span>
+  </div>
+  <div class="kpis" style="margin-top:10px">
+    <div class="kpi">
+      <div class="kpi-lbl">Reputación</div>
+      <div class="kpi-bar"><div class="kpi-fill kfi-green" id="kRep" style="width:65%"></div></div>
+      <div class="kpi-val" id="kRepV">65</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">Flota</div>
+      <div class="kpi-bar"><div class="kpi-fill kfi-blue" id="kFleet" style="width:80%"></div></div>
+      <div class="kpi-val" id="kFleetV">2 camiones</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">Mantenimiento</div>
+      <div class="kpi-bar"><div class="kpi-fill kfi-gold" id="kMaint" style="width:80%"></div></div>
+      <div class="kpi-val" id="kMaintV">80%</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">ACPM</div>
+      <div class="kpi-bar"><div class="kpi-fill kfi-red" id="kFuel" style="width:72%"></div></div>
+      <div class="kpi-val" id="kFuelV">72%</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TABS ══ -->
+<div class="tabs">
+  <button class="tab on" onclick="switchTab('overview')">📊 Inicio</button>
+  <button class="tab" onclick="switchTab('trucks')" id="tabTrucks">🚛 Flota</button>
+  <button class="tab" onclick="switchTab('routes')" id="tabRoutes">🗺️ Rutas</button>
+  <button class="tab" onclick="switchTab('shop')">🏪 Tienda</button>
+</div>
+
+<!-- ══ OVERVIEW ══ -->
+<div class="panel on" id="pan-overview">
+
+  <!-- LIVE SCENE -->
+  <div class="scene-wrap" onclick="sceneTap()">
+    <div class="hbox" id="hbox"></div>
+    <svg viewBox="0 0 440 220" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="skG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0a1a40"/>
+          <stop offset="60%" stop-color="#1a3a70"/>
+          <stop offset="100%" stop-color="#2255a0"/>
+        </linearGradient>
+        <linearGradient id="rdG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2c2c2c"/>
+          <stop offset="100%" stop-color="#1a1a1a"/>
+        </linearGradient>
+        <linearGradient id="mtG1" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1a3d15"/>
+          <stop offset="100%" stop-color="#0d2209"/>
+        </linearGradient>
+        <linearGradient id="mtG2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#234e1c"/>
+          <stop offset="100%" stop-color="#142e0e"/>
+        </linearGradient>
+        <radialGradient id="sunGr" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#fff7c0"/>
+          <stop offset="100%" stop-color="#f59e0b"/>
+        </radialGradient>
+        <linearGradient id="cabGr" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#dc2626"/>
+          <stop offset="100%" stop-color="#991b1b"/>
+        </linearGradient>
+        <linearGradient id="trailerGr" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#f0f0f0"/>
+          <stop offset="100%" stop-color="#d8d8d8"/>
+        </linearGradient>
+        <linearGradient id="grassG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2d6a1e"/>
+          <stop offset="100%" stop-color="#1a3f10"/>
+        </linearGradient>
+        <filter id="sf"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="gf"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <clipPath id="scClip"><rect width="440" height="220" rx="18"/></clipPath>
+      </defs>
+      <g clip-path="url(#scClip)">
+
+      <!-- SKY -->
+      <rect width="440" height="145" fill="url(#skG)"/>
+
+      <!-- STARS -->
+      <circle cx="30" cy="14" r="1" fill="white" opacity=".6"><animate attributeName="opacity" values=".6;.1;.6" dur="2.3s" repeatCount="indefinite"/></circle>
+      <circle cx="90" cy="8" r="1.2" fill="white" opacity=".5"><animate attributeName="opacity" values=".5;.15;.5" dur="3s" repeatCount="indefinite"/></circle>
+      <circle cx="155" cy="20" r=".9" fill="#ddd6fe" opacity=".7"><animate attributeName="opacity" values=".7;.2;.7" dur="2.7s" repeatCount="indefinite"/></circle>
+      <circle cx="230" cy="10" r="1.1" fill="white" opacity=".55"><animate attributeName="opacity" values=".55;.1;.55" dur="1.9s" repeatCount="indefinite"/></circle>
+      <circle cx="310" cy="22" r=".8" fill="#fef9c3" opacity=".6"><animate attributeName="opacity" values=".6;.18;.6" dur="2.5s" repeatCount="indefinite"/></circle>
+      <circle cx="380" cy="12" r="1.1" fill="white" opacity=".5"><animate attributeName="opacity" values=".5;.1;.5" dur="3.2s" repeatCount="indefinite"/></circle>
+      <circle cx="415" cy="30" r=".8" fill="#ddd6fe" opacity=".65"><animate attributeName="opacity" values=".65;.2;.65" dur="2.1s" repeatCount="indefinite"/></circle>
+      <!-- big 4-point star -->
+      <path d="M340,25 L341.5,21 L343,25 L347,26.5 L343,28 L341.5,32 L340,28 L336,26.5 Z" fill="#fef9c3" opacity=".7"><animate attributeName="opacity" values=".7;.25;.7" dur="2.8s" repeatCount="indefinite"/></path>
+
+      <!-- MOON crescent -->
+      <circle cx="60" cy="45" r="28" fill="url(#sunGr)" opacity=".2" filter="url(#gf)"/>
+      <circle cx="60" cy="45" r="17" fill="#fffde8"/>
+      <circle cx="68" cy="39" r="13" fill="#1a3a70"/>
+      <!-- moon craters -->
+      <circle cx="52" cy="42" r="2.5" fill="#f0e8a0" opacity=".3"/>
+      <circle cx="60" cy="52" r="1.8" fill="#f0e8a0" opacity=".25"/>
+
+      <!-- CITY LIGHTS in distance (Bogotá) -->
+      <g opacity=".4">
+        <rect x="50" y="110" width="2" height="4" fill="#fbbf24" rx="1"/>
+        <rect x="60" y="107" width="2" height="7" fill="#fbbf24" rx="1"/>
+        <rect x="72" y="109" width="2" height="5" fill="#60a5fa" rx="1"/>
+        <rect x="82" y="106" width="2" height="8" fill="#fbbf24" rx="1"/>
+        <rect x="92" y="108" width="2" height="6" fill="#60a5fa" rx="1"/>
+        <rect x="100" y="107" width="2" height="7" fill="#fbbf24" rx="1"/>
+        <rect x="350" y="109" width="2" height="5" fill="#fbbf24" rx="1"/>
+        <rect x="360" y="107" width="2" height="7" fill="#60a5fa" rx="1"/>
+        <rect x="370" y="110" width="2" height="4" fill="#fbbf24" rx="1"/>
+        <rect x="380" y="106" width="2" height="8" fill="#fbbf24" rx="1"/>
+        <rect x="390" y="108" width="2" height="6" fill="#60a5fa" rx="1"/>
+      </g>
+
+      <!-- MOUNTAINS BACK -->
+      <polygon points="0,140 55,72 110,128 0,128" fill="#0d1f0d" opacity=".7"/>
+      <polygon points="70,142 148,52 226,138 70,138" fill="url(#mtG1)"/>
+      <polygon points="180,142 268,42 356,142" fill="url(#mtG2)"/>
+      <polygon points="295,142 368,65 440,132 440,142" fill="url(#mtG1)"/>
+      <polygon points="360,142 420,78 440,110 440,142" fill="#0f1f0d" opacity=".9"/>
+      <!-- snow caps -->
+      <polygon points="148,52 162,76 134,76" fill="white" opacity=".75"/>
+      <polygon points="268,42 282,68 254,68" fill="white" opacity=".8"/>
+      <polygon points="368,65 380,90 356,90" fill="white" opacity=".65"/>
+
+      <!-- GRASS -->
+      <rect x="0" y="140" width="440" height="16" fill="url(#grassG)"/>
+      <rect x="0" y="140" width="440" height="4" fill="#3a8a28" opacity=".5"/>
+      <!-- grass blades -->
+      <g fill="#2d7a1e" opacity=".6">
+        <path d="M15,140 Q17,132 19,140"/><path d="M22,140 Q23,134 25,140"/>
+        <path d="M400,140 Q402,133 404,140"/><path d="M408,140 Q409,135 411,140"/>
+        <path d="M418,140 Q420,133 422,140"/>
+      </g>
+
+      <!-- ROAD -->
+      <rect x="0" y="153" width="440" height="67" fill="url(#rdG)"/>
+      <!-- shoulder lines -->
+      <line x1="0" y1="155" x2="440" y2="155" stroke="#f59e0b" stroke-width="2.5" opacity=".55"/>
+      <line x1="0" y1="218" x2="440" y2="218" stroke="#f59e0b" stroke-width="2.5" opacity=".55"/>
+      <!-- center dashes -->
+      <line x1="0" y1="186" x2="440" y2="186" stroke="white" stroke-width="3" stroke-dasharray="28,20" opacity=".45">
+        <animate attributeName="stroke-dashoffset" values="0;-48" dur=".7s" repeatCount="indefinite"/>
+      </line>
+      <!-- road edge markings -->
+      <line x1="0" y1="164" x2="440" y2="164" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+      <line x1="0" y1="210" x2="440" y2="210" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+      <!-- km markers -->
+      <rect x="88" y="153" width="2" height="8" fill="#fbbf24" opacity=".5"/>
+      <rect x="220" y="153" width="2" height="8" fill="#fbbf24" opacity=".5"/>
+      <rect x="352" y="153" width="2" height="8" fill="#fbbf24" opacity=".5"/>
+      <!-- road sign -->
+      <g transform="translate(408,128)">
+        <rect x="-1" y="0" width="2.5" height="26" fill="#888"/>
+        <rect x="-13" y="-5" width="26" height="18" rx="3" fill="#1565c0"/>
+        <text x="0" y="6" text-anchor="middle" font-size="5.5" font-weight="900" fill="white" font-family="Nunito">BOG</text>
+        <text x="0" y="12" text-anchor="middle" font-size="4.5" fill="#b3e5fc" font-family="Nunito">145 km</text>
+      </g>
+      <!-- otro letrero -->
+      <g transform="translate(32,132)">
+        <rect x="-1" y="0" width="2.5" height="22" fill="#888"/>
+        <rect x="-12" y="-4" width="24" height="16" rx="3" fill="#388e3c"/>
+        <text x="0" y="5" text-anchor="middle" font-size="5" font-weight="900" fill="white" font-family="Nunito">MED</text>
+        <text x="0" y="10" text-anchor="middle" font-size="4" fill="#c8e6c9" font-family="Nunito">440 km</text>
+      </g>
+
+      <!-- ══ CAMIÓN COLOMBIANO ESTILO CHATO ══ -->
+      <g id="truckSVG">
+        <animateTransform attributeName="transform" type="translate" values="-310,0;500,0" dur="7s" repeatCount="indefinite" calcMode="linear"/>
+
+        <!-- TRAILER -->
+        <g transform="translate(-155,0)">
+          <!-- trailer body -->
+          <rect x="0" y="130" width="188" height="54" rx="4" fill="url(#trailerGr)"/>
+          <!-- trailer top ridge -->
+          <rect x="0" y="130" width="188" height="7" rx="3" fill="#d0d0d0"/>
+          <!-- red stripe empresa -->
+          <rect x="0" y="138" width="188" height="40" rx="2" fill="#dc2626" opacity=".92"/>
+          <!-- empresa logo area -->
+          <rect x="4" y="141" width="180" height="34" rx="2" fill="#b91c1c" opacity=".7"/>
+          <!-- texto empresa -->
+          <text x="94" y="155" text-anchor="middle" font-size="8.5" font-weight="900" fill="white" font-family="Nunito" letter-spacing=".5">TRANSPORTES EL PAISA</text>
+          <text x="94" y="165" text-anchor="middle" font-size="6" font-weight="700" fill="rgba(255,255,255,.75)" font-family="Nunito">BOG · MED · CALI · CTG</text>
+          <!-- telefono -->
+          <text x="94" y="173" text-anchor="middle" font-size="5.5" font-weight="700" fill="rgba(255,255,255,.5)" font-family="Nunito">📞 315 4XX XXXX</text>
+          <!-- trailer panel lines -->
+          <line x1="62" y1="130" x2="62" y2="184" stroke="rgba(0,0,0,.1)" stroke-width="1.2"/>
+          <line x1="125" y1="130" x2="125" y2="184" stroke="rgba(0,0,0,.1)" stroke-width="1.2"/>
+          <!-- shine -->
+          <rect x="2" y="131" width="184" height="5" fill="white" opacity=".15" rx="2"/>
+          <!-- Colombia flag stripe -->
+          <rect x="0" y="178" width="188" height="3" fill="#fde047" opacity=".8"/>
+          <rect x="0" y="181" width="188" height="3" fill="#dc2626" opacity=".7"/>
+          <!-- wheels trailer -->
+          <g fill="#111">
+            <circle cx="22" cy="188" r="12"/><circle cx="22" cy="188" r="8" fill="#222"/><circle cx="22" cy="188" r="4.5" fill="#3a3a3a"/><circle cx="20" cy="186" r="1.8" fill="#555"/>
+            <circle cx="47" cy="188" r="12"/><circle cx="47" cy="188" r="8" fill="#222"/><circle cx="47" cy="188" r="4.5" fill="#3a3a3a"/><circle cx="45" cy="186" r="1.8" fill="#555"/>
+            <circle cx="142" cy="188" r="12"/><circle cx="142" cy="188" r="8" fill="#222"/><circle cx="142" cy="188" r="4.5" fill="#3a3a3a"/><circle cx="140" cy="186" r="1.8" fill="#555"/>
+            <circle cx="167" cy="188" r="12"/><circle cx="167" cy="188" r="8" fill="#222"/><circle cx="167" cy="188" r="4.5" fill="#3a3a3a"/><circle cx="165" cy="186" r="1.8" fill="#555"/>
+          </g>
+          <!-- mud flaps -->
+          <rect x="12" y="183" width="5" height="10" rx="1.5" fill="#0a0a0a" opacity=".8"/>
+          <rect x="132" y="183" width="5" height="10" rx="1.5" fill="#0a0a0a" opacity=".8"/>
+        </g>
+
+        <!-- CAB (estilo NPR colombiano chato) -->
+        <!-- cab chassis -->
+        <rect x="48" y="170" width="30" height="14" rx="2" fill="#7f1d1d"/>
+        <!-- cab main body -->
+        <rect x="0" y="132" width="80" height="52" rx="5" fill="url(#cabGr)"/>
+        <!-- cab hood corto -->
+        <rect x="58" y="148" width="28" height="36" rx="4" fill="#b91c1c"/>
+        <!-- hood top -->
+        <rect x="58" y="148" width="28" height="5" rx="2" fill="#991b1b"/>
+        <!-- cab roof visor (ICONIC colombiano) -->
+        <rect x="-3" y="130" width="86" height="10" rx="4" fill="#7f1d1d"/>
+        <rect x="0" y="134" width="80" height="4" rx="2" fill="#ef4444" opacity=".4"/>
+        <!-- luces colores en visor (chiva style) -->
+        <circle cx="4" cy="134" r="2.5" fill="#fde047" opacity=".9"/>
+        <circle cx="11" cy="133" r="2.5" fill="#ef4444" opacity=".9"/>
+        <circle cx="18" cy="134" r="2.5" fill="#4ade80" opacity=".9"/>
+        <circle cx="25" cy="133" r="2.5" fill="#60a5fa" opacity=".9"/>
+        <circle cx="32" cy="134" r="2.5" fill="#fde047" opacity=".9"/>
+        <circle cx="39" cy="133" r="2.5" fill="#f97316" opacity=".9"/>
+        <circle cx="46" cy="134" r="2.5" fill="#a78bfa" opacity=".9"/>
+        <circle cx="53" cy="133" r="2.5" fill="#ef4444" opacity=".9"/>
+        <circle cx="60" cy="134" r="2.5" fill="#fde047" opacity=".9"/>
+        <circle cx="67" cy="133" r="2.5" fill="#4ade80" opacity=".9"/>
+        <circle cx="74" cy="134" r="2.5" fill="#60a5fa" opacity=".9"/>
+        <!-- windshield -->
+        <rect x="3" y="140" width="52" height="30" rx="4" fill="#7dd3fc" opacity=".82"/>
+        <!-- windshield division -->
+        <line x1="29" y1="140" x2="29" y2="170" stroke="rgba(0,0,0,.2)" stroke-width="1.5"/>
+        <!-- windshield glare -->
+        <polygon points="5,141 24,141 14,153" fill="white" opacity=".22"/>
+        <polygon points="31,141 50,141 40,151" fill="white" opacity=".15"/>
+        <!-- side window -->
+        <rect x="57" y="150" width="26" height="20" rx="3" fill="#7dd3fc" opacity=".75"/>
+        <polygon points="59,151 72,151 64,160" fill="white" opacity=".15"/>
+        <!-- Colombian flag on door -->
+        <rect x="3" y="168" width="52" height="3" fill="#fde047" opacity=".75"/>
+        <rect x="3" y="171" width="52" height="2" fill="#0369a1" opacity=".6"/>
+        <!-- cab number sticker -->
+        <text x="29" y="167" text-anchor="middle" font-size="5.5" font-weight="900" fill="rgba(255,255,255,.55)" font-family="Nunito">EL PAISA #01</text>
+        <!-- chrome bumper -->
+        <rect x="76" y="162" width="12" height="8" rx="3" fill="#e5e5e5"/>
+        <rect x="77" y="162" width="10" height="2.5" rx="1" fill="white" opacity=".6"/>
+        <!-- headlights -->
+        <rect x="79" y="150" width="8" height="10" rx="2.5" fill="#fef9c3" filter="url(#sf)"/>
+        <rect x="79" y="150" width="8" height="10" rx="2.5" fill="rgba(255,249,195,.5)"/>
+        <!-- blinker -->
+        <rect x="80" y="161" width="5" height="3.5" rx="1" fill="#f97316"/>
+        <!-- AIR HORNS (iconic!) -->
+        <rect x="8" y="127" width="3.5" height="10" rx="1.5" fill="#9ca3af"/>
+        <rect x="14" y="126" width="3.5" height="11" rx="1.5" fill="#9ca3af"/>
+        <circle cx="9.75" cy="126.5" r="2.5" fill="#6b7280"/>
+        <circle cx="15.75" cy="125.5" r="2.5" fill="#6b7280"/>
+        <!-- exhaust with SMOKE -->
+        <rect x="7" y="120" width="4" height="8" rx="2" fill="#6b7280"/>
+        <g>
+          <circle cx="9" cy="116" r="5" fill="#9ca3af" opacity=".4"><animate attributeName="cy" values="116;100;84" dur=".9s" repeatCount="indefinite"/><animate attributeName="opacity" values=".4;.15;0" dur=".9s" repeatCount="indefinite"/><animate attributeName="r" values="5;8;13" dur=".9s" repeatCount="indefinite"/></circle>
+          <circle cx="11" cy="110" r="4" fill="#aaa" opacity=".35"><animate attributeName="cy" values="110;94;78" dur="1.2s" begin=".3s" repeatCount="indefinite"/><animate attributeName="opacity" values=".35;.12;0" dur="1.2s" begin=".3s" repeatCount="indefinite"/><animate attributeName="r" values="4;7;12" dur="1.2s" begin=".3s" repeatCount="indefinite"/></circle>
+        </g>
+        <!-- cab wheels -->
+        <circle cx="14" cy="188" r="13" fill="#111"/><circle cx="14" cy="188" r="9" fill="#1e1e1e"/><circle cx="14" cy="188" r="5.5" fill="#333"/><circle cx="12" cy="186" r="2" fill="#555"/>
+        <circle cx="62" cy="188" r="13" fill="#111"/><circle cx="62" cy="188" r="9" fill="#1e1e1e"/><circle cx="62" cy="188" r="5.5" fill="#333"/><circle cx="60" cy="186" r="2" fill="#555"/>
+        <!-- trailer hitch -->
+        <rect x="80" y="172" width="10" height="5" rx="2" fill="#9ca3af"/>
+      </g>
+
+      <!-- SECOND TRUCK (distant, different color) -->
+      <g id="truck2SVG" opacity=".6">
+        <animateTransform attributeName="transform" type="translate" values="500,0;-280,0" dur="11s" repeatCount="indefinite" calcMode="linear"/>
+        <rect x="-120" y="142" width="140" height="40" rx="3" fill="#1a5c1a"/>
+        <rect x="-120" y="142" width="140" height="6" rx="2" fill="#166016"/>
+        <text x="-50" y="167" text-anchor="middle" font-size="7" font-weight="900" fill="rgba(255,255,255,.7)" font-family="Nunito">RAPID CARGO CO.</text>
+        <rect x="-130" y="148" width="16" height="34" rx="3" fill="#166016"/>
+        <rect x="-146" y="145" width="18" height="6" rx="2" fill="#14531e"/>
+        <rect x="-130" y="153" width="16" height="20" rx="2" fill="#4ade80" opacity=".6"/>
+        <rect x="-132" y="168" width="6" height="3" rx="1" fill="#f59e0b"/>
+        <circle cx="-118" cy="186" r="10" fill="#111"/><circle cx="-118" cy="186" r="6.5" fill="#222"/><circle cx="-118" cy="186" r="4" fill="#333"/>
+        <circle cx="-80" cy="186" r="10" fill="#111"/><circle cx="-80" cy="186" r="6.5" fill="#222"/>
+        <circle cx="-10" cy="186" r="10" fill="#111"/><circle cx="-10" cy="186" r="6.5" fill="#222"/>
+      </g>
+
+      </g>
+    </svg>
+  </div>
+
+  <!-- TICKER -->
+  <div class="ticker-wrap">
+    <div class="ticker-inner" id="tickerInner">
+      📻 ACPM sube 5% esta semana &nbsp;|&nbsp; 🚧 Derrumbe en vía al Llano, precaución &nbsp;|&nbsp; 💰 Nuevas tarifas MinTransporte 2025 &nbsp;|&nbsp; ☔ Lluvias fuertes eje cafetero &nbsp;|&nbsp; ⚠️ Operativos de peso en Bogotá-Med &nbsp;|&nbsp; 🇨🇴 Exportaciones de café +12% &nbsp;|&nbsp; 🛣️ Obra en vía Cali-Pasto hasta diciembre &nbsp;|&nbsp; 📻 ACPM sube 5% esta semana &nbsp;|&nbsp; 🚧 Derrumbe en vía al Llano, precaución &nbsp;|&nbsp; 💰 Nuevas tarifas MinTransporte 2025 &nbsp;|&nbsp;
+    </div>
+  </div>
+
+  <!-- EVENT -->
+  <div class="event-banner" id="evBanner" style="display:none">
+    <div class="ev-title" id="evTitle">Evento</div>
+    <div class="ev-desc" id="evDesc">desc</div>
+    <div class="ev-btns">
+      <button class="ev-yes" onclick="evAccept()">✓ Aceptar</button>
+      <button class="ev-no" onclick="evReject()">✗ Rechazar</button>
+    </div>
+  </div>
+
+  <!-- STATS GRID -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-card-lbl">💰 Ganancia hoy</div>
+      <div class="stat-card-val" id="sc-earn">$0</div>
+      <div class="stat-card-sub" id="sc-earn-sub">Cobrar rutas</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-lbl">🚛 Camiones activos</div>
+      <div class="stat-card-val" id="sc-active">0/2</div>
+      <div class="stat-card-sub">En ruta ahora</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-lbl">⭐ Contratos totales</div>
+      <div class="stat-card-val" id="sc-contracts">0</div>
+      <div class="stat-card-sub">Completados</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-lbl">📏 Km recorridos</div>
+      <div class="stat-card-val" id="sc-km">0</div>
+      <div class="stat-card-sub">Totales flota</div>
+    </div>
+  </div>
+
+  <!-- QUICK ACTIONS -->
+  <div class="sec-lbl">Acciones rápidas</div>
+  <div class="qa-row">
+    <button class="qa-btn" onclick="collectDay()"><span class="qa-ico">💰</span>Cobrar día</button>
+    <button class="qa-btn" onclick="maintAll()"><span class="qa-ico">🔧</span>Mantener</button>
+    <button class="qa-btn" onclick="refuelAll()"><span class="qa-ico">⛽</span>Recargar</button>
+    <button class="qa-btn" onclick="switchTab('routes')"><span class="qa-ico">🗺️</span>Rutas</button>
+  </div>
+
+</div>
+
+<!-- ══ TRUCKS ══ -->
+<div class="panel" id="pan-trucks"></div>
+
+<!-- ══ ROUTES ══ -->
+<div class="panel" id="pan-routes"></div>
+
+<!-- ══ SHOP ══ -->
+<div class="panel" id="pan-shop"></div>
+
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const cop=n=>'$'+Math.round(n).toLocaleString('es-CO');
+
+const G={
+  money:4800000, rep:65, xp:0, level:1, day:1,
+  totalEarnToday:0, totalContracts:0, totalKm:0,
+  fuelPrice:10200,
+  trucks:[
+    {id:0,model:'Chevrolet NPR',plate:'ABC-123',color:'#dc2626',stars:3,hp:88,fuel:72,maint:80,status:'garage',routeId:-1,routePct:0,km:45200,earnings:0},
+    {id:1,model:'International 4300',plate:'XYZ-789',color:'#1d4ed8',stars:4,hp:95,fuel:85,maint:65,status:'garage',routeId:-1,routePct:0,km:128400,earnings:0},
+  ],
+  routes:[
+    {id:0,from:'Bogotá',to:'Medellín',km:440,hrs:8,earn:850000,fuelCost:280000,risk:'Media',cargo:'Electrodomésticos',emoji:'📺'},
+    {id:1,from:'Bogotá',to:'Cali',km:468,hrs:9,earn:920000,fuelCost:300000,risk:'Media',cargo:'Textiles',emoji:'👔'},
+    {id:2,from:'Medellín',to:'Cartagena',km:650,hrs:12,earn:1300000,fuelCost:420000,risk:'Alta',cargo:'Mercancía general',emoji:'📦'},
+    {id:3,from:'Bogotá',to:'Bucaramanga',km:395,hrs:7,earn:720000,fuelCost:250000,risk:'Baja',cargo:'Alimentos',emoji:'🥦'},
+    {id:4,from:'Cali',to:'Pasto',km:275,hrs:6,earn:580000,fuelCost:190000,risk:'Alta',cargo:'Café',emoji:'☕'},
+    {id:5,from:'Bogotá',to:'Barranquilla',km:975,hrs:16,earn:1850000,fuelCost:620000,risk:'Alta',cargo:'Export contenedor',emoji:'🚢'},
+  ],
+  shop:[
+    {id:'t_kenworth',ico:'🚛',name:'Kenworth T800',desc:'Reina de las cordilleras. 500HP, perfecta para carga pesada.',price:85000000,type:'truck',stars:5},
+    {id:'t_inter',ico:'🚚',name:'International ProStar',desc:'Eficiencia AAA en combustible. Ideal para rutas largas.',price:120000000,type:'truck',stars:5},
+    {id:'t_npr2',ico:'🚌',name:'Chevrolet NPR Extra',desc:'Versátil y económico. Perfecto para rutas cortas.',price:38000000,type:'truck',stars:3},
+    {id:'kit_maint',ico:'🔧',name:'Kit Mantenimiento Pro',desc:'Restaura mantenimiento de toda la flota +35',price:480000,type:'maint'},
+    {id:'fuel_drum',ico:'⛽',name:'Barril ACPM 200L',desc:'Recarga combustible +45 a toda la flota',price:350000,type:'fuel'},
+    {id:'gps',ico:'📡',name:'GPS Satelital Premium',desc:'+15 rep · Rutas 20% más rápidas · Rastrea carga',price:3200000,type:'upgrade'},
+    {id:'driver',ico:'👷',name:'Conductor Veterano',desc:'Reduce accidentes. +10 rep. Más ganancias en ruta.',price:1400000,type:'driver'},
+    {id:'seg',ico:'🛡️',name:'Seguro de Carga',desc:'Protege contra eventos negativos por 10 días.',price:800000,type:'insurance'},
+  ],
+  events:[
+    {title:'🚧 Derrumbe en vía',desc:'Derrumbe en la vía Bogotá-Med. Ruta alterna: 3h extra y $90.000 más. ¿Tomar alterna o esperar?',yes:{money:-90000,rep:6,msg:'Ruta alterna tomada. Llegaste tarde pero seguro.'},no:{money:-200000,rep:-10,msg:'Esperaste y el cliente canceló. Pago de penalidad.'}},
+    {title:'📋 Contrato Bavaria',desc:'Bavaria necesita 20 toneladas a Barranquilla URGENTE. Pagan el doble: $1.800.000 pero exigen salida en 1 hora.',yes:{money:1800000,rep:14,xp:20,msg:'¡Bavaria pagó! +$1.800.000 🍺'},no:{money:0,rep:-3,msg:'Dejaste ir el contrato de Bavaria.'}},
+    {title:'⚡ Roce en la vía',desc:'Tu camión tuvo un roce menor en la Autopista Norte. El otro conductor pide $350.000. ¿Pagar o llamar al seguro?',yes:{money:-350000,rep:8,msg:'Pagaste. Tu reputación quedó intacta.'},no:{money:-700000,rep:-18,maint:-20,msg:'¡Multa + daños! El seguro no cubrió.'}},
+    {title:'🌧️ Aguacero en eje cafetero',desc:'Lluvia torrencial en Manizales. ¿Esperar 5 horas o arriesgarse en vía mojada?',yes:{money:0,maint:-18,rep:5,msg:'Cruzaste bajo la lluvia. Camión sufrió daños.'},no:{money:-150000,rep:3,msg:'Esperaste prudente. Pago de estadía extra.'}},
+    {title:'🏗️ Contrato Alcaldía',desc:'La Alcaldía de Medellín necesita transporte de materiales de construcción. Pago seguro: $680.000.',yes:{money:680000,rep:12,xp:15,msg:'¡Contrato alcaldía completado! +$680.000'},no:{money:0,rep:0,msg:'Rechazaste el contrato municipal.'}},
+    {title:'👮 Control de peso',desc:'En la balanza de Villeta detectaron sobrepeso. Multa oficial: $500.000 o retener carga y reprogramar.',yes:{money:-500000,rep:5,msg:'Pagaste la multa. Legal y sin problemas.'},no:{money:0,rep:-12,cargo:true,msg:'Retuvieron la carga. Cliente muy molesto.'}},
+    {title:'🔥 Oferta de combustible',desc:'Una estación de gasolina ofrece ACPM al 15% de descuento si compras 500 litros hoy.',yes:{money:-430000,fuel:60,msg:'¡ACPM barato! Toda la flota llena. +60% combustible'},no:{money:0,rep:0,msg:'Rechazaste la oferta de combustible.'}},
+    {title:'🤝 Socio estratégico',desc:'Una empresa de Bucaramanga quiere asociarse. Inversión: $2.000.000. Retorno prometido: $3.500.000 en 5 días.',yes:{money:-2000000,pending:3500000,rep:8,xp:25,msg:'¡Sociedad firmada! Espera el retorno en 5 días.'},no:{money:0,rep:0,msg:'Rechazaste la sociedad.'}},
+  ],
+  activeEvent:null,
+  insurance:false,
+  gpsInstalled:false,
+  pendingBonus:0,
+  pendingDays:0,
+  achievements:[
+    {id:'first_route',title:'Primera ruta completada',done:false},
+    {id:'mil',title:'¡Primer millón!',done:false},
+    {id:'fleet3',title:'Flota de 3 camiones',done:false},
+    {id:'rep80',title:'Reputación 80+',done:false},
+    {id:'km100k',title:'100.000 km recorridos',done:false},
+    {id:'contracts10',title:'10 contratos completados',done:false},
+  ],
+};
+
+// ── TOAST ──
+function toast(msg,type=''){
+  const t=$('toast');
+  t.textContent=msg;
+  t.className='toast show'+(type?' '+type:'');
+  setTimeout(()=>t.className='toast',2600);
+}
+
+// ── ACHIEVEMENT ──
+function unlockAch(id){
+  const a=G.achievements.find(x=>x.id===id);
+  if(!a||a.done)return;
+  a.done=true;
+  const p=$('achPop');
+  $('achTxt').textContent=a.title;
+  p.className='ach-pop show';
+  setTimeout(()=>p.className='ach-pop',3200);
+  G.xp+=30;updateHeader();
+}
+
+function checkAchs(){
+  if(G.totalContracts>=1)unlockAch('first_route');
+  if(G.money>=1000000)unlockAch('mil');
+  if(G.trucks.length>=3)unlockAch('fleet3');
+  if(G.rep>=80)unlockAch('rep80');
+  if(G.totalKm>=100000)unlockAch('km100k');
+  if(G.totalContracts>=10)unlockAch('contracts10');
+}
+
+// ── POP PARTICLES ──
+function pop(n,e){
+  const box=$('hbox');if(!box)return;
+  for(let i=0;i<n;i++){
+    setTimeout(()=>{
+      const h=document.createElement('div');h.className='fp';h.textContent=e||'💰';
+      h.style.left=(8+Math.random()*84)+'%';h.style.top=(5+Math.random()*75)+'%';
+      box.appendChild(h);setTimeout(()=>h.remove(),1100);
+    },i*90);
+  }
+}
+
+// ── HEADER UPDATE ──
+function updateHeader(){
+  $('moneyVal').textContent=cop(G.money);
+  $('moneyChange').textContent=(G.totalEarnToday>=0?'+':'')+cop(G.totalEarnToday)+' hoy';
+  $('dayBadge').textContent='Día '+G.day+' · Nivel '+G.level;
+  const xpMax=G.level*100;
+  $('xpBar').style.width=(G.xp/xpMax*100)+'%';
+  $('xpVal').textContent=G.xp+'/'+xpMax;
+  if(G.xp>=xpMax){G.level++;G.xp=0;toast('🎉 ¡NIVEL '+G.level+'! Nuevas rutas desbloqueadas','good');}
+
+  const rep=Math.min(100,Math.max(0,G.rep));
+  $('kRep').style.width=rep+'%';$('kRepV').textContent=rep;
+  const avgF=Math.round(G.trucks.reduce((a,t)=>a+t.fuel,0)/G.trucks.length);
+  const avgM=Math.round(G.trucks.reduce((a,t)=>a+t.maint,0)/G.trucks.length);
+  $('kFuel').style.width=avgF+'%';$('kFuelV').textContent=avgF+'%';
+  $('kMaint').style.width=avgM+'%';$('kMaintV').textContent=avgM+'%';
+  $('kFleet').style.width=(G.trucks.length/5*100)+'%';$('kFleetV').textContent=G.trucks.length+' cam.';
+
+  const active=G.trucks.filter(t=>t.status==='ruta').length;
+  $('sc-active').textContent=active+'/'+G.trucks.length;
+  $('sc-contracts').textContent=G.totalContracts;
+  $('sc-km').textContent=Math.round(G.totalKm/1000)+'k';
+  $('sc-earn').textContent=cop(G.totalEarnToday);
+
+  // tab notifications
+  const hasMaint=G.trucks.some(t=>t.maint<40);
+  $('tabTrucks').innerHTML='🚛 Flota'+(hasMaint?'<span class="tab-notif">!</span>':'');
+  const freeT=G.trucks.some(t=>t.status==='garage');
+  $('tabRoutes').innerHTML='🗺️ Rutas'+(freeT?'<span class="tab-notif">'+G.routes.length+'</span>':'');
+}
+
+// ── TABS ──
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  const idx={overview:0,trucks:1,routes:2,shop:3}[name];
+  document.querySelectorAll('.tab')[idx].classList.add('on');
+  $('pan-'+name).classList.add('on');
+  if(name==='trucks')renderTrucks();
+  if(name==='routes')renderRoutes();
+  if(name==='shop')renderShop();
+}
+
+// ── RENDER TRUCKS ──
+function renderTrucks(){
+  const p=$('pan-trucks');p.innerHTML='';
+  const lbl=document.createElement('div');lbl.className='sec-lbl';lbl.textContent='Mi Flota · '+G.trucks.length+' camiones';p.appendChild(lbl);
+  G.trucks.forEach(t=>{
+    const stCls=t.status==='ruta'?'b-en-ruta':t.status==='maint'?'b-maint':'b-garage';
+    const stTxt=t.status==='ruta'?'🟢 En ruta':t.status==='maint'?'🔴 Mantenimiento':'🟡 En garage';
+    const stars='⭐'.repeat(t.stars)+'☆'.repeat(5-t.stars);
+    const d=document.createElement('div');d.className='truck-card';
+    d.innerHTML=`
+      <div class="tc-top">
+        <div class="tc-icon" style="background:${t.color}22;border:1px solid ${t.color}44">🚛</div>
+        <div class="tc-meta">
+          <div class="tc-model">${t.model}</div>
+          <span class="tc-plate">${t.plate}</span>
+          <div class="tc-badges">
+            <span class="badge-sm ${stCls}">${stTxt}</span>
+            <span style="font-size:11px;color:rgba(255,255,255,.4)">${Math.round(t.km/1000)}k km</span>
+          </div>
+        </div>
+        <div class="tc-stars" style="font-size:11px">${stars}</div>
+      </div>
+      ${t.status==='ruta'?`
+      <div class="route-progress">
+        <div class="rp-row">
+          <span class="rp-lbl">📍 ${G.routes[t.routeId].from} → ${G.routes[t.routeId].to}</span>
+          <span class="rp-val">${Math.round(t.routePct)}%</span>
+        </div>
+        <div class="rp-bar"><div class="rp-fill" style="width:${t.routePct}%"></div></div>
+      </div>`:``}
+      <div class="tc-bars">
+        <div class="tc-bar-row">
+          <div class="tb-top"><span class="tb-lbl">⚙️ Estado mecánico</span><span class="tb-val">${t.hp}</span></div>
+          <div class="tb-bw"><div class="tb-bf ${t.hp>60?'kfi-green':'kfi-red'}" style="width:${t.hp}%"></div></div>
+        </div>
+        <div class="tc-bar-row">
+          <div class="tb-top"><span class="tb-lbl">⛽ ACPM</span><span class="tb-val">${Math.round(t.fuel)}%</span></div>
+          <div class="tb-bw"><div class="tb-bf ${t.fuel>30?'kfi-gold':'kfi-red'}" style="width:${t.fuel}%"></div></div>
+        </div>
+        <div class="tc-bar-row">
+          <div class="tb-top"><span class="tb-lbl">🔧 Mantenimiento</span><span class="tb-val">${Math.round(t.maint)}%</span></div>
+          <div class="tb-bw"><div class="tb-bf ${t.maint>50?'kfi-green':'kfi-red'}" style="width:${t.maint}%"></div></div>
+        </div>
+        <div class="tc-bar-row">
+          <div class="tb-top"><span class="tb-lbl">💰 Ganó</span><span class="tb-val">${cop(t.earnings)}</span></div>
+          <div class="tb-bw"><div class="tb-bf kfi-blue" style="width:${Math.min(100,t.earnings/200000)}%"></div></div>
+        </div>
+      </div>
+      <div class="tc-btns">
+        <button class="tc-btn g" onclick="repairTruck(${t.id})" ${t.maint>=100||G.money<300000?'disabled':''}>🔧 Reparar<br><span style="font-size:9px;opacity:.7">${cop(Math.round((100-t.maint)*3200))}</span></button>
+        <button class="tc-btn y" onclick="refuelTruck(${t.id})" ${t.fuel>=100||G.money<150000?'disabled':''}>⛽ ACPM<br><span style="font-size:9px;opacity:.7">${cop(Math.round((100-t.fuel)*1.8*G.fuelPrice/100))}</span></button>
+        <button class="tc-btn b" onclick="assignRoute(${t.id})" ${t.status!=='garage'?'disabled':''}>🗺️ Ruta<br><span style="font-size:9px;opacity:.7">${t.status==='ruta'?'En viaje':'Disponible'}</span></button>
+        <button class="tc-btn r" onclick="sellTruck(${t.id})" ${G.trucks.length<=1||t.status==='ruta'?'disabled':''}>💸 Vender<br><span style="font-size:9px;opacity:.7">${cop(Math.round(32000000*(t.maint/100)*(t.hp/100)))}</span></button>
+      </div>`;
+    p.appendChild(d);
+  });
+}
+
+// ── RENDER ROUTES ──
+function renderRoutes(){
+  const p=$('pan-routes');p.innerHTML='';
+  const lbl=document.createElement('div');lbl.className='sec-lbl';lbl.textContent='Rutas disponibles · Colombia';p.appendChild(lbl);
+  G.routes.forEach(r=>{
+    const net=r.earn-r.fuelCost;
+    const riskCls=r.risk==='Alta'?'rt-red':r.risk==='Baja'?'rt-green':'rt-gold';
+    const freeTrucks=G.trucks.filter(t=>t.status==='garage'&&t.fuel>15);
+    const d=document.createElement('div');d.className='route-card';
+    d.innerHTML=`
+      <div class="rc-top">
+        <div class="rc-left">
+          <div class="rc-route">${r.emoji} ${r.from} → ${r.to}</div>
+          <div class="rc-cargo">📦 ${r.cargo} · ${r.km} km · ${r.hrs}h</div>
+        </div>
+        <div class="rc-right">
+          <div class="rc-earn">${cop(r.earn)}</div>
+          <div class="rc-net">neto ${cop(net)}</div>
+        </div>
+      </div>
+      <div class="rc-tags">
+        <span class="rtag ${riskCls}">⚠️ ${r.risk}</span>
+        <span class="rtag rt-gold">⛽ -${cop(r.fuelCost)}</span>
+        <span class="rtag rt-green">💰 +${cop(net)}</span>
+        <span class="rtag rt-blue">⏱ ${r.hrs}h</span>
+      </div>
+      <div class="rc-trucks">
+        ${freeTrucks.length===0?`<button class="rc-truck-btn" disabled>Sin camiones disponibles</button>`:
+          freeTrucks.map(t=>`<button class="rc-truck-btn" onclick="sendTruckOnRoute(${t.id},${r.id})">🚛 ${t.model.split(' ')[0]} ${t.plate}</button>`).join('')}
+      </div>`;
+    p.appendChild(d);
+  });
+}
+
+// ── RENDER SHOP ──
+function renderShop(){
+  const p=$('pan-shop');p.innerHTML='';
+  const lbl=document.createElement('div');lbl.className='sec-lbl';lbl.textContent='Tienda · Expande tu empresa';p.appendChild(lbl);
+  const grid=document.createElement('div');grid.className='shop-grid';
+  G.shop.forEach(item=>{
+    const can=G.money>=item.price;
+    const d=document.createElement('div');d.className='shop-card';
+    d.innerHTML=`
+      <div class="shop-ico-wrap">${item.ico}</div>
+      <div class="shop-info">
+        <div class="shop-name">${item.name}${item.stars?'&nbsp;'+'⭐'.repeat(item.stars):''}</div>
+        <div class="shop-desc">${item.desc}</div>
+        <div class="shop-foot">
+          <span class="shop-price">${cop(item.price)}</span>
+          <button class="shop-btn ${can?'':''}${item.type==='truck'?'gold':''}" onclick="buyItem('${item.id}')" ${!can?'disabled':''}>
+            ${can?'Comprar':'Sin fondos'}
+          </button>
+        </div>
+      </div>`;
+    grid.appendChild(d);
+  });
+  p.appendChild(grid);
+}
+
+// ── TRUCK ACTIONS ──
+function repairTruck(id){
+  const t=G.trucks.find(x=>x.id===id);
+  const cost=Math.round((100-t.maint)*3200);
+  if(G.money<cost){toast('Sin plata para reparar!','bad');return;}
+  G.money-=cost;t.maint=100;t.hp=Math.min(100,t.hp+5);
+  G.totalEarnToday-=cost;
+  toast('✅ '+t.model+' reparado! -'+cop(cost),'warn');
+  updateHeader();renderTrucks();
+}
+function refuelTruck(id){
+  const t=G.trucks.find(x=>x.id===id);
+  const litros=Math.round((100-t.fuel)*1.8);
+  const cost=litros*G.fuelPrice/100;
+  if(G.money<cost){toast('Sin plata para ACPM!','bad');return;}
+  G.money-=cost;t.fuel=100;
+  G.totalEarnToday-=cost;
+  toast('⛽ '+t.model+' recargado! -'+cop(cost),'warn');
+  updateHeader();renderTrucks();
+}
+function sellTruck(id){
+  const t=G.trucks.find(x=>x.id===id);
+  const val=Math.round(32000000*(t.maint/100)*(t.hp/100));
+  G.money+=val;G.totalEarnToday+=val;
+  G.trucks=G.trucks.filter(x=>x.id!==id);
+  toast('💸 '+t.model+' vendido por '+cop(val),'good');
+  pop(4,'💵');updateHeader();renderTrucks();
+}
+function assignRoute(id){switchTab('routes');}
+
+function sendTruckOnRoute(truckId,routeId){
+  const t=G.trucks.find(x=>x.id===truckId);
+  const r=G.routes[routeId];
+  if(!t||t.status!=='garage'){toast('Camión no disponible!','bad');return;}
+  if(t.fuel<15){toast('ACPM muy bajo! Recarga primero.','bad');return;}
+  t.status='ruta';t.routeId=routeId;t.routePct=0;
+  G.rep=Math.min(100,G.rep+2);G.xp+=5;
+  toast('🚛 '+t.model+' salió a '+r.from+'→'+r.to+'!','good');
+  updateHeader();switchTab('overview');
+  // animate route progress
+  const interval=setInterval(()=>{
+    t.routePct=Math.min(100,t.routePct+(G.gpsInstalled?1.2:1));
+    if($('pan-trucks').classList.contains('on'))renderTrucks();
+    if(t.routePct>=100){clearInterval(interval);finishRoute(truckId);}
+  },r.hrs*15);
+}
+
+function finishRoute(truckId){
+  const t=G.trucks.find(x=>x.id===truckId);
+  if(!t||t.status!=='ruta')return;
+  const r=G.routes[t.routeId];
+  const earn=r.earn;const fuelCost=r.fuelCost;
+  const maintLoss=Math.round(10+Math.random()*15);
+  const fuelLoss=Math.round(20+Math.random()*18);
+  G.money+=earn;G.totalEarnToday+=earn-fuelCost;
+  t.fuel=Math.max(8,t.fuel-fuelLoss);
+  t.maint=Math.max(8,t.maint-maintLoss);
+  t.km+=r.km;t.earnings+=earn;t.status='garage';t.routeId=-1;t.routePct=0;
+  G.rep=Math.min(100,G.rep+5);G.xp+=10;
+  G.totalContracts++;G.totalKm+=r.km;
+  toast('💰 Ruta completada! +'+cop(earn),'good');
+  pop(5,'💰');updateHeader();checkAchs();
+  if($('pan-trucks').classList.contains('on'))renderTrucks();
+  if($('pan-routes').classList.contains('on'))renderRoutes();
+}
+
+function maintAll(){
+  const cost=G.trucks.reduce((a,t)=>a+Math.round((100-t.maint)*2000),0);
+  if(cost===0){toast('¡Toda la flota en perfecto estado!','good');return;}
+  if(G.money<cost){toast('Faltan '+cop(cost-G.money)+' para mantenimiento!','bad');return;}
+  G.money-=cost;G.totalEarnToday-=cost;
+  G.trucks.forEach(t=>t.maint=Math.min(100,t.maint+40));
+  toast('🔧 Flota mantenida! -'+cop(cost),'warn');
+  updateHeader();
+}
+function refuelAll(){
+  const cost=G.trucks.reduce((a,t)=>a+Math.round((100-t.fuel)*1.8*G.fuelPrice/100),0);
+  if(cost===0){toast('¡Toda la flota llena de ACPM!','good');return;}
+  if(G.money<cost){toast('Sin plata para abastecer!','bad');return;}
+  G.money-=cost;G.totalEarnToday-=cost;
+  G.trucks.forEach(t=>t.fuel=100);
+  toast('⛽ Flota abastecida! -'+cop(cost),'warn');
+  updateHeader();
+}
+
+function collectDay(){
+  const base=G.trucks.length*180000+G.rep*7000+G.level*50000;
+  const earn=Math.round(base*(0.85+Math.random()*.3));
+  G.money+=earn;G.totalEarnToday+=earn;
+  G.day++;G.xp+=8;G.rep=Math.max(0,G.rep-1);
+  G.trucks.forEach(t=>{if(t.status!=='ruta'){t.fuel=Math.max(0,t.fuel-4);t.maint=Math.max(0,t.maint-2);}});
+  if(G.pendingDays>0){G.pendingDays--;if(G.pendingDays===0){G.money+=G.pendingBonus;G.totalEarnToday+=G.pendingBonus;toast('🤝 ¡Retorno de sociedad! +'+cop(G.pendingBonus),'good');G.pendingBonus=0;}}
+  toast('💰 +'+cop(earn)+' cobrado (Día '+G.day+')','good');
+  pop(3,'💵');updateHeader();checkAchs();
+}
+
+// ── BUY ──
+function buyItem(itemId){
+  const item=G.shop.find(x=>x.id===itemId);
+  if(!item||G.money<item.price){toast('Sin fondos!','bad');return;}
+  G.money-=item.price;G.totalEarnToday-=item.price;G.xp+=15;
+  if(item.type==='truck'){
+    const colors=['#1d4ed8','#065f46','#6d28d9','#92400e','#0e7490'];
+    const starsMap={t_kenworth:5,t_inter:5,t_npr2:3};
+    G.trucks.push({id:Date.now(),model:item.name,plate:'NEW-'+Math.floor(100+Math.random()*900),color:colors[Math.floor(Math.random()*colors.length)],stars:starsMap[item.id]||4,hp:100,fuel:100,maint:100,status:'garage',routeId:-1,routePct:0,km:0,earnings:0});
+    toast('🚛 ¡Nuevo camión comprado: '+item.name+'!','good');pop(6,'🚛');checkAchs();
+  }else if(item.type==='maint'){
+    G.trucks.forEach(t=>t.maint=Math.min(100,t.maint+35));
+    toast('🔧 Mantenimiento de flota +35!','good');
+  }else if(item.type==='fuel'){
+    G.trucks.forEach(t=>t.fuel=Math.min(100,t.fuel+45));
+    toast('⛽ +45% ACPM a toda la flota!','good');
+  }else if(item.type==='upgrade'&&item.id==='gps'){
+    G.gpsInstalled=true;G.rep=Math.min(100,G.rep+15);
+    toast('📡 GPS instalado! +15 rep. Rutas más rápidas.','good');
+  }else if(item.type==='driver'){
+    G.rep=Math.min(100,G.rep+10);
+    G.trucks.forEach(t=>t.hp=Math.min(100,t.hp+5));
+    toast('👷 Conductor veterano contratado! +10 rep.','good');
+  }else if(item.type==='insurance'){
+    G.insurance=true;
+    toast('🛡️ Seguro activo por 10 días!','good');
+  }
+  updateHeader();renderShop();
+  if($('pan-trucks').classList.contains('on'))renderTrucks();
+}
+
+// ── EVENTS ──
+function triggerEvent(){
+  if(G.activeEvent)return;
+  const ev=G.events[Math.floor(Math.random()*G.events.length)];
+  G.activeEvent=ev;
+  $('evTitle').textContent=ev.title;
+  $('evDesc').textContent=ev.desc;
+  $('evBanner').style.display='flex';
+  $('evBanner').style.flexDirection='column';
+  if($('pan-overview').classList.contains('on')){}else switchTab('overview');
+}
+function evAccept(){
+  const e=G.activeEvent.yes;
+  if(e.money){G.money=Math.max(0,G.money+e.money);G.totalEarnToday+=e.money;}
+  if(e.rep)G.rep=Math.min(100,Math.max(0,G.rep+e.rep));
+  if(e.xp)G.xp+=e.xp;
+  if(e.fuel)G.trucks.forEach(t=>t.fuel=Math.min(100,t.fuel+e.fuel));
+  if(e.maint)G.trucks.forEach(t=>t.maint=Math.max(0,t.maint+e.maint));
+  if(e.pending){G.pendingBonus=e.pending;G.pendingDays=5;}
+  const good=!e.money||e.money>=0;
+  toast(e.msg,good?'good':'warn');
+  if(e.money>0)pop(3,'💰');
+  G.activeEvent=null;$('evBanner').style.display='none';
+  updateHeader();checkAchs();
+}
+function evReject(){
+  const e=G.activeEvent.no;
+  if(e.money){G.money=Math.max(0,G.money+e.money);G.totalEarnToday+=e.money;}
+  if(e.rep)G.rep=Math.min(100,Math.max(0,G.rep+e.rep));
+  const bad=e.money<0||e.rep<0;
+  toast(e.msg,bad?'bad':'');
+  G.activeEvent=null;$('evBanner').style.display='none';
+  updateHeader();
+}
+
+function sceneTap(){
+  const msgs=['🚛 ¡Vroom vroom, parcero!','🇨🇴 ¡Arriba Colombia!','⛽ ¡A rodar!','💪 ¡Duro con eso!','🏔️ Cruzando los Andes!'];
+  pop(2,'🚛');toast(msgs[Math.floor(Math.random()*msgs.length)]);
+}
+
+// ── PASSIVE DECAY ──
+setInterval(()=>{
+  G.trucks.forEach(t=>{
+    if(t.status==='garage'){t.fuel=Math.max(0,t.fuel-.5);t.maint=Math.max(0,t.maint-.3);}
+  });
+  updateHeader();
+},8000);
+
+// ── RANDOM EVENTS ──
+setInterval(()=>{if(!G.activeEvent&&Math.random()<.6)triggerEvent();},40000);
+</script>
+
+<!-- Firebase integration: award site coins when game generates earnings -->
+<script>
+(function(){
+  const COP_PER_COIN = 10000; // 10.000 COP => 1 site coin
+  function readyForFirebase(timeout=7000){
+    return new Promise(resolve=>{
+      const t0=Date.now();
+      const timer=setInterval(()=>{
+        const ok = window.auth && window.db && window.getDoc && window.setDoc && window.addDoc && window.collection && window.fsDoc;
+        if(ok){ clearInterval(timer); resolve(true); }
+        else if(Date.now()-t0>timeout){ clearInterval(timer); resolve(false); }
+      },120);
+    });
+  }
+
+  async function awardPlayerCoinsFromCOP(copAmount, reason='game_earn'){
+    if(!copAmount || copAmount<=0) return 0;
+    const can = await readyForFirebase(4000);
+    if(!can || !window.auth || !window.auth.currentUser) return 0;
+    const uid = window.auth.currentUser.uid;
+    try{
+      const coins = Math.max(1, Math.round(copAmount / COP_PER_COIN));
+      const userRef = window.fsDoc(window.db, 'users', uid);
+      const snap = await window.getDoc(userRef);
+      const prev = snap.exists() ? Number(snap.data()?.coins || 0) : 0;
+      const newTotal = prev + coins;
+      await window.setDoc(userRef, { coins: newTotal, updatedAt: new Date().toISOString() }, { merge: true });
+      // log activity
+      try{ await window.addDoc(window.collection(window.db, 'users', uid, 'activity'), { type: reason, coins, cop: copAmount, createdAt: new Date().toISOString(), gameId: 'transportes-paisa' }); }catch(e){}
+      try{ const toastEl=document.getElementById('toast'); if(toastEl){ const msg = `+${coins} monedas por ganancias de juego`; toast(msg); } }catch(e){}
+      return coins;
+    }catch(err){ console.warn('awardPlayerCoinsFromCOP failed', err); return 0; }
+  }
+
+  // Monkey-patch functions that add money: collectDay, finishRoute, sendTruckOnRoute may call finishRoute, sellTruck, evAccept etc.
+  function patch(fnName){
+    try{
+      const orig = window[fnName];
+      if(typeof orig !== 'function') return;
+      window[fnName] = async function(...args){
+        const before = (typeof G !== 'undefined')? Number(G.money||0) : 0;
+        const res = orig.apply(this, args);
+        // allow original to run and update state (if it returns a promise await it)
+        if(res && typeof res.then === 'function') await res;
+        const after = (typeof G !== 'undefined')? Number(G.money||0) : 0;
+        const delta = Math.max(0, after - before);
+        if(delta>0) await awardPlayerCoinsFromCOP(delta, `game:${fnName}`);
+        return res;
+      };
+    }catch(e){console.warn('patch failed',fnName,e);}  
+  }
+
+  // Patch common gain points
+  ['collectDay','finishRoute','sellTruck','evAccept'].forEach(patch);
+  // also patch triggerEvent accept flows that set pendingBonus (award when pending realized by collectDay)
+
+  // If user is not logged in, show hint in header
+  readyForFirebase(4000).then(ok=>{
+    if(ok && window.auth && !window.auth.currentUser){
+      const moneyVal = document.getElementById('moneyVal');
+      if(moneyVal && !document.getElementById('transportesLoginHint')){
+        const hint = document.createElement('div'); hint.id='transportesLoginHint'; hint.style.fontSize='.82rem'; hint.style.color='#9fbecf'; hint.style.marginTop='6px'; hint.textContent='Inicia sesión para recibir monedas reales por tus ganancias.';
+        moneyVal.parentNode && moneyVal.parentNode.appendChild(hint);
+      }
+    }
+  }).catch(()=>{});
+})();
+</script>
+
+// ── INIT ──
+updateHeader();
+</script>

@@ -77,7 +77,10 @@
                 <p id="devHubUserLabel">Cargando usuario...</p>
             </div>
             <div class="dev-topbar-right">
-                <button class="dev-btn" id="devHubReloadBtn">↻ Recargar</button>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <button class="dev-btn" id="devOpenAdvancesBtn">🗓️ Avances</button>
+                        <button class="dev-btn" id="devHubReloadBtn">↻ Recargar</button>
+                    </div>
             </div>
         </div>
 
@@ -121,62 +124,19 @@
                             <div class="dev-muted">Versiones del build</div>
                         </div>
                     </a>
+                    <a href="games/2048.html" class="dev-card" style="text-decoration:none;display:flex;align-items:center;gap:10px;">
+                        <span style="font-size:1.5rem;">🎲</span>
+                        <div>
+                            <div style="color:#fff;font-weight:700;font-size:.88rem;">2048 (mini)</div>
+                            <div class="dev-muted">Probar mecánicas y recompensas</div>
+                        </div>
+                    </a>
                     <a href="bugs.html" class="dev-card" style="text-decoration:none;display:flex;align-items:center;gap:10px;">
                         <span style="font-size:1.5rem;">🐛</span>
                         <div>
                             <div style="color:#fff;font-weight:700;font-size:.88rem;">Bug Tracker</div>
-                            <div class="dev-muted">Reportar y seguir bugs</div>
-                        </div>
-                    </a>
-                    <a href="ideas.html" class="dev-card" style="text-decoration:none;display:flex;align-items:center;gap:10px;">
-                        <span style="font-size:1.5rem;">💡</span>
-                        <div>
-                            <div style="color:#fff;font-weight:700;font-size:.88rem;">Ideas Board</div>
-                            <div class="dev-muted">Canvas de nodos</div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Gestión rápida de proyectos y actualizaciones -->
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;align-items:start;">
-                <section class="dev-card">
-                    <h3 style="margin:.2rem 0 .7rem;">➕ Agregar proyecto</h3>
-                    <div class="dev-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                        <div>
-                            <label for="devCreateProjectType" class="dev-muted">Tipo</label>
-                            <select id="devCreateProjectType" class="dev-select" style="width:100%;">
-                                <option value="juego">Juego</option>
-                                <option value="aplicacion">Aplicación</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="devCreateProjectStatus" class="dev-muted">Estado</label>
-                            <select id="devCreateProjectStatus" class="dev-select" style="width:100%;">
-                                <option value="development">Desarrollo</option>
-                                <option value="planning">Planeación</option>
-                                <option value="testing">Testing</option>
-                                <option value="production">Producción</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div style="margin-top:8px;">
-                        <label for="devCreateProjectTitle" class="dev-muted">Nombre del proyecto</label>
-                        <input id="devCreateProjectTitle" type="text" placeholder="Ej: Nuestra Tierra Job Simulator" style="width:100%;">
-                    </div>
-                    <div style="margin-top:8px;">
-                        <label for="devCreateProjectSummary" class="dev-muted">Resumen</label>
-                        <textarea id="devCreateProjectSummary" rows="3" placeholder="Descripción corta para la lista pública" style="width:100%;"></textarea>
-                    </div>
-                    <div style="margin-top:8px;">
-                        <label for="devCreateProjectImage" class="dev-muted">Imagen (URL)</label>
-                        <input id="devCreateProjectImage" type="url" placeholder="https://..." style="width:100%;">
-                    </div>
-                    <div class="dev-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
-                        <div>
-                            <label for="devCreateProjectPlatform" class="dev-muted">Plataforma</label>
-                            <input id="devCreateProjectPlatform" type="text" placeholder="PC, Móvil, Web" style="width:100%;">
-                        </div>
+                    <!-- Avances: accesible desde modal (botón en topbar) -->
+                    <!-- Button inserted in topbar via HTML below -->
                         <div>
                             <label for="devCreateProjectProgress" class="dev-muted">Progreso (%)</label>
                             <input id="devCreateProjectProgress" type="number" min="0" max="100" step="1" placeholder="35" style="width:100%;">
@@ -287,6 +247,61 @@
                 <button class="dev-tab" data-tab="recent">Actividad reciente</button>
             </div>
 
+            <!-- Avances: registro y calendario -->
+            <div style="margin-top:14px;display:grid;grid-template-columns:1fr 360px;gap:14px;align-items:start;">
+                <section class="dev-card">
+                    <h3 style="margin:.2rem 0 .7rem;">🗓️ Avances (registro rápido)</h3>
+                    <div>
+                        <label class="dev-muted">Proyecto (opcional)</label>
+                        <select id="devAdvanceProject" class="dev-select" style="width:100%;">
+                            <option value="">(Sin proyecto)</option>
+                        </select>
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label class="dev-muted">Título</label>
+                        <input id="devAdvanceTitle" type="text" placeholder="Ej: Integracion de login" style="width:100%;">
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label class="dev-muted">Resumen breve</label>
+                        <input id="devAdvanceSummary" type="text" placeholder="Breve descripción del avance" style="width:100%;">
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label class="dev-muted">Etiquetas / parámetros (coma separadas)</label>
+                        <input id="devAdvanceParams" type="text" placeholder="ej: backend, auth, bugfix" style="width:100%;">
+                    </div>
+                    <div style="margin-top:8px;display:flex;gap:8px;">
+                        <div style="flex:1;">
+                            <label class="dev-muted">Fecha y hora</label>
+                            <input id="devAdvanceDate" type="datetime-local" style="width:100%;">
+                        </div>
+                        <div style="width:120px;">
+                            <label class="dev-muted">Publicar</label>
+                            <div style="display:flex;align-items:center;height:100%;">
+                                <input id="devAdvancePublished" type="checkbox" checked>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                        <button class="dev-btn dev-btn-primary" id="devCreateAdvanceBtn">Agregar avance</button>
+                        <button class="dev-btn" id="devRefreshAdvancesBtn">Refrescar</button>
+                    </div>
+                    <p id="devCreateAdvanceMsg" class="dev-msg" style="margin-top:8px;"></p>
+
+                    <h4 style="margin-top:12px;margin-bottom:6px;">Entradas recientes</h4>
+                    <div id="devAdvancesList"><p class="dev-empty">Cargando avances...</p></div>
+                </section>
+
+                <aside class="dev-card">
+                    <h3 style="margin:.2rem 0 .7rem;">Calendario</h3>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <button class="dev-btn" id="advCalPrev">◀</button>
+                        <div id="advCalMonthLabel" style="font-weight:700"></div>
+                        <button class="dev-btn" id="advCalNext">▶</button>
+                    </div>
+                    <div id="advCalendar" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:8px;"></div>
+                    <div id="advDayEntries"><p class="dev-empty">Selecciona un día para ver entradas.</p></div>
+                </aside>
+            </div>
             <!-- Tab panel: proyectos -->
             <div class="dev-tab-panel active" id="tabProjects">
                 <div class="dev-filter-bar">
@@ -313,5 +328,71 @@
     </div>
 
     <script src="../../assets/js/admin/panel-desarrollo.js"></script>
+    <!-- Modal: Avances -->
+    <div id="devAdvancesModal" class="dev-modal" hidden>
+        <div class="dev-modal-backdrop" id="devAdvancesBackdrop"></div>
+        <div class="dev-modal-content" role="dialog" aria-modal="true" aria-labelledby="devAdvancesTitle">
+            <header style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                <h2 id="devAdvancesTitle">🗓️ Avances</h2>
+                <div style="display:flex;gap:8px;">
+                    <button class="dev-btn" id="devRefreshAdvancesBtn">Refrescar</button>
+                    <button class="dev-btn" id="devAdvancesModalClose">Cerrar ✕</button>
+                </div>
+            </header>
+            <div style="display:grid;grid-template-columns:1fr 360px;gap:14px;margin-top:12px;">
+                <section class="dev-card" style="padding:12px;">
+                    <h3 style="margin:.2rem 0 .7rem;">Registrar avance</h3>
+                    <div>
+                        <label class="dev-muted">Proyecto (opcional)</label>
+                        <select id="devAdvanceProject" class="dev-select" style="width:100%;">
+                            <option value="">(Sin proyecto)</option>
+                        </select>
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label class="dev-muted">Título</label>
+                        <input id="devAdvanceTitle" type="text" placeholder="Ej: Integracion de login" style="width:100%;">
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label class="dev-muted">Resumen breve</label>
+                        <input id="devAdvanceSummary" type="text" placeholder="Breve descripción del avance" style="width:100%;">
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label class="dev-muted">Etiquetas / parámetros (coma separadas)</label>
+                        <input id="devAdvanceParams" type="text" placeholder="ej: backend, auth, bugfix" style="width:100%;">
+                    </div>
+                    <div style="margin-top:8px;display:flex;gap:8px;">
+                        <div style="flex:1;">
+                            <label class="dev-muted">Fecha y hora</label>
+                            <input id="devAdvanceDate" type="datetime-local" style="width:100%;">
+                        </div>
+                        <div style="width:120px;">
+                            <label class="dev-muted">Publicar</label>
+                            <div style="display:flex;align-items:center;height:100%;">
+                                <input id="devAdvancePublished" type="checkbox" checked>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                        <button class="dev-btn dev-btn-primary" id="devCreateAdvanceBtn">Agregar avance</button>
+                    </div>
+                    <p id="devCreateAdvanceMsg" class="dev-msg" style="margin-top:8px;"></p>
+
+                    <h4 style="margin-top:12px;margin-bottom:6px;">Entradas recientes</h4>
+                    <div id="devAdvancesList"><p class="dev-empty">Cargando avances...</p></div>
+                </section>
+
+                <aside class="dev-card" style="padding:12px;">
+                    <h3 style="margin:.2rem 0 .7rem;">Calendario</h3>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <button class="dev-btn" id="advCalPrev">◀</button>
+                        <div id="advCalMonthLabel" style="font-weight:700"></div>
+                        <button class="dev-btn" id="advCalNext">▶</button>
+                    </div>
+                    <div id="advCalendar" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:8px;"></div>
+                    <div id="advDayEntries"><p class="dev-empty">Selecciona un día para ver entradas.</p></div>
+                </aside>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
