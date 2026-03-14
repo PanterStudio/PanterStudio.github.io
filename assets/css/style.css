@@ -431,6 +431,30 @@ body {
         font-size: 1.5rem;
         letter-spacing: 1px;
     }
+
+/* Mini-games promotional banner on index */
+.mini-games-banner {
+    background: linear-gradient(90deg, rgba(30,112,200,0.08), rgba(168,85,247,0.06));
+    border: 1px solid rgba(30,112,200,0.12);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 18px;
+}
+.mini-games-inner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    justify-content: space-between;
+}
+.mini-games-text h3 { margin: 6px 0; color: #072241; }
+.mini-games-text p { color: #27435d; margin-bottom: 12px; max-width: 640px; }
+.mini-games-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.mini-games-art { font-size: 2.2rem; opacity: 0.95; }
+
+@media (max-width: 800px) {
+    .mini-games-inner { flex-direction: column; align-items: flex-start; }
+    .mini-games-art { align-self: flex-end; }
+}
     
     .promo-header {
         padding: 20px 15px;
