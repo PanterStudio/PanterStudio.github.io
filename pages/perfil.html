@@ -1,214 +1,665 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Perfil - Panter Studio</title>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
-    <link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
-    <link rel="stylesheet" href="../assets/css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
-    <script src="../assets/js/core/firebase-config.js"></script>
-    <script src="../assets/js/site-visibility.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Perfil — Panter Studio</title>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
+  <link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+  <script src="../assets/js/core/firebase-config.js"></script>
+  <script src="../assets/js/site-visibility.js"></script>
+  <style>
+  /* ─── RESET / BASE ─── */
+  *, *::before, *::after { box-sizing: border-box; }
+  body { background: #0b0e17 !important; color: #e0edff; font-size: 14px; }
+  #tsparticles { position: fixed; inset: 0; z-index: -1; }
+
+  /* ─── SHELL ─── */
+  .ps { max-width: 1080px; margin: 0 auto; padding: 16px 14px 40px; }
+
+  /* ════════════════════════════
+     AUTH GATE
+  ════════════════════════════ */
+  .auth-gate {
+    min-height: 80vh; display: flex;
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .auth-card {
+    background: linear-gradient(155deg,#101828,#0c1320);
+    border: 1px solid rgba(30,112,200,.4); border-radius: 18px;
+    padding: 32px 28px; width: 100%; max-width: 400px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.55); text-align: center;
+    animation: fadeUp .45s ease both;
+  }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+  .auth-logo {
+    width: 68px; height: 68px; border-radius: 50%;
+    border: 2px solid rgba(30,112,200,.5); margin: 0 auto 16px; display: block;
+    box-shadow: 0 0 20px rgba(30,112,200,.28);
+  }
+  .auth-card h1 { font-size: 1.4rem; font-weight: 800; color: #fff; margin: 0 0 6px; }
+  .auth-card > p { color: #7aa6c0; font-size: .88rem; margin: 0 0 20px; }
+  .auth-tabs { display: flex; gap: 5px; margin-bottom: 16px; }
+  .auth-tab {
+    flex: 1; padding: 9px; border-radius: 9px;
+    border: 1px solid rgba(30,112,200,.28);
+    background: rgba(30,112,200,.07);
+    color: #6fa5c4; font-size: .85rem; font-weight: 700;
+    cursor: pointer; transition: all .15s; font-family: inherit;
+  }
+  .auth-tab.active { background: rgba(30,112,200,.32); border-color: #1e70c8; color: #fff; }
+  .auth-form { display: none; flex-direction: column; gap: 10px; }
+  .auth-form.active { display: flex; }
+  .p-inp {
+    padding: 10px 12px; border-radius: 9px;
+    border: 1px solid rgba(135,206,235,.22);
+    background: rgba(255,255,255,.05);
+    color: #fff; font-size: .9rem; font-family: inherit;
+    outline: none; transition: border-color .15s;
+  }
+  .p-inp:focus { border-color: rgba(30,112,200,.65); }
+  .p-inp::placeholder { color: rgba(200,230,255,.3); }
+  .auth-forgot { font-size: .78rem; color: #4e80a0; cursor: pointer; text-decoration: underline; text-align: center; display: block; margin-top: 4px; }
+  .auth-msg { min-height: 16px; font-size: .82rem; text-align: center; padding: 7px 9px; border-radius: 7px; margin-top: 4px; }
+  .auth-msg.error   { background: rgba(248,113,113,.1); color: #f87171; }
+  .auth-msg.success { background: rgba(74,222,128,.09); color: #4ade80; }
+
+  /* ════════════════════════════
+     DASHBOARD
+  ════════════════════════════ */
+  #profileDashboard { display: none; }
+  #profileDashboard.active { display: block; }
+
+  /* ─── COMPACT HERO ─── */
+  .ph {
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    gap: 12px; align-items: center;
+    padding: 14px 16px;
+    background: linear-gradient(145deg,rgba(14,22,36,.97),rgba(9,14,26,.98));
+    border: 1px solid rgba(30,112,200,.22); border-radius: 14px;
+    margin-bottom: 10px;
+  }
+  .ph-avatar {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: rgba(30,112,200,.18); border: 2px solid rgba(30,112,200,.35);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem; flex-shrink: 0;
+  }
+  .ph-info h2 { margin: 0 0 2px; color: #fff; font-size: 1.05rem; font-weight: 800; line-height: 1.2; }
+  .ph-info p  { margin: 0; color: #5a88a8; font-size: .72rem; font-family: monospace; }
+  .ph-badges  { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+  .ph-right   { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+  .coins-chip {
+    background: rgba(251,191,36,.1); border: 1px solid rgba(251,191,36,.22);
+    border-radius: 9px; padding: 5px 10px; text-align: center; white-space: nowrap;
+  }
+  .coins-chip b { display: block; font-size: 1.1rem; font-weight: 900; color: #fbbf24; line-height: 1; }
+  .coins-chip small { font-size: .65rem; color: #7a6010; }
+
+  /* ─── BADGE PILLS ─── */
+  .bp {
+    display: inline-flex; align-items: center; padding: 2px 7px;
+    border-radius: 999px; background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.09); color: #cce4ff; font-size: .65rem; font-weight: 700;
+  }
+  .bp.g  { border-color: rgba(74,222,128,.35); color: #86efac; }
+  .bp.b  { border-color: rgba(96,165,250,.35); color: #93c5fd; }
+  .bp.pu { border-color: rgba(168,85,247,.35);  color: #d8b4fe; }
+  .bp.go { border-color: rgba(251,191,36,.35);  color: #fde68a; }
+  .bp.r  { border-color: rgba(248,113,113,.35); color: #fda4af; }
+
+  /* ─── KPI STRIP ─── */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0,1fr));
+    gap: 6px; margin-bottom: 10px;
+  }
+  .kpi {
+    padding: 8px 10px; border-radius: 10px;
+    background: linear-gradient(145deg,rgba(14,22,36,.95),rgba(9,14,26,.98));
+    border: 1px solid rgba(30,112,200,.18);
+  }
+  .kpi-l { font-size: .63rem; color: #3d6a88; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+  .kpi-v { font-size: 1.05rem; font-weight: 800; color: #fff; line-height: 1; }
+  .kpi-s { font-size: .63rem; color: #2d5570; margin-top: 2px; }
+
+  /* ─── MAIN 3-COLUMN GRID ─── */
+  .pg {
+    display: grid;
+    grid-template-columns: 200px minmax(0,1fr) 200px;
+    gap: 8px;
+  }
+  .pg-left, .pg-mid, .pg-right { display: flex; flex-direction: column; gap: 8px; }
+
+  /* ─── CARD ─── */
+  .pc {
+    background: linear-gradient(145deg,rgba(13,19,31,.97),rgba(8,13,22,.98));
+    border: 1px solid rgba(30,112,200,.15); border-radius: 12px;
+    padding: 12px 13px; font-size: .82rem;
+  }
+  .pc-h {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; margin-bottom: 8px;
+  }
+  .pc-h h3 { margin: 0; color: #fff; font-size: .82rem; font-weight: 800; }
+  .pc-h span { font-size: .68rem; color: #3d6a88; }
+
+  /* ─── INFO TABLE ─── */
+  .it { width: 100%; border-collapse: collapse; }
+  .it td { padding: 4px 0; border-bottom: 1px solid rgba(30,112,200,.08); vertical-align: top; font-size: .77rem; }
+  .it td:first-child { color: #3d6a88; width: 46%; padding-right: 6px; }
+  .it td:last-child  { color: #c8e0f8; font-weight: 600; }
+  .it tr:last-child td { border-bottom: none; }
+
+  /* ─── SPIN WHEEL — Canvas ─── */
+  .sw-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .sw-container {
+    position: relative; width: 150px; height: 150px;
+    filter: drop-shadow(0 4px 16px rgba(30,112,200,.4));
+  }
+  #spinWheel {
+    width: 150px; height: 150px; border-radius: 50%; display: block;
+    /* sin transition CSS — la animación la maneja requestAnimationFrame */
+  }
+  .sw-center {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 26px; height: 26px; border-radius: 50%;
+    background: radial-gradient(circle, #1e3a5f, #090e18);
+    border: 2.5px solid rgba(30,112,200,.7);
+    box-shadow: 0 0 10px rgba(30,112,200,.5), inset 0 0 6px rgba(0,0,0,.6);
+    z-index: 4; pointer-events: none;
+  }
+  .sw-pointer {
+    position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 10px solid transparent; border-right: 10px solid transparent;
+    border-top: 22px solid #f59e0b;
+    filter: drop-shadow(0 2px 5px rgba(0,0,0,.7)); z-index: 5;
+    transition: transform .15s ease;
+  }
+  .sw-pointer.click { transform: translateX(-50%) rotate(-16deg) scale(1.15); }
+  #spinParticles { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
+  #spinMessage  { min-height: 14px; font-size: .75rem; font-weight: 700; text-align: center; }
+  #spinMessage.success { color: #4ade80; }
+  #spinCooldown { font-size: .68rem; color: #3d6a88; text-align: center; }
+
+  /* ─── STREAK DAYS ─── */
+  .streak-row { display: flex; gap: 3px; justify-content: center; }
+  .streak-day {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(255,255,255,.04); border: 1.5px solid rgba(30,112,200,.18);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .58rem; color: #2d5570; font-weight: 800; transition: all .25s;
+  }
+  .streak-day.completed {
+    background: rgba(30,112,200,.22); border-color: #1e70c8; color: #7dd3fc;
+    box-shadow: 0 0 6px rgba(30,112,200,.25);
+  }
+  .streak-day.current { border-color: #f0c419; }
+  #dailyBonusMessage { min-height: 14px; font-size: .75rem; font-weight: 700; text-align: center; }
+  #dailyBonusMessage.success { color: #4ade80; }
+
+  /* ─── REFERRAL BOX ─── */
+  .ref-box {
+    display: flex; gap: 5px; align-items: center; margin: 6px 0;
+    background: rgba(255,255,255,.03); border: 1px solid rgba(30,112,200,.18);
+    border-radius: 8px; padding: 6px 9px;
+  }
+  #referralCode { flex: 1; font-family: monospace; font-size: .88rem; color: #f0c419; font-weight: 800; }
+  .ref-stats { display: flex; gap: 10px; flex-wrap: wrap; }
+  .ref-stat { font-size: .72rem; color: #3d6a88; }
+  .ref-stat strong { color: #b8d8f0; }
+
+  /* ─── ACTIVITY ─── */
+  .act-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1px; }
+  .act-item {
+    display: flex; align-items: center; gap: 7px; padding: 5px 2px;
+    border-bottom: 1px solid rgba(30,112,200,.07); font-size: .75rem;
+  }
+  .act-item:last-child { border-bottom: none; }
+  .act-ico {
+    width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(30,112,200,.12); border: 1px solid rgba(30,112,200,.2);
+    display: flex; align-items: center; justify-content: center; font-size: .8rem;
+  }
+  .act-txt { flex: 1; min-width: 0; }
+  .act-title { color: #c0daf5; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .act-time  { font-size: .65rem; color: #2d5570; }
+  .act-coins { font-weight: 800; color: #4ade80; white-space: nowrap; font-size: .75rem; }
+  .act-coins.neg { color: #f87171; }
+
+  /* ─── PROJECT FEED ─── */
+  .feed { display: flex; flex-direction: column; gap: 5px; }
+  .feed-link {
+    display: flex; flex-direction: column; gap: 1px; padding: 7px 9px;
+    border-radius: 8px; text-decoration: none;
+    background: rgba(255,255,255,.025); border: 1px solid rgba(30,112,200,.1);
+    transition: background .15s;
+  }
+  .feed-link:hover { background: rgba(30,112,200,.09); }
+  .feed-link strong { color: #fff; font-size: .78rem; }
+  .feed-link span   { color: #3d6a88; font-size: .7rem; }
+  .feed-link small  { color: #27495e; font-size: .65rem; }
+
+  /* ─── SPONSOR ─── */
+  .sp-row { display: flex; align-items: center; gap: 9px; }
+  .sp-ico { font-size: 1.6rem; }
+  .sp-name { color: #fff; font-size: .82rem; font-weight: 800; margin: 0 0 2px; }
+  .sp-desc { color: #3d6a88; font-size: .7rem; }
+  .sp-sum  { font-size: .72rem; color: #3d6a88; margin-top: 6px; }
+
+  /* ─── REDEEM ─── */
+  .rdm-row { display: grid; grid-template-columns: 1fr auto; gap: 5px; margin-top: 7px; }
+  .rdm-row input {
+    padding: 7px 9px; border-radius: 8px;
+    border: 1px solid rgba(135,206,235,.2); background: rgba(2,8,14,.88);
+    color: #eaf6ff; font-size: .82rem; font-family: inherit; outline: none;
+  }
+  .rdm-stats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+  .rdm-stat { font-size: .7rem; color: #3d6a88; }
+  .rdm-stat b { color: #b8d8f0; }
+  #redeemMessage { min-height: 14px; font-size: .75rem; font-weight: 700; margin-top: 5px; }
+  #redeemMessage.success { color: #4ade80; }
+  #redeemMessage.error   { color: #f87171; }
+
+  /* ─── BIO ─── */
+  .bio-box {
+    background: rgba(255,255,255,.025); border: 1px solid rgba(30,112,200,.09);
+    border-radius: 8px; padding: 7px 9px; color: #7aa6c0; font-size: .75rem; line-height: 1.5;
+    margin-top: 6px;
+  }
+
+  /* ─── REDEEM HISTORY ─── */
+  .rdm-hist-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 5px 7px; border-radius: 7px;
+    background: rgba(255,255,255,.025); border: 1px solid rgba(30,112,200,.09);
+    font-size: .72rem; margin-bottom: 4px;
+  }
+  .rdm-hist-item strong { color: #c8e0f8; display: block; }
+  .rdm-hist-item small  { color: #2d5570; }
+  .rdm-status { display: inline-block; padding: 1px 6px; border-radius: 999px; font-size: .62rem; font-weight: 800; }
+  .rdm-status.completed { background: rgba(96,165,250,.12); color: #60a5fa; }
+  .rdm-status.approved  { background: rgba(74,222,128,.12);  color: #4ade80; }
+  .rdm-status.pending   { background: rgba(251,191,36,.12);  color: #fbbf24; }
+  .rdm-status.rejected  { background: rgba(248,113,113,.12); color: #f87171; }
+
+  /* ─── BUTTONS ─── */
+  .pb {
+    display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+    padding: 7px 12px; border-radius: 8px;
+    border: 1px solid rgba(30,112,200,.35); background: rgba(30,112,200,.15);
+    color: #a8d2f0; font-size: .78rem; font-weight: 700;
+    cursor: pointer; transition: all .14s; font-family: inherit; white-space: nowrap;
+  }
+  .pb:hover { background: rgba(30,112,200,.28); color: #fff; }
+  .pb.prim { background: #1e70c8; border-color: #1e70c8; color: #fff; }
+  .pb.prim:hover { background: #2580de; }
+  .pb.sm   { padding: 5px 9px; font-size: .72rem; }
+  .pb.gold { background: rgba(251,191,36,.1); border-color: rgba(251,191,36,.28); color: #fbbf24; }
+  .pb.gold:hover { background: rgba(251,191,36,.2); }
+  .pb.dng  { background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.28); color: #f87171; }
+  .pb.dng:hover  { background: rgba(239,68,68,.2); }
+  .pb:disabled { opacity: .35; cursor: not-allowed; }
+  .pb-full { width: 100%; }
+
+  /* ─── EDIT MODAL ─── */
+  .pm {
+    border: 1px solid rgba(30,112,200,.32); border-radius: 16px;
+    background: linear-gradient(155deg,#0d1422,#09101c);
+    color: #e0edff; padding: 0; width: min(480px,94vw); max-height: 88vh; overflow-y: auto;
+    box-shadow: 0 20px 50px rgba(0,0,0,.6);
+  }
+  .pm::backdrop { background: rgba(0,0,0,.72); backdrop-filter: blur(4px); }
+  .pm-h { padding: 16px 18px 12px; border-bottom: 1px solid rgba(30,112,200,.18); display: flex; align-items: center; justify-content: space-between; }
+  .pm-h h3 { margin: 0; color: #fff; font-size: .95rem; font-weight: 800; }
+  .pm-b { padding: 14px 18px; display: flex; flex-direction: column; gap: 11px; }
+  .pm-f { padding: 12px 18px; border-top: 1px solid rgba(30,112,200,.18); display: flex; gap: 7px; justify-content: flex-end; }
+  .pm-grp { display: flex; flex-direction: column; gap: 3px; }
+  .pm-grp label { font-size: .7rem; color: #3d6a88; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+  .pm-inp {
+    padding: 9px 11px; border-radius: 8px;
+    border: 1px solid rgba(135,206,235,.2); background: rgba(2,8,14,.88);
+    color: #eaf6ff; font-size: .85rem; font-family: inherit; outline: none; transition: border-color .15s;
+  }
+  .pm-inp:focus { border-color: rgba(30,112,200,.65); }
+  .pm-inp::placeholder { color: rgba(200,230,255,.25); }
+  textarea.pm-inp { resize: vertical; min-height: 60px; }
+  .av-grid { display: flex; gap: 6px; flex-wrap: wrap; }
+  .av-opt {
+    width: 36px; height: 36px; border-radius: 8px; font-size: 1.3rem;
+    background: rgba(255,255,255,.04); border: 2px solid transparent;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .14s;
+  }
+  .av-opt:hover { background: rgba(30,112,200,.14); border-color: rgba(30,112,200,.35); }
+  .av-opt.selected { background: rgba(30,112,200,.22); border-color: #1e70c8; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 860px) {
+    .pg { grid-template-columns: 1fr 1fr; }
+    .pg-left { order: 2; }
+    .pg-mid  { order: 1; grid-column: 1 / -1; }
+    .pg-right{ order: 3; }
+    .kpis { grid-template-columns: repeat(3,1fr); }
+    .ph { grid-template-columns: 48px 1fr; }
+    .ph-right { display: none; }
+  }
+  @media (max-width: 540px) {
+    .ps { padding: 10px 10px 32px; }
+    .pg { grid-template-columns: 1fr; }
+    .pg-left, .pg-right { order: unset; }
+    .kpis { grid-template-columns: repeat(3,1fr); }
+    .ph { grid-template-columns: 44px 1fr; gap: 9px; padding: 11px 12px; }
+    .ph-badges { display: none; }
+    .auth-card { padding: 22px 18px; }
+  }
+  </style>
 </head>
 <body data-site-root="..">
-    <div id="tsparticles"></div>
-    <header>
-        <img src="https://i.imgur.com/GYjAGS7.png" alt="Logo Panter Studio" class="logo-img">
-        <button id="dark-mode-toggle" class="dark-mode-toggle">🌙</button>
-    </header>
+<div id="tsparticles"></div>
 
-    <nav>
-        <a href="../index.html">Inicio</a>
-        <div class="nav-dropdown">
-            <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">Aplicaciones</button>
-            <div class="nav-dropdown-menu">
-                <a href="juegos.html">Juegos</a>
-                <a href="aplicaciones.html">Aplicaciones</a>
-            </div>
-        </div>
-        <a href="minijuegos.html">Minijuegos</a>
-        <a href="actualizaciones.html">Actualizaciones</a>
-        <a href="donaciones.html">Apóyanos</a>
-        <a href="personal.html">Personal</a>
-        <a href="perfil.html" class="active">Mi Perfil</a>
-        <a href="preregistro.html">Pre-registro</a>
-    </nav>
+<header>
+  <img src="https://i.imgur.com/GYjAGS7.png" alt="Logo Panter Studio" class="logo-img">
+  <button id="dark-mode-toggle" class="dark-mode-toggle">🌙</button>
+</header>
 
-    <div class="container profile-shell">
-        <section class="profile-auth-section">
-            <div class="profile-auth-card profile-auth-card--centered">
-                <img src="https://media.discordapp.net/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=69b9568e&is=69b8050e&hm=79eb602ee4f4028860ecc07bd7b7f8787b8235c7dee065274be317c823a95564&=&format=webp&quality=lossless&width=120&height=120" alt="Logo" class="profile-auth-logo">
-                <h1 class="profile-auth-title">Bienvenido a tu perfil</h1>
-                <p class="profile-auth-desc">Accede para ver tu información, progreso, recompensas y mucho más en Panter Studio.</p>
-                <div class="profile-auth-actions" id="authActions">
-                    <button class="btn btn-primary" id="showLogin">Iniciar Sesión</button>
-                    <button class="btn btn-secondary" id="showRegister">Crear Cuenta</button>
-                </div>
-                <form id="loginForm" class="profile-auth-form" style="display:none;flex-direction:column;gap:1.1rem;margin-top:1.5rem;">
-                    <input type="email" placeholder="Correo electrónico" required class="profile-input">
-                    <input type="password" placeholder="Contraseña" required class="profile-input">
-                    <button type="submit" class="btn btn-primary">Entrar</button>
-                    <button type="button" class="btn btn-secondary" id="backToAuth1">Volver</button>
-                </form>
-                <form id="registerForm" class="profile-auth-form" style="display:none;flex-direction:column;gap:1.1rem;margin-top:1.5rem;">
-                    <input type="email" placeholder="Correo electrónico" required class="profile-input">
-                    <input type="password" placeholder="Contraseña (mínimo 6 caracteres)" minlength="6" required class="profile-input">
-                    <input type="text" placeholder="Código de referido (opcional)" class="profile-input">
-                    <button type="submit" class="btn btn-primary">Crear Cuenta</button>
-                    <button type="button" class="btn btn-secondary" id="backToAuth2">Volver</button>
-                </form>
-                <style>
-                .profile-auth-form {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 1.1rem;
-                    align-items: stretch;
-                }
-                .profile-input {
-                    padding: 0.8rem 1rem;
-                    border-radius: 8px;
-                    border: 1.5px solid #232b3b;
-                    background: #232b3b;
-                    color: #eaf6ff;
-                    font-size: 1rem;
-                    font-family: inherit;
-                    outline: none;
-                    transition: border 0.2s;
-                }
-                .profile-input:focus {
-                    border: 1.5px solid #1e70c8;
-                }
-                </style>
-                <script>
-                // Mostrar formularios y volver
-                document.getElementById('showLogin').onclick = function() {
-                    document.getElementById('authActions').style.display = 'none';
-                    document.getElementById('loginForm').style.display = 'flex';
-                    document.getElementById('registerForm').style.display = 'none';
-                };
-                document.getElementById('showRegister').onclick = function() {
-                    document.getElementById('authActions').style.display = 'none';
-                    document.getElementById('loginForm').style.display = 'none';
-                    document.getElementById('registerForm').style.display = 'flex';
-                };
-                document.getElementById('backToAuth1').onclick = function() {
-                    document.getElementById('authActions').style.display = 'flex';
-                    document.getElementById('loginForm').style.display = 'none';
-                };
-                document.getElementById('backToAuth2').onclick = function() {
-                    document.getElementById('authActions').style.display = 'flex';
-                    document.getElementById('registerForm').style.display = 'none';
-                };
-                </script>
-            </div>
-        </section>
+<nav>
+  <a href="../index.html">Inicio</a>
+  <div class="nav-dropdown">
+    <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">Aplicaciones</button>
+    <div class="nav-dropdown-menu">
+      <a href="juegos.html">Juegos</a>
+      <a href="aplicaciones.html">Aplicaciones</a>
     </div>
-    <style>
-    body {
-        background: #10131a !important;
-        color: #eaf6ff;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    .profile-shell {
-        min-height: 80vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    .profile-auth-section {
-        width: 100%;
-        max-width: 420px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    .profile-auth-card--centered {
-        background: #181f2a;
-        border-radius: 18px;
-        box-shadow: 0 8px 32px 0 rgba(30,112,200,0.18), 0 1.5px 0 #232b3b;
-        border: 2px solid #232b3b;
-        padding: 2.5rem 2rem 2rem 2rem;
-        text-align: center;
-        max-width: 370px;
-        width: 100%;
-        color: #eaf6ff;
-        box-sizing: border-box;
-        animation: fadeInProfile 0.7s cubic-bezier(.4,1.4,.6,1) 1;
-    }
-    @keyframes fadeInProfile {
-        from { opacity: 0; transform: translateY(40px) scale(0.98); }
-        to { opacity: 1; transform: none; }
-    }
-    .profile-auth-logo {
-        width: 90px;
-        margin-bottom: 1.5rem;
-        filter: drop-shadow(0 0 16px #1e70c8cc);
-    }
-    .profile-auth-title {
-        color: #7ecbff;
-        font-size: 2rem;
-        font-weight: 800;
-        letter-spacing: 1px;
-        margin-bottom: 0.7rem;
-        text-align: center;
-        text-shadow: 0 2px 8px #1e70c822;
-    }
-    .profile-auth-desc {
-        color: #b6c8e6;
-        font-size: 1.13rem;
-        margin-bottom: 2.2rem;
-        text-align: center;
-    }
-    .profile-auth-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 1.1rem;
-    }
-    .btn {
-        padding: 1rem 0;
-        border-radius: 10px;
-        border: none;
-        font-size: 1.13rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-        font-family: inherit;
-    }
-    .btn-primary {
-        background: #1e70c8;
-        color: #fff;
-        border: 1.5px solid #1e70c8;
-        box-shadow: 0 2px 8px #1e70c855;
-    }
-    .btn-primary:hover {
-        background: #155a9c;
-        color: #fff;
-        box-shadow: 0 4px 16px #1e70c888;
-    }
-    .btn-secondary {
-        background: #232b3b;
-        color: #7ecbff;
-        border: 1.5px solid #1e70c8;
-    }
-    .btn-secondary:hover {
-        background: #1e70c8;
-        color: #fff;
-    }
-    @media (max-width: 600px) {
-        .profile-auth-card--centered {
-            padding: 1.5rem 0.7rem 1.2rem 0.7rem;
-        }
-        .profile-auth-section {
-            max-width: 98vw;
-        }
-    }
-    </style>
+  </div>
+  <a href="minijuegos.html">Minijuegos</a>
+  <a href="actualizaciones.html">Actualizaciones</a>
+  <a href="donaciones.html">Apóyanos</a>
+  <a href="personal.html">Personal</a>
+  <a href="perfil.html" class="active">Mi Perfil</a>
+  <a href="preregistro.html">Pre-registro</a>
+</nav>
 
-    <footer>
-        <p>&copy; 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
-    </footer>
-    <script src="../assets/js/core/script.js"></script>
-    <script src="../assets/js/pages/perfil.js"></script>
+<!-- ════════════════════════
+     AUTH GATE
+════════════════════════ -->
+<div id="profileAuthSection" class="auth-gate">
+  <div class="auth-card">
+    <img src="https://i.imgur.com/GYjAGS7.png" alt="Panter Studio" class="auth-logo">
+    <h1>Mi Perfil</h1>
+    <p>Inicia sesión para ver tu progreso, monedas y recompensas.</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">Iniciar sesión</button>
+      <button class="auth-tab" data-tab="register">Crear cuenta</button>
+    </div>
+    <form id="loginForm" class="auth-form active" autocomplete="off" novalidate>
+      <input type="email"    id="loginEmail"    class="p-inp" placeholder="Correo electrónico" required>
+      <input type="password" id="loginPassword" class="p-inp" placeholder="Contraseña" required>
+      <button type="submit" class="btn">Entrar</button>
+      <a class="auth-forgot" id="forgotPasswordLink">Olvidé mi contraseña</a>
+    </form>
+    <form id="registerForm" class="auth-form" autocomplete="off" novalidate>
+      <input type="email"    id="registerEmail"    class="p-inp" placeholder="Correo electrónico" required>
+      <input type="password" id="registerPassword" class="p-inp" placeholder="Contraseña (mín. 6 caracteres)" minlength="6" required>
+      <input type="text"     id="registerReferral" class="p-inp" placeholder="Código de referido (opcional)">
+      <button type="submit" class="btn">Crear cuenta</button>
+    </form>
+    <div id="authMessage" class="auth-msg"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════
+     DASHBOARD
+════════════════════════ -->
+<section id="profileDashboard" class="ps">
+
+  <!-- HERO COMPACT -->
+  <div class="ph">
+    <div class="ph-avatar" id="profileAvatarLetter">😊</div>
+    <div class="ph-info">
+      <h2 id="profileDisplayName">Usuario</h2>
+      <p id="profileUid"></p>
+      <div class="ph-badges" id="profileBadges"></div>
+    </div>
+    <div class="ph-right">
+      <div class="coins-chip">
+        <b id="profileCoins">0</b>
+        <small>🪙 monedas</small>
+        <small id="profileCoinsDollars" style="color:#4e7b9c;display:block"></small>
+      </div>
+      <div style="display:flex;gap:5px;flex-direction:column">
+        <button class="pb prim sm" id="editProfileBtn">✏️ Editar</button>
+        <button class="pb dng  sm" id="logoutBtn">🚪 Salir</button>
+      </div>
+      <div id="profileAdminTools" hidden>
+        <a href="../admin/dashboard.html" class="pb gold sm">🛡️ Admin</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI STRIP -->
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-l">Nivel</div>
+      <div class="kpi-v" id="profileLevel">—</div>
+      <div class="kpi-s" id="profileRole"></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Racha</div>
+      <div class="kpi-v" id="profileStreak">0</div>
+      <div class="kpi-s">días</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Miembro</div>
+      <div class="kpi-v" id="profileJoinDate">—</div>
+      <div class="kpi-s" id="profileProvider"></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Juegos hoy</div>
+      <div class="kpi-v" id="profileGamesPlayedToday">0/3</div>
+      <div class="kpi-s">minijuegos</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Soporte</div>
+      <div class="kpi-v" id="profileSupportTotal">$0</div>
+      <div class="kpi-s" id="profileSupportCount">0 aportes</div>
+    </div>
+  </div>
+
+  <!-- MAIN 3-COL GRID -->
+  <div class="pg">
+
+    <!-- ── COLUMNA IZQUIERDA ── -->
+    <div class="pg-left">
+
+      <!-- Info del perfil -->
+      <div class="pc">
+        <div class="pc-h"><h3>👤 Información</h3></div>
+        <table class="it">
+          <tr><td>Email</td><td id="profileEmail">—</td></tr>
+          <tr><td>Verificado</td><td id="profileVerificationStatusSide">—</td></tr>
+          <tr><td>Proveedor</td><td id="profileProviderSide">—</td></tr>
+          <tr><td>Pre-registro</td><td id="profilePreregisterStatusSide">—</td></tr>
+          <tr><td>Acceso</td><td id="profileAccessLevel">—</td></tr>
+          <tr><td>País</td><td id="profileCountry">—</td></tr>
+          <tr><td>Proy. fav.</td><td id="profileFavoriteProject">—</td></tr>
+        </table>
+        <div class="bio-box" id="profileBio">Sin descripción aún.</div>
+      </div>
+
+      <!-- Patrocinador -->
+      <div class="pc">
+        <div class="pc-h"><h3>🏆 Patrocinador</h3></div>
+        <div class="sp-row">
+          <div class="sp-ico" id="sponsorBadge">👤</div>
+          <div>
+            <p class="sp-name" id="sponsorLevelName">Visitante</p>
+            <p class="sp-desc" id="sponsorLevelDesc">Haz una donación.</p>
+          </div>
+        </div>
+        <div class="sp-sum" id="profileSponsorSummary"></div>
+        <a href="donaciones.html" class="pb gold sm pb-full" style="margin-top:8px">💖 Apoyar</a>
+      </div>
+
+    </div><!-- /pg-left -->
+
+    <!-- ── COLUMNA CENTRAL ── -->
+    <div class="pg-mid">
+
+      <!-- Bonus diario (sin ruleta) -->
+      <div class="pc">
+        <div>
+          <div class="pc-h">
+            <h3>📅 Bonus diario</h3>
+            <span>+<span id="dailyBonusAmount">10</span>🪙</span>
+          </div>
+          <div class="streak-row" style="margin:8px 0">
+              <div class="streak-day" data-day="1">L</div>
+              <div class="streak-day" data-day="2">M</div>
+              <div class="streak-day" data-day="3">X</div>
+              <div class="streak-day" data-day="4">J</div>
+              <div class="streak-day" data-day="5">V</div>
+              <div class="streak-day" data-day="6">S</div>
+              <div class="streak-day" data-day="7">D</div>
+            </div>
+            <button class="pb prim sm pb-full" id="claimDailyBtn">Reclamar</button>
+            <div id="dailyBonusMessage" style="margin-top:5px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Canje de monedas -->
+      <div class="pc">
+        <div class="pc-h">
+          <h3>💎 Canjear monedas</h3>
+          <span>5000🪙 = 50💎</span>
+        </div>
+        <div class="rdm-stats">
+          <span class="rdm-stat">Disponibles: <b id="redeemCoinsAvailable">0</b>🪙</span>
+          <span class="rdm-stat">Equiv.: <b id="redeemDollars">0💎</b></span>
+          <span class="rdm-stat">Total: <b id="redeemTotalPaid">0💎</b></span>
+          <span class="rdm-stat">Canjes: <b id="redeemTotalCount">0</b></span>
+        </div>
+        <div class="rdm-row">
+          <input type="number" id="redeemAmount" placeholder="5000" min="5000" step="100">
+          <button class="pb prim" id="redeemBtn">Canjear</button>
+        </div>
+        <div id="redeemMessage"></div>
+        <div id="redeemHistory" hidden style="margin-top:8px">
+          <div style="font-size:.65rem;color:#2d5570;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em">Historial</div>
+          <div id="redeemHistoryList"></div>
+        </div>
+      </div>
+
+      <!-- Actividad reciente -->
+      <div class="pc">
+        <div class="pc-h"><h3>📋 Actividad reciente</h3></div>
+        <ul class="act-list" id="activityList">
+          <li class="act-item"><div class="act-txt"><div class="act-title" style="color:#2d5570">Cargando...</div></div></li>
+        </ul>
+      </div>
+
+    </div><!-- /pg-mid -->
+
+    <!-- ── COLUMNA DERECHA ── -->
+    <div class="pg-right">
+
+      <!-- Referidos -->
+      <div class="pc">
+        <div class="pc-h"><h3>👥 Referidos</h3></div>
+        <div style="font-size:.72rem;color:#2d5570;margin-bottom:4px">Comparte y gana monedas.</div>
+        <div class="ref-box">
+          <span id="referralCode">——</span>
+          <button class="pb sm" id="copyReferralBtn">Copiar</button>
+        </div>
+        <div class="ref-stats">
+          <span class="ref-stat">Total: <strong id="referralCount">0</strong></span>
+          <span class="ref-stat">Ganados: <strong id="referralCoins">0</strong>🪙</span>
+        </div>
+      </div>
+
+      <!-- Novedades -->
+      <div class="pc">
+        <div class="pc-h">
+          <h3>🎮 Novedades</h3>
+          <a href="actualizaciones.html" class="pb sm">Ver →</a>
+        </div>
+        <div class="feed" id="projectUpdateFeed">
+          <p style="color:#2d5570;font-size:.75rem">Cargando...</p>
+        </div>
+      </div>
+
+    </div><!-- /pg-right -->
+
+  </div><!-- /pg -->
+</section>
+
+<!-- ════════════════════════
+     EDIT MODAL
+════════════════════════ -->
+<dialog class="pm" id="editProfileModal">
+  <div class="pm-h">
+    <h3>Editar perfil</h3>
+    <button class="pb sm dng" data-close-modal="editProfileModal">✕</button>
+  </div>
+  <form id="editProfileForm" method="dialog">
+    <div class="pm-b">
+      <div class="pm-grp">
+        <label>Nombre de usuario</label>
+        <input type="text" id="editDisplayName" class="pm-inp" placeholder="Tu nombre visible" maxlength="40">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="pm-grp">
+          <label>País</label>
+          <input type="text" id="editCountry" class="pm-inp" placeholder="Colombia...">
+        </div>
+        <div class="pm-grp">
+          <label>Proyecto favorito</label>
+          <input type="text" id="editFavoriteProject" class="pm-inp" placeholder="Nuestra Tierra...">
+        </div>
+      </div>
+      <div class="pm-grp">
+        <label>Sobre mí</label>
+        <textarea id="editBio" class="pm-inp" placeholder="Cuéntanos algo..."></textarea>
+      </div>
+      <div class="pm-grp">
+        <label>Avatar</label>
+        <input type="hidden" id="editAvatarValue" value="😊">
+        <div class="av-grid">
+          <button type="button" class="av-opt selected" data-avatar="😊">😊</button>
+          <button type="button" class="av-opt" data-avatar="😎">😎</button>
+          <button type="button" class="av-opt" data-avatar="🦊">🦊</button>
+          <button type="button" class="av-opt" data-avatar="🐱">🐱</button>
+          <button type="button" class="av-opt" data-avatar="🐺">🐺</button>
+          <button type="button" class="av-opt" data-avatar="🦁">🦁</button>
+          <button type="button" class="av-opt" data-avatar="🐼">🐼</button>
+          <button type="button" class="av-opt" data-avatar="🐸">🐸</button>
+          <button type="button" class="av-opt" data-avatar="👾">👾</button>
+          <button type="button" class="av-opt" data-avatar="🤖">🤖</button>
+          <button type="button" class="av-opt" data-avatar="🎮">🎮</button>
+          <button type="button" class="av-opt" data-avatar="🏆">🏆</button>
+          <button type="button" class="av-opt" data-avatar="⚡">⚡</button>
+          <button type="button" class="av-opt" data-avatar="🔥">🔥</button>
+          <button type="button" class="av-opt" data-avatar="💎">💎</button>
+          <button type="button" class="av-opt" data-avatar="🌙">🌙</button>
+        </div>
+      </div>
+    </div>
+    <div class="pm-f">
+      <button type="button" class="pb" data-close-modal="editProfileModal">Cancelar</button>
+      <button type="submit" class="pb prim">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<footer>
+  <p>&copy; 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
+</footer>
+
+<script src="../assets/js/core/script.js"></script>
+<script src="../assets/js/pages/perfil.js"></script>
 </body>
 </html>
