@@ -1,3 +1,77 @@
+/* === PERFIL UNIFICADO === */
+.profile-unified-section {
+    max-width: 600px;
+    margin: 2.5rem auto 2rem auto;
+    background: #f6f9ff;
+    border-radius: 18px;
+    box-shadow: 0 4px 32px rgba(30,112,200,0.07);
+    padding: 0 0 2rem 0;
+}
+
+.profile-unified-blocks {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    margin-top: 1.5rem;
+}
+
+.profile-unified-section .profile-kpi-grid {
+    margin: 0 1.5rem 1.5rem 1.5rem;
+    border-radius: 12px;
+    background: #e9eef8;
+    box-shadow: 0 2px 12px rgba(30,112,200,0.04);
+    padding: 1.2rem 0.5rem 0.7rem 0.5rem;
+}
+
+.profile-unified-section .profile-card {
+    margin: 0 1.5rem;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 1px 8px rgba(30,112,200,0.03);
+    padding: 1.2rem 1rem 1rem 1rem;
+}
+
+.profile-unified-section .profile-card--wide {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+}
+
+.profile-unified-section .profile-hub-hero {
+    margin: 0 1.5rem 1.5rem 1.5rem;
+    border-radius: 14px 14px 0 0;
+    background: #1e70c8;
+    color: #fff;
+    box-shadow: 0 2px 12px rgba(30,112,200,0.08);
+    padding: 1.5rem 1rem 1rem 1rem;
+}
+
+.profile-unified-section .profile-hub-hero .profile-hub-copy h2,
+.profile-unified-section .profile-hub-hero .profile-hub-copy p,
+.profile-unified-section .profile-hub-hero .profile-hub-kicker {
+    color: #fff;
+}
+
+.profile-unified-section .profile-hub-hero .profile-hub-chip-row {
+    margin-top: 0.7rem;
+}
+
+@media (max-width: 700px) {
+    .profile-unified-section {
+        max-width: 98vw;
+        margin: 1rem 0 1rem 0;
+        border-radius: 0;
+        padding: 0 0 1.2rem 0;
+    }
+    .profile-unified-section .profile-kpi-grid,
+    .profile-unified-section .profile-card,
+    .profile-unified-section .profile-hub-hero {
+        margin: 0 0.3rem 1rem 0.3rem;
+        border-radius: 10px;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+}
 /* style.css - Hoja de Estilos Global */
 
 /* ===== MEJORAS PARA MÓVILES ===== */

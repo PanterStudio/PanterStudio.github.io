@@ -1,15 +1,65 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2048 Esteroides</title>
-    <link rel="stylesheet" href="../../assets/css/2048-esteroides.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>2048 con Esteroides</title>
+  <link rel="stylesheet" href="../../assets/css/2048-esteroides.css">
 </head>
 <body>
-    <h1>2048 con Esteroides</h1>
+
+  <h1>2048 <span class="accent">con Esteroides</span></h1>
+  <p class="subtitle">Swipe, combina, domina</p>
+
+  <div class="scores-row">
+    <div class="score-box">
+      <div class="label">Puntos</div>
+      <div class="value" id="score">0</div>
+    </div>
+    <div class="score-box best">
+      <div class="label">Récord</div>
+      <div class="value" id="best">0</div>
+    </div>
+    <div class="score-box moves">
+      <div class="label">Movimientos</div>
+      <div class="value" id="moves">0</div>
+    </div>
+    <div class="score-box combo">
+      <div class="label">Combo</div>
+      <div class="value" id="combo">x1</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="restart-btn">🔄 Nuevo juego</button>
+    <button id="undo-btn" disabled>↩ Deshacer</button>
+    <div class="size-controls">
+      <span>Tamaño:</span>
+      <button class="size-btn active" data-size="4">4×4</button>
+      <button class="size-btn" data-size="5">5×5</button>
+      <button class="size-btn" data-size="6">6×6</button>
+    </div>
+  </div>
+
+  <div id="board-wrapper">
     <div id="game-container"></div>
-    <button id="restart-btn">Reiniciar</button>
-    <script src="../../assets/js/games/2048-esteroides.js"></script>
+    <div id="overlay" class="hidden">
+      <div class="overlay-content">
+        <div id="overlay-title"></div>
+        <div id="overlay-score"></div>
+        <button id="overlay-btn">Jugar de nuevo</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="powerups-row">
+    <button class="pu-btn" id="pu-bomb"    title="Elimina una casilla">💣 Bomba <span id="pu-bomb-count">3</span></button>
+    <button class="pu-btn" id="pu-shuffle" title="Reorganiza el tablero">🔀 Mezcla <span id="pu-shuffle-count">2</span></button>
+    <button class="pu-btn" id="pu-double"  title="Dobla una casilla">✖2 Doble <span id="pu-double-count">1</span></button>
+  </div>
+
+  <div id="touch-hint">👆 Desliza para mover</div>
+
+  <script src="../../assets/js/games/2048-esteroides.js"></script>
 </body>
 </html>

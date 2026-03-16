@@ -1,85 +1,492 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proyecto - Panter Studio</title>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
-    <link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
-    <link rel="stylesheet" href="../assets/css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
-    <script src="../assets/js/core/firebase-config.js"></script>
-</head>
-<body data-site-root="..">
-    <div id="tsparticles"></div>
-    <header>
-        <img src="https://i.imgur.com/GYjAGS7.png" alt="Logo Panter Studio" class="logo-img">
-        <button id="dark-mode-toggle" class="dark-mode-toggle">🌙</button>
-    </header>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Board de Desarrollo — Panter Studio</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
+<link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+<script src="../assets/js/core/firebase-config.js"></script>
+<style>
+:root {
+  --bg: #0d1117;
+  --bg2: #161b22;
+  --bg3: #21262d;
+  --border: #30363d;
+  --border2: #484f58;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #6e7681;
+  --accent: #238636;
+  --accent2: #2ea043;
+  --blue: #1f6feb;
+  --blue2: #388bfd;
+  --gold: #d29922;
+  --gold2: #e3b341;
+  --red: #da3633;
+  --purple: #8957e5;
+  --teal: #1abc9c;
+  --radius: 8px;
+  --radius2: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,.4), 0 0 0 1px var(--border);
+  --shadow2: 0 8px 32px rgba(0,0,0,.5);
+  --font: 'Inter', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --panel-w: 300px;
+  --toolbar-h: 52px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+}
 
-    <nav>
-        <a href="../index.html">Inicio</a>
-        <div class="nav-dropdown">
-            <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">Aplicaciones</button>
-            <div class="nav-dropdown-menu">
-                <a href="juegos.html">Juegos</a>
-                <a href="aplicaciones.html">Aplicaciones</a>
-            </div>
-        </div>
-        <a href="minijuegos.html">Minijuegos</a>
-        <a href="actualizaciones.html">Actualizaciones</a>
-        <a href="donaciones.html">Apóyanos</a>
-        <a href="personal.html">Personal</a>
-        <a href="perfil.html">Mi Perfil</a>
-        <a href="preregistro.html">Pre-registro</a>
-    </nav>
+/* ── LAYOUT ── */
+#app { display: flex; flex-direction: column; height: 100vh; }
+  boardName: 'dev_board',
+  currentUser: null,
+    metaHtml += `<span class="node-pill" style="background:rgba(56,139,253,.18);color:#388bfd">📅 ${node.date}</span>`;
+function deleteConnection(i) {
+<script src="../assets/js/pages/ideas.js"></script>
+  state.nodes.push(node);
+  markDirty(); renderAll();
+}
 
-    <div class="container">
-        <section class="juegos-showcase">
-            <div class="juegos-hero">
-                <span class="highlight-tag" id="projectTypeTag">PROYECTO</span>
-                <h2 id="projectTitle">Cargando proyecto...</h2>
-                <p id="projectSummary">Estamos cargando los datos del proyecto.</p>
-                <div class="juegos-metrics" aria-label="Resumen del proyecto">
-                    <div class="juegos-metric-box">
-                        <strong id="projectStatus">—</strong>
-                        <span>Estado</span>
-                    </div>
-                    <div class="juegos-metric-box">
-                        <strong id="projectProgress">0%</strong>
-                        <span>Progreso</span>
-                    </div>
-                    <div class="juegos-metric-box">
-                        <strong id="projectPlatform">—</strong>
-                        <span>Plataforma</span>
-                    </div>
-                    <div class="juegos-metric-box">
-                        <strong id="projectUpdatesCount">0</strong>
-                        <span>Actualizaciones</span>
-                    </div>
-                    <div class="juegos-metric-box">
-                        <strong id="projectLastUpdate">—</strong>
-                        <span>Ultima novedad</span>
-                    </div>
-                </div>
-                <div id="projectActionArea" class="juego-actions" style="margin-top:14px;"></div>
-                <div id="projectMetaTags" class="juego-tags" style="margin-top:12px;"></div>
-            </div>
+function deleteNode(id) {
+  state.nodes = state.nodes.filter(n => n.id !== id);
+  state.connections = state.connections.filter(c => c.from !== id && c.to !== id);
+  if (state.selectedId === id) { state.selectedId = null; closePanel(); }
+  markDirty(); renderAll();
+}
 
-            <div class="juegos-grid" id="projectHeroCard"></div>
+function onNodeClick(id) {
+  if (state.connectMode) { handleConnectClick(id); return; }
+  state.selectedId = id;
+  renderNodes();
+  openPanel(id);
+}
 
-            <div class="card" style="margin-top:16px;">
-                <h3>Bitacora de actualizaciones</h3>
-                <div id="projectUpdatesList"><p>Cargando actualizaciones...</p></div>
-            </div>
-        </section>
-    </div>
+/* ═══════════════════════════════════════════════
+   DRAG
+═══════════════════════════════════════════════ */
+let dragStart = null, dragNodeStart = null;
 
-    <footer>
-        <p>&copy; 2026 Panter Studio Game Dev.</p>
-    </footer>
+function onNodeMouseDown(e, id) {
+  if (e.button !== 0) return;
+  if (e.target.closest('.node-menu-btn, .node-task-btn, .node-connect-port')) return;
+  e.stopPropagation();
+  const node = state.nodes.find(n => n.id === id);
+  if (!node) return;
+  dragStart = { x: e.clientX, y: e.clientY };
+  dragNodeStart = { x: node.x, y: node.y };
+  state.dragging = id;
+  document.addEventListener('mousemove', onDragMove);
+  document.addEventListener('mouseup', onDragEnd);
+}
 
-    <script src="../assets/js/core/script.js"></script>
-    <script src="../assets/js/pages/proyecto.js"></script>
+function onDragMove(e) {
+  if (!state.dragging || !dragStart) return;
+  const dx = (e.clientX - dragStart.x) / state.zoom;
+  const dy = (e.clientY - dragStart.y) / state.zoom;
+  const node = state.nodes.find(n => n.id === state.dragging);
+  if (!node) return;
+  node.x = dragNodeStart.x + dx;
+  node.y = dragNodeStart.y + dy;
+  const el = $('nodes-container').querySelector(`[data-id="${node.id}"]`);
+  if (el) { el.style.left = node.x + 'px'; el.style.top = node.y + 'px'; }
+  renderConnections();
+}
+
+function onDragEnd() {
+  if (state.dragging) { markDirty(); }
+  state.dragging = null; dragStart = null; dragNodeStart = null;
+  document.removeEventListener('mousemove', onDragMove);
+  document.removeEventListener('mouseup', onDragEnd);
+}
+
+// Touch drag
+let touchDragId = null, touchStart = null, touchNodeStart = null;
+function onNodeTouchStart(e, id) {
+  if (e.touches.length !== 1) return;
+  if (e.target.closest('.node-menu-btn, .node-task-btn, .node-connect-port')) return;
+  e.preventDefault(); e.stopPropagation();
+  const node = state.nodes.find(n => n.id === id);
+  if (!node) return;
+  touchDragId = id;
+  touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  touchNodeStart = { x: node.x, y: node.y };
+  state.dragging = id;
+}
+
+/* ═══════════════════════════════════════════════
+   PAN (canvas drag)
+═══════════════════════════════════════════════ */
+let panStart = null;
+
+function onCanvasMouseDown(e) {
+  if (e.button !== 1 || e.target !== $('canvas-area') && !e.target.closest('#canvas-scroll')) {
+    if (e.button === 0 && (e.target === $('canvas-area') || e.target.id === 'canvas-scroll' || e.target.id === 'viewport' || e.target.id === 'idea-svg')) {
+      // Deselect
+      state.selectedId = null;
+      closePanel();
+      renderNodes();
+    }
+    if (e.button !== 1) return;
+  }
+  e.preventDefault();
+  panStart = { x: e.clientX - state.panX, y: e.clientY - state.panY };
+  state.panning = true;
+  document.addEventListener('mousemove', onPanMove);
+  document.addEventListener('mouseup', onPanEnd);
+}
+
+function onPanMove(e) {
+  if (!state.panning || !panStart) return;
+  state.panX = e.clientX - panStart.x;
+  state.panY = e.clientY - panStart.y;
+  applyTransform();
+}
+function onPanEnd() { state.panning = false; panStart = null; document.removeEventListener('mousemove', onPanMove); document.removeEventListener('mouseup', onPanEnd); }
+
+// Spacebar + drag pan
+let spaceDown = false;
+document.addEventListener('keydown', e => { if (e.code === 'Space' && !e.target.matches('input,textarea,select')) { e.preventDefault(); spaceDown = true; $('canvas-area').style.cursor = 'grab'; } });
+document.addEventListener('keyup', e => { if (e.code === 'Space') { spaceDown = false; $('canvas-area').style.cursor = 'default'; } });
+
+function onCanvasMouseDownSpace(e) {
+  if (!spaceDown) return;
+  panStart = { x: e.clientX - state.panX, y: e.clientY - state.panY };
+  state.panning = true;
+  document.addEventListener('mousemove', onPanMove);
+  document.addEventListener('mouseup', onPanEnd);
+}
+
+/* ═══════════════════════════════════════════════
+   ZOOM
+═══════════════════════════════════════════════ */
+function zoomAt(delta, cx, cy) {
+  const prev = state.zoom;
+  state.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, state.zoom + delta * ZOOM_STEP));
+  if (cx !== undefined && cy !== undefined) {
+    const ca = $('canvas-area').getBoundingClientRect();
+    const wx = (cx - ca.left - state.panX) / prev;
+    const wy = (cy - ca.top - state.panY) / prev;
+    state.panX -= (state.zoom - prev) * wx;
+    state.panY -= (state.zoom - prev) * wy;
+  }
+  applyTransform();
+}
+
+/* ═══════════════════════════════════════════════
+   CONNECTION MODE
+═══════════════════════════════════════════════ */
+function toggleConnectMode() {
+  state.connectMode = !state.connectMode;
+  state.connectFrom = null;
+  $('connectModeBtn').classList.toggle('active', state.connectMode);
+  $('conn-hint').classList.toggle('hidden', !state.connectMode);
+  if (state.connectMode) $('canvas-area').classList.add('connect-mode');
+  else $('canvas-area').classList.remove('connect-mode');
+}
+
+function handleConnectClick(id) {
+  if (!state.connectFrom) {
+    state.connectFrom = id;
+    $('conn-hint').textContent = 'Ahora click en el nodo destino · ESC para cancelar';
+  } else if (state.connectFrom !== id) {
+    const already = state.connections.some(c => c.from === state.connectFrom && c.to === id);
+    if (!already) { state.connections.push({ from: state.connectFrom, to: id }); markDirty(); renderConnections(); toast('Conexión creada', 'success'); }
+    state.connectFrom = null;
+    $('conn-hint').textContent = 'Click en otro nodo para conectar · ESC para cancelar';
+  } else {
+    state.connectFrom = null;
+    $('conn-hint').textContent = 'Click en otro nodo para conectar · ESC para cancelar';
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   SIDE PANEL
+═══════════════════════════════════════════════ */
+function openPanel(id) {
+  const node = state.nodes.find(n => n.id === id);
+  if (!node) return;
+  state.selectedId = id;
+  const panel = $('side-panel');
+  panel.classList.remove('hidden');
+
+  // Type selector
+  const typeEl = $('editType');
+  typeEl.innerHTML = NODE_TYPES.map(t => `<option value="${t.type}" ${t.type===node.type?'selected':''}>${t.icon} ${t.label}</option>`).join('');
+  typeEl.onchange = () => {
+    const td = typeOf(typeEl.value);
+    node.type = td.type; node.icon = td.icon;
+    if (!node.color || node.color === typeOf(node.type)?.color) node.color = td.color;
+    td.fields.forEach(f => { if (!node[f.key]) node[f.key] = ''; });
+    renderCustomFields(node);
+    renderNodes();
+  };
+
+  $('editTitle').value = node.title || '';
+  $('editBody').value = node.body || '';
+  $('editNodeId').textContent = node.id;
+
+  renderColorGrid(node);
+  renderCustomFields(node);
+}
+
+function renderCustomFields(node) {
+  const container = $('editCustomFields');
+  container.innerHTML = '';
+  const td = typeOf(node.type);
+  if (!td.fields || td.fields.length === 0) return;
+  td.fields.forEach(f => {
+    const grp = document.createElement('div'); grp.className = 'field-group';
+    const lbl = document.createElement('div'); lbl.className = 'field-label'; lbl.textContent = f.label; grp.appendChild(lbl);
+    let inp;
+    if (f.type === 'date') { inp = document.createElement('input'); inp.type = 'date'; inp.className = 'field-input'; }
+    else { inp = document.createElement('input'); inp.type = 'text'; inp.className = 'field-input'; inp.placeholder = f.ph || ''; }
+    inp.value = node[f.key] || '';
+    inp.oninput = () => { node[f.key] = inp.value; };
+    grp.appendChild(inp); container.appendChild(grp);
+  });
+}
+
+function renderColorGrid(node) {
+  const grid = $('colorGrid'); grid.innerHTML = '';
+  PALETTE.forEach(col => {
+    const sw = document.createElement('div');
+    sw.className = 'color-swatch' + (node.color === col ? ' active' : '');
+    sw.style.background = col;
+    sw.title = col;
+    sw.onclick = () => { node.color = col; renderColorGrid(node); renderNodes(); };
+    grid.appendChild(sw);
+  });
+}
+
+function applyPanel() {
+  const node = state.nodes.find(n => n.id === state.selectedId);
+  if (!node) return;
+  node.title = $('editTitle').value;
+  node.body = $('editBody').value;
+  markDirty(); renderAll();
+  toast('Cambios aplicados', 'success');
+}
+
+function closePanel() { $('side-panel').classList.add('hidden'); }
+
+/* ═══════════════════════════════════════════════
+   CONTEXT MENU
+═══════════════════════════════════════════════ */
+let ctxNodeId = null;
+function showCtxMenu(e, id) {
+  e.preventDefault(); ctxNodeId = id;
+  const menu = $('ctx-menu');
+  menu.classList.remove('hidden');
+  menu.style.left = Math.min(e.clientX, window.innerWidth - 180) + 'px';
+  menu.style.top = Math.min(e.clientY, window.innerHeight - 160) + 'px';
+}
+function hideCtxMenu() { $('ctx-menu').classList.add('hidden'); ctxNodeId = null; }
+
+/* ═══════════════════════════════════════════════
+   TYPE PICKER POPUP
+═══════════════════════════════════════════════ */
+function showTypePicker(btnRect) {
+  const picker = $('type-picker');
+  picker.innerHTML = NODE_TYPES.map(t =>
+    `<div class="type-opt" data-type="${t.type}">
+      <span class="type-opt-dot" style="background:${t.color}"></span>
+      <span>${t.icon} ${t.label}</span>
+    </div>`
+  ).join('');
+  picker.querySelectorAll('.type-opt').forEach(el => {
+    el.onclick = () => {
+      picker.classList.add('hidden');
+      const worldPos = screenToWorld(btnRect.left + btnRect.width/2, btnRect.bottom + 20);
+      addNode(el.dataset.type, worldPos.x, worldPos.y);
+    };
+  });
+  picker.classList.remove('hidden');
+  picker.style.top = (btnRect.bottom + 6) + 'px';
+  picker.style.left = Math.min(btnRect.left, window.innerWidth - 240) + 'px';
+}
+
+/* ═══════════════════════════════════════════════
+   STATUS BAR
+═══════════════════════════════════════════════ */
+function updateStatus() {
+  $('tb-status').textContent = `${state.nodes.length} nodos · ${state.connections.length} conexiones${state.dirty ? ' · sin guardar' : ''}`;
+}
+
+function markDirty() { state.dirty = true; updateStatus(); }
+
+/* ═══════════════════════════════════════════════
+   BOARD NAME
+═══════════════════════════════════════════════ */
+function updateBoardLabel() {
+  $('board-name-label').textContent = state.boardName;
+}
+
+/* ═══════════════════════════════════════════════
+   KEYBOARD SHORTCUTS
+═══════════════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  const focused = document.activeElement;
+  const typing = focused.matches('input, textarea, select');
+
+  if (e.key === 'Escape') {
+    if (state.connectMode) { toggleConnectMode(); return; }
+    hideCtxMenu(); $('type-picker').classList.add('hidden');
+    closePanel(); state.selectedId = null; renderNodes();
+    return;
+  }
+  if (typing) return;
+
+  if (e.key === 'a' || e.key === 'A') { const btn = $('addNodeBtn'); showTypePicker(btn.getBoundingClientRect()); }
+  if (e.key === 'c' || e.key === 'C') { toggleConnectMode(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); save(); }
+  if (e.key === '+' || e.key === '=') { zoomAt(1, window.innerWidth/2, window.innerHeight/2); }
+  if (e.key === '-') { zoomAt(-1, window.innerWidth/2, window.innerHeight/2); }
+  if (e.key === '0') { state.zoom = 1; state.panX = 100; state.panY = 80; applyTransform(); }
+  if ((e.key === 'Delete' || e.key === 'Backspace') && state.selectedId) { deleteNode(state.selectedId); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'd' && state.selectedId) { e.preventDefault(); duplicateNode(state.selectedId); }
+});
+
+/* ═══════════════════════════════════════════════
+   TOUCH PAN & PINCH
+═══════════════════════════════════════════════ */
+let touchPanStart = null, pinchStart = null, pinchZoomStart = null, pinchCenterStart = null;
+
+$('canvas-area').addEventListener('touchstart', e => {
+  if (e.target.closest('.idea-node')) return;
+  if (e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    pinchStart = Math.sqrt(dx*dx + dy*dy);
+    pinchZoomStart = state.zoom;
+    const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+    const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+    const ca = $('canvas-area').getBoundingClientRect();
+    pinchCenterStart = { x:(cx-ca.left-state.panX)/state.zoom, y:(cy-ca.top-state.panY)/state.zoom };
+    touchPanStart = null;
+  } else if (e.touches.length === 1) {
+    touchPanStart = { x: e.touches[0].clientX - state.panX, y: e.touches[0].clientY - state.panY };
+  }
+}, { passive: true });
+
+$('canvas-area').addEventListener('touchmove', e => {
+  if (e.target.closest('.idea-node')) return;
+  if (e.touches.length === 2 && pinchStart) {
+    e.preventDefault();
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    const newDist = Math.sqrt(dx*dx+dy*dy);
+    const scale = newDist / pinchStart;
+    const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, pinchZoomStart * scale));
+    const ca = $('canvas-area').getBoundingClientRect();
+    state.panX = ((e.touches[0].clientX + e.touches[1].clientX)/2 - ca.left) - pinchCenterStart.x * newZoom;
+    state.panY = ((e.touches[0].clientY + e.touches[1].clientY)/2 - ca.top) - pinchCenterStart.y * newZoom;
+    state.zoom = newZoom;
+    applyTransform();
+  } else if (e.touches.length === 1 && touchPanStart) {
+    state.panX = e.touches[0].clientX - touchPanStart.x;
+    state.panY = e.touches[0].clientY - touchPanStart.y;
+    applyTransform();
+  }
+}, { passive: false });
+
+$('canvas-area').addEventListener('touchend', e => {
+  if (e.touches.length < 2) { pinchStart = null; }
+  if (e.touches.length === 0) { touchPanStart = null; }
+});
+
+// Touch drag for nodes
+$('nodes-container').addEventListener('touchmove', e => {
+  if (!touchDragId || !touchStart) return;
+  e.preventDefault();
+  const dx = (e.touches[0].clientX - touchStart.x) / state.zoom;
+  const dy = (e.touches[0].clientY - touchStart.y) / state.zoom;
+  const node = state.nodes.find(n => n.id === touchDragId);
+  if (!node) return;
+  node.x = touchNodeStart.x + dx; node.y = touchNodeStart.y + dy;
+  const el = $('nodes-container').querySelector(`[data-id="${node.id}"]`);
+  if (el) { el.style.left = node.x + 'px'; el.style.top = node.y + 'px'; }
+  renderConnections();
+}, { passive: false });
+
+$('nodes-container').addEventListener('touchend', () => {
+  if (touchDragId) markDirty();
+  touchDragId = null; touchStart = null; touchNodeStart = null; state.dragging = null;
+});
+
+/* ═══════════════════════════════════════════════
+   EVENT WIRING
+═══════════════════════════════════════════════ */
+$('canvas-area').addEventListener('mousedown', e => { onCanvasMouseDownSpace(e); onCanvasMouseDown(e); });
+$('canvas-area').addEventListener('wheel', e => { e.preventDefault(); zoomAt(e.deltaY < 0 ? 1 : -1, e.clientX, e.clientY); }, { passive: false });
+
+$('addNodeBtn').addEventListener('click', () => {
+  const rect = $('addNodeBtn').getBoundingClientRect();
+  showTypePicker(rect);
+});
+
+$('connectModeBtn').addEventListener('click', toggleConnectMode);
+$('zoomInBtn').addEventListener('click', () => zoomAt(1, window.innerWidth/2, window.innerHeight/2));
+$('zoomOutBtn').addEventListener('click', () => zoomAt(-1, window.innerWidth/2, window.innerHeight/2));
+$('resetViewBtn').addEventListener('click', () => { state.zoom=1; state.panX=100; state.panY=80; applyTransform(); });
+$('saveBtn').addEventListener('click', save);
+$('clearBtn').addEventListener('click', () => {
+  if (!confirm('¿Borrar todos los nodos y conexiones?')) return;
+  state.nodes=[]; state.connections=[]; markDirty(); renderAll(); closePanel();
+  toast('Board limpiado', '');
+});
+
+$('board-name-label').addEventListener('click', () => {
+  const n = prompt('Nombre del board:', state.boardName);
+  if (n && n.trim()) { state.boardName = n.trim(); markDirty(); updateBoardLabel(); }
+});
+
+$('panelCloseBtn').addEventListener('click', closePanel);
+$('applyNodeBtn').addEventListener('click', applyPanel);
+$('deleteNodeBtn').addEventListener('click', () => { if (state.selectedId) deleteNode(state.selectedId); });
+
+// Context menu actions
+$('ctx-edit').addEventListener('click', () => { if(ctxNodeId){openPanel(ctxNodeId);state.selectedId=ctxNodeId;renderNodes();} hideCtxMenu(); });
+$('ctx-duplicate').addEventListener('click', () => { if(ctxNodeId) duplicateNode(ctxNodeId); hideCtxMenu(); });
+$('ctx-connect').addEventListener('click', () => { if(ctxNodeId){if(!state.connectMode)toggleConnectMode();state.connectFrom=ctxNodeId;} hideCtxMenu(); });
+$('ctx-delete').addEventListener('click', () => { if(ctxNodeId) deleteNode(ctxNodeId); hideCtxMenu(); });
+
+document.addEventListener('click', e => {
+  if (!$('ctx-menu').classList.contains('hidden') && !e.target.closest('#ctx-menu')) hideCtxMenu();
+  if (!$('type-picker').classList.contains('hidden') && !e.target.closest('#type-picker') && !e.target.closest('#addNodeBtn')) $('type-picker').classList.add('hidden');
+});
+
+/* ═══════════════════════════════════════════════
+   AUTOSAVE every 90s
+═══════════════════════════════════════════════ */
+setInterval(() => { if (state.dirty) save(); }, 90000);
+
+/* ═══════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════ */
+async function init() {
+  // Try Firebase auth
+  try {
+    if (window.firebase?.auth) {
+      window.firebase.auth().onAuthStateChanged(user => {
+        state.currentUser = user || null;
+        load();
+      });
+    } else { await load(); }
+  } catch { await load(); }
+}
+
+init();
+</script>
 </body>
 </html>

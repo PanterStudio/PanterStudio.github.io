@@ -12,6 +12,10 @@ let connectingFrom = null;
 let boardId = 'dev_board';
 let boardName = 'Desarrollo Videojuego';
 let currentUser = null;
+let boardZoom = 1;
+const MIN_ZOOM = 0.4;
+const MAX_ZOOM = 2.2;
+const ZOOM_STEP = 0.15;
 
 // Tipos de nodos para desarrollo de videojuegos
 const NODE_TYPES = [
@@ -30,12 +34,26 @@ const NODE_TYPES = [
   { type: 'custom', label: 'Personalizado', color: '#d35400', icon: '📝', fields: [] }
 ];
 
-// --- Firebase helpers ---
+// --- Firebase y Local helpers ---
 function getFirestore() { return window.firebase?.firestore?.(); }
 function boardDoc() { return getFirestore().collection('idea_boards').doc(boardId); }
 
+function saveLocal() {
+  localStorage.setItem('ideasBoardNodes', JSON.stringify(nodes));
+  localStorage.setItem('ideasBoardConnections', JSON.stringify(connections));
+}
+function loadLocal() {
+  try {
+    nodes = JSON.parse(localStorage.getItem('ideasBoardNodes')) || [];
+    connections = JSON.parse(localStorage.getItem('ideasBoardConnections')) || [];
+  } catch { nodes = []; connections = []; }
+}
+
 async function saveToFirestore() {
-  if (!currentUser) return;
+  if (!currentUser) {
+    saveLocal();
+    return;
+  }
   await boardDoc().set({
     boardName,
     nodes,
@@ -46,6 +64,11 @@ async function saveToFirestore() {
 }
 
 async function loadFromFirestore() {
+  if (!currentUser) {
+    loadLocal();
+    renderAll();
+    return;
+  }
   const snap = await boardDoc().get();
   if (snap.exists) {
     const data = snap.data();
@@ -67,6 +90,12 @@ function renderAll() {
   if (!nodeContainer || !svg) return;
   nodeContainer.innerHTML = '';
   svg.innerHTML = '';
+  // Aplicar zoom
+  const viewport = document.getElementById('ideaViewport');
+  if (viewport) {
+    viewport.style.transform = `scale(${boardZoom})`;
+    viewport.style.transformOrigin = '0 0';
+  }
 
   // Renderizar conexiones
   connections.forEach(conn => {
@@ -91,16 +120,88 @@ function renderAll() {
     el.style.position = 'absolute';
     el.style.left = node.x + 'px';
     el.style.top = node.y + 'px';
-    el.style.background = node.color || '#232b3a';
-    el.style.color = '#fff';
-    el.style.borderRadius = '10px';
-    el.style.padding = '12px 18px';
-    el.style.minWidth = '120px';
-    el.style.boxShadow = '0 2px 8px #0006';
+    // Fondo con gradiente sutil
+    const baseColor = node.color || '#232b3a';
+    el.style.background = `linear-gradient(135deg, ${baseColor} 85%, #232b3a 100%)`;
+    // Contraste de texto
+    function getContrastYIQ(hexcolor) {
+      hexcolor = hexcolor.replace('#','');
+      if (hexcolor.length === 3) hexcolor = hexcolor.split('').map(x=>x+x).join('');
+      const r = parseInt(hexcolor.substr(0,2),16);
+      const g = parseInt(hexcolor.substr(2,2),16);
+      const b = parseInt(hexcolor.substr(4,2),16);
+      const yiq = ((r*299)+(g*587)+(b*114))/1000;
+      return (yiq >= 140) ? '#222' : '#fff';
+    }
+    const textColor = getContrastYIQ(baseColor);
+    el.style.color = textColor;
+    el.style.borderRadius = '16px';
+    el.style.padding = '0';
+    // Responsive sizing
+    if (window.innerWidth < 700) {
+      el.style.width = '92vw';
+      el.style.minWidth = '60vw';
+      el.style.maxWidth = '98vw';
+      el.style.height = 'auto';
+      el.style.minHeight = '48px';
+      el.style.maxHeight = 'none';
+      el.style.fontSize = '1em';
+    } else {
+      el.style.width = 'min(90vw, 220px)';
+      el.style.height = 'auto';
+      el.style.minWidth = '120px';
+      el.style.maxWidth = '98vw';
+      el.style.minHeight = '48px';
+      el.style.maxHeight = 'none';
+    }
+    el.style.boxShadow = '0 1.5px 0 0 #fff1 inset'; // Solo un sutil borde superior
+    el.style.border = `2.5px solid transparent`;
+    el.style.transition = 'box-shadow .18s, border .18s, background .18s, width .18s, height .18s, filter .18s';
+    el.style.borderImage = `linear-gradient(135deg, ${textColor}33 0%, ${baseColor} 100%) 1`;
+    el.onmouseenter = () => { el.style.filter = 'brightness(1.08) drop-shadow(0 2px 8px #6cb2f7aa)'; };
+    el.onmouseleave = () => { el.style.filter = 'none'; };
     el.style.cursor = 'grab';
     el.style.userSelect = 'none';
     el.style.zIndex = node.id === selectedNodeId ? 20 : 10;
-    el.innerHTML = `<span style="font-size:1.3em;">${node.icon||'💡'}</span> <b>${node.title||node.type}</b>`;
+    el.style.marginBottom = '10px';
+    el.style.marginRight = '10px';
+    el.style.display = 'flex';
+    el.style.flexDirection = 'column';
+    el.style.overflow = 'hidden';
+    const typeDef = NODE_TYPES.find(t => t.type === node.type);
+    const typeLabel = typeDef ? typeDef.label : (node.type || 'Nodo');
+    el.innerHTML = `
+      <div style="
+        background:rgba(30,32,40,0.72);backdrop-filter:blur(2.5px);
+        padding:7px 12px 4px 12px;
+        border-radius:14px 14px 0 0;
+        font-size:.98em;font-weight:700;letter-spacing:.7px;
+        color:${textColor};line-height:1.1;
+        display:flex;align-items:center;gap:8px;
+        text-transform:uppercase;
+        border-bottom:1.5px solid ${textColor}22;">
+        <span style='font-size:1.2em;line-height:1;'>${node.icon||'💡'}</span> ${typeLabel}
+      </div>
+      <div style="
+        flex:1;display:flex;flex-direction:column;justify-content:center;
+        padding:7px 12px 6px 12px;
+        background:rgba(255,255,255,0.03);border-radius:0 0 14px 14px;">
+        <div style="font-size:.98em;font-weight:500;color:${textColor};opacity:.92;word-break:break-word;">${node.title||''}</div>
+        ${(node.type==='task') ? `<button class="task-status-btn" style="margin-top:8px;padding:6px 12px;border-radius:7px;border:none;font-weight:600;font-size:.97em;cursor:pointer;background:${node.status==='hecho'?'#27ae60':'#b2bec3'};color:${node.status==='hecho'?'#fff':'#232b3a'};transition:background .18s;">${node.status==='hecho'?'✔ Hecho':'Pendiente'}</button>` : ''}
+      </div>
+    `;
+    // Si es tarea, agregar evento al botón
+    if(node.type==='task') {
+      const btn = el.querySelector('.task-status-btn');
+      if(btn) {
+        btn.onclick = (ev) => {
+          ev.stopPropagation();
+          node.status = node.status==='hecho' ? 'pendiente' : 'hecho';
+          saveToFirestore();
+          renderAll();
+        };
+      }
+    }
     el.dataset.id = node.id;
     // Drag events
     el.onmousedown = e => startDragNode(e, node.id);
@@ -113,7 +214,7 @@ function renderAll() {
   // Actualizar status bar
   const statusBar = document.getElementById('ideaStatusBar');
   if (statusBar) {
-    statusBar.textContent = `Nodos: ${nodes.length} | Conexiones: ${connections.length}`;
+    statusBar.textContent = `Nodos: ${nodes.length} | Conexiones: ${connections.length} | Zoom: ${Math.round(boardZoom*100)}%`;
   }
 }
 
@@ -187,6 +288,66 @@ function showEditPanel(nodeId) {
   panel.classList.remove('hidden');
   document.getElementById('ideaEditTitle').value = node.title || '';
   document.getElementById('ideaEditBody').value = node.body || '';
+  // Selector de tipo
+  const typeSelect = document.getElementById('ideaEditType');
+  if (typeSelect) {
+    typeSelect.innerHTML = '';
+    NODE_TYPES.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.type;
+      opt.textContent = `${t.icon} ${t.label}`;
+      if (node.type === t.type) opt.selected = true;
+      typeSelect.appendChild(opt);
+    });
+    typeSelect.onchange = () => {
+      const t = NODE_TYPES.find(nt => nt.type === typeSelect.value);
+      if (t) {
+        node.type = t.type;
+        node.icon = t.icon;
+        node.color = t.color;
+        // Limpiar campos personalizados al cambiar tipo
+        if (t.fields && t.fields.length) {
+          t.fields.forEach(f => { node[f.key] = ''; });
+        }
+        renderAll();
+        showEditPanel(nodeId);
+      }
+    };
+  }
+  // Campos personalizados
+  const customFieldsDiv = document.getElementById('ideaCustomFields');
+  if (customFieldsDiv) {
+    customFieldsDiv.innerHTML = '';
+    const typeDef = NODE_TYPES.find(t => t.type === node.type);
+    if (typeDef && typeDef.fields && typeDef.fields.length) {
+      typeDef.fields.forEach(field => {
+        const fieldLabel = document.createElement('label');
+        fieldLabel.textContent = field.label;
+        fieldLabel.style.marginTop = '8px';
+        let input;
+        if (field.type === 'text') {
+          input = document.createElement('input');
+          input.type = 'text';
+          input.value = node[field.key] || '';
+          input.placeholder = field.placeholder || '';
+        } else if (field.type === 'date') {
+          input = document.createElement('input');
+          input.type = 'date';
+          input.value = node[field.key] || '';
+        } else {
+          input = document.createElement('input');
+          input.type = 'text';
+          input.value = node[field.key] || '';
+        }
+        input.style.width = '100%';
+        input.oninput = () => {
+          node[field.key] = input.value;
+        };
+        customFieldsDiv.appendChild(fieldLabel);
+        customFieldsDiv.appendChild(input);
+      });
+    }
+  }
   // Colores
   const picker = document.getElementById('ideaColorPicker');
   if (picker) {
@@ -216,6 +377,85 @@ function hideEditPanel() {
 // --- Inicialización ---
 // --- Inicialización y eventos de UI ---
 async function initIdeasBoard(user) {
+          // Ocultar el gate si existe
+          const gate = document.getElementById('ideaGate');
+          if (gate) gate.style.display = 'none';
+        // Zoom dinámico: rueda del mouse y gesto de pinza
+        if (viewport) {
+          // Zoom con rueda del mouse
+          viewport.addEventListener('wheel', (e) => {
+            if (e.ctrlKey) return; // Evitar conflicto con zoom del navegador
+            e.preventDefault();
+            const rect = viewport.getBoundingClientRect();
+            const mouseX = (e.clientX - rect.left - panOrigin.x) / boardZoom;
+            const mouseY = (e.clientY - rect.top - panOrigin.y) / boardZoom;
+            let delta = e.deltaY < 0 ? 1 : -1;
+            let prevZoom = boardZoom;
+            boardZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, boardZoom + delta * ZOOM_STEP));
+            // Mantener el punto bajo el cursor fijo
+            panOrigin.x -= (boardZoom - prevZoom) * mouseX;
+            panOrigin.y -= (boardZoom - prevZoom) * mouseY;
+            renderAll();
+          }, { passive: false });
+
+          // Zoom con gesto de pinza en móvil
+          let lastDist = null;
+          let pinchCenter = null;
+          viewport.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+              const dx = e.touches[0].clientX - e.touches[1].clientX;
+              const dy = e.touches[0].clientY - e.touches[1].clientY;
+              lastDist = Math.sqrt(dx*dx + dy*dy);
+              const rect = viewport.getBoundingClientRect();
+              pinchCenter = {
+                x: ((e.touches[0].clientX + e.touches[1].clientX)/2 - rect.left - panOrigin.x) / boardZoom,
+                y: ((e.touches[0].clientY + e.touches[1].clientY)/2 - rect.top - panOrigin.y) / boardZoom
+              };
+            }
+          });
+          viewport.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && lastDist !== null && pinchCenter) {
+              e.preventDefault();
+              const dx = e.touches[0].clientX - e.touches[1].clientX;
+              const dy = e.touches[0].clientY - e.touches[1].clientY;
+              const newDist = Math.sqrt(dx*dx + dy*dy);
+              let scaleDelta = (newDist - lastDist) / 180; // Sensibilidad
+              let prevZoom = boardZoom;
+              boardZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, boardZoom + scaleDelta));
+              panOrigin.x -= (boardZoom - prevZoom) * pinchCenter.x;
+              panOrigin.y -= (boardZoom - prevZoom) * pinchCenter.y;
+              lastDist = newDist;
+              renderAll();
+            }
+          }, { passive: false });
+          viewport.addEventListener('touchend', (e) => {
+            if (e.touches.length < 2) {
+              lastDist = null;
+              pinchCenter = null;
+            }
+          });
+        }
+      const zoomInBtn = document.getElementById('ideaZoomInBtn');
+      if (zoomInBtn) {
+        zoomInBtn.onclick = () => {
+          boardZoom = Math.min(MAX_ZOOM, boardZoom + ZOOM_STEP);
+          renderAll();
+        };
+      }
+      const zoomOutBtn = document.getElementById('ideaZoomOutBtn');
+      if (zoomOutBtn) {
+        zoomOutBtn.onclick = () => {
+          boardZoom = Math.max(MIN_ZOOM, boardZoom - ZOOM_STEP);
+          renderAll();
+        };
+      }
+      const resetBtn = document.getElementById('ideaResetViewBtn');
+      if (resetBtn) {
+        resetBtn.onclick = () => {
+          boardZoom = 1;
+          renderAll();
+        };
+      }
   currentUser = user;
   await loadFromFirestore();
   // Botón agregar nodo
@@ -303,3 +543,10 @@ async function initIdeasBoard(user) {
 
 // Exportar funciones principales si se usa como módulo
 window.ideasBoard = { initIdeasBoard, saveToFirestore, loadFromFirestore, NODE_TYPES };
+
+// Inicializar automáticamente para todos los usuarios
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof window.ideasBoard !== 'undefined') {
+    window.ideasBoard.initIdeasBoard(null);
+  }
+});

@@ -2,8 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#1e70c8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Perfil - Panter Studio</title>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
     <link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
@@ -30,398 +29,185 @@
         </div>
         <a href="minijuegos.html">Minijuegos</a>
         <a href="actualizaciones.html">Actualizaciones</a>
-        <a href="donaciones.html">Apoyanos</a>
+        <a href="donaciones.html">Apóyanos</a>
         <a href="personal.html">Personal</a>
         <a href="perfil.html" class="active">Mi Perfil</a>
+        <a href="preregistro.html">Pre-registro</a>
     </nav>
 
     <div class="container profile-shell">
-        <section id="profileAuthSection" class="profile-auth-section">
-            <div class="profile-auth-card profile-auth-card--expanded">
-                <img src="https://i.imgur.com/GYjAGS7.png" alt="Logo" class="profile-auth-logo">
-                <h2>Accede a tu centro de cuenta</h2>
-                <p>Tu perfil ahora concentra sesión, progreso, recompensas, preregistro, actividad, estado de apoyo y accesos rápidos.</p>
-
-                <div class="profile-auth-tabs">
-                    <button class="auth-tab active" data-tab="login">Iniciar Sesion</button>
-                    <button class="auth-tab" data-tab="register">Crear Cuenta</button>
+        <section class="profile-auth-section">
+            <div class="profile-auth-card profile-auth-card--centered">
+                <img src="https://media.discordapp.net/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=69b9568e&is=69b8050e&hm=79eb602ee4f4028860ecc07bd7b7f8787b8235c7dee065274be317c823a95564&=&format=webp&quality=lossless&width=120&height=120" alt="Logo" class="profile-auth-logo">
+                <h1 class="profile-auth-title">Bienvenido a tu perfil</h1>
+                <p class="profile-auth-desc">Accede para ver tu información, progreso, recompensas y mucho más en Panter Studio.</p>
+                <div class="profile-auth-actions" id="authActions">
+                    <button class="btn btn-primary" id="showLogin">Iniciar Sesión</button>
+                    <button class="btn btn-secondary" id="showRegister">Crear Cuenta</button>
                 </div>
-
-                <form id="loginForm" class="profile-auth-form">
-                    <label for="loginEmail">Correo electronico</label>
-                    <input type="email" id="loginEmail" placeholder="tu@correo.com" required>
-
-                    <label for="loginPassword">Contrasena</label>
-                    <input type="password" id="loginPassword" placeholder="********" required>
-
-                    <button type="submit" class="btn">Entrar a mi perfil</button>
-                    <p class="auth-link">Olvidaste tu contrasena? <a href="#" id="forgotPasswordLink">Recuperar acceso</a></p>
+                <form id="loginForm" class="profile-auth-form" style="display:none;flex-direction:column;gap:1.1rem;margin-top:1.5rem;">
+                    <input type="email" placeholder="Correo electrónico" required class="profile-input">
+                    <input type="password" placeholder="Contraseña" required class="profile-input">
+                    <button type="submit" class="btn btn-primary">Entrar</button>
+                    <button type="button" class="btn btn-secondary" id="backToAuth1">Volver</button>
                 </form>
-
-                <form id="registerForm" class="profile-auth-form" hidden>
-                    <label for="registerEmail">Correo electronico</label>
-                    <input type="email" id="registerEmail" placeholder="tu@correo.com" required>
-
-                    <label for="registerPassword">Contrasena</label>
-                    <input type="password" id="registerPassword" placeholder="Min. 6 caracteres" required minlength="6">
-
-                    <label for="registerReferral">Codigo de referido (opcional)</label>
-                    <input type="text" id="registerReferral" placeholder="ABC123">
-
-                    <button type="submit" class="btn">Crear Cuenta</button>
+                <form id="registerForm" class="profile-auth-form" style="display:none;flex-direction:column;gap:1.1rem;margin-top:1.5rem;">
+                    <input type="email" placeholder="Correo electrónico" required class="profile-input">
+                    <input type="password" placeholder="Contraseña (mínimo 6 caracteres)" minlength="6" required class="profile-input">
+                    <input type="text" placeholder="Código de referido (opcional)" class="profile-input">
+                    <button type="submit" class="btn btn-primary">Crear Cuenta</button>
+                    <button type="button" class="btn btn-secondary" id="backToAuth2">Volver</button>
                 </form>
-
-                <p id="authMessage" class="profile-auth-message"></p>
-
-                <div class="profile-auth-benefits profile-auth-benefits--grid">
-                    <div class="profile-mini-benefit"><strong>Cuenta</strong><span>Nombre, avatar, bio y preferencias</span></div>
-                    <div class="profile-mini-benefit"><strong>Sesion</strong><span>Proveedor, verificacion y accesos</span></div>
-                    <div class="profile-mini-benefit"><strong>Recompensas</strong><span>Monedas, racha y ruleta diaria</span></div>
-                    <div class="profile-mini-benefit"><strong>Comunidad</strong><span>Referidos, apoyo y novedades</span></div>
-                </div>
+                <style>
+                .profile-auth-form {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1.1rem;
+                    align-items: stretch;
+                }
+                .profile-input {
+                    padding: 0.8rem 1rem;
+                    border-radius: 8px;
+                    border: 1.5px solid #232b3b;
+                    background: #232b3b;
+                    color: #eaf6ff;
+                    font-size: 1rem;
+                    font-family: inherit;
+                    outline: none;
+                    transition: border 0.2s;
+                }
+                .profile-input:focus {
+                    border: 1.5px solid #1e70c8;
+                }
+                </style>
+                <script>
+                // Mostrar formularios y volver
+                document.getElementById('showLogin').onclick = function() {
+                    document.getElementById('authActions').style.display = 'none';
+                    document.getElementById('loginForm').style.display = 'flex';
+                    document.getElementById('registerForm').style.display = 'none';
+                };
+                document.getElementById('showRegister').onclick = function() {
+                    document.getElementById('authActions').style.display = 'none';
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('registerForm').style.display = 'flex';
+                };
+                document.getElementById('backToAuth1').onclick = function() {
+                    document.getElementById('authActions').style.display = 'flex';
+                    document.getElementById('loginForm').style.display = 'none';
+                };
+                document.getElementById('backToAuth2').onclick = function() {
+                    document.getElementById('authActions').style.display = 'flex';
+                    document.getElementById('registerForm').style.display = 'none';
+                };
+                </script>
             </div>
-        </section>
-
-        <section id="profileDashboard" class="profile-dashboard" hidden>
-            <div class="profile-hub-hero">
-                <div class="profile-hub-hero-main">
-                    <div class="profile-hub-avatar-wrap">
-                        <div class="profile-avatar" id="profileAvatar">
-                            <span id="profileAvatarLetter">?</span>
-                        </div>
-                        <div class="profile-badge-container" id="profileBadges"></div>
-                    </div>
-                    <div class="profile-hub-copy">
-                        <span class="profile-hub-kicker">Centro de cuenta</span>
-                        <h2 id="profileDisplayName">Usuario</h2>
-                        <p id="profileEmail" class="profile-email">correo@ejemplo.com</p>
-                        <p id="profileHeroSummary" class="profile-hub-summary">Cargando datos de tu cuenta...</p>
-                        <div class="profile-hub-chip-row">
-                            <span class="profile-hub-chip" id="profileRole">Miembro</span>
-                            <span class="profile-hub-chip" id="profileVerificationStatus">Verificacion pendiente</span>
-                            <span class="profile-hub-chip" id="profileProvider">Email</span>
-                            <span class="profile-hub-chip" id="profilePreregisterStatus">Sin preregistro</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="profile-hub-hero-side">
-                    <button id="editProfileBtn" class="btn btn-small">Editar Perfil</button>
-                    <button id="logoutBtn" class="btn btn-small">Cerrar Sesion</button>
-                </div>
-            </div>
-
-            <div class="profile-kpi-grid">
-                <article class="profile-kpi-card">
-                    <span>Monedas</span>
-                    <strong id="profileCoins">0</strong>
-                    <small id="coinsDisplayLarge">0 disponibles</small>
-                </article>
-                    <article class="profile-kpi-card">
-                        <span>Esmeraldas</span>
-                        <strong id="profileCoinsDollars">0 💎</strong>
-                        <small>saldo interno de tu cuenta</small>
-                    </article>
-                <article class="profile-kpi-card">
-                    <span>Nivel</span>
-                    <strong id="profileLevel">Visitante</strong>
-                    <small id="sponsorLevelName">Visitante</small>
-                </article>
-                <article class="profile-kpi-card">
-                    <span>Miembro desde</span>
-                    <strong id="profileJoinDate">-</strong>
-                    <small id="profileUid">UID: -</small>
-                </article>
-                <article class="profile-kpi-card">
-                    <span>Racha</span>
-                    <strong id="profileStreak">0</strong>
-                    <small>dias activos</small>
-                </article>
-                <article class="profile-kpi-card">
-                    <span>Referidos</span>
-                    <strong id="referralCount">0</strong>
-                    <small><span id="referralCoins">0</span> monedas ganadas</small>
-                </article>
-                <article class="profile-kpi-card">
-                    <span>Apoyo total</span>
-                    <strong id="profileSupportTotal">$0</strong>
-                    <small id="profileSupportCount">0 aportes</small>
-                </article>
-            </div>
-
-            <div class="profile-hub-grid">
-                <div class="profile-hub-main">
-                    <section class="profile-card profile-card--wide">
-                        <div class="profile-card-head">
-                            <h3>Resumen de cuenta</h3>
-                            <span class="profile-card-tag">Sesion activa</span>
-                        </div>
-                        <div class="profile-detail-grid">
-                            <div class="profile-detail-item">
-                                <span>Nombre visible</span>
-                                <strong id="profileDetailName">-</strong>
-                            </div>
-                            <div class="profile-detail-item">
-                                <span>Rol actual</span>
-                                <strong id="profileDetailRole">-</strong>
-                            </div>
-                            <div class="profile-detail-item">
-                                <span>Pais / region</span>
-                                <strong id="profileCountry">No definido</strong>
-                            </div>
-                            <div class="profile-detail-item">
-                                <span>Proyecto favorito</span>
-                                <strong id="profileFavoriteProject">No definido</strong>
-                            </div>
-                        </div>
-                        <div class="profile-bio-box">
-                            <span>Bio</span>
-                            <p id="profileBio">Todavia no has configurado una descripcion personal.</p>
-                        </div>
-                    </section>
-
-                    <section class="profile-card profile-card--wide">
-                        <div class="profile-card-head">
-                            <h3>Recompensas y ritmo diario</h3>
-                            <span class="profile-card-tag">Monedas y bonus</span>
-                        </div>
-                        <div class="profile-rewards-grid">
-                            <div class="profile-reward-panel">
-                                <h4>Ruleta diaria</h4>
-                                <p>Gira una vez al dia y gana monedas gratis.</p>
-                                <div class="spin-wheel-container">
-                                    <div class="spin-wheel" id="spinWheel">
-                                        <div class="spin-segment" data-value="5">5</div>
-                                        <div class="spin-segment" data-value="10">10</div>
-                                        <div class="spin-segment" data-value="25">25</div>
-                                        <div class="spin-segment" data-value="50">50</div>
-                                        <div class="spin-segment" data-value="100">100</div>
-                                        <div class="spin-segment" data-value="5">5</div>
-                                        <div class="spin-segment" data-value="10">10</div>
-                                        <div class="spin-segment" data-value="25">25</div>
-                                            <div id="spinParticles" class="spin-particles"></div>
-                                    </div>
-                                    <div class="spin-pointer">▼</div>
-                                </div>
-                                <button id="spinBtn" class="btn btn-spin">Girar la Ruleta</button>
-                                <p id="spinMessage" class="spin-message"></p>
-                                <p id="spinCooldown" class="spin-cooldown"></p>
-                            </div>
-                            <div class="profile-reward-panel">
-                                <h4>Bonus diario</h4>
-                                <p>Reclama monedas extra solo por iniciar sesion cada dia.</p>
-                                <div class="daily-streak">
-                                    <span class="streak-day" data-day="1">1</span>
-                                    <span class="streak-day" data-day="2">2</span>
-                                    <span class="streak-day" data-day="3">3</span>
-                                    <span class="streak-day" data-day="4">4</span>
-                                    <span class="streak-day" data-day="5">5</span>
-                                    <span class="streak-day" data-day="6">6</span>
-                                    <span class="streak-day bonus" data-day="7">🎁</span>
-                                </div>
-                                <button id="claimDailyBtn" class="btn">Reclamar Bonus (+<span id="dailyBonusAmount">10</span> 🪙)</button>
-                                <p id="dailyBonusMessage" class="spin-message"></p>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="profile-card profile-card--wide">
-                        <div class="profile-card-head">
-                            <h3>Actividad reciente</h3>
-                            <span class="profile-card-tag">Historial</span>
-                        </div>
-                            <ul class="activity-list profile-activity-list" id="activityList" aria-live="polite">
-                            <li>Cargando actividad...</li>
-                        </ul>
-                    </section>
-
-                        <section class="profile-card profile-card--wide" id="coinRedemptionSection">
-                            <div class="profile-card-head">
-                                <h3>Canjear Monedas</h3>
-                                <span class="profile-card-tag">Cambio interno</span>
-                            </div>
-                            <div class="redemption-info-row">
-                                <div class="redemption-rate-card">
-                                    <span class="redemption-rate-icon">💱</span>
-                                    <div>
-                                        <strong>Tipo de cambio</strong>
-                                        <p>5 000 monedas = 50 esmeraldas</p>
-                                    </div>
-                                </div>
-                                <div class="redemption-rate-card">
-                                    <span class="redemption-rate-icon">🪙</span>
-                                    <div>
-                                        <strong>Tu saldo canjeaable</strong>
-                                        <p><span id="redeemCoinsAvailable">0</span> monedas = <span id="redeemDollars">0 💎</span></p>
-                                    </div>
-                                </div>
-                                <div class="redemption-rate-card">
-                                    <span class="redemption-rate-icon">📊</span>
-                                    <div>
-                                        <strong>Total canjeado</strong>
-                                        <p><span id="redeemTotalPaid">0 💎</span> en <span id="redeemTotalCount">0</span> canjes</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="redemption-form-row" id="redeemFormRow">
-                                <div>
-                                    <label for="redeemAmount">Monedas a canjear <small>(minimo 5 000)</small></label>
-                                    <input type="number" id="redeemAmount" class="mg-input" min="5000" step="1000" placeholder="5000">
-                                </div>
-                                <div>
-                                    <label>Cambio automatico</label>
-                                    <input type="text" class="mg-input" value="Se agrega directo a tu saldo de esmeraldas" readonly>
-                                </div>
-                                <div>
-                                    <label>&nbsp;</label>
-                                    <button id="redeemBtn" class="btn">Canjear ahora</button>
-                                </div>
-                            </div>
-                            <p id="redeemMessage" class="mg-game-result" style="margin-top:.6rem"></p>
-                            <div id="redeemHistory" hidden>
-                                <h4 class="redemption-history-title">Historial de canjes</h4>
-                                <div id="redeemHistoryList" class="redemption-history-list"></div>
-                            </div>
-                        </section>
-                </div>
-
-                <div class="profile-hub-side">
-                    <section class="profile-card">
-                        <div class="profile-card-head">
-                            <h3>Invita amigos</h3>
-                            <span class="profile-card-tag">Referidos</span>
-                        </div>
-                        <p>Comparte tu codigo y gana monedas cuando nuevos miembros creen cuenta.</p>
-                        <div class="referral-code-box">
-                            <span id="referralCode">CARGANDO...</span>
-                            <button id="copyReferralBtn" class="btn btn-small">Copiar</button>
-                        </div>
-                        <p class="profile-mini-text">Referidos activos: <strong id="referralCountSide">0</strong></p>
-                        <p class="profile-mini-text">Recompensas por referidos: <strong id="referralCoinsSide">0</strong> 🪙</p>
-                    </section>
-
-                    <section class="profile-card" id="sponsorLevelCard">
-                        <div class="profile-card-head">
-                            <h3>Tu nivel de apoyo</h3>
-                            <span class="profile-card-tag">Patrocinio</span>
-                        </div>
-                        <div class="sponsor-level-display">
-                            <span class="sponsor-badge" id="sponsorBadge">👤</span>
-                            <span class="sponsor-name" id="sponsorLevelNameSide">Visitante</span>
-                        </div>
-                        <p id="sponsorLevelDesc">Haz una donacion para subir de nivel y desbloquear beneficios exclusivos.</p>
-                        <p id="profileSponsorSummary" class="profile-mini-text">Sin aportes registrados por ahora.</p>
-                        <a href="donaciones.html" class="btn btn-small">Ver niveles</a>
-                    </section>
-
-                    <section class="profile-card">
-                        <div class="profile-card-head">
-                            <h3>Estado de miembro</h3>
-                            <span class="profile-card-tag">Cuenta</span>
-                        </div>
-                        <div class="profile-status-stack">
-                            <div class="profile-status-row">
-                                <span>Preregistro</span>
-                                <strong id="profilePreregisterStatusSide">Pendiente</strong>
-                            </div>
-                            <div class="profile-status-row">
-                                <span>Correo verificado</span>
-                                <strong id="profileVerificationStatusSide">No</strong>
-                            </div>
-                            <div class="profile-status-row">
-                                <span>Proveedor</span>
-                                <strong id="profileProviderSide">Email</strong>
-                            </div>
-                            <div class="profile-status-row">
-                                <span>Acceso especial</span>
-                                <strong id="profileAccessLevel">Miembro</strong>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="profile-card">
-                        <div class="profile-card-head">
-                            <h3>Novedades relevantes</h3>
-                            <span class="profile-card-tag">Proyectos</span>
-                        </div>
-                        <div id="projectUpdateFeed" class="profile-update-feed">
-                            <p>Cargando novedades...</p>
-                        </div>
-                    </section>
-
-                    <section class="profile-card" id="profileAdminTools" hidden>
-                        <div class="profile-card-head">
-                            <h3>Accesos especiales</h3>
-                            <span class="profile-card-tag">Admin / Dev</span>
-                        </div>
-                        <div class="profile-link-stack">
-                            <a id="profileAdminShortcut" class="btn btn-small" href="admin/admin.html">Abrir Panel Admin</a>
-                            <a id="profileDevShortcut" class="btn btn-small" href="admin/panel-desarrollo.html">Abrir Dev Hub</a>
-                        </div>
-                    </section>
-
-                        <section class="profile-card">
-                            <div class="profile-card-head">
-                                <h3>Minijuegos</h3>
-                                <span class="profile-card-tag">Gana monedas</span>
-                            </div>
-                            <p class="profile-mini-text">Juega cada dia para acumular monedas y convertirlas en esmeraldas dentro de la pagina.</p>
-                            <p class="profile-mini-text">Jugados hoy: <strong id="profileGamesPlayedToday">0 de 3</strong></p>
-                            <a href="minijuegos.html" class="btn btn-small" style="margin-top:.6rem">Ir a Minijuegos</a>
-                        </section>
-                </div>
-            </div>
-
-            <dialog id="editProfileModal" class="profile-modal">
-                <form id="editProfileForm" class="profile-modal-form">
-                    <h3>Editar Perfil</h3>
-
-                    <label for="editDisplayName">Nombre visible</label>
-                    <input type="text" id="editDisplayName" minlength="3" maxlength="24">
-
-                    <label for="editBio">Bio</label>
-                    <textarea id="editBio" rows="4" placeholder="Cuéntale a la comunidad qué te gusta de Panter Studio"></textarea>
-
-                    <div class="profile-modal-grid">
-                        <div>
-                            <label for="editFavoriteProject">Proyecto favorito</label>
-                            <input type="text" id="editFavoriteProject" placeholder="Ej: Nuestra Tierra Job Simulator">
-                        </div>
-                        <div>
-                            <label for="editCountry">Pais / region</label>
-                            <input type="text" id="editCountry" placeholder="Colombia">
-                        </div>
-                    </div>
-
-                    <label for="editAvatar">Avatar (emoji)</label>
-                    <div class="avatar-picker">
-                        <button type="button" class="avatar-option" data-avatar="😊">😊</button>
-                        <button type="button" class="avatar-option" data-avatar="🎮">🎮</button>
-                        <button type="button" class="avatar-option" data-avatar="🐱">🐱</button>
-                        <button type="button" class="avatar-option" data-avatar="🐼">🐼</button>
-                        <button type="button" class="avatar-option" data-avatar="🦊">🦊</button>
-                        <button type="button" class="avatar-option" data-avatar="🐺">🐺</button>
-                        <button type="button" class="avatar-option" data-avatar="🦁">🦁</button>
-                        <button type="button" class="avatar-option" data-avatar="🐯">🐯</button>
-                        <button type="button" class="avatar-option" data-avatar="🚗">🚗</button>
-                        <button type="button" class="avatar-option" data-avatar="🚌">🚌</button>
-                        <button type="button" class="avatar-option" data-avatar="🚚">🚚</button>
-                        <button type="button" class="avatar-option" data-avatar="⭐">⭐</button>
-                    </div>
-                    <input type="hidden" id="editAvatarValue">
-
-                    <div class="profile-modal-actions">
-                        <button type="submit" class="btn">Guardar cambios</button>
-                        <button type="button" class="btn" data-close-modal="editProfileModal">Cancelar</button>
-                    </div>
-                </form>
-            </dialog>
         </section>
     </div>
+    <style>
+    body {
+        background: #10131a !important;
+        color: #eaf6ff;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .profile-shell {
+        min-height: 80vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .profile-auth-section {
+        width: 100%;
+        max-width: 420px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .profile-auth-card--centered {
+        background: #181f2a;
+        border-radius: 18px;
+        box-shadow: 0 8px 32px 0 rgba(30,112,200,0.18), 0 1.5px 0 #232b3b;
+        border: 2px solid #232b3b;
+        padding: 2.5rem 2rem 2rem 2rem;
+        text-align: center;
+        max-width: 370px;
+        width: 100%;
+        color: #eaf6ff;
+        box-sizing: border-box;
+        animation: fadeInProfile 0.7s cubic-bezier(.4,1.4,.6,1) 1;
+    }
+    @keyframes fadeInProfile {
+        from { opacity: 0; transform: translateY(40px) scale(0.98); }
+        to { opacity: 1; transform: none; }
+    }
+    .profile-auth-logo {
+        width: 90px;
+        margin-bottom: 1.5rem;
+        filter: drop-shadow(0 0 16px #1e70c8cc);
+    }
+    .profile-auth-title {
+        color: #7ecbff;
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: 1px;
+        margin-bottom: 0.7rem;
+        text-align: center;
+        text-shadow: 0 2px 8px #1e70c822;
+    }
+    .profile-auth-desc {
+        color: #b6c8e6;
+        font-size: 1.13rem;
+        margin-bottom: 2.2rem;
+        text-align: center;
+    }
+    .profile-auth-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 1.1rem;
+    }
+    .btn {
+        padding: 1rem 0;
+        border-radius: 10px;
+        border: none;
+        font-size: 1.13rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+        font-family: inherit;
+    }
+    .btn-primary {
+        background: #1e70c8;
+        color: #fff;
+        border: 1.5px solid #1e70c8;
+        box-shadow: 0 2px 8px #1e70c855;
+    }
+    .btn-primary:hover {
+        background: #155a9c;
+        color: #fff;
+        box-shadow: 0 4px 16px #1e70c888;
+    }
+    .btn-secondary {
+        background: #232b3b;
+        color: #7ecbff;
+        border: 1.5px solid #1e70c8;
+    }
+    .btn-secondary:hover {
+        background: #1e70c8;
+        color: #fff;
+    }
+    @media (max-width: 600px) {
+        .profile-auth-card--centered {
+            padding: 1.5rem 0.7rem 1.2rem 0.7rem;
+        }
+        .profile-auth-section {
+            max-width: 98vw;
+        }
+    }
+    </style>
 
     <footer>
         <p>&copy; 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
     </footer>
-
     <script src="../assets/js/core/script.js"></script>
     <script src="../assets/js/pages/perfil.js"></script>
 </body>

@@ -7,11 +7,23 @@
     <title>Gestión de Desarrollo - Board</title>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
     <link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/style.css">
     <script src="../../assets/js/core/firebase-config.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: radial-gradient(ellipse at 60% 40%, #23272e 60%, #181b20 100%); color: #e3e6eb; margin: 0; }
-        .dev-main-content { background: #23272e; border-radius: 12px; box-shadow: 0 2px 24px #000a; margin: 32px auto 0; max-width: 96vw; min-height: 80vh; padding: 0; display: flex; flex-direction: column; }
+        body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; background: radial-gradient(ellipse at 60% 40%, #23272e 60%, #181b20 100%); color: #e3e6eb; margin: 0; }
+        .idea-node, .idea-node * { font-family: 'Inter', 'Segoe UI', Arial, sans-serif !important; }
+        .dev-main-content { background: #23272e; border-radius: 12px; box-shadow: 0 2px 24px #000a; margin: 32px auto 0; max-width: 96vw; min-height: 80vh; padding: 0; display: flex; flex-direction: column; transition: margin-left .22s; }
+                .dev-sidebar { width: 270px; transition: transform .22s; }
+                .dev-sidebar.hide { transform: translateX(-100%); }
+                .dev-main-content.sidebar-hidden { margin-left: 0 !important; }
+                .dev-main-content { margin-left: 270px; }
+                @media (max-width: 900px) {
+                    .dev-sidebar { width: 100vw; }
+                    .dev-main-content { margin-left: 0; }
+                }
         .dev-topbar-strip { background: #23272e; border-bottom: 1px solid #232b3a; padding: 16px 32px 8px; display: flex; justify-content: space-between; align-items: flex-end; border-radius: 12px 12px 0 0; }
         .dev-topbar-left h2 { font-size: 1.6rem; color: #6cb2f7; margin: 0 0 2px 0; font-weight: 700; letter-spacing: 1px; }
         .dev-topbar-left p { color: #b0b8c1; font-size: 1rem; margin: 0; }
@@ -48,44 +60,6 @@
             .idea-edit-panel { width: 100vw; }
         }
     </style>
-</head>
-        .dev-canvas-toolbar .dev-btn { padding: 5px 10px; font-size: .78rem; }
-        .dev-canvas-toolbar .dev-btn.active { background: rgba(52,211,153,.2); border-color: rgba(52,211,153,.6); color: #6ee7b7; }
-        /* status bar */
-        .idea-status-bar {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            background: rgba(8,12,20,.82);
-            border: 1px solid rgba(30,112,200,.2);
-            border-radius: 6px;
-            padding: 4px 10px;
-            color: #5a8aac;
-            font-size: .72rem;
-            z-index: 20;
-            pointer-events: none;
-        }
-        .idea-conn-hint {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(8,12,20,.94);
-            border: 1px solid rgba(52,211,153,.5);
-            border-radius: 10px;
-            padding: 12px 20px;
-            color: #6ee7b7;
-            font-size: .82rem;
-            z-index: 80;
-            display: none;
-            text-align: center;
-            pointer-events: none;
-        }
-        @media (max-width: 700px) {
-            .idea-edit-panel { width: 100%; height: auto; top: auto; bottom: 0; border-left: none; border-top: 1px solid rgba(30,112,200,.35); transform: translateY(140%); }
-            .idea-edit-panel.hidden { transform: translateY(140%); }
-            .idea-edit-panel:not(.hidden) { transform: translateY(0); }
-        }
     </style>
 </head>
 <body class="dev-studio-page" data-site-root="../..">
@@ -151,7 +125,7 @@
     </nav>
 
     <!-- Main content -->
-    <div class="dev-main-content" id="ideaPanel" hidden>
+    <div class="dev-main-content" id="ideaPanel">
 
         <!-- Topbar -->
         <div class="dev-topbar-strip">
@@ -213,6 +187,12 @@
                     </div>
                     <div class="idea-edit-panel-body">
                         <div>
+                            <label>Tipo de nodo</label>
+                            <select id="ideaEditType" style="width:100%;background:#181b20;color:#e3e6eb;border:1.5px solid #2c3440;border-radius:6px;padding:8px 11px;font-size:1rem;">
+                                <!-- Opciones generadas por JS -->
+                            </select>
+                        </div>
+                        <div>
                             <label>Título</label>
                             <input type="text" id="ideaEditTitle" placeholder="Título del nodo..." maxlength="80">
                         </div>
@@ -220,6 +200,7 @@
                             <label>Descripción</label>
                             <textarea id="ideaEditBody" placeholder="Descripción, detalles..." rows="4"></textarea>
                         </div>
+                        <div id="ideaCustomFields"></div>
                         <div>
                             <label>Color del nodo</label>
                             <div class="idea-color-picker" id="ideaColorPicker"></div>
@@ -237,5 +218,18 @@
     </div><!-- /dev-main-content -->
 
     <script src="../../assets/js/admin/ideas.js"></script>
+</body>
+<script>
+// Sidebar toggle
+const sidebar = document.getElementById('ideaSidebar');
+const mainContent = document.getElementById('ideaPanel');
+const toggleBtn = document.getElementById('ideaSidebarToggle');
+if (sidebar && mainContent && toggleBtn) {
+    toggleBtn.onclick = () => {
+        sidebar.classList.toggle('hide');
+        mainContent.classList.toggle('sidebar-hidden');
+    };
+}
+</script>
 </body>
 </html>
