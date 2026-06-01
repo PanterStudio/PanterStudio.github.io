@@ -32,6 +32,9 @@
   const forgotLink   = $('forgotPasswordLink');
 
   const profileAvatarLetter           = $('profileAvatarLetter');
+  const editProfileImagePreview       = $('editProfileImagePreview');
+  const editProfileImageInput         = $('editProfileImage');
+  const removeProfileImageBtn         = $('removeProfileImageBtn');
   const profileDisplayName            = $('profileDisplayName');
   const profileEmail                  = $('profileEmail');
   const profileCoins                  = $('profileCoins');
@@ -54,6 +57,10 @@
   const profileSponsorSummary         = $('profileSponsorSummary');
   const profileAdminTools             = $('profileAdminTools');
   const profileGamesPlayedToday       = $('profileGamesPlayedToday');
+  const gameLevel                     = $('gameLevel');
+  const gameJobsCompleted             = $('gameJobsCompleted');
+  const gameHoursPlayed               = $('gameHoursPlayed');
+  const gameCoins                     = $('gameCoins');
 
   const sponsorBadge     = $('sponsorBadge');
   const sponsorLevelName = $('sponsorLevelName');
@@ -372,7 +379,13 @@
     const role = String(d.role || 'viewer').toLowerCase();
     const set  = (el, v) => { if (el) el.textContent = v; };
 
-    set(profileAvatarLetter, d.avatar || '😊');
+    if (profileAvatarLetter) {
+      if (d.avatarImg) {
+        profileAvatarLetter.innerHTML = `<img src="${esc(d.avatarImg)}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+      } else {
+        profileAvatarLetter.textContent = d.avatar || '😊';
+      }
+    }
     set(profileDisplayName, name);
     set(profileEmail, currentUser.email || '');
     set(profileUid, 'UID: ' + String(currentUser.uid || '').slice(0, 12));
@@ -399,6 +412,12 @@
     if (redeemDollars) redeemDollars.textContent = formatEmeralds(coinsToEmeralds(d.coins || 0));
     const gp = countGamesPlayedToday(currentUser.uid);
     set(profileGamesPlayedToday, `${gp}/3`);
+
+    // Sincronización de estadísticas del juego
+    set(gameLevel, d.gameStats?.level !== undefined ? String(d.gameStats.level) : '—');
+    set(gameJobsCompleted, d.gameStats?.jobsCompleted !== undefined ? String(d.gameStats.jobsCompleted) : '—');
+    set(gameHoursPlayed, d.gameStats?.hoursPlayed !== undefined ? `${Number(d.gameStats.hoursPlayed).toFixed(1)}h` : '—');
+    set(gameCoins, d.gameStats?.coins !== undefined ? String(d.gameStats.coins) : '—');
 
     renderSponsorLevel(d.level);
     renderStreakDays(d.streak || 0);
@@ -555,6 +574,21 @@
   /* Logout */
   logoutBtn?.addEventListener('click', async () => { try { await window.signOut(window.auth); } catch (e) { console.error(e); } });
 
+  /* Google Auth */
+  $('googleAuthBtn')?.addEventListener('click', async () => {
+    if (!await waitForFirebase()) { setAuthMessage('Firebase no está listo. Recarga la página.', 'error'); return; }
+    try {
+      setAuthMessage('Conectando con Google...');
+      const provider = new window.GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      setAuthMessage('Redirigiendo a Google...');
+      await window.signInWithRedirect(window.auth, provider);
+    } catch (err) {
+      console.error('Google Sign-In Error:', err);
+      setAuthMessage(getAuthError(err), 'error');
+    }
+  });
+
   /* Bonus diario */
   claimDailyBtn?.addEventListener('click', async () => {
     if (!currentUser || !currentUserData || claimDailyBtn.disabled) return;
@@ -610,21 +644,62 @@
     $('editCountry').value        = currentUserData.country || '';
     $('editAvatarValue').value    = currentUserData.avatar || '😊';
     $$('.av-opt').forEach(b => b.classList.toggle('selected', b.dataset.avatar === (currentUserData.avatar || '😊')));
+
+    if (currentUserData.avatarImg) {
+      editProfileImagePreview && (editProfileImagePreview.innerHTML = `<img src="${esc(currentUserData.avatarImg)}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`);
+      if (editProfileImageInput) editProfileImageInput.value = currentUserData.avatarImg;
+      if (removeProfileImageBtn) removeProfileImageBtn.style.display = '';
+    } else {
+      editProfileImagePreview && (editProfileImagePreview.innerHTML = $('editAvatarValue')?.value || '😊');
+      if (editProfileImageInput) editProfileImageInput.value = '';
+      if (removeProfileImageBtn) removeProfileImageBtn.style.display = 'none';
+    }
+
     editProfileModal.showModal();
   });
 
   $$('.av-opt').forEach(b => {
-    b.addEventListener('click', () => { $$('.av-opt').forEach(x => x.classList.remove('selected')); b.classList.add('selected'); $('editAvatarValue').value = b.dataset.avatar || '😊'; });
+    b.addEventListener('click', () => {
+      $$('.av-opt').forEach(x => x.classList.remove('selected'));
+      b.classList.add('selected');
+      $('editAvatarValue').value = b.dataset.avatar || '😊';
+      if (editProfileImagePreview) editProfileImagePreview.innerHTML = b.dataset.avatar || '😊';
+      if (editProfileImageInput) editProfileImageInput.value = '';
+      if (removeProfileImageBtn) removeProfileImageBtn.style.display = 'none';
+    });
+  });
+
+  if (editProfileImageInput) {
+    editProfileImageInput.addEventListener('input', () => {
+      const url = String(editProfileImageInput.value || '').trim();
+      if (url) {
+        editProfileImagePreview && (editProfileImagePreview.innerHTML = `<img src="${esc(url)}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`);
+        if (removeProfileImageBtn) removeProfileImageBtn.style.display = '';
+        $('editAvatarValue').value = '';
+        $$('.av-opt').forEach(x => x.classList.remove('selected'));
+      } else {
+        editProfileImagePreview && (editProfileImagePreview.innerHTML = $('editAvatarValue')?.value || '😊');
+        if (removeProfileImageBtn) removeProfileImageBtn.style.display = 'none';
+      }
+    });
+  }
+
+  removeProfileImageBtn?.addEventListener('click', () => {
+    if (editProfileImageInput) editProfileImageInput.value = '';
+    if (editProfileImagePreview) editProfileImagePreview.innerHTML = $('editAvatarValue')?.value || '😊';
+    if (removeProfileImageBtn) removeProfileImageBtn.style.display = 'none';
   });
 
   editProfileForm?.addEventListener('submit', async e => {
     e.preventDefault(); if (!currentUser) return;
+    const avatarImgUrl = String(editProfileImageInput?.value || '').trim();
     const p = {
       displayName:     String($('editDisplayName')?.value     || '').trim(),
       bio:             String($('editBio')?.value             || '').trim(),
       favoriteProject: String($('editFavoriteProject')?.value || '').trim(),
       country:         String($('editCountry')?.value         || '').trim(),
-      avatar:          String($('editAvatarValue')?.value     || '😊')
+      avatar:          avatarImgUrl ? '' : String($('editAvatarValue')?.value || '😊'),
+      avatarImg:       avatarImgUrl || ''
     };
     await updateUserData(currentUser.uid, p);
     await window.updateProfile(currentUser, { displayName: p.displayName });

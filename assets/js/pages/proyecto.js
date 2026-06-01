@@ -78,7 +78,7 @@
         heroCardEl.innerHTML = `
             <article class="juego-featured-card">
                 <div class="juego-featured-media">
-                    <img src="${esc(project.image || 'https://i.imgur.com/GYjAGS7.png')}" alt="${esc(project.title)}" loading="lazy">
+                    <img src="${esc(project.image || 'https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&')}" alt="${esc(project.title)}" loading="lazy">
                     <span class="juego-status-badge">${esc(String(project.status || 'activo').toUpperCase())}</span>
                 </div>
                 <div class="juego-featured-body">
@@ -189,17 +189,17 @@
             return;
         }
 
-        const [project, updates] = await Promise.all([
-            findProject(projectId, projectType),
-            loadProjectUpdates(projectId)
-        ]);
-
+        const project = await findProject(projectId, projectType);
         if (!project) {
             titleEl.textContent = 'Proyecto no encontrado';
             summaryEl.textContent = 'Este proyecto no existe o fue removido.';
             updatesListEl.innerHTML = '<p>No hay informacion disponible para este proyecto.</p>';
             return;
         }
+
+        // Load updates using the resolved project.id to avoid mismatches
+        const resolvedProjectId = String(project.id || projectId || '').trim();
+        const updates = await loadProjectUpdates(resolvedProjectId);
 
         renderProject(project);
         renderUpdates(updates);

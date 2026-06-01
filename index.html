@@ -3,211 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#1e70c8">
+    <meta name="theme-color" content="#00c853">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Inicio - Panter Studio</title>
-    <link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
-    <link rel="apple-touch-icon" href="https://i.imgur.com/GYjAGS7.png">
+    <meta name="description" content="Panter Studio Game Dev — Hub oficial del estudio indie. Sigue el desarrollo de Nuestra Tierra Job Simulator, gana monedas en minijuegos y únete a la comunidad fundadora.">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
+    <title>Inicio — Panter Studio</title>
+    <link rel="icon" href="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" type="image/png">
+    <link rel="apple-touch-icon" href="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    <style>
+        /* ===== INDEX-SPECIFIC STYLES ===== */
+        .hub-hero-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .btn-sm {
+            padding: 0.55rem 1.25rem;
+            font-size: 0.9rem;
+        }
+        /* Right column layout */
+        .hub-right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        /* Devlog section */
+        .home-devlogs-section {
+            margin-top: 1.5rem;
+        }
+        /* Studio info strip */
+        .studio-info-strip {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            padding: 1.25rem;
+            background: var(--bg-glass-card);
+            border: var(--border-glass);
+            border-radius: var(--border-radius-lg);
+        }
+        .info-strip-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 4px;
+        }
+        .info-strip-item strong {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--color-primary-light);
+            font-family: var(--font-display);
+            line-height: 1;
+        }
+        .info-strip-item span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        /* Minijuegos quick card */
+        .minijuego-quick {
+            background: linear-gradient(135deg, rgba(0,200,83,0.06), rgba(0,200,83,0.02));
+            border: 1px solid rgba(0,200,83,0.12);
+            border-radius: var(--border-radius-lg);
+            padding: 1.25rem;
+        }
+        .minijuego-quick-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 0.75rem;
+        }
+        .minijuego-quick-header h3 {
+            font-size: 1rem;
+            margin: 0;
+            font-weight: 700;
+        }
+        .minijuego-quick p {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin: 0 0 1rem 0;
+            line-height: 1.4;
+        }
+        /* Preregistro widget */
+        .prereg-widget {
+            background: linear-gradient(135deg, rgba(212,175,55,0.07), rgba(212,175,55,0.02));
+            border: 1px solid rgba(212,175,55,0.2);
+            border-radius: var(--border-radius-lg);
+            padding: 1.25rem;
+        }
+        .prereg-widget-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+        .prereg-widget-header h3 {
+            font-size: 1rem;
+            margin: 0;
+            color: var(--color-accent);
+        }
+        .prereg-widget p {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin: 0 0 1rem 0;
+            line-height: 1.4;
+        }
+        .prereg-bar-wrap {
+            background: rgba(0,0,0,0.3);
+            border-radius: 100px;
+            height: 6px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        .prereg-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #b8860b, var(--color-accent));
+            border-radius: 100px;
+            transition: width 1.5s var(--ease-smooth);
+            box-shadow: 0 0 8px rgba(212,175,55,0.4);
+        }
+        .prereg-bar-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        /* No skeleton flash */
+        .loading-pulse {
+            background: linear-gradient(90deg, var(--bg-glass-card) 25%, var(--bg-glass-card-hover) 50%, var(--bg-glass-card) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+            height: 1em;
+            display: inline-block;
+            width: 60px;
+        }
+    </style>
 </head>
-<body data-site-root=".">
+<body data-site-root="." data-theme="dark" class="dark-mode">
     <div id="tsparticles"></div>
-    
-    <!-- POPUP PRE-REGISTRO ESTILO COMBO -->
-    <div id="preregistroModal" class="promo-modal">
-        <div class="promo-overlay" onclick="closePromoModal()"></div>
-        <div class="promo-content">
-            <button class="promo-close" onclick="closePromoModal()">✕</button>
-            
-            <div class="promo-header">
-                <div class="promo-badge">LISTA DE ESPERA</div>
-                <h1 class="promo-title">¡SÉ DE LOS PRIMEROS!</h1>
-                <div class="promo-subtitle">Únete a la Comunidad</div>
-            </div>
-            
-            <div class="promo-body">
-                <div class="promo-benefits">
-                    <div class="benefit-item">
-                        <span class="benefit-icon">🎮</span>
-                        <span class="benefit-text">Acceso Anticipado</span>
-                    </div>
-                    <div class="benefit-item">
-                        <span class="benefit-icon">🎁</span>
-                        <span class="benefit-text">Recompensas Especiales</span>
-                    </div>
-                    <div class="benefit-item">
-                        <span class="benefit-icon">📢</span>
-                        <span class="benefit-text">Noticias Exclusivas</span>
-                    </div>
-                    <div class="benefit-item">
-                        <span class="benefit-icon">🌟</span>
-                        <span class="benefit-text">Miembro Fundador</span>
-                    </div>
-                </div>
-                
-                <div class="promo-features">
-                    <div class="feature-badge">✓ 100% Gratis</div>
-                    <div class="feature-badge">✓ Notificaciones</div>
-                    <div class="feature-badge">✓ Acceso Temprano</div>
-                </div>
-                
-                <div class="promo-cta">
-                    <button class="promo-btn primary" onclick="goToPreregistro()">
-                        <span class="btn-text">ÚNETE A LA LISTA</span>
-                        <span class="btn-arrow">→</span>
-                    </button>
-                    <button class="promo-btn secondary" onclick="closePromoModal()">
-                        Tal vez más tarde
-                    </button>
-                </div>
-                
-                <div class="promo-countdown">
-                    <div class="countdown-item">
-                        <span class="countdown-number" id="promoRegistrados">0</span>
-                        <span class="countdown-label">Registrados</span>
-                    </div>
-                    <div class="countdown-item">
-                        <span class="countdown-number" id="promoCupoTotal">1000</span>
-                        <span class="countdown-label">Cupo Total</span>
-                    </div>
-                    <div class="countdown-item">
-                        <span class="countdown-number" id="promoDisponibles">1000</span>
-                        <span class="countdown-label">Disponibles</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="promo-footer">
-                <p>🔥 <span id="promoRegistros">0</span> personas esperan el lanzamiento</p>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Ventana Lateral Izquierda -->
-    <div class="side-panel left-panel" id="leftPanel">
-        <div class="panel-content">
-            <div class="panel-header">
-                <h3>🎮 Navegación</h3>
-                <button class="close-panel" onclick="closePanel('left')">✕</button>
-            </div>
-            <div class="panel-links">
-                <a href="index.html" class="panel-link">🏠 Inicio</a>
-                <a href="pages/juegos.html" class="panel-link">🎮 Juegos</a>
-                <a href="pages/aplicaciones.html" class="panel-link">📱 Aplicaciones</a>
-                <a href="pages/minijuegos.html" class="panel-link">🎮 Minijuegos</a>
-                <a href="pages/actualizaciones.html" class="panel-link">📰 Actualizaciones</a>
-                <a href="pages/donaciones.html" class="panel-link">💖 Apóyanos</a>
-                <a href="pages/personal.html" class="panel-link">👥 Personal</a>
-                <a href="pages/perfil.html" class="panel-link">👤 Mi Perfil</a>
-                <a href="pages/preregistro.html" class="panel-link">📝 Pre-registro</a>
-                <a href="pages/admin/admin.html" id="adminPanelSideLink" class="panel-link" hidden>🛠️ Panel Admin</a>
-            </div>
-        </div>
-        <div class="claw-marks left-claws"></div>
-    </div>
 
-    <!-- Ventana Lateral Derecha -->
-    <div class="side-panel right-panel" id="rightPanel">
-        <div class="panel-content">
-            <div class="panel-header">
-                <h3>🌐 Redes Sociales</h3>
-                <button class="close-panel" onclick="closePanel('right')">✕</button>
-            </div>
-            <div class="panel-links">
-                <a href="#" class="panel-link social-link">
-                    <span class="social-icon">📘</span> Facebook
-                </a>
-                <a href="#" class="panel-link social-link">
-                    <span class="social-icon">🐦</span> Twitter
-                </a>
-                <a href="#" class="panel-link social-link">
-                    <span class="social-icon">📷</span> Instagram
-                </a>
-                <a href="#" class="panel-link social-link">
-                    <span class="social-icon">▶️</span> YouTube
-                </a>
-                <a href="#" class="panel-link social-link">
-                    <span class="social-icon">💬</span> Discord
-                </a>
-                <a href="#" class="panel-link social-link">
-                    <span class="social-icon">🎮</span> TikTok
-                </a>
-            </div>
-        </div>
-        <div class="claw-marks right-claws"></div>
-    </div>
-
-    <!-- Botones de activación -->
-    <button class="panel-trigger left-trigger" onclick="togglePanel('left')" title="Navegación">
-        <span class="trigger-icon">☰</span>
-    </button>
-    <button class="panel-trigger right-trigger" onclick="togglePanel('right')" title="Redes Sociales">
-        <span class="trigger-icon">🌐</span>
-    </button>
-
-    <header>
-        <img src="https://i.imgur.com/GYjAGS7.png" alt="Logo Panter Studio" class="logo-img">
-        <p>Creando mundos, diseñando sueños.</p>
-        <div class="header-auth" id="headerAuthBox">
-            <div class="auth-signal-row">
-                <span id="authSignalDot" class="auth-signal-dot auth-signal-guest" aria-hidden="true"></span>
-                <span id="authSignalText" class="auth-signal-text">Invitado</span>
-                <span id="authRoleBadge" class="auth-role-badge" hidden>ADMIN</span>
-            </div>
-            <p id="authUserLabel" class="auth-user-label">Invitado</p>
-            <div class="header-auth-actions">
-                <button id="loginAuthBtn" class="btn auth-btn">Entrar</button>
-                <button id="logoutAuthBtn" class="btn btn-ghost auth-btn" hidden>Salir</button>
-            </div>
-        </div>
-        <button id="dark-mode-toggle" class="dark-mode-toggle">🌙</button>
-    </header>
-
+    <!-- AUTH MODAL (Google-only) -->
     <div id="authModal" class="auth-modal" hidden>
         <div class="auth-modal-overlay" data-auth-close="true"></div>
         <div class="auth-modal-card" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
             <button type="button" class="auth-modal-close" id="authModalCloseBtn" aria-label="Cerrar">✕</button>
-            <h3 id="authModalTitle">Acceso a tu cuenta</h3>
-
-            <div class="auth-modal-tabs">
-                <button type="button" id="authTabRegister" class="auth-tab">Registrarse</button>
-                <button type="button" id="authTabLogin" class="auth-tab active">Entrar</button>
-            </div>
-
-            <form id="authRegisterForm" class="auth-modal-form" hidden>
-                <label for="authRegisterEmail">Correo</label>
-                <input type="email" id="authRegisterEmail" placeholder="tu-correo@gmail.com" required>
-
-                <label for="authRegisterPassword">Contraseña</label>
-                <input type="password" id="authRegisterPassword" placeholder="Minimo 6 caracteres" minlength="6" required>
-
-                <label for="authRegisterReferral">Codigo de invitacion (opcional)</label>
-                <input type="text" id="authRegisterReferral" placeholder="ABC123">
-
-                <button type="submit" class="btn auth-submit">Crear cuenta</button>
-            </form>
-
-            <form id="authLoginForm" class="auth-modal-form">
-                <label for="authLoginEmail">Correo</label>
-                <input type="email" id="authLoginEmail" placeholder="tu-correo@gmail.com" required>
-
-                <label for="authLoginPassword">Contraseña</label>
-                <input type="password" id="authLoginPassword" placeholder="Tu contraseña" required>
-
-                <button type="submit" class="btn auth-submit">Entrar</button>
-            </form>
-
-            <div class="auth-modal-sep"><span>o</span></div>
-            <button type="button" id="googleAuthModalBtn" class="btn btn-ghost auth-submit">Continuar con Google</button>
+            <h3 id="authModalTitle">Mi Perfil</h3>
+            <p style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:2rem; text-align:center;">Conéctate con tu cuenta de Google para acceder a tu perfil, monedas y más.</p>
+            <!-- Hidden tabs and forms required by script.js (not shown to user) -->
+            <button type="button" id="authTabRegister" class="auth-tab" hidden></button>
+            <button type="button" id="authTabLogin" class="auth-tab active" hidden></button>
+            <form id="authRegisterForm" class="auth-modal-form" hidden></form>
+            <form id="authLoginForm" class="auth-modal-form" hidden></form>
+            <button type="button" id="googleAuthModalBtn" class="btn" style="width:100%; display:flex; align-items:center; justify-content:center; gap:10px;">
+                <img src="recursos/google-logo.svg" alt="Google" style="width:20px; height:20px;">
+                Continuar con Google
+            </button>
             <p id="authModalMessage" class="auth-modal-message"></p>
         </div>
     </div>
 
-    <!-- Modal de nombre de usuario (primer acceso con Google) -->
+    <!-- MODAL NOMBRE USUARIO (primer acceso Google) -->
     <div id="usernameModal" class="username-modal" hidden>
         <div class="username-modal-overlay"></div>
         <div class="username-modal-card">
@@ -227,124 +190,281 @@
         </div>
     </div>
 
+    <!-- NAV -->
     <nav>
-        <a href="index.html" class="active">Inicio</a>
-        <div class="nav-dropdown">
-            <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">Aplicaciones</button>
-            <div class="nav-dropdown-menu">
-                <a href="pages/juegos.html">Juegos</a>
-                <a href="pages/aplicaciones.html">Aplicaciones</a>
+        <div class="nav-left">
+            <a href="index.html" class="nav-logo">
+                <img src="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" alt="Panter Studio">
+                <span>Panter Studio</span>
+            </a>
+        </div>
+        <div class="nav-middle">
+            <a href="index.html" class="active">Inicio</a>
+            <div class="nav-dropdown">
+                <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">Novedades</button>
+                <div class="nav-dropdown-menu">
+                    <a href="pages/actualizaciones.html">Actualizaciones</a>
+                    <a href="pages/imagenes.html">Galeria</a>
+                </div>
+            </div>
+            <a href="pages/minijuegos.html">Minijuegos</a>
+            <a href="pages/donaciones.html">Apoyanos</a>
+            <a href="pages/personal.html">Personal</a>
+            <a href="pages/perfil.html">Mi Perfil</a>
+            <a href="pages/meinteresa.html">Me Interesa</a>
+            <a href="pages/admin/admin.html" id="adminNavLink" hidden>Panel Admin</a>
+        </div>
+        <div class="nav-right">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span data-auth-signal-dot class="auth-signal-dot auth-signal-guest" aria-hidden="true"></span>
+                <span data-auth-signal-text class="auth-signal-text" style="font-size:0.8rem; font-weight:600; color:var(--text-secondary);">Invitado</span>
+                <button data-open-auth-modal class="btn btn-sm" style="padding:0.45rem 1rem; font-size:0.82rem;">Mi Perfil</button>
+                <button data-auth-logout class="btn btn-ghost btn-sm" style="padding:0.45rem 1rem; font-size:0.82rem;" hidden>Salir</button>
             </div>
         </div>
-        <a href="pages/minijuegos.html">Minijuegos</a>
-        <a href="pages/actualizaciones.html">Actualizaciones</a>
-        <a href="pages/donaciones.html">Apóyanos</a>
-        <a href="pages/personal.html">Personal</a>
-        <a href="pages/perfil.html">Mi Perfil</a>
-        <a href="pages/preregistro.html">Pre-registro</a>
-        <a href="pages/admin/admin.html" id="adminNavLink" hidden>Panel Admin</a>
     </nav>
 
-    <div class="container">
-        <!-- Primero: Pre-registro (se mantiene en primer lugar) -->
-        <section>
-            <div class="index-preregistro-highlight">
-                <div class="index-preregistro-media">
-                    <img src="https://i.imgur.com/1IRRyFY.jpeg" alt="Pre-registro Nuestra Tierra Job Simulator" loading="lazy">
+    <!-- MAIN CONTAINER -->
+    <div class="container" style="padding-top: 0.5rem;">
+
+        <!-- STATUS BAR -->
+        <div class="hub-status-bar">
+            <div class="hub-status-servers">
+                <div class="server-status-item">
+                    <span class="pulsing-dot online"></span>
+                    Servidor Alfa: <strong>Desarrollo Activo</strong>
                 </div>
-                <div class="index-preregistro-copy">
-                    <span class="highlight-tag">COMUNIDAD FUNDADORA</span>
-                    <h3>Reserva tu lugar en Nuestra Tierra Job Simulator</h3>
-                    <p>
-                        Estamos formando la lista oficial de jugadores que quieren entrar desde el dia uno.
-                        Solo hay 1000 lugares y cada registro fortalece el lanzamiento.
-                    </p>
-                    <div class="index-preregistro-actions">
-                        <a href="pages/preregistro.html" class="btn">Entrar a la lista de espera</a>
-                        <p class="highlight-note">Recibe acceso anticipado, novedades directas y recompensas de fundador.</p>
+                <div class="server-status-item">
+                    <span class="pulsing-dot online"></span>
+                    Minijuegos Web: <strong>Online</strong>
+                </div>
+                <div class="server-status-item">
+                    <span class="pulsing-dot online"></span>
+                    Firebase: <strong>Conectada</strong>
+                </div>
+            </div>
+            <div style="font-size:0.8rem; font-weight:700; color:var(--color-accent); letter-spacing:0.5px;">
+                VERS. DE DESARROLLO: v0.4.2-ALPHA
+            </div>
+        </div>
+
+        <!-- HUB GRID: LEFT (main) / RIGHT (sidebar) -->
+        <div class="hub-grid">
+
+            <!-- ===== COLUMNA IZQUIERDA ===== -->
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+
+                <!-- FLAGSHIP HERO -->
+                <div class="hub-hero-premium">
+                    <img src="https://i.imgur.com/1IRRyFY.jpeg" alt="Nuestra Tierra Job Simulator" class="hub-hero-bg">
+                    <div class="hub-hero-overlay"></div>
+                    <div class="hub-hero-content">
+                        <span class="hub-hero-badge">★ NUESTRO JUEGO ESTRELLA</span>
+                        <h1 class="hub-hero-title" style="font-size:clamp(1.8rem,4vw,2.8rem);">Nuestra Tierra</h1>
+                        <p class="hub-hero-desc">
+                            El primer simulador móvil de trabajos tradicionales y modernos con toda la identidad de nuestra cultura. Recorre el campo, atiende tu tienda y sé parte del día uno.
+                        </p>
+                        <div class="hub-hero-actions">
+                            <a href="pages/meinteresa.html" class="btn btn-sm">💚 Me Interesa</a>
+                            <a href="pages/actualizaciones.html" class="btn btn-ghost btn-sm">Ver Novedades</a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- Segundo: Minijuegos (mismo diseño aproximado que Pre-registro) -->
-        <section>
-            <div class="index-preregistro-highlight index-minijuegos-highlight">
-                <div class="index-preregistro-media">
-                    <div class="minijuegos-visual" aria-hidden="true">
-                        <div id="minigamesParticles" class="minigames-particles" aria-hidden="true"></div>
-                        <!-- SVG icons (decorative) -->
-                        <svg class="icon icon-game" viewBox="0 0 24 24" aria-hidden="true">
-                            <path fill="#fff" d="M6 10h2v2H6zM4 6h16v12H4z" opacity="0.9"></path>
-                        </svg>
-                        <svg class="icon icon-coin" viewBox="0 0 24 24" aria-hidden="true">
-                            <circle cx="12" cy="12" r="8" fill="#ffd700" />
-                            <path d="M8 12h8" stroke="#b88600" stroke-width="1.2" stroke-linecap="round" />
-                        </svg>
-                        <svg class="icon icon-star" viewBox="0 0 24 24" aria-hidden="true">
-                            <path fill="#fff7b0" d="M12 2l2.6 6.8L22 10l-5 3.8L18 22l-6-3.6L6 22l1-8.2L2 10l7.4-1.2z"/>
-                        </svg>
-                        <svg class="icon icon-flash" viewBox="0 0 24 24" aria-hidden="true">
-                            <path fill="#fff" d="M13 2L3 14h7l-1 8 10-12h-7z" opacity="0.95"/>
-                        </svg>
-                        <svg class="icon icon-trophy" viewBox="0 0 24 24" aria-hidden="true">
-                            <path fill="#ffe6a7" d="M6 3h12v2a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4V3zM8 13h8v2H8z"/>
-                        </svg>
+                <!-- STUDIO STATS STRIP -->
+                <div class="studio-info-strip">
+                    <div class="info-strip-item">
+                        <strong id="statRegistrados">—</strong>
+                        <span>Interesados</span>
+                    </div>
+                    <div class="info-strip-item">
+                        <strong>1,000</strong>
+                        <span>Cupo Fundador</span>
+                    </div>
+                    <div class="info-strip-item">
+                        <strong id="statJugadores">—</strong>
+                        <span>Jugadores Activos</span>
+                    </div>
+                    <div class="info-strip-item">
+                        <strong>2025</strong>
+                        <span>Año de Fundación</span>
                     </div>
                 </div>
-                <div class="index-preregistro-copy">
-                    <span class="highlight-tag">MINIJUEGOS</span>
-                    <h3>Juega minijuegos y gana monedas diariamente</h3>
-                    <p>
-                        Accede a una colección de minijuegos rápidos para divertirte y ganar monedas dentro de tu cuenta.
-                        Ideal para sesiones cortas y desafíos diarios.
-                    </p>
-                    <div class="index-preregistro-actions">
-                        <a href="pages/minijuegos.html" class="btn btn-cta">Ver Minijuegos</a>
-                        <p class="highlight-note">Compite, gana recompensas y sube en la tabla de líderes.</p>
+
+                <!-- DEVLOGS SECTION -->
+                <div class="home-devlogs-section">
+                    <div class="hub-section-title">
+                        <span style="color:var(--color-primary-light);">📋</span> Últimas Novedades
+                    </div>
+                    <div id="homeDevlogsGrid" class="devlogs-grid">
+                        <!-- Injected by JS -->
+                        <div class="mini-devlog-card" style="opacity:0.5;">
+                            <div style="width:110px;height:70px;border-radius:6px;background:var(--bg-glass-card-hover);flex-shrink:0;"></div>
+                            <div class="mini-devlog-body">
+                                <div class="loading-pulse" style="width:70%; margin-bottom:8px;"></div>
+                                <div class="loading-pulse" style="width:90%; height:0.7em; margin-bottom:4px;"></div>
+                                <div class="loading-pulse" style="width:60%; height:0.7em;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="pages/actualizaciones.html" class="btn btn-ghost btn-sm" style="margin-top:1rem; width:100%; justify-content:center;">
+                        Ver todas las actualizaciones →
+                    </a>
+                </div>
+
+                <!-- HOW IT WORKS -->
+                <div>
+                    <div class="hub-section-title">
+                        <span style="color:var(--color-primary-light);">🚀</span> Cómo Empezar
+                    </div>
+                    <div class="hub-steps-grid">
+                        <div class="step-card">
+                            <span class="step-number">01</span>
+                            <h4>Crea tu Cuenta</h4>
+                            <p>Regístrate con Google en segundos y asegura tu identidad en la comunidad.</p>
+                        </div>
+                        <div class="step-card">
+                        <span class="step-number">02</span>
+                        <h4>Di «Me Interesa»</h4>
+                        <p>Marca tu interés en el juego con un solo clic. Sin datos personales, sin spam.</p>
+                    </div>
+                        <div class="step-card">
+                            <span class="step-number">03</span>
+                            <h4>Juega y Gana</h4>
+                            <p>Participa en minijuegos diarios para ganar monedas y subir en el ranking.</p>
+                        </div>
+                        <div class="step-card">
+                            <span class="step-number">04</span>
+                            <h4>Sigue el Dev</h4>
+                            <p>Recibe devlogs exclusivos y novedades antes de que salgan a redes sociales.</p>
+                        </div>
                     </div>
                 </div>
+
             </div>
-        </section>
 
-        <!-- Banner promocional eliminado a petición del usuario -->
+            <!-- ===== COLUMNA DERECHA ===== -->
+            <div class="hub-right-col">
 
-        <section>
-            <div class="index-value-points" aria-label="Beneficios de la lista de espera">
-                <div class="value-point">
-                    <span class="value-icon">🎯</span>
-                    <p>Prioridad de acceso cuando abra la primera fase jugable.</p>
+                <!-- CUENTA / WIDGET USUARIO -->
+                <div class="hub-account-widget">
+                    <div class="account-profile-header">
+                        <div class="account-avatar" id="hubAccountAvatar">👤</div>
+                        <div class="account-info">
+                            <h4 id="hubAccountName">Invitado</h4>
+                            <p id="hubAccountStatus">No has iniciado sesión</p>
+                        </div>
+                    </div>
+                    <div class="account-stats-row" id="hubAccountStats">
+                        <div class="account-stat-box">
+                            <span>Monedas</span>
+                            <strong class="coins-highlight" id="hubCoins">—</strong>
+                        </div>
+                        <div class="account-stat-box">
+                            <span>Esmeraldas</span>
+                            <strong class="emeralds-highlight" id="hubEmeralds">—</strong>
+                        </div>
+                        <div class="account-stat-box">
+                            <span>Partidas</span>
+                            <strong id="hubGamesPlayed">—</strong>
+                        </div>
+                        <div class="account-stat-box">
+                            <span>Rango</span>
+                            <strong id="hubRank">—</strong>
+                        </div>
+                    </div>
+                    <a href="pages/perfil.html" class="btn btn-sm" style="width:100%; justify-content:center; text-align:center;" id="hubProfileBtn">
+                        Ver Mi Perfil
+                    </a>
                 </div>
-                <div class="value-point">
-                    <span class="value-icon">📣</span>
-                    <p>Actualizaciones exclusivas del desarrollo antes de redes.</p>
-                </div>
-                <div class="value-point">
-                    <span class="value-icon">🏅</span>
-                    <p>Reconocimiento como miembro fundador de la comunidad.</p>
-                </div>
-            </div>
 
-            <div class="index-launch-strip">
-                <p><strong>Estado del proyecto:</strong> desarrollo activo, sistemas base en avance y comunidad creciendo semana a semana.</p>
-            </div>
+                <!-- TOP MILLONARIOS / LEADERBOARD -->
+                <div class="leaderboard-card">
+                    <div class="leaderboard-header">
+                        <h3>🏆 Top Millonarios</h3>
+                        <span>COMUNIDAD</span>
+                    </div>
+                    <div class="leaderboard-list" id="homeLeaderboard">
+                        <!-- Injected by JS -->
+                        <div class="leaderboard-row" style="opacity:0.4;">
+                            <div class="leaderboard-user-info">
+                                <div class="leaderboard-rank">—</div>
+                                <div class="loading-pulse" style="width:80px;"></div>
+                            </div>
+                            <div class="leaderboard-value">—</div>
+                        </div>
+                        <div class="leaderboard-row" style="opacity:0.3;">
+                            <div class="leaderboard-user-info">
+                                <div class="leaderboard-rank">—</div>
+                                <div class="loading-pulse" style="width:60px;"></div>
+                            </div>
+                            <div class="leaderboard-value">—</div>
+                        </div>
+                        <div class="leaderboard-row" style="opacity:0.2;">
+                            <div class="leaderboard-user-info">
+                                <div class="leaderboard-rank">—</div>
+                                <div class="loading-pulse" style="width:70px;"></div>
+                            </div>
+                            <div class="leaderboard-value">—</div>
+                        </div>
+                    </div>
+                    <div class="leaderboard-user-self" id="lbSelfRow">Inicia sesión para ver tu posición</div>
+                </div>
 
-            <h2>Sobre Nosotros</h2>
-            <p>Bienvenido al sitio oficial de <strong>Panter Studio Game Dev</strong>. Somos un equipo indie enfocado en crear videojuegos con identidad propia, narrativa inmersiva y sistemas de juego con profundidad.</p>
-            <p>Nuestro objetivo es construir experiencias memorables: visualmente atractivas, tecnicamente solidas y conectadas con una comunidad real desde etapas tempranas.</p>
-            <br>
-            <h3>Nuestra Misión</h3>
-            <p>Innovar en cada genero que tocamos, iterar con feedback de jugadores y mantener una comunicacion transparente durante todo el desarrollo.</p>
-            <div class="index-preregistro-inline">
-                <p>Si quieres apoyar el lanzamiento desde el inicio, este es el mejor momento para registrarte.</p>
-                <a href="pages/preregistro.html" class="btn">Quiero mi lugar</a>
+                <!-- MINIJUEGO RÁPIDO -->
+                <div class="minijuego-quick">
+                    <div class="minijuego-quick-header">
+                        <span style="font-size:1.5rem;">☕</span>
+                        <h3>La Tiendita Express</h3>
+                    </div>
+                    <p>Atiende clientes con productos típicos colombianos. Gana hasta 3 recompensas diarias y sube en el ranking de monedas.</p>
+                    <a href="pages/minijuegos.html" class="btn btn-sm" style="width:100%; justify-content:center;">
+                        Jugar Ahora →
+                    </a>
+                </div>
+
+                <!-- ME INTERESA WIDGET -->
+                <div class="prereg-widget">
+                    <div class="prereg-widget-header">
+                        <h3>💚 Me Interesa</h3>
+                        <span style="font-size:0.7rem; color:var(--color-primary-light); font-weight:700; background:rgba(0,200,83,0.1); padding:2px 8px; border-radius:100px;">ABIERTO</span>
+                    </div>
+                    <p>Haz clic para que el equipo sepa que esperas <strong style="color:var(--text-primary);">Nuestra Tierra</strong>. Sin correo, sin spam.</p>
+                    <div style="text-align:center; margin-bottom:0.75rem;">
+                        <span style="font-family:var(--font-display); font-size:2rem; font-weight:800; color:var(--color-primary-light);" id="widgetInteresados">—</span>
+                        <span style="display:block; font-size:0.7rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">personas interesadas</span>
+                    </div>
+                    <a href="pages/meinteresa.html" class="btn btn-sm" style="width:100%; justify-content:center;">
+                        💚 ¡Me Interesa!
+                    </a>
+                </div>
+
+                <!-- SOBRE EL ESTUDIO -->
+                <div class="hub-card" style="gap:1rem;">
+                    <div>
+                        <div class="hub-section-title" style="font-size:1rem; margin-bottom:0.5rem;">
+                            <span>🎮</span> Panter Studio
+                        </div>
+                        <p style="font-size:0.82rem; color:var(--text-secondary); margin:0; line-height:1.5;">
+                            Estudio indie independiente creando videojuegos con identidad colombiana. Nuestro enfoque: narrativa real, sistemas profundos y comunidad desde el día uno.
+                        </p>
+                    </div>
+                    <a href="pages/personal.html" class="btn btn-ghost btn-sm" style="width:100%; justify-content:center;">
+                        Conocer al Equipo
+                    </a>
+                </div>
+
             </div>
-            <a href="pages/juegos.html" class="btn">Explorar juegos</a>
-        </section>
+        </div>
     </div>
 
     <footer>
-        <p>&copy; 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
+        <p>© 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
+        <div class="footer-links">
+            <a href="pages/preregistro.html">Pre-registro</a>
+            <a href="pages/personal.html">Personal</a>
+            <a href="pages/donaciones.html">Apoyanos</a>
+        </div>
     </footer>
 
     <script src="assets/js/core/firebase-config.js"></script>
@@ -352,5 +472,193 @@
     <script src="assets/js/ui-enhancements.js"></script>
     <script src="assets/js/site-visibility.js"></script>
     <script src="assets/js/core/script.js"></script>
+
+    <script>
+    // ===== HOME HUB DYNAMIC CONTENT =====
+    (function() {
+        function waitForFirebase(timeout = 8000) {
+            return new Promise((resolve) => {
+                if (window.auth && window.db && window.fsCollection) return resolve(true);
+                const start = Date.now();
+                const t = setInterval(() => {
+                    if (window.auth && window.db && window.fsCollection) {
+                        clearInterval(t); resolve(true);
+                    } else if (Date.now() - start > timeout) {
+                        clearInterval(t); resolve(false);
+                    }
+                }, 100);
+            });
+        }
+
+        // -- Leaderboard --
+        async function loadLeaderboard() {
+            const ok = await waitForFirebase();
+            if (!ok || !window.fsQuery || !window.fsOrderBy || !window.fsLimit || !window.getDocs) return;
+            try {
+                const q = window.fsQuery(
+                    window.fsCollection(window.db, 'users'),
+                    window.fsOrderBy('coins', 'desc'),
+                    window.fsLimit(5)
+                );
+                const snap = await window.getDocs(q);
+                const lb = document.getElementById('homeLeaderboard');
+                if (!lb) return;
+                lb.innerHTML = '';
+                const medals = ['🥇','🥈','🥉'];
+                const topClasses = ['top-1','top-2','top-3'];
+                let rank = 0;
+                snap.forEach(doc => {
+                    rank++;
+                    const d = doc.data();
+                    const username = d.username || d.displayName || 'Anónimo';
+                    const coins = d.coins || 0;
+                    const cls = rank <= 3 ? topClasses[rank-1] : '';
+                    const medal = rank <= 3 ? medals[rank-1] : rank;
+                    lb.innerHTML += `
+                        <div class="leaderboard-row ${cls}">
+                            <div class="leaderboard-user-info">
+                                <div class="leaderboard-rank">${medal}</div>
+                                <span class="leaderboard-avatar">👤</span>
+                                <span class="leaderboard-name">${username}</span>
+                            </div>
+                            <div class="leaderboard-value">🪙 ${coins.toLocaleString()}</div>
+                        </div>`;
+                });
+                if (snap.empty) {
+                    lb.innerHTML = '<p style="text-align:center;font-size:0.8rem;color:var(--text-muted);padding:1rem;">¡Sé el primero en la tabla!</p>';
+                }
+            } catch(e) { console.warn('Leaderboard error:', e); }
+        }
+
+        // -- Devlogs --
+        async function loadDevlogs() {
+            const ok = await waitForFirebase();
+            if (!ok || !window.fsQuery || !window.fsOrderBy || !window.fsLimit || !window.getDocs) return;
+            try {
+                const q = window.fsQuery(
+                    window.fsCollection(window.db, 'devlogs'),
+                    window.fsOrderBy('createdAt', 'desc'),
+                    window.fsLimit(3)
+                );
+                const snap = await window.getDocs(q);
+                const grid = document.getElementById('homeDevlogsGrid');
+                if (!grid) return;
+                if (snap.empty) {
+                    grid.innerHTML = '<p style="font-size:0.85rem;color:var(--text-muted);text-align:center;padding:1rem;">No hay novedades aún.</p>';
+                    return;
+                }
+                grid.innerHTML = '';
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    const title = d.title || 'Sin título';
+                    const summary = d.summary || d.body?.substring(0,120) || '';
+                    const img = d.imageUrl || 'https://i.imgur.com/1IRRyFY.jpeg';
+                    const date = d.createdAt ? new Date(d.createdAt.toDate ? d.createdAt.toDate() : d.createdAt).toLocaleDateString('es-CO', {day:'numeric',month:'short'}) : '';
+                    const tag = d.tag || 'UPDATE';
+                    grid.innerHTML += `
+                        <a href="pages/actualizaciones.html" class="mini-devlog-card">
+                            <img class="mini-devlog-img" src="${img}" alt="${title}" onerror="this.src='https://i.imgur.com/1IRRyFY.jpeg'">
+                            <div class="mini-devlog-body">
+                                <h4>${title}</h4>
+                                <p>${summary}</p>
+                                <div class="mini-devlog-meta">
+                                    <span>${tag}</span>
+                                    ${date}
+                                </div>
+                            </div>
+                        </a>`;
+                });
+            } catch(e) {
+                console.warn('Devlogs error:', e);
+                const grid = document.getElementById('homeDevlogsGrid');
+                if (grid) grid.innerHTML = '<p style="font-size:0.85rem;color:var(--text-muted);">No se pudieron cargar las novedades.</p>';
+            }
+        }
+
+        // -- Pre-registro stats --
+        async function loadPreregStats() {
+            // Load "Me Interesa" counter
+            const ok = await waitForFirebase();
+            if (!ok || !window.getDoc || !window.fsDoc) return;
+            try {
+                const snap = await window.getDoc(window.fsDoc(window.db, 'interesados', 'contador'));
+                const total = snap.exists() ? (snap.data().total || 0) : 0;
+                const statEl = document.getElementById('statRegistrados');
+                const widgetEl = document.getElementById('widgetInteresados');
+                if (statEl) statEl.textContent = total.toLocaleString();
+                if (widgetEl) widgetEl.textContent = total.toLocaleString();
+            } catch(e) { console.warn('Interesados counter error:', e); }
+        }
+
+        // -- User account widget --
+        async function loadAccountWidget() {
+            const ok = await waitForFirebase();
+            if (!ok) return;
+            window.auth.onAuthStateChanged(async (user) => {
+                const nameEl = document.getElementById('hubAccountName');
+                const statusEl = document.getElementById('hubAccountStatus');
+                const avatarEl = document.getElementById('hubAccountAvatar');
+                const coinsEl = document.getElementById('hubCoins');
+                const emeraldsEl = document.getElementById('hubEmeralds');
+                const gamesEl = document.getElementById('hubGamesPlayed');
+                const rankEl = document.getElementById('hubRank');
+                const lbSelf = document.getElementById('lbSelfRow');
+
+                if (user) {
+                    if (nameEl) nameEl.textContent = user.displayName || 'Jugador';
+                    if (statusEl) statusEl.textContent = 'Sesión activa';
+                    if (avatarEl && user.photoURL) {
+                        avatarEl.innerHTML = `<img src="${user.photoURL}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="Avatar">`;
+                    }
+                    // Load user data from Firestore
+                    try {
+                        const docSnap = await window.fsGetDoc(window.fsDoc(window.db, 'users', user.uid));
+                        if (docSnap.exists()) {
+                            const d = docSnap.data();
+                            if (coinsEl) coinsEl.textContent = (d.coins || 0).toLocaleString();
+                            if (emeraldsEl) emeraldsEl.textContent = (d.emeralds || 0).toLocaleString();
+                            if (gamesEl) gamesEl.textContent = (d.gamesPlayed || 0).toLocaleString();
+                            if (rankEl) rankEl.textContent = d.rank || 'Novato';
+                            if (nameEl) nameEl.textContent = d.username || user.displayName || 'Jugador';
+                            // Show leaderboard self position
+                            if (lbSelf) lbSelf.textContent = `Tu posición: buscando... · ${(d.coins||0).toLocaleString()} 🪙`;
+                        }
+                    } catch(e) { console.warn('User data error:', e); }
+                } else {
+                    if (nameEl) nameEl.textContent = 'Invitado';
+                    if (statusEl) statusEl.textContent = 'No has iniciado sesión';
+                    if (coinsEl) coinsEl.textContent = '—';
+                    if (emeraldsEl) emeraldsEl.textContent = '—';
+                    if (gamesEl) gamesEl.textContent = '—';
+                    if (rankEl) rankEl.textContent = '—';
+                    if (lbSelf) lbSelf.textContent = 'Inicia sesión para ver tu posición';
+                }
+            });
+        }
+
+        // -- Active players stats (rough estimate from users collection) --
+        async function loadPlayerStats() {
+            const ok = await waitForFirebase();
+            if (!ok) return;
+            try {
+                const snap = await window.fsGetDoc(window.fsDoc(window.db, 'settings', 'stats'));
+                if (snap.exists()) {
+                    const d = snap.data();
+                    const el = document.getElementById('statJugadores');
+                    if (el && d.jugadores) el.textContent = Number(d.jugadores).toLocaleString();
+                }
+            } catch(e) { /* silent */ }
+        }
+
+        // Run all
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLeaderboard();
+            loadDevlogs();
+            loadPreregStats();
+            loadAccountWidget();
+            loadPlayerStats();
+        });
+    })();
+    </script>
 </body>
 </html>

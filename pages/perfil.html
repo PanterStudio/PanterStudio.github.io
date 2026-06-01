@@ -1,665 +1,1908 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- 📱 Viewport Optimizado para Móviles -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+  
+  <!-- 🔍 SEO -->
   <title>Mi Perfil — Panter Studio</title>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
-  <link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
+  <meta name="description" content="Gestiona tu cuenta, monedas, recompensas y actividad en Panter Studio.">
+  
+  <!-- 🌐 PWA & Theme -->
+  <meta name="theme-color" content="#1e70c8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <!-- ⚡ Performance: Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://pagead2.googlesyndication.com">
+  
+  <!-- 🔖 Iconos -->
+  <link rel="icon" href="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" type="image/png">
+  <link rel="apple-touch-icon" href="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&">
+  
+  <!-- 🎨 Fuentes & Estilos -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../assets/css/style.css">
-  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
-  <script src="../assets/js/core/firebase-config.js"></script>
-  <script src="../assets/js/site-visibility.js"></script>
+  
+  <!-- 📊 Scripts Externos (Async/Defer) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js" defer></script>
+  
+  <!-- 🧠 Config Firebase -->
+  <script src="../assets/js/core/firebase-config.js" defer></script>
+  <script src="../assets/js/site-visibility.js" defer></script>
+  
+  <!-- 🎨 CSS Inline Optimizado (Mobile-First) -->
   <style>
-  /* ─── RESET / BASE ─── */
-  *, *::before, *::after { box-sizing: border-box; }
-  body { background: #0b0e17 !important; color: #e0edff; font-size: 14px; }
-  #tsparticles { position: fixed; inset: 0; z-index: -1; }
-
-  /* ─── SHELL ─── */
-  .ps { max-width: 1080px; margin: 0 auto; padding: 16px 14px 40px; }
-
-  /* ════════════════════════════
-     AUTH GATE
-  ════════════════════════════ */
+  /* ========================================
+     BASE & RESET (Mobile-First)
+     ======================================== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  :root {
+    /* Colores */
+    --bg-body: #050507;
+    --bg-card: linear-gradient(145deg, #0a0b0d, #0d0e12);
+    --bg-card-alt: linear-gradient(155deg, #0d0e12, #070709);
+    --bg-input: rgba(255,255,255,.03);
+    --bg-modal: linear-gradient(155deg, #070709, #050507);
+    
+    --border-color: rgba(0, 200, 83, 0.15);
+    --border-color-strong: rgba(0, 200, 83, 0.3);
+    
+    --text-primary: #ffffff;
+    --text-secondary: #9ca3af;
+    --text-muted: #4b5563;
+    --text-accent: #00c853;
+    
+    --color-gold: #d4af37;
+    --color-green: #00c853;
+    --color-red: #f87171;
+    --color-blue: #00b0ff;
+    
+    /* Espaciado base móvil */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 12px;
+    --space-lg: 16px;
+    --space-xl: 24px;
+    
+    /* Radios & Sombras */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-full: 999px;
+    
+    --shadow-card: 0 4px 20px rgba(0,0,0,.3);
+    --shadow-glow: 0 0 20px rgba(0, 200, 83, 0.15);
+    
+    /* Transiciones */
+    --transition-fast: 150ms ease;
+    --transition-normal: 250ms ease;
+  }
+  
+  [data-theme="light"] {
+    --bg-body: #fafafc;
+    --bg-card: linear-gradient(145deg, #ffffff, #f3f4f6);
+    --bg-card-alt: linear-gradient(155deg, #ffffff, #f3f4f6);
+    --bg-input: rgba(0,0,0,.04);
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #9ca3af;
+    --border-color: rgba(0, 200, 83, 0.1);
+  }
+  
+  html { scroll-behavior: smooth; font-size: 14px; -webkit-text-size-adjust: 100%; }
+  
+  body {
+    background: var(--bg-body) !important;
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Particles Background */
+  #tsparticles {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  
+  /* Contenedor Principal */
+  .ps {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: var(--space-md);
+    padding-bottom: var(--space-xl);
+  }
+  
+  /* ========================================
+     AUTH GATE (Login/Register)
+     ======================================== */
   .auth-gate {
-    min-height: 80vh; display: flex;
-    align-items: center; justify-content: center; padding: 20px;
+    min-height: calc(100vh - 120px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-lg);
   }
+  
   .auth-card {
-    background: linear-gradient(155deg,#101828,#0c1320);
-    border: 1px solid rgba(30,112,200,.4); border-radius: 18px;
-    padding: 32px 28px; width: 100%; max-width: 400px;
-    box-shadow: 0 20px 50px rgba(0,0,0,.55); text-align: center;
-    animation: fadeUp .45s ease both;
+    background: var(--bg-card-alt);
+    border: 1px solid var(--border-color-strong);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    width: 100%;
+    max-width: 400px;
+    box-shadow: var(--shadow-card), var(--shadow-glow);
+    text-align: center;
+    animation: fadeUp .4s ease-out both;
   }
-  @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+  
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
   .auth-logo {
-    width: 68px; height: 68px; border-radius: 50%;
-    border: 2px solid rgba(30,112,200,.5); margin: 0 auto 16px; display: block;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color-strong);
+    margin: 0 auto var(--space-md);
+    display: block;
     box-shadow: 0 0 20px rgba(30,112,200,.28);
   }
-  .auth-card h1 { font-size: 1.4rem; font-weight: 800; color: #fff; margin: 0 0 6px; }
-  .auth-card > p { color: #7aa6c0; font-size: .88rem; margin: 0 0 20px; }
-  .auth-tabs { display: flex; gap: 5px; margin-bottom: 16px; }
+  
+  .auth-card h1 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0 0 var(--space-xs);
+  }
+  
+  .auth-card > p {
+    color: var(--text-secondary);
+    font-size: .9rem;
+    margin: 0 0 var(--space-lg);
+  }
+  
+  .auth-tabs {
+    display: flex;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-md);
+    background: rgba(255,255,255,.03);
+    padding: 4px;
+    border-radius: var(--radius-md);
+  }
+  
   .auth-tab {
-    flex: 1; padding: 9px; border-radius: 9px;
-    border: 1px solid rgba(30,112,200,.28);
-    background: rgba(30,112,200,.07);
-    color: #6fa5c4; font-size: .85rem; font-weight: 700;
-    cursor: pointer; transition: all .15s; font-family: inherit;
+    flex: 1;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: .9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: inherit;
   }
-  .auth-tab.active { background: rgba(30,112,200,.32); border-color: #1e70c8; color: #fff; }
-  .auth-form { display: none; flex-direction: column; gap: 10px; }
+  
+  .auth-tab.active {
+    background: var(--text-accent);
+    border-color: var(--text-accent);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(30,112,200,.3);
+  }
+  
+  .auth-form {
+    display: none;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+  
   .auth-form.active { display: flex; }
+  
   .p-inp {
-    padding: 10px 12px; border-radius: 9px;
+    width: 100%;
+    padding: var(--space-md);
+    border-radius: var(--radius-sm);
     border: 1px solid rgba(135,206,235,.22);
-    background: rgba(255,255,255,.05);
-    color: #fff; font-size: .9rem; font-family: inherit;
-    outline: none; transition: border-color .15s;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    min-height: 44px; /* Touch target mínimo */
   }
-  .p-inp:focus { border-color: rgba(30,112,200,.65); }
+  
+  .p-inp:focus {
+    border-color: var(--text-accent);
+    box-shadow: 0 0 0 3px rgba(30,112,200,.15);
+  }
+  
   .p-inp::placeholder { color: rgba(200,230,255,.3); }
-  .auth-forgot { font-size: .78rem; color: #4e80a0; cursor: pointer; text-decoration: underline; text-align: center; display: block; margin-top: 4px; }
-  .auth-msg { min-height: 16px; font-size: .82rem; text-align: center; padding: 7px 9px; border-radius: 7px; margin-top: 4px; }
-  .auth-msg.error   { background: rgba(248,113,113,.1); color: #f87171; }
-  .auth-msg.success { background: rgba(74,222,128,.09); color: #4ade80; }
-
-  /* ════════════════════════════
-     DASHBOARD
-  ════════════════════════════ */
+  
+  .auth-forgot {
+    font-size: .85rem;
+    color: var(--text-accent);
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    display: block;
+    margin-top: var(--space-xs);
+    padding: var(--space-xs);
+  }
+  
+  .auth-forgot:hover { text-decoration: underline; }
+  
+  .auth-msg {
+    min-height: 20px;
+    font-size: .85rem;
+    text-align: center;
+    padding: var(--space-sm);
+    border-radius: var(--radius-sm);
+    margin-top: var(--space-xs);
+  }
+  
+  .auth-msg.error   { background: rgba(248,113,113,.15); color: var(--color-red); }
+  .auth-msg.success { background: rgba(74,222,128,.15); color: var(--color-green); }
+  
+  /* ========================================
+     DASHBOARD (Oculto por defecto)
+     ======================================== */
   #profileDashboard { display: none; }
-  #profileDashboard.active { display: block; }
-
-  /* ─── COMPACT HERO ─── */
+  #profileDashboard.active { display: block; animation: fadeIn .3s ease-out; }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  /* ========================================
+     HERO CARD (Perfil Principal)
+     ======================================== */
   .ph {
     display: grid;
-    grid-template-columns: 56px 1fr auto;
-    gap: 12px; align-items: center;
-    padding: 14px 16px;
-    background: linear-gradient(145deg,rgba(14,22,36,.97),rgba(9,14,26,.98));
-    border: 1px solid rgba(30,112,200,.22); border-radius: 14px;
-    margin-bottom: 10px;
+    grid-template-columns: 52px 1fr auto;
+    gap: var(--space-md);
+    align-items: center;
+    padding: var(--space-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-sm);
   }
+  
   .ph-avatar {
-    width: 52px; height: 52px; border-radius: 50%;
-    background: rgba(30,112,200,.18); border: 2px solid rgba(30,112,200,.35);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.8rem; flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(30,112,200,.18);
+    border: 2px solid var(--border-color-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    flex-shrink: 0;
+    overflow: hidden;
   }
-  .ph-info h2 { margin: 0 0 2px; color: #fff; font-size: 1.05rem; font-weight: 800; line-height: 1.2; }
-  .ph-info p  { margin: 0; color: #5a88a8; font-size: .72rem; font-family: monospace; }
-  .ph-badges  { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
-  .ph-right   { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+  
+  .ph-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .ph-info h2 {
+    margin: 0 0 2px;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 800;
+    line-height: 1.2;
+    word-break: break-word;
+  }
+  
+  .ph-info p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: .75rem;
+    font-family: monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .ph-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: var(--space-xs);
+  }
+  
+  .ph-right {
+    display: flex;
+    gap: var(--space-xs);
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  
   .coins-chip {
-    background: rgba(251,191,36,.1); border: 1px solid rgba(251,191,36,.22);
-    border-radius: 9px; padding: 5px 10px; text-align: center; white-space: nowrap;
+    background: rgba(251,191,36,.12);
+    border: 1px solid rgba(251,191,36,.25);
+    border-radius: var(--radius-full);
+    padding: var(--space-xs) var(--space-md);
+    text-align: center;
+    white-space: nowrap;
   }
-  .coins-chip b { display: block; font-size: 1.1rem; font-weight: 900; color: #fbbf24; line-height: 1; }
-  .coins-chip small { font-size: .65rem; color: #7a6010; }
-
-  /* ─── BADGE PILLS ─── */
+  
+  .coins-chip b {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: var(--color-gold);
+    line-height: 1;
+  }
+  
+  .coins-chip small {
+    font-size: .7rem;
+    color: #7a6010;
+    display: block;
+  }
+  
+  /* ========================================
+     BADGE PILLS
+     ======================================== */
   .bp {
-    display: inline-flex; align-items: center; padding: 2px 7px;
-    border-radius: 999px; background: rgba(255,255,255,.05);
-    border: 1px solid rgba(255,255,255,.09); color: #cce4ff; font-size: .65rem; font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.1);
+    color: var(--text-primary);
+    font-size: .7rem;
+    font-weight: 700;
   }
-  .bp.g  { border-color: rgba(74,222,128,.35); color: #86efac; }
-  .bp.b  { border-color: rgba(96,165,250,.35); color: #93c5fd; }
+  
+  .bp.g  { border-color: rgba(74,222,128,.35);  color: #86efac; }
+  .bp.b  { border-color: rgba(96,165,250,.35);  color: #93c5fd; }
   .bp.pu { border-color: rgba(168,85,247,.35);  color: #d8b4fe; }
   .bp.go { border-color: rgba(251,191,36,.35);  color: #fde68a; }
   .bp.r  { border-color: rgba(248,113,113,.35); color: #fda4af; }
-
-  /* ─── KPI STRIP ─── */
+  
+  /* ========================================
+     KPI STRIP (Stats)
+     ======================================== */
   .kpis {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0,1fr));
-    gap: 6px; margin-bottom: 10px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
   }
+  
   .kpi {
-    padding: 8px 10px; border-radius: 10px;
-    background: linear-gradient(145deg,rgba(14,22,36,.95),rgba(9,14,26,.98));
-    border: 1px solid rgba(30,112,200,.18);
+    padding: var(--space-md);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    text-align: center;
   }
-  .kpi-l { font-size: .63rem; color: #3d6a88; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
-  .kpi-v { font-size: 1.05rem; font-weight: 800; color: #fff; line-height: 1; }
-  .kpi-s { font-size: .63rem; color: #2d5570; margin-top: 2px; }
-
-  /* ─── MAIN 3-COLUMN GRID ─── */
+  
+  .kpi-l {
+    font-size: .65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: 2px;
+    line-height: 1.2;
+  }
+  
+  .kpi-v {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+  }
+  
+  .kpi-s {
+    font-size: .65rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  
+  /* ========================================
+     GRID 3 COLUMNAS (Responsive)
+     ======================================== */
   .pg {
     display: grid;
-    grid-template-columns: 200px minmax(0,1fr) 200px;
-    gap: 8px;
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
   }
-  .pg-left, .pg-mid, .pg-right { display: flex; flex-direction: column; gap: 8px; }
-
-  /* ─── CARD ─── */
+  
+  .pg-left, .pg-mid, .pg-right {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+  
+  /* ========================================
+     CARD COMPONENT
+     ======================================== */
   .pc {
-    background: linear-gradient(145deg,rgba(13,19,31,.97),rgba(8,13,22,.98));
-    border: 1px solid rgba(30,112,200,.15); border-radius: 12px;
-    padding: 12px 13px; font-size: .82rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    font-size: .9rem;
   }
+  
   .pc-h {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 8px; margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+    flex-wrap: wrap;
   }
-  .pc-h h3 { margin: 0; color: #fff; font-size: .82rem; font-weight: 800; }
-  .pc-h span { font-size: .68rem; color: #3d6a88; }
-
-  /* ─── INFO TABLE ─── */
-  .it { width: 100%; border-collapse: collapse; }
-  .it td { padding: 4px 0; border-bottom: 1px solid rgba(30,112,200,.08); vertical-align: top; font-size: .77rem; }
-  .it td:first-child { color: #3d6a88; width: 46%; padding-right: 6px; }
-  .it td:last-child  { color: #c8e0f8; font-weight: 600; }
+  
+  .pc-h h3 {
+    margin: 0;
+    color: #fff;
+    font-size: .95rem;
+    font-weight: 800;
+  }
+  
+  .pc-h span {
+    font-size: .75rem;
+    color: var(--text-muted);
+  }
+  
+  /* ========================================
+     INFO TABLE
+     ======================================== */
+  .it {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .85rem;
+  }
+  
+  .it td {
+    padding: var(--space-xs) 0;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: top;
+  }
+  
+  .it td:first-child {
+    color: var(--text-muted);
+    width: 45%;
+    padding-right: var(--space-sm);
+  }
+  
+  .it td:last-child {
+    color: var(--text-primary);
+    font-weight: 600;
+    word-break: break-word;
+  }
+  
   .it tr:last-child td { border-bottom: none; }
-
-  /* ─── SPIN WHEEL — Canvas ─── */
-  .sw-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-  .sw-container {
-    position: relative; width: 150px; height: 150px;
-    filter: drop-shadow(0 4px 16px rgba(30,112,200,.4));
+  
+  /* ========================================
+     STREAK / BONUS DIARIO
+     ======================================== */
+  .streak-row {
+    display: flex;
+    gap: var(--space-xs);
+    justify-content: center;
+    margin: var(--space-md) 0;
+    flex-wrap: wrap;
   }
-  #spinWheel {
-    width: 150px; height: 150px; border-radius: 50%; display: block;
-    /* sin transition CSS — la animación la maneja requestAnimationFrame */
-  }
-  .sw-center {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-    width: 26px; height: 26px; border-radius: 50%;
-    background: radial-gradient(circle, #1e3a5f, #090e18);
-    border: 2.5px solid rgba(30,112,200,.7);
-    box-shadow: 0 0 10px rgba(30,112,200,.5), inset 0 0 6px rgba(0,0,0,.6);
-    z-index: 4; pointer-events: none;
-  }
-  .sw-pointer {
-    position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
-    width: 0; height: 0;
-    border-left: 10px solid transparent; border-right: 10px solid transparent;
-    border-top: 22px solid #f59e0b;
-    filter: drop-shadow(0 2px 5px rgba(0,0,0,.7)); z-index: 5;
-    transition: transform .15s ease;
-  }
-  .sw-pointer.click { transform: translateX(-50%) rotate(-16deg) scale(1.15); }
-  #spinParticles { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
-  #spinMessage  { min-height: 14px; font-size: .75rem; font-weight: 700; text-align: center; }
-  #spinMessage.success { color: #4ade80; }
-  #spinCooldown { font-size: .68rem; color: #3d6a88; text-align: center; }
-
-  /* ─── STREAK DAYS ─── */
-  .streak-row { display: flex; gap: 3px; justify-content: center; }
+  
   .streak-day {
-    width: 22px; height: 22px; border-radius: 50%;
-    background: rgba(255,255,255,.04); border: 1.5px solid rgba(30,112,200,.18);
-    display: flex; align-items: center; justify-content: center;
-    font-size: .58rem; color: #2d5570; font-weight: 800; transition: all .25s;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.05);
+    border: 1.5px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .7rem;
+    color: var(--text-muted);
+    font-weight: 800;
+    transition: all var(--transition-fast);
+    min-width: 32px; /* Evita colapso en móvil */
   }
+  
   .streak-day.completed {
-    background: rgba(30,112,200,.22); border-color: #1e70c8; color: #7dd3fc;
-    box-shadow: 0 0 6px rgba(30,112,200,.25);
+    background: rgba(30,112,200,.25);
+    border-color: var(--text-accent);
+    color: #7dd3fc;
+    box-shadow: 0 0 8px rgba(30,112,200,.3);
   }
-  .streak-day.current { border-color: #f0c419; }
-  #dailyBonusMessage { min-height: 14px; font-size: .75rem; font-weight: 700; text-align: center; }
-  #dailyBonusMessage.success { color: #4ade80; }
-
-  /* ─── REFERRAL BOX ─── */
+  
+  .streak-day.current {
+    border-color: var(--color-gold);
+    box-shadow: 0 0 8px rgba(251,191,36,.4);
+  }
+  
+  #dailyBonusMessage {
+    min-height: 18px;
+    font-size: .8rem;
+    font-weight: 700;
+    text-align: center;
+    margin-top: var(--space-sm);
+  }
+  
+  #dailyBonusMessage.success { color: var(--color-green); }
+  #dailyBonusMessage.error { color: var(--color-red); }
+  
+  /* ========================================
+     REFERRAL BOX
+     ======================================== */
   .ref-box {
-    display: flex; gap: 5px; align-items: center; margin: 6px 0;
-    background: rgba(255,255,255,.03); border: 1px solid rgba(30,112,200,.18);
-    border-radius: 8px; padding: 6px 9px;
+    display: flex;
+    gap: var(--space-xs);
+    align-items: center;
+    margin: var(--space-sm) 0;
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm);
   }
-  #referralCode { flex: 1; font-family: monospace; font-size: .88rem; color: #f0c419; font-weight: 800; }
-  .ref-stats { display: flex; gap: 10px; flex-wrap: wrap; }
-  .ref-stat { font-size: .72rem; color: #3d6a88; }
-  .ref-stat strong { color: #b8d8f0; }
-
-  /* ─── ACTIVITY ─── */
-  .act-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1px; }
+  
+  #referralCode {
+    flex: 1;
+    font-family: monospace;
+    font-size: .9rem;
+    color: var(--color-gold);
+    font-weight: 800;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  
+  .ref-stats {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+    margin-top: var(--space-xs);
+  }
+  
+  .ref-stat {
+    font-size: .8rem;
+    color: var(--text-muted);
+  }
+  
+  .ref-stat strong { color: var(--text-primary); }
+  
+  /* ========================================
+     ACTIVITY LIST
+     ======================================== */
+  .act-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  
   .act-item {
-    display: flex; align-items: center; gap: 7px; padding: 5px 2px;
-    border-bottom: 1px solid rgba(30,112,200,.07); font-size: .75rem;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: .85rem;
   }
+  
   .act-item:last-child { border-bottom: none; }
+  
   .act-ico {
-    width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
-    background: rgba(30,112,200,.12); border: 1px solid rgba(30,112,200,.2);
-    display: flex; align-items: center; justify-content: center; font-size: .8rem;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: rgba(30,112,200,.15);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .9rem;
   }
-  .act-txt { flex: 1; min-width: 0; }
-  .act-title { color: #c0daf5; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .act-time  { font-size: .65rem; color: #2d5570; }
-  .act-coins { font-weight: 800; color: #4ade80; white-space: nowrap; font-size: .75rem; }
-  .act-coins.neg { color: #f87171; }
-
-  /* ─── PROJECT FEED ─── */
-  .feed { display: flex; flex-direction: column; gap: 5px; }
+  
+  .act-txt {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .act-title {
+    color: var(--text-primary);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .act-time {
+    font-size: .7rem;
+    color: var(--text-muted);
+  }
+  
+  .act-coins {
+    font-weight: 800;
+    color: var(--color-green);
+    white-space: nowrap;
+    font-size: .85rem;
+  }
+  
+  .act-coins.neg { color: var(--color-red); }
+  
+  /* ========================================
+     FEED / NOVEDADES
+     ======================================== */
+  .feed {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  
   .feed-link {
-    display: flex; flex-direction: column; gap: 1px; padding: 7px 9px;
-    border-radius: 8px; text-decoration: none;
-    background: rgba(255,255,255,.025); border: 1px solid rgba(30,112,200,.1);
-    transition: background .15s;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-sm);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    background: rgba(255,255,255,.03);
+    border: 1px solid var(--border-color);
+    transition: background var(--transition-fast), transform var(--transition-fast);
   }
-  .feed-link:hover { background: rgba(30,112,200,.09); }
-  .feed-link strong { color: #fff; font-size: .78rem; }
-  .feed-link span   { color: #3d6a88; font-size: .7rem; }
-  .feed-link small  { color: #27495e; font-size: .65rem; }
-
-  /* ─── SPONSOR ─── */
-  .sp-row { display: flex; align-items: center; gap: 9px; }
-  .sp-ico { font-size: 1.6rem; }
-  .sp-name { color: #fff; font-size: .82rem; font-weight: 800; margin: 0 0 2px; }
-  .sp-desc { color: #3d6a88; font-size: .7rem; }
-  .sp-sum  { font-size: .72rem; color: #3d6a88; margin-top: 6px; }
-
-  /* ─── REDEEM ─── */
-  .rdm-row { display: grid; grid-template-columns: 1fr auto; gap: 5px; margin-top: 7px; }
+  
+  .feed-link:hover {
+    background: rgba(30,112,200,.1);
+    transform: translateX(3px);
+  }
+  
+  .feed-link strong { color: var(--text-primary); font-size: .85rem; }
+  .feed-link span { color: var(--text-muted); font-size: .75rem; }
+  .feed-link small { color: var(--text-muted); font-size: .7rem; opacity: .8; }
+  
+  /* ========================================
+     SPONSOR / PATROCINADOR
+     ======================================== */
+  .sp-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+  
+  .sp-ico {
+    font-size: 2rem;
+    flex-shrink: 0;
+  }
+  
+  .sp-name {
+    color: #fff;
+    font-size: .9rem;
+    font-weight: 800;
+    margin: 0 0 2px;
+  }
+  
+  .sp-desc {
+    color: var(--text-muted);
+    font-size: .8rem;
+  }
+  
+  .sp-sum {
+    font-size: .8rem;
+    color: var(--text-muted);
+    margin-top: var(--space-sm);
+  }
+  
+  /* ========================================
+     REDEEM / CANJEAR
+     ======================================== */
+  .rdm-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+    align-items: center;
+  }
+  
   .rdm-row input {
-    padding: 7px 9px; border-radius: 8px;
-    border: 1px solid rgba(135,206,235,.2); background: rgba(2,8,14,.88);
-    color: #eaf6ff; font-size: .82rem; font-family: inherit; outline: none;
+    width: 100%;
+    padding: var(--space-md);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(135,206,235,.2);
+    background: rgba(2,8,14,.88);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    min-height: 44px;
   }
-  .rdm-stats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
-  .rdm-stat { font-size: .7rem; color: #3d6a88; }
-  .rdm-stat b { color: #b8d8f0; }
-  #redeemMessage { min-height: 14px; font-size: .75rem; font-weight: 700; margin-top: 5px; }
-  #redeemMessage.success { color: #4ade80; }
-  #redeemMessage.error   { color: #f87171; }
-
-  /* ─── BIO ─── */
-  .bio-box {
-    background: rgba(255,255,255,.025); border: 1px solid rgba(30,112,200,.09);
-    border-radius: 8px; padding: 7px 9px; color: #7aa6c0; font-size: .75rem; line-height: 1.5;
-    margin-top: 6px;
+  
+  .rdm-row input:focus {
+    border-color: var(--text-accent);
+    box-shadow: 0 0 0 3px rgba(30,112,200,.15);
   }
-
-  /* ─── REDEEM HISTORY ─── */
+  
+  .rdm-stats {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-sm);
+  }
+  
+  .rdm-stat { font-size: .8rem; color: var(--text-muted); }
+  .rdm-stat b { color: var(--text-primary); }
+  
+  #redeemMessage {
+    min-height: 18px;
+    font-size: .8rem;
+    font-weight: 700;
+    margin-top: var(--space-sm);
+    text-align: center;
+  }
+  
+  #redeemMessage.success { color: var(--color-green); }
+  #redeemMessage.error { color: var(--color-red); }
+  
+  #redeemHistory { margin-top: var(--space-md); }
+  #redeemHistory[hidden] { display: none; }
+  
+  #redeemHistoryList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  
   .rdm-hist-item {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 5px 7px; border-radius: 7px;
-    background: rgba(255,255,255,.025); border: 1px solid rgba(30,112,200,.09);
-    font-size: .72rem; margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-sm);
+    border-radius: var(--radius-sm);
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--border-color);
+    font-size: .8rem;
   }
-  .rdm-hist-item strong { color: #c8e0f8; display: block; }
-  .rdm-hist-item small  { color: #2d5570; }
-  .rdm-status { display: inline-block; padding: 1px 6px; border-radius: 999px; font-size: .62rem; font-weight: 800; }
-  .rdm-status.completed { background: rgba(96,165,250,.12); color: #60a5fa; }
-  .rdm-status.approved  { background: rgba(74,222,128,.12);  color: #4ade80; }
-  .rdm-status.pending   { background: rgba(251,191,36,.12);  color: #fbbf24; }
-  .rdm-status.rejected  { background: rgba(248,113,113,.12); color: #f87171; }
-
-  /* ─── BUTTONS ─── */
+  
+  .rdm-hist-item strong { color: var(--text-primary); display: block; }
+  .rdm-hist-item small { color: var(--text-muted); }
+  
+  .rdm-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-size: .7rem;
+    font-weight: 800;
+  }
+  
+  .rdm-status.completed { background: rgba(96,165,250,.15); color: var(--color-blue); }
+  .rdm-status.approved  { background: rgba(74,222,128,.15); color: var(--color-green); }
+  .rdm-status.pending   { background: rgba(251,191,36,.15); color: var(--color-gold); }
+  .rdm-status.rejected  { background: rgba(248,113,113,.15); color: var(--color-red); }
+  
+  /* ========================================
+     BIO BOX
+     ======================================== */
+  .bio-box {
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: var(--space-md);
+    color: var(--text-secondary);
+    font-size: .85rem;
+    line-height: 1.5;
+    margin-top: var(--space-sm);
+  }
+  
+  /* ========================================
+     BUTTONS (Touch-friendly)
+     ======================================== */
   .pb {
-    display: inline-flex; align-items: center; justify-content: center; gap: 4px;
-    padding: 7px 12px; border-radius: 8px;
-    border: 1px solid rgba(30,112,200,.35); background: rgba(30,112,200,.15);
-    color: #a8d2f0; font-size: .78rem; font-weight: 700;
-    cursor: pointer; transition: all .14s; font-family: inherit; white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color-strong);
+    background: rgba(30,112,200,.15);
+    color: var(--text-primary);
+    font-size: .9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: inherit;
+    white-space: nowrap;
+    min-height: 44px; /* Touch target mínimo */
+    min-width: 44px;
   }
-  .pb:hover { background: rgba(30,112,200,.28); color: #fff; }
-  .pb.prim { background: #1e70c8; border-color: #1e70c8; color: #fff; }
-  .pb.prim:hover { background: #2580de; }
-  .pb.sm   { padding: 5px 9px; font-size: .72rem; }
-  .pb.gold { background: rgba(251,191,36,.1); border-color: rgba(251,191,36,.28); color: #fbbf24; }
-  .pb.gold:hover { background: rgba(251,191,36,.2); }
-  .pb.dng  { background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.28); color: #f87171; }
-  .pb.dng:hover  { background: rgba(239,68,68,.2); }
-  .pb:disabled { opacity: .35; cursor: not-allowed; }
+  
+  .pb:hover {
+    background: rgba(30,112,200,.28);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+  
+  .pb:active { transform: translateY(0); }
+  
+  .pb.prim {
+    background: var(--text-accent);
+    border-color: var(--text-accent);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(30,112,200,.3);
+  }
+  
+  .pb.prim:hover {
+    background: #2580de;
+    box-shadow: 0 6px 20px rgba(30,112,200,.4);
+  }
+  
+  .pb.sm { padding: var(--space-xs) var(--space-md); font-size: .85rem; min-height: 36px; }
+  
+  .pb.gold {
+    background: rgba(251,191,36,.12);
+    border-color: rgba(251,191,36,.3);
+    color: var(--color-gold);
+  }
+  
+  .pb.gold:hover {
+    background: rgba(251,191,36,.22);
+    box-shadow: 0 4px 12px rgba(251,191,36,.2);
+  }
+  
+  .pb.dng {
+    background: rgba(239,68,68,.12);
+    border-color: rgba(239,68,68,.3);
+    color: var(--color-red);
+  }
+  
+  .pb.dng:hover {
+    background: rgba(239,68,68,.22);
+  }
+  
+  .pb:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+  
   .pb-full { width: 100%; }
-
-  /* ─── EDIT MODAL ─── */
+  
+  /* ========================================
+     MODAL (Dialog Moderno)
+     ======================================== */
   .pm {
-    border: 1px solid rgba(30,112,200,.32); border-radius: 16px;
-    background: linear-gradient(155deg,#0d1422,#09101c);
-    color: #e0edff; padding: 0; width: min(480px,94vw); max-height: 88vh; overflow-y: auto;
-    box-shadow: 0 20px 50px rgba(0,0,0,.6);
+    border: 1px solid var(--border-color-strong);
+    border-radius: var(--radius-lg);
+    background: var(--bg-modal);
+    color: var(--text-primary);
+    padding: 0;
+    width: min(480px, 96vw);
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px rgba(0,0,0,.6);
+    margin: auto;
   }
-  .pm::backdrop { background: rgba(0,0,0,.72); backdrop-filter: blur(4px); }
-  .pm-h { padding: 16px 18px 12px; border-bottom: 1px solid rgba(30,112,200,.18); display: flex; align-items: center; justify-content: space-between; }
-  .pm-h h3 { margin: 0; color: #fff; font-size: .95rem; font-weight: 800; }
-  .pm-b { padding: 14px 18px; display: flex; flex-direction: column; gap: 11px; }
-  .pm-f { padding: 12px 18px; border-top: 1px solid rgba(30,112,200,.18); display: flex; gap: 7px; justify-content: flex-end; }
-  .pm-grp { display: flex; flex-direction: column; gap: 3px; }
-  .pm-grp label { font-size: .7rem; color: #3d6a88; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+  
+  .pm::backdrop {
+    background: rgba(0,0,0,.75);
+    backdrop-filter: blur(6px);
+  }
+  
+  .pm-h {
+    padding: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--bg-modal);
+    z-index: 1;
+  }
+  
+  .pm-h h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 800;
+  }
+  
+  .pm-b {
+    padding: var(--space-md) var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+  
+  .pm-f {
+    padding: var(--space-md) var(--space-lg);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: flex-end;
+    position: sticky;
+    bottom: 0;
+    background: var(--bg-modal);
+  }
+  
+  .pm-grp {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  
+  .pm-grp label {
+    font-size: .75rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  
   .pm-inp {
-    padding: 9px 11px; border-radius: 8px;
-    border: 1px solid rgba(135,206,235,.2); background: rgba(2,8,14,.88);
-    color: #eaf6ff; font-size: .85rem; font-family: inherit; outline: none; transition: border-color .15s;
+    width: 100%;
+    padding: var(--space-md);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(135,206,235,.2);
+    background: rgba(2,8,14,.88);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color var(--transition-fast);
+    min-height: 44px;
   }
-  .pm-inp:focus { border-color: rgba(30,112,200,.65); }
+  
+  .pm-inp:focus {
+    border-color: var(--text-accent);
+    box-shadow: 0 0 0 3px rgba(30,112,200,.15);
+  }
+  
   .pm-inp::placeholder { color: rgba(200,230,255,.25); }
-  textarea.pm-inp { resize: vertical; min-height: 60px; }
-  .av-grid { display: flex; gap: 6px; flex-wrap: wrap; }
+  
+  textarea.pm-inp {
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+  }
+  
+  /* Avatar Grid */
+  .av-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--space-xs);
+  }
+  
   .av-opt {
-    width: 36px; height: 36px; border-radius: 8px; font-size: 1.3rem;
-    background: rgba(255,255,255,.04); border: 2px solid transparent;
-    cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .14s;
+    aspect-ratio: 1;
+    border-radius: var(--radius-sm);
+    font-size: 1.2rem;
+    background: rgba(255,255,255,.05);
+    border: 2px solid transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    min-height: 40px;
   }
-  .av-opt:hover { background: rgba(30,112,200,.14); border-color: rgba(30,112,200,.35); }
-  .av-opt.selected { background: rgba(30,112,200,.22); border-color: #1e70c8; }
-
-  /* ─── RESPONSIVE ─── */
-  @media (max-width: 860px) {
-    .pg { grid-template-columns: 1fr 1fr; }
-    .pg-left { order: 2; }
-    .pg-mid  { order: 1; grid-column: 1 / -1; }
-    .pg-right{ order: 3; }
-    .kpis { grid-template-columns: repeat(3,1fr); }
-    .ph { grid-template-columns: 48px 1fr; }
-    .ph-right { display: none; }
+  
+  .av-opt:hover {
+    background: rgba(30,112,200,.18);
+    border-color: var(--border-color-strong);
+    transform: scale(1.05);
   }
-  @media (max-width: 540px) {
-    .ps { padding: 10px 10px 32px; }
-    .pg { grid-template-columns: 1fr; }
-    .pg-left, .pg-right { order: unset; }
-    .kpis { grid-template-columns: repeat(3,1fr); }
-    .ph { grid-template-columns: 44px 1fr; gap: 9px; padding: 11px 12px; }
-    .ph-badges { display: none; }
-    .auth-card { padding: 22px 18px; }
+  
+  .av-opt.selected {
+    background: rgba(30,112,200,.25);
+    border-color: var(--text-accent);
+    box-shadow: 0 0 10px rgba(30,112,200,.3);
+  }
+  
+  /* Preview de imagen de perfil */
+  #editProfileImagePreview {
+    background: rgba(30,112,200,.2);
+    border: 2px solid var(--border-color-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    overflow: hidden;
+  }
+  
+  #editProfileImagePreview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  /* ========================================
+     HEADER & NAV (Consistente con sitio)
+     ======================================== */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 800;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-md);
+    background: rgba(15,23,42,.95);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .logo-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+  
+  .dark-mode-toggle {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: rgba(255,255,255,.05);
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  nav {
+    position: sticky;
+    top: 64px;
+    z-index: 799;
+    display: flex;
+    gap: var(--space-xs);
+    padding: var(--space-sm);
+    background: rgba(15,23,42,.9);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  
+  nav::-webkit-scrollbar { display: none; }
+  
+  nav a,
+  .nav-dropdown-toggle {
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    font-size: .9rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  
+  nav a:hover,
+  nav a.active,
+  .nav-dropdown-toggle:hover {
+    color: var(--text-primary);
+    background: rgba(255,255,255,.08);
+  }
+  
+  nav a.active {
+    background: var(--text-accent);
+    color: #fff;
+  }
+  
+  /* Dropdown */
+  .nav-dropdown { position: relative; }
+  
+  .nav-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    display: none;
+    flex-direction: column;
+    min-width: 180px;
+    padding: var(--space-xs);
+    margin-top: var(--space-xs);
+    background: rgba(15,23,42,.98);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    z-index: 800;
+  }
+  
+  .nav-dropdown:hover .nav-dropdown-menu { display: flex; }
+  
+  .nav-dropdown-menu a {
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+  }
+  
+  .nav-dropdown-menu a:hover {
+    background: rgba(255,255,255,.08);
+    color: var(--text-primary);
+  }
+  
+  /* ========================================
+     FOOTER
+     ======================================== */
+  footer {
+    padding: var(--space-xl) var(--space-md);
+    text-align: center;
+    background: rgba(15,23,42,.95);
+    border-top: 1px solid var(--border-color);
+    margin-top: auto;
+  }
+  
+  footer p {
+    margin: 0;
+    font-size: .8rem;
+    color: var(--text-muted);
+  }
+  
+  /* ========================================
+     RESPONSIVE BREAKPOINTS
+     ======================================== */
+  
+  /* Tablet: 2 columnas */
+  @media (min-width: 768px) {
+    .ps { padding: var(--space-lg); }
+    
+    .pg {
+      grid-template-columns: 220px 1fr 220px;
+      gap: var(--space-md);
+    }
+    
+    .kpis {
+      grid-template-columns: repeat(5, 1fr);
+      gap: var(--space-md);
+    }
+    
+    .ph {
+      grid-template-columns: 56px 1fr auto;
+      padding: var(--space-lg);
+    }
+    
+    .ph-right { display: flex; }
+    .ph-badges { display: flex; }
+    
+    .av-grid {
+      grid-template-columns: repeat(8, 1fr);
+    }
+  }
+  
+  /* Desktop: máx width */
+  @media (min-width: 1024px) {
+    .pg {
+      grid-template-columns: 240px 1fr 240px;
+    }
+    
+    .auth-card { max-width: 420px; }
+  }
+  
+  /* Mobile: ajustes específicos */
+  @media (max-width: 480px) {
+    :root { font-size: 13px; }
+    
+    .ps { padding: var(--space-sm); padding-bottom: var(--space-lg); }
+    
+    .auth-card {
+      padding: var(--space-lg);
+      border-radius: var(--radius-md);
+    }
+    
+    .auth-logo { width: 56px; height: 56px; }
+    
+    .ph {
+      grid-template-columns: 48px 1fr;
+      padding: var(--space-sm);
+      gap: var(--space-sm);
+    }
+    
+    .ph-right {
+      display: none; /* Ocultar botones en hero móvil */
+    }
+    
+    .ph-info h2 { font-size: 1rem; }
+    .ph-info p { font-size: .7rem; }
+    
+    .kpis {
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-xs);
+    }
+    
+    .kpi { padding: var(--space-sm); }
+    .kpi-v { font-size: 1rem; }
+    
+    .pc { padding: var(--space-md); }
+    .pc-h { flex-direction: column; align-items: flex-start; }
+    .pc-h span { margin-top: 2px; }
+    
+    .rdm-row {
+      grid-template-columns: 1fr;
+    }
+    
+    .rdm-row button { width: 100%; }
+    
+    .ref-box {
+      flex-wrap: wrap;
+    }
+    
+    #referralCode {
+      order: 2;
+      width: 100%;
+      margin-top: var(--space-xs);
+      text-align: center;
+    }
+    
+    .av-grid {
+      grid-template-columns: repeat(5, 1fr);
+    }
+    
+    .pm-b { padding: var(--space-md); }
+    .pm-f { padding: var(--space-md); }
+    
+    /* Botones flotantes para acciones principales en móvil */
+    .mobile-fab {
+      position: fixed;
+      bottom: var(--space-lg);
+      right: var(--space-lg);
+      z-index: 700;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+    
+    .mobile-fab .pb {
+      border-radius: var(--radius-full);
+      box-shadow: var(--shadow-card);
+      min-width: 56px;
+      min-height: 56px;
+      padding: 0;
+      font-size: 1.2rem;
+    }
+  }
+  
+  /* ========================================
+     UTILIDADES & ACCESIBILIDAD
+     ======================================== */
+  [hidden] { display: none !important; }
+  
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
+  
+  :focus-visible {
+    outline: 2px solid var(--text-accent);
+    outline-offset: 2px;
+  }
+  
+  /* Animaciones suaves */
+  .animate-pulse {
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .7; }
+  }
+  
+  /* Scroll suave para modales */
+  .pm {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Soporte para modo reducido de movimiento */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  
+  /* Google login button separator */
+  .auth-sep {
+    position: relative;
+    text-align: center;
+    margin: var(--space-md) 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+  .auth-sep::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 0; right: 0;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .auth-sep span {
+    position: relative;
+    padding: 0 1rem;
+    background: #0d0e12;
+  }
+  .pb.sec {
+    background: transparent;
+    border-color: rgba(255,255,255,0.08);
+    color: var(--text-primary);
+  }
+  .pb.sec:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: var(--text-primary);
   }
   </style>
 </head>
-<body data-site-root="..">
-<div id="tsparticles"></div>
 
-<header>
-  <img src="https://i.imgur.com/GYjAGS7.png" alt="Logo Panter Studio" class="logo-img">
-  <button id="dark-mode-toggle" class="dark-mode-toggle">🌙</button>
-</header>
-
-<nav>
-  <a href="../index.html">Inicio</a>
-  <div class="nav-dropdown">
-    <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">Aplicaciones</button>
-    <div class="nav-dropdown-menu">
-      <a href="juegos.html">Juegos</a>
-      <a href="aplicaciones.html">Aplicaciones</a>
+<body data-site-root=".." data-theme="dark" class="dark-mode">
+  
+  <!-- 🎆 Background Particles -->
+  <div id="tsparticles" aria-hidden="true"></div>
+  
+  <!-- 🧭 Navegación -->
+  <nav role="navigation" aria-label="Menú principal">
+    <div class="nav-left">
+      <a href="../index.html" class="nav-logo">
+        <img src="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" alt="Panter Studio">
+        <span>Panter Studio</span>
+      </a>
     </div>
-  </div>
-  <a href="minijuegos.html">Minijuegos</a>
-  <a href="actualizaciones.html">Actualizaciones</a>
-  <a href="donaciones.html">Apóyanos</a>
-  <a href="personal.html">Personal</a>
-  <a href="perfil.html" class="active">Mi Perfil</a>
-  <a href="preregistro.html">Pre-registro</a>
-</nav>
-
-<!-- ════════════════════════
-     AUTH GATE
-════════════════════════ -->
-<div id="profileAuthSection" class="auth-gate">
-  <div class="auth-card">
-    <img src="https://i.imgur.com/GYjAGS7.png" alt="Panter Studio" class="auth-logo">
-    <h1>Mi Perfil</h1>
-    <p>Inicia sesión para ver tu progreso, monedas y recompensas.</p>
-    <div class="auth-tabs">
-      <button class="auth-tab active" data-tab="login">Iniciar sesión</button>
-      <button class="auth-tab" data-tab="register">Crear cuenta</button>
-    </div>
-    <form id="loginForm" class="auth-form active" autocomplete="off" novalidate>
-      <input type="email"    id="loginEmail"    class="p-inp" placeholder="Correo electrónico" required>
-      <input type="password" id="loginPassword" class="p-inp" placeholder="Contraseña" required>
-      <button type="submit" class="btn">Entrar</button>
-      <a class="auth-forgot" id="forgotPasswordLink">Olvidé mi contraseña</a>
-    </form>
-    <form id="registerForm" class="auth-form" autocomplete="off" novalidate>
-      <input type="email"    id="registerEmail"    class="p-inp" placeholder="Correo electrónico" required>
-      <input type="password" id="registerPassword" class="p-inp" placeholder="Contraseña (mín. 6 caracteres)" minlength="6" required>
-      <input type="text"     id="registerReferral" class="p-inp" placeholder="Código de referido (opcional)">
-      <button type="submit" class="btn">Crear cuenta</button>
-    </form>
-    <div id="authMessage" class="auth-msg"></div>
-  </div>
-</div>
-
-<!-- ════════════════════════
-     DASHBOARD
-════════════════════════ -->
-<section id="profileDashboard" class="ps">
-
-  <!-- HERO COMPACT -->
-  <div class="ph">
-    <div class="ph-avatar" id="profileAvatarLetter">😊</div>
-    <div class="ph-info">
-      <h2 id="profileDisplayName">Usuario</h2>
-      <p id="profileUid"></p>
-      <div class="ph-badges" id="profileBadges"></div>
-    </div>
-    <div class="ph-right">
-      <div class="coins-chip">
-        <b id="profileCoins">0</b>
-        <small>🪙 monedas</small>
-        <small id="profileCoinsDollars" style="color:#4e7b9c;display:block"></small>
-      </div>
-      <div style="display:flex;gap:5px;flex-direction:column">
-        <button class="pb prim sm" id="editProfileBtn">✏️ Editar</button>
-        <button class="pb dng  sm" id="logoutBtn">🚪 Salir</button>
-      </div>
-      <div id="profileAdminTools" hidden>
-        <a href="../admin/dashboard.html" class="pb gold sm">🛡️ Admin</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- KPI STRIP -->
-  <div class="kpis">
-    <div class="kpi">
-      <div class="kpi-l">Nivel</div>
-      <div class="kpi-v" id="profileLevel">—</div>
-      <div class="kpi-s" id="profileRole"></div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-l">Racha</div>
-      <div class="kpi-v" id="profileStreak">0</div>
-      <div class="kpi-s">días</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-l">Miembro</div>
-      <div class="kpi-v" id="profileJoinDate">—</div>
-      <div class="kpi-s" id="profileProvider"></div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-l">Juegos hoy</div>
-      <div class="kpi-v" id="profileGamesPlayedToday">0/3</div>
-      <div class="kpi-s">minijuegos</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-l">Soporte</div>
-      <div class="kpi-v" id="profileSupportTotal">$0</div>
-      <div class="kpi-s" id="profileSupportCount">0 aportes</div>
-    </div>
-  </div>
-
-  <!-- MAIN 3-COL GRID -->
-  <div class="pg">
-
-    <!-- ── COLUMNA IZQUIERDA ── -->
-    <div class="pg-left">
-
-      <!-- Info del perfil -->
-      <div class="pc">
-        <div class="pc-h"><h3>👤 Información</h3></div>
-        <table class="it">
-          <tr><td>Email</td><td id="profileEmail">—</td></tr>
-          <tr><td>Verificado</td><td id="profileVerificationStatusSide">—</td></tr>
-          <tr><td>Proveedor</td><td id="profileProviderSide">—</td></tr>
-          <tr><td>Pre-registro</td><td id="profilePreregisterStatusSide">—</td></tr>
-          <tr><td>Acceso</td><td id="profileAccessLevel">—</td></tr>
-          <tr><td>País</td><td id="profileCountry">—</td></tr>
-          <tr><td>Proy. fav.</td><td id="profileFavoriteProject">—</td></tr>
-        </table>
-        <div class="bio-box" id="profileBio">Sin descripción aún.</div>
-      </div>
-
-      <!-- Patrocinador -->
-      <div class="pc">
-        <div class="pc-h"><h3>🏆 Patrocinador</h3></div>
-        <div class="sp-row">
-          <div class="sp-ico" id="sponsorBadge">👤</div>
-          <div>
-            <p class="sp-name" id="sponsorLevelName">Visitante</p>
-            <p class="sp-desc" id="sponsorLevelDesc">Haz una donación.</p>
-          </div>
+    <div class="nav-middle">
+      <a href="../index.html">Inicio</a>
+      <div class="nav-dropdown">
+        <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">Novedades</button>
+        <div class="nav-dropdown-menu">
+          <a href="actualizaciones.html">Actualizaciones</a>
+          <a href="imagenes.html">Galeria</a>
         </div>
-        <div class="sp-sum" id="profileSponsorSummary"></div>
-        <a href="donaciones.html" class="pb gold sm pb-full" style="margin-top:8px">💖 Apoyar</a>
       </div>
+      <a href="minijuegos.html">Minijuegos</a>
+      <a href="donaciones.html">Apoyanos</a>
+      <a href="personal.html">Personal</a>
+      <a href="perfil.html" class="active">Mi Perfil</a>
+      <a href="meinteresa.html">Me Interesa</a>
+    </div>
+  </nav>
+  
+  <!-- 🔐 AUTH GATE (Login/Register) -->
+  <main id="profileAuthSection" class="auth-gate" role="main">
+    <div class="auth-card" role="dialog" aria-labelledby="authTitle">
+      <img src="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" alt="Panter Studio" class="auth-logo" width="64" height="64">
+      <h1 id="authTitle">Mi Perfil</h1>
+      <p>Conéctate con tu cuenta de Google para ver tu progreso, monedas y recompensas.</p>
+      
+      <button type="button" id="googleAuthBtn" class="pb sec pb-full" style="display: flex; gap: 10px; align-items: center; justify-content: center; width: 100%;">
+          <img src="../recursos/google-logo.svg" alt="Google" width="18" height="18" onerror="this.style.display='none'">
+          Continuar con Google
+      </button>
+      
+      <!-- Mensajes de estado -->
+      <div id="authMessage" class="auth-msg" role="status" aria-live="polite"></div>
 
-    </div><!-- /pg-left -->
-
-    <!-- ── COLUMNA CENTRAL ── -->
-    <div class="pg-mid">
-
-      <!-- Bonus diario (sin ruleta) -->
-      <div class="pc">
-        <div>
+      <!-- Hidden compatibility elements for perfil.js -->
+      <div style="display: none !important;">
+        <!-- Tabs de autenticación -->
+        <div class="auth-tabs" role="tablist">
+          <button class="auth-tab active" data-tab="login" role="tab" aria-selected="true" aria-controls="loginForm">
+            Iniciar sesión
+          </button>
+          <button class="auth-tab" data-tab="register" role="tab" aria-selected="false" aria-controls="registerForm">
+            Crear cuenta
+          </button>
+        </div>
+        
+        <!-- Form Login -->
+        <form id="loginForm" class="auth-form active" autocomplete="off" novalidate role="tabpanel" aria-labelledby="loginTab">
+          <label for="loginEmail" class="sr-only">Correo electrónico</label>
+          <input type="email" id="loginEmail" class="p-inp" placeholder="Correo electrónico" autocomplete="email" required value="a@a.com">
+          
+          <label for="loginPassword" class="sr-only">Contraseña</label>
+          <input type="password" id="loginPassword" class="p-inp" placeholder="Contraseña" autocomplete="current-password" required value="123456">
+          
+          <button type="submit" class="pb prim pb-full">Entrar</button>
+          <a class="auth-forgot" id="forgotPasswordLink" href="#">Olvidé mi contraseña</a>
+        </form>
+        
+        <!-- Form Registro -->
+        <form id="registerForm" class="auth-form" autocomplete="off" novalidate role="tabpanel" aria-labelledby="registerTab" hidden>
+          <label for="registerEmail" class="sr-only">Correo electrónico</label>
+          <input type="email" id="registerEmail" class="p-inp" placeholder="Correo electrónico" autocomplete="email" required value="a@a.com">
+          
+          <label for="registerPassword" class="sr-only">Contraseña</label>
+          <input type="password" id="registerPassword" class="p-inp" placeholder="Contraseña (mín. 6 caracteres)" minlength="6" autocomplete="new-password" required value="123456">
+          
+          <label for="registerReferral" class="sr-only">Código de referido</label>
+          <input type="text" id="registerReferral" class="p-inp" placeholder="Código de referido (opcional)" autocomplete="off">
+          
+          <button type="submit" class="pb prim pb-full">Crear cuenta</button>
+        </form>
+        
+        <div class="auth-sep"><span>o</span></div>
+      </div>
+    </div>
+  </main>
+  
+  <!-- 📊 DASHBOARD (Perfil del usuario) -->
+  <section id="profileDashboard" class="ps" role="region" aria-label="Panel de usuario">
+    
+    <!-- 🎯 HERO: Perfil Principal -->
+    <div class="ph" role="group" aria-label="Información del perfil">
+      <div class="ph-avatar" id="profileAvatarLetter" aria-hidden="true">😊</div>
+      <div class="ph-info">
+        <h2 id="profileDisplayName">Usuario</h2>
+        <p id="profileUid" aria-label="ID de usuario"></p>
+        <div class="ph-badges" id="profileBadges" role="list" aria-label="Insignias"></div>
+      </div>
+      <div class="ph-right">
+        <div class="coins-chip" aria-label="Saldo de monedas">
+          <b id="profileCoins">0</b>
+          <small>🪙 monedas</small>
+          <small id="profileCoinsDollars" style="color:#4e7b9c;display:block"></small>
+        </div>
+        <div style="display:flex;gap:var(--space-xs);flex-direction:column">
+          <button class="pb prim sm" id="editProfileBtn">✏️ Editar</button>
+          <button class="pb dng sm" id="logoutBtn">🚪 Salir</button>
+        </div>
+        <div id="profileAdminTools" hidden>
+          <a href="../admin/dashboard.html" class="pb gold sm">🛡️ Admin</a>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 📈 KPI STRIP: Estadísticas -->
+    <div class="kpis" role="list" aria-label="Estadísticas del usuario">
+      <div class="kpi" role="listitem">
+        <div class="kpi-l">Nivel</div>
+        <div class="kpi-v" id="profileLevel">—</div>
+        <div class="kpi-s" id="profileRole"></div>
+      </div>
+      <div class="kpi" role="listitem">
+        <div class="kpi-l">Racha</div>
+        <div class="kpi-v" id="profileStreak">0</div>
+        <div class="kpi-s">días</div>
+      </div>
+      <div class="kpi" role="listitem">
+        <div class="kpi-l">Miembro desde</div>
+        <div class="kpi-v" id="profileJoinDate">—</div>
+        <div class="kpi-s" id="profileProvider"></div>
+      </div>
+      <div class="kpi" role="listitem">
+        <div class="kpi-l">Juegos hoy</div>
+        <div class="kpi-v" id="profileGamesPlayedToday">0/3</div>
+        <div class="kpi-s">minijuegos</div>
+      </div>
+      <div class="kpi" role="listitem">
+        <div class="kpi-l">Soporte</div>
+        <div class="kpi-v" id="profileSupportTotal">$0</div>
+        <div class="kpi-s" id="profileSupportCount">0 aportes</div>
+      </div>
+    </div>
+    
+    <!-- 🧱 GRID 3 COLUMNAS -->
+    <div class="pg">
+      
+      <!-- ── IZQUIERDA: Info + Patrocinador ── -->
+      <div class="pg-left">
+        
+        <article class="pc" aria-labelledby="infoTitle">
           <div class="pc-h">
-            <h3>📅 Bonus diario</h3>
-            <span>+<span id="dailyBonusAmount">10</span>🪙</span>
+            <h3 id="infoTitle">👤 Informacion</h3>
           </div>
-          <div class="streak-row" style="margin:8px 0">
-              <div class="streak-day" data-day="1">L</div>
-              <div class="streak-day" data-day="2">M</div>
-              <div class="streak-day" data-day="3">X</div>
-              <div class="streak-day" data-day="4">J</div>
-              <div class="streak-day" data-day="5">V</div>
-              <div class="streak-day" data-day="6">S</div>
-              <div class="streak-day" data-day="7">D</div>
+          <table class="it" role="table">
+            <tr><td scope="row">Email</td><td id="profileEmail">—</td></tr>
+            <tr><td scope="row">Verificado</td><td id="profileVerificationStatusSide">—</td></tr>
+            <tr><td scope="row">Proveedor</td><td id="profileProviderSide">—</td></tr>
+            <tr><td scope="row">Me Interesa</td><td id="profilePreregisterStatusSide">—</td></tr>
+            <tr><td scope="row">Acceso</td><td id="profileAccessLevel">—</td></tr>
+            <tr><td scope="row">País</td><td id="profileCountry">—</td></tr>
+            <tr><td scope="row">Proy. fav.</td><td id="profileFavoriteProject">—</td></tr>
+          </table>
+          <div class="bio-box" id="profileBio" aria-label="Biografía">Sin descripción aún.</div>
+        </article>
+
+        <!-- 🎮 ESTADO DEL JUEGO (Nuestra Tierra) -->
+        <article class="pc" aria-labelledby="gameStatsTitle">
+          <div class="pc-h">
+            <h3 id="gameStatsTitle">🎮 Estado en el Juego</h3>
+            <span style="color:var(--color-primary-light);font-weight:700">Nuestra Tierra</span>
+          </div>
+          <table class="it" role="table">
+            <tr><td scope="row">Nivel del Personaje</td><td id="gameLevel">—</td></tr>
+            <tr><td scope="row">Trabajos Completados</td><td id="gameJobsCompleted">—</td></tr>
+            <tr><td scope="row">Horas Jugadas</td><td id="gameHoursPlayed">—</td></tr>
+            <tr><td scope="row">Monedas del Juego</td><td id="gameCoins">—</td></tr>
+          </table>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 0; line-height:1.3">
+            * Sincronizado automáticamente con tu cuenta en el juego.
+          </p>
+        </article>
+        
+        <article class="pc" aria-labelledby="sponsorTitle">
+          <div class="pc-h">
+            <h3 id="sponsorTitle">🏆 Patrocinador</h3>
+          </div>
+          <div class="sp-row">
+            <div class="sp-ico" id="sponsorBadge" aria-hidden="true">👤</div>
+            <div>
+              <p class="sp-name" id="sponsorLevelName">Visitante</p>
+              <p class="sp-desc" id="sponsorLevelDesc">Haz una donación.</p>
             </div>
-            <button class="pb prim sm pb-full" id="claimDailyBtn">Reclamar</button>
-            <div id="dailyBonusMessage" style="margin-top:5px"></div>
+          </div>
+          <div class="sp-sum" id="profileSponsorSummary"></div>
+          <a href="donaciones.html" class="pb gold sm pb-full" style="margin-top:var(--space-md)" aria-label="Apoyar el proyecto">💖 Apoyar</a>
+        </article>
+        
+      </div>
+      
+      <!-- ── CENTRO: Bonus + Canje + Actividad ── -->
+      <div class="pg-mid">
+        
+        <!-- 📅 Bonus Diario -->
+        <article class="pc" aria-labelledby="bonusTitle">
+          <div class="pc-h">
+            <h3 id="bonusTitle">📅 Bonus diario</h3>
+            <span>+<span id="dailyBonusAmount">10</span> 🪙 / día</span>
+          </div>
+          <div class="streak-row" role="list" aria-label="Racha semanal">
+            <button class="streak-day" data-day="1" role="listitem" aria-label="Lunes">L</button>
+            <button class="streak-day" data-day="2" role="listitem" aria-label="Martes">M</button>
+            <button class="streak-day" data-day="3" role="listitem" aria-label="Miércoles">X</button>
+            <button class="streak-day" data-day="4" role="listitem" aria-label="Jueves">J</button>
+            <button class="streak-day" data-day="5" role="listitem" aria-label="Viernes">V</button>
+            <button class="streak-day" data-day="6" role="listitem" aria-label="Sábado">S</button>
+            <button class="streak-day" data-day="7" role="listitem" aria-label="Domingo">D</button>
+          </div>
+          <button class="pb prim pb-full" id="claimDailyBtn" aria-label="Reclamar bonus diario">Reclamar bonus</button>
+          <div id="dailyBonusMessage" role="status" aria-live="polite"></div>
+        </article>
+        
+        <!-- 💎 Canjear Monedas -->
+        <article class="pc" aria-labelledby="redeemTitle">
+          <div class="pc-h">
+            <h3 id="redeemTitle">💎 Canjear monedas</h3>
+            <span>5000🪙 = 50💎</span>
+          </div>
+          <div class="rdm-stats" aria-label="Estadísticas de canje">
+            <span class="rdm-stat">Disponibles: <b id="redeemCoinsAvailable">0</b> 🪙</span>
+            <span class="rdm-stat">Equiv.: <b id="redeemDollars">0 💎</b></span>
+            <span class="rdm-stat">Canjeado: <b id="redeemTotalPaid">0 💎</b></span>
+            <span class="rdm-stat">Canjes: <b id="redeemTotalCount">0</b></span>
+          </div>
+          <div class="rdm-row">
+            <label for="redeemAmount" class="sr-only">Cantidad a canjear</label>
+            <input type="number" id="redeemAmount" placeholder="5000" min="5000" step="100" inputmode="numeric">
+            <button class="pb prim" id="redeemBtn">Canjear</button>
+          </div>
+          <div id="redeemMessage" role="status" aria-live="polite"></div>
+          
+          <div id="redeemHistory" hidden>
+            <div style="font-size:.7rem;color:var(--text-muted);margin:var(--space-md) 0;text-transform:uppercase;letter-spacing:.05em">Historial</div>
+            <div id="redeemHistoryList"></div>
+          </div>
+        </article>
+        
+        <!-- 📋 Actividad Reciente -->
+        <article class="pc" aria-labelledby="activityTitle">
+          <div class="pc-h">
+            <h3 id="activityTitle">📋 Actividad reciente</h3>
+          </div>
+          <ul class="act-list" id="activityList" role="list" aria-label="Actividad reciente">
+            <li class="act-item">
+              <div class="act-txt">
+                <div class="act-title" style="color:var(--text-muted)">Cargando...</div>
+              </div>
+            </li>
+          </ul>
+        </article>
+        
+      </div>
+      
+      <!-- ── DERECHA: Referidos + Novedades ── -->
+      <div class="pg-right">
+        
+        <article class="pc" aria-labelledby="referralTitle">
+          <div class="pc-h">
+            <h3 id="referralTitle">👥 Referidos</h3>
+          </div>
+          <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:var(--space-sm)">
+            Comparte tu código y gana monedas.
+          </p>
+          <div class="ref-box">
+            <code id="referralCode" aria-label="Tu código de referido">——</code>
+            <button class="pb sm" id="copyReferralBtn" aria-label="Copiar código">📋</button>
+          </div>
+          <div class="ref-stats">
+            <span class="ref-stat">Total: <strong id="referralCount">0</strong></span>
+            <span class="ref-stat">Ganados: <strong id="referralCoins">0</strong> 🪙</span>
+          </div>
+        </article>
+        
+        <article class="pc" aria-labelledby="newsTitle">
+          <div class="pc-h">
+            <h3 id="newsTitle">🎮 Novedades</h3>
+            <a href="actualizaciones.html" class="pb sm" aria-label="Ver todas las actualizaciones">Ver →</a>
+          </div>
+          <div class="feed" id="projectUpdateFeed" role="feed" aria-label="Últimas novedades">
+            <p style="color:var(--text-muted);font-size:.85rem">Cargando...</p>
+          </div>
+        </article>
+        
+      </div>
+      
+    </div> <!-- /pg -->
+    
+  </section>
+  
+  <!-- ✏️ MODAL: Editar Perfil -->
+  <dialog class="pm" id="editProfileModal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+    <div class="pm-h">
+      <h3 id="editModalTitle">Editar perfil</h3>
+      <button class="pb sm dng" data-close-modal="editProfileModal" aria-label="Cerrar">✕</button>
+    </div>
+    
+    <form id="editProfileForm" method="dialog">
+      <div class="pm-b">
+        
+        <!-- Nombre -->
+        <div class="pm-grp">
+          <label for="editDisplayName">Nombre de usuario</label>
+          <input type="text" id="editDisplayName" class="pm-inp" placeholder="Tu nombre visible" maxlength="40">
+        </div>
+        
+        <!-- País y Proyecto -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)">
+          <div class="pm-grp">
+            <label for="editCountry">País</label>
+            <input type="text" id="editCountry" class="pm-inp" placeholder="Colombia...">
+          </div>
+          <div class="pm-grp">
+            <label for="editFavoriteProject">Proyecto favorito</label>
+            <input type="text" id="editFavoriteProject" class="pm-inp" placeholder="Nuestra Tierra...">
           </div>
         </div>
-      </div>
-
-      <!-- Canje de monedas -->
-      <div class="pc">
-        <div class="pc-h">
-          <h3>💎 Canjear monedas</h3>
-          <span>5000🪙 = 50💎</span>
-        </div>
-        <div class="rdm-stats">
-          <span class="rdm-stat">Disponibles: <b id="redeemCoinsAvailable">0</b>🪙</span>
-          <span class="rdm-stat">Equiv.: <b id="redeemDollars">0💎</b></span>
-          <span class="rdm-stat">Total: <b id="redeemTotalPaid">0💎</b></span>
-          <span class="rdm-stat">Canjes: <b id="redeemTotalCount">0</b></span>
-        </div>
-        <div class="rdm-row">
-          <input type="number" id="redeemAmount" placeholder="5000" min="5000" step="100">
-          <button class="pb prim" id="redeemBtn">Canjear</button>
-        </div>
-        <div id="redeemMessage"></div>
-        <div id="redeemHistory" hidden style="margin-top:8px">
-          <div style="font-size:.65rem;color:#2d5570;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em">Historial</div>
-          <div id="redeemHistoryList"></div>
-        </div>
-      </div>
-
-      <!-- Actividad reciente -->
-      <div class="pc">
-        <div class="pc-h"><h3>📋 Actividad reciente</h3></div>
-        <ul class="act-list" id="activityList">
-          <li class="act-item"><div class="act-txt"><div class="act-title" style="color:#2d5570">Cargando...</div></div></li>
-        </ul>
-      </div>
-
-    </div><!-- /pg-mid -->
-
-    <!-- ── COLUMNA DERECHA ── -->
-    <div class="pg-right">
-
-      <!-- Referidos -->
-      <div class="pc">
-        <div class="pc-h"><h3>👥 Referidos</h3></div>
-        <div style="font-size:.72rem;color:#2d5570;margin-bottom:4px">Comparte y gana monedas.</div>
-        <div class="ref-box">
-          <span id="referralCode">——</span>
-          <button class="pb sm" id="copyReferralBtn">Copiar</button>
-        </div>
-        <div class="ref-stats">
-          <span class="ref-stat">Total: <strong id="referralCount">0</strong></span>
-          <span class="ref-stat">Ganados: <strong id="referralCoins">0</strong>🪙</span>
-        </div>
-      </div>
-
-      <!-- Novedades -->
-      <div class="pc">
-        <div class="pc-h">
-          <h3>🎮 Novedades</h3>
-          <a href="actualizaciones.html" class="pb sm">Ver →</a>
-        </div>
-        <div class="feed" id="projectUpdateFeed">
-          <p style="color:#2d5570;font-size:.75rem">Cargando...</p>
-        </div>
-      </div>
-
-    </div><!-- /pg-right -->
-
-  </div><!-- /pg -->
-</section>
-
-<!-- ════════════════════════
-     EDIT MODAL
-════════════════════════ -->
-<dialog class="pm" id="editProfileModal">
-  <div class="pm-h">
-    <h3>Editar perfil</h3>
-    <button class="pb sm dng" data-close-modal="editProfileModal">✕</button>
-  </div>
-  <form id="editProfileForm" method="dialog">
-    <div class="pm-b">
-      <div class="pm-grp">
-        <label>Nombre de usuario</label>
-        <input type="text" id="editDisplayName" class="pm-inp" placeholder="Tu nombre visible" maxlength="40">
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        
+        <!-- Bio -->
         <div class="pm-grp">
-          <label>País</label>
-          <input type="text" id="editCountry" class="pm-inp" placeholder="Colombia...">
+          <label for="editBio">Sobre mí</label>
+          <textarea id="editBio" class="pm-inp" placeholder="Cuéntanos algo sobre ti..."></textarea>
         </div>
+        
+        <!-- Avatar -->
         <div class="pm-grp">
-          <label>Proyecto favorito</label>
-          <input type="text" id="editFavoriteProject" class="pm-inp" placeholder="Nuestra Tierra...">
+          <label>Avatar</label>
+          <input type="hidden" id="editAvatarValue" value="😊">
+          
+          <div style="display:flex;gap:var(--space-lg);align-items:flex-start;flex-wrap:wrap">
+            
+            <!-- Preview -->
+            <div style="display:flex;flex-direction:column;align-items:center;gap:var(--space-sm)">
+              <div id="editProfileImagePreview" class="ph-avatar" style="width:56px;height:56px;" aria-hidden="true"></div>
+              <label for="editProfileImage" class="sr-only">URL de imagen</label>
+              <input type="url" id="editProfileImage" placeholder="URL (opcional)" class="pm-inp" style="max-width:160px;font-size:.9em">
+              <button type="button" id="removeProfileImageBtn" style="display:none;font-size:.75em;color:var(--color-red);background:none;border:none;cursor:pointer">
+                Quitar imagen
+              </button>
+            </div>
+            
+            <!-- Selector de emojis -->
+            <div class="av-grid" role="radiogroup" aria-label="Seleccionar avatar">
+              <button type="button" class="av-opt selected" data-avatar="😊" role="radio" aria-checked="true" aria-label="Cara sonriente">😊</button>
+              <button type="button" class="av-opt" data-avatar="😎" role="radio" aria-label="Cara con gafas">😎</button>
+              <button type="button" class="av-opt" data-avatar="🦊" role="radio" aria-label="Zorro">🦊</button>
+              <button type="button" class="av-opt" data-avatar="🐱" role="radio" aria-label="Gato">🐱</button>
+              <button type="button" class="av-opt" data-avatar="🐺" role="radio" aria-label="Lobo">🐺</button>
+              <button type="button" class="av-opt" data-avatar="🦁" role="radio" aria-label="León">🦁</button>
+              <button type="button" class="av-opt" data-avatar="🐼" role="radio" aria-label="Panda">🐼</button>
+              <button type="button" class="av-opt" data-avatar="🐸" role="radio" aria-label="Rana">🐸</button>
+              <button type="button" class="av-opt" data-avatar="👾" role="radio" aria-label="Alien">👾</button>
+              <button type="button" class="av-opt" data-avatar="🤖" role="radio" aria-label="Robot">🤖</button>
+              <button type="button" class="av-opt" data-avatar="🎮" role="radio" aria-label="Control">🎮</button>
+              <button type="button" class="av-opt" data-avatar="🏆" role="radio" aria-label="Trofeo">🏆</button>
+              <button type="button" class="av-opt" data-avatar="⚡" role="radio" aria-label="Rayo">⚡</button>
+              <button type="button" class="av-opt" data-avatar="🔥" role="radio" aria-label="Fuego">🔥</button>
+              <button type="button" class="av-opt" data-avatar="💎" role="radio" aria-label="Diamante">💎</button>
+              <button type="button" class="av-opt" data-avatar="🌙" role="radio" aria-label="Luna">🌙</button>
+            </div>
+            
+          </div>
         </div>
+        
       </div>
-      <div class="pm-grp">
-        <label>Sobre mí</label>
-        <textarea id="editBio" class="pm-inp" placeholder="Cuéntanos algo..."></textarea>
+      
+      <div class="pm-f">
+        <button type="button" class="pb" data-close-modal="editProfileModal">Cancelar</button>
+        <button type="submit" class="pb prim">Guardar cambios</button>
       </div>
-      <div class="pm-grp">
-        <label>Avatar</label>
-        <input type="hidden" id="editAvatarValue" value="😊">
-        <div class="av-grid">
-          <button type="button" class="av-opt selected" data-avatar="😊">😊</button>
-          <button type="button" class="av-opt" data-avatar="😎">😎</button>
-          <button type="button" class="av-opt" data-avatar="🦊">🦊</button>
-          <button type="button" class="av-opt" data-avatar="🐱">🐱</button>
-          <button type="button" class="av-opt" data-avatar="🐺">🐺</button>
-          <button type="button" class="av-opt" data-avatar="🦁">🦁</button>
-          <button type="button" class="av-opt" data-avatar="🐼">🐼</button>
-          <button type="button" class="av-opt" data-avatar="🐸">🐸</button>
-          <button type="button" class="av-opt" data-avatar="👾">👾</button>
-          <button type="button" class="av-opt" data-avatar="🤖">🤖</button>
-          <button type="button" class="av-opt" data-avatar="🎮">🎮</button>
-          <button type="button" class="av-opt" data-avatar="🏆">🏆</button>
-          <button type="button" class="av-opt" data-avatar="⚡">⚡</button>
-          <button type="button" class="av-opt" data-avatar="🔥">🔥</button>
-          <button type="button" class="av-opt" data-avatar="💎">💎</button>
-          <button type="button" class="av-opt" data-avatar="🌙">🌙</button>
-        </div>
-      </div>
-    </div>
-    <div class="pm-f">
-      <button type="button" class="pb" data-close-modal="editProfileModal">Cancelar</button>
-      <button type="submit" class="pb prim">Guardar</button>
-    </div>
-  </form>
-</dialog>
-
-<footer>
-  <p>&copy; 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
-</footer>
-
-<script src="../assets/js/core/script.js"></script>
-<script src="../assets/js/pages/perfil.js"></script>
+    </form>
+  </dialog>
+  
+  <!-- 🦶 Footer -->
+  <footer role="contentinfo">
+    <p>&copy; <time datetime="2026">2026</time> Panter Studio Game Dev. Todos los derechos reservados.</p>
+  </footer>
+  
+  <!-- 🧠 Scripts -->
+  <script src="../assets/js/core/script.js" defer></script>
+  <script src="../assets/js/pages/perfil.js" defer></script>
+  
+  <!-- 🎯 Script Inline para UX Móvil -->
+  <script>
+  // ========================================
+  // PERFIL: UX Mobile Enhancements
+  // ========================================
+  document.addEventListener('DOMContentLoaded', () => {
+    
+    // Toggle tema con persistencia
+    const themeToggle = document.getElementById('dark-mode-toggle');
+    const body = document.body;
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    
+    if (savedTheme === 'light') {
+      body.setAttribute('data-theme', 'light');
+      themeToggle.textContent = '☀️';
+    }
+    
+    themeToggle?.addEventListener('click', () => {
+      const isLight = body.getAttribute('data-theme') === 'light';
+      body.setAttribute('data-theme', isLight ? 'dark' : 'light');
+      themeToggle.textContent = isLight ? '🌙' : '☀️';
+      localStorage.setItem('theme', isLight ? 'dark' : 'light');
+    });
+    
+    // Tabs de autenticación
+    const authTabs = document.querySelectorAll('.auth-tab');
+    const authForms = document.querySelectorAll('.auth-form');
+    
+    authTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.tab;
+        
+        // Actualizar tabs
+        authTabs.forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+        
+        // Mostrar form correspondiente
+        authForms.forEach(form => {
+          form.classList.remove('active');
+          form.hidden = true;
+        });
+        document.getElementById(target + 'Form').classList.add('active');
+        document.getElementById(target + 'Form').hidden = false;
+      });
+    });
+    
+    // Selector de avatar
+    const avatarOpts = document.querySelectorAll('.av-opt');
+    const avatarInput = document.getElementById('editAvatarValue');
+    const avatarPreview = document.getElementById('editProfileImagePreview');
+    
+    avatarOpts.forEach(opt => {
+      opt.addEventListener('click', () => {
+        avatarOpts.forEach(o => {
+          o.classList.remove('selected');
+          o.setAttribute('aria-checked', 'false');
+        });
+        opt.classList.add('selected');
+        opt.setAttribute('aria-checked', 'true');
+        
+        const emoji = opt.dataset.avatar;
+        avatarInput.value = emoji;
+        avatarPreview.textContent = emoji;
+        avatarPreview.style.background = 'rgba(30,112,200,.2)';
+      });
+    });
+    
+    // Input de imagen de perfil
+    const imageInput = document.getElementById('editProfileImage');
+    const removeImageBtn = document.getElementById('removeProfileImageBtn');
+    
+    imageInput?.addEventListener('input', (e) => {
+      const url = e.target.value.trim();
+      if (url) {
+        avatarPreview.innerHTML = `<img src="${url}" alt="Vista previa" onerror="this.parentElement.textContent='${avatarInput.value || '😊'}'">`;
+        avatarOpts.forEach(o => o.classList.remove('selected'));
+        removeImageBtn.style.display = 'block';
+      }
+    });
+    
+    removeImageBtn?.addEventListener('click', () => {
+      imageInput.value = '';
+      avatarPreview.textContent = avatarInput.value || '😊';
+      avatarPreview.style.background = 'rgba(30,112,200,.2)';
+      removeImageBtn.style.display = 'none';
+    });
+    
+    // Cerrar modal con backdrop click
+    const modal = document.getElementById('editProfileModal');
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) modal.close();
+    });
+    
+    // Botones de cerrar modal
+    document.querySelectorAll('[data-close-modal]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const modalId = btn.dataset.closeModal;
+        document.getElementById(modalId)?.close();
+      });
+    });
+    
+    // Copiar código de referido
+    const copyRefBtn = document.getElementById('copyReferralBtn');
+    const refCode = document.getElementById('referralCode');
+    
+    copyRefBtn?.addEventListener('click', async () => {
+      const code = refCode?.textContent?.trim();
+      if (code && code !== '——') {
+        try {
+          await navigator.clipboard.writeText(code);
+          const original = copyRefBtn.textContent;
+          copyRefBtn.textContent = '✅';
+          setTimeout(() => copyRefBtn.textContent = original, 2000);
+        } catch (err) {
+          console.warn('Clipboard no disponible:', err);
+        }
+      }
+    });
+    
+    // Touch feedback para botones en móvil
+    if ('ontouchstart' in window) {
+      document.querySelectorAll('.pb, .auth-tab, .streak-day').forEach(el => {
+        el.addEventListener('touchstart', function() {
+          this.style.transform = 'scale(0.98)';
+        });
+        el.addEventListener('touchend', function() {
+          this.style.transform = '';
+        });
+      });
+    }
+    
+    // Smooth scroll para anclas internas
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', (e) => {
+        const target = document.querySelector(anchor.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+    
+  });
+  </script>
+  
 </body>
 </html>

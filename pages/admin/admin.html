@@ -6,7 +6,8 @@
     <meta name="theme-color" content="#1e70c8">
     <title>Panel Administrativo - Panter Studio</title>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
-    <link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
+    <link rel="icon" href="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/style.css">
     <script src="../../assets/js/core/firebase-config.js"></script>
 </head>
@@ -23,7 +24,7 @@
 
     <main class="admin-shell">
         <section class="admin-gate" id="adminGate">
-            <img src="https://i.imgur.com/GYjAGS7.png" alt="Logo Panter Studio" class="admin-logo">
+            <img src="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" alt="Logo Panter Studio" class="admin-logo">
             <h1>Panel Administrativo</h1>
             <p id="adminGateMessage" class="admin-message">Verificando acceso...</p>
         </section>
@@ -35,7 +36,7 @@
                     <p>Base mínima activa. Iremos agregando módulos poco a poco.</p>
                 </div>
                 <div class="admin-top-actions">
-                    <button id="adminDevPanelBtn" class="btn">Panel Desarrollo</button>
+                    <!-- Panel Desarrollo removido - sólo panel administrativo activo -->
                     <button id="adminVisibilityBtn" class="btn">Visibilidad Páginas</button>
                     <button id="adminGoHomeBtn" class="btn">Ir al inicio</button>
                     <button id="adminLogoutBtn" class="btn">Cerrar sesion</button>
@@ -64,9 +65,53 @@
                 </div>
             </section>
 
+            <section class="admin-section" id="adminCreateUpdateSection">
+                <header class="admin-section-header">
+                    <h3>Agregar actualizacion</h3>
+                </header>
+                <div class="admin-section-intro">
+                    <p>Publica una actualización ligada a un proyecto (juego/aplicación) para que aparezca en la página pública.</p>
+                </div>
+                <div style="margin-top:12px;max-width:760px;">
+                    <form id="adminCreateUpdateForm" class="dev-form" autocomplete="off">
+                        <div>
+                            <label>Proyecto</label>
+                            <select id="adminCreateUpdateProject">
+                                <option value="">(Selecciona un proyecto...)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Título</label>
+                            <input type="text" id="adminCreateUpdateTitle" required placeholder="Título de la actualización">
+                        </div>
+                        <div>
+                            <label>Resumen (opcional)</label>
+                            <input type="text" id="adminCreateUpdateSummary" placeholder="Resumen breve">
+                        </div>
+                        <div>
+                            <label>Contenido</label>
+                            <textarea id="adminCreateUpdateContent" rows="5" required placeholder="Detalles de la actualización"></textarea>
+                        </div>
+                        <div>
+                            <label>Imagen URL (opcional)</label>
+                            <input type="url" id="adminCreateUpdateImage" placeholder="https://...">
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+                            <label>Publicar ahora</label>
+                            <input type="checkbox" id="adminCreateUpdatePublished" checked>
+                        </div>
+                        <div style="margin-top:10px;display:flex;gap:8px;">
+                            <button type="submit" class="btn">Publicar actualización</button>
+                            <button type="button" id="adminCreateUpdateReset" class="btn">Limpiar</button>
+                        </div>
+                    </form>
+                    <p id="adminCreateUpdateMsg" class="admin-message" style="margin-top:8px"></p>
+                </div>
+            </section>
+
             <section class="admin-users-section" id="adminCeoTools" hidden>
                 <header class="admin-section-header">
-                    <h3>Gestión de Cuentas (CEO)</h3>
+                    <h3>Gestion de Cuentas (CEO)</h3>
                     <button id="adminCeoRefreshUsersBtn" class="btn">Actualizar lista</button>
                 </header>
                 <div class="admin-section-intro">
@@ -74,7 +119,7 @@
                 </div>
 
                 <div class="admin-ceo-funds" style="margin-top:16px;">
-                    <h4>Agregar fondos - Apóyanos</h4>
+                    <h4>Agregar fondos - Apoyanos</h4>
                     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
                         <input id="founderAddAmount" type="number" placeholder="Monto (USD)" min="0" step="0.01" style="padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
                         <input id="founderAddNote" type="text" placeholder="Nota / Descripción (opcional)" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
@@ -84,7 +129,7 @@
                 </div>
 
                 <div style="margin-top:12px;">
-                    <h4>Eliminar saldo - Apóyanos</h4>
+                    <h4>Eliminar saldo - Apoyanos</h4>
                     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
                         <input id="founderRemoveAmount" type="number" placeholder="Monto a quitar (USD)" min="0" step="0.01" style="padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
                         <input id="founderRemoveNote" type="text" placeholder="Nota / Motivo (opcional)" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
@@ -98,7 +143,7 @@
                 </div>
 
                 <div id="adminDonationsConfigContainer" class="admin-panel" hidden style="margin-top:12px;padding:12px;">
-                    <h4>Configuración - Apóyanos</h4>
+                    <h4>Configuracion - Apoyanos</h4>
                     <div id="donationsPreview" style="margin-bottom:12px;padding:12px;border-radius:8px;background:rgba(255,255,255,0.02);">
                         <div style="margin-bottom:8px;">
                             <div class="donaciones-progress" style="margin-bottom:8px;">

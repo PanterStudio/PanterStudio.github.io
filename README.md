@@ -16,9 +16,7 @@ Repositorio web de Panter Studio.
 |   |-- personal.html
 |   |-- preregistro.html
 |   `-- admin/
-|       |-- admin.html
-|       |-- panel-desarrollo.html
-|       `-- panel-desarrollo-proyecto.html
+	|       |-- admin.html
 |-- assets/
 |   |-- css/
 |   `-- js/

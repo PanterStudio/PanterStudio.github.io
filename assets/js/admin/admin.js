@@ -94,7 +94,6 @@ const previewBreveBtn = document.getElementById('previewBreveBtn');
 
 const logoutBtn = document.getElementById('adminLogoutBtn');
 const goHomeBtn = document.getElementById('adminGoHomeBtn');
-const devPanelBtn = document.getElementById('adminDevPanelBtn');
 
 const welcomeOverlay = document.getElementById('adminWelcome');
 const welcomeTitleEl = document.getElementById('adminWelcomeTitle');
@@ -104,6 +103,19 @@ let welcomeTimer = null;
 let hasPlayedWelcome = false;
 let ceoUsersList = [];
 let currentUser = null;
+
+// Create updates UI refs (admin)
+const adminCreateUpdateForm = document.getElementById('adminCreateUpdateForm');
+const adminCreateUpdateProject = document.getElementById('adminCreateUpdateProject');
+const adminCreateUpdateTitle = document.getElementById('adminCreateUpdateTitle');
+const adminCreateUpdateSummary = document.getElementById('adminCreateUpdateSummary');
+const adminCreateUpdateContent = document.getElementById('adminCreateUpdateContent');
+const adminCreateUpdateImage = document.getElementById('adminCreateUpdateImage');
+const adminCreateUpdatePublished = document.getElementById('adminCreateUpdatePublished');
+const adminCreateUpdateReset = document.getElementById('adminCreateUpdateReset');
+const adminCreateUpdateMsg = document.getElementById('adminCreateUpdateMsg');
+
+let adminProjectsCache = [];
 
 function normalizeRole(role) {
     const normalizedRaw = String(role || '').trim().toLowerCase();
@@ -381,6 +393,96 @@ function bindCeoRoleActions() {
         if (!(selectEl instanceof HTMLSelectElement)) return;
         saveCeoUserRole(saveUid, selectEl.value);
     });
+}
+
+// ---------- Admin updates helpers ----------
+async function loadAdminProjects() {
+    if (!window.db || !window.collection || !window.getDocs) return [];
+    try {
+        const cols = ['games', 'applications', 'apps'];
+        const results = [];
+        for (const c of cols) {
+            try {
+                const snap = await window.getDocs(window.collection(window.db, c));
+                if (!snap) continue;
+                snap.docs.forEach(d => {
+                    const data = d.data() || {};
+                    results.push({ collection: c, id: String(d.id), title: String(data.title || data.name || data.id || d.id), type: c === 'games' ? 'juego' : 'aplicacion' });
+                });
+            } catch (err) { /* ignore individual collection errors */ }
+        }
+        adminProjectsCache = results;
+        if (adminCreateUpdateProject) {
+            const opts = ['<option value="">(Selecciona un proyecto...)</option>'].concat(results.map(p => `<option value="${p.collection}::${p.id}">${p.title} (${p.type})</option>`));
+            adminCreateUpdateProject.innerHTML = opts.join('');
+        }
+        return results;
+    } catch (err) { console.warn('Error cargando proyectos para admin:', err); return []; }
+}
+
+function setAdminCreateUpdateMessage(text, isError = false) {
+    if (!adminCreateUpdateMsg) return;
+    adminCreateUpdateMsg.textContent = text || '';
+    adminCreateUpdateMsg.className = isError ? 'admin-message error' : 'admin-message';
+}
+
+async function handleAdminCreateUpdate(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const projVal = String(adminCreateUpdateProject?.value || '').trim();
+    const title = String(adminCreateUpdateTitle?.value || '').trim();
+    const summary = String(adminCreateUpdateSummary?.value || '').trim();
+    const content = String(adminCreateUpdateContent?.value || '').trim();
+    const image = String(adminCreateUpdateImage?.value || '').trim();
+    const published = Boolean(adminCreateUpdatePublished?.checked);
+
+    if (!title) return setAdminCreateUpdateMessage('El título es obligatorio.', true);
+    if (!content) return setAdminCreateUpdateMessage('El contenido es obligatorio.', true);
+    if (image && !/^https?:\/\//i.test(image)) return setAdminCreateUpdateMessage('La imagen debe ser una URL válida (http/https).', true);
+
+    const now = new Date().toISOString();
+    const updateId = `upd_${Date.now()}`;
+
+    let projectId = '';
+    let projectType = '';
+    let projectTitle = '';
+    if (projVal) {
+        const [col, id] = projVal.split('::');
+        projectId = id || '';
+        const found = adminProjectsCache.find(p => p.collection === col && p.id === id);
+        projectType = found ? found.type : (col === 'games' ? 'juego' : 'aplicacion');
+        projectTitle = found ? found.title : '';
+    }
+
+    const payload = {
+        id: updateId,
+        projectId,
+        projectType,
+        projectTitle,
+        title,
+        summary,
+        content,
+        image,
+        published,
+        date: now,
+        createdAt: now,
+        updatedAt: now,
+        createdByUid: currentUser?.uid || ''
+    };
+
+    try {
+        setAdminCreateUpdateMessage('Publicando actualización...');
+        await window.setDoc(window.fsDoc(window.db, 'project_updates', updateId), payload, { merge: true });
+        if (projectId) {
+            const col = projVal.split('::')[0];
+            try { await window.setDoc(window.fsDoc(window.db, col, projectId), { updatedAt: now, lastUpdateAt: now }, { merge: true }); } catch (err) { /* ignore */ }
+        }
+
+        setAdminCreateUpdateMessage('Actualización publicada.');
+        if (adminCreateUpdateForm) adminCreateUpdateForm.reset();
+    } catch (err) {
+        console.error('Error creando actualización desde admin:', err);
+        setAdminCreateUpdateMessage('No se pudo publicar la actualización.', true);
+    }
 }
 
 function setupCeoTools(user, role) {
@@ -839,6 +941,8 @@ async function handleAuthStateChange(user) {
     showPanel();
     playWelcomeAnimation(user, role);
     setupCeoTools(user, role);
+    // Load projects for admin create-update UI
+    try { loadAdminProjects().catch(()=>{}); } catch(e) {}
 }
 
 async function handleLogout() {
@@ -864,11 +968,7 @@ function bindEvents() {
         });
     }
 
-    if (devPanelBtn) {
-        devPanelBtn.addEventListener('click', () => {
-            window.location.href = toSitePath('pages/admin/panel-desarrollo.html');
-        });
-    }
+    // Dev panel removed — no handler
 
     if (ceoEmailSearchInput) {
         ceoEmailSearchInput.addEventListener('input', (event) => {
@@ -884,6 +984,9 @@ function bindEvents() {
     }
 
     bindCeoRoleActions();
+    // Admin create-update bindings
+    if (adminCreateUpdateForm) adminCreateUpdateForm.addEventListener('submit', handleAdminCreateUpdate);
+    if (adminCreateUpdateReset) adminCreateUpdateReset.addEventListener('click', () => { if (adminCreateUpdateForm) adminCreateUpdateForm.reset(); setAdminCreateUpdateMessage(''); });
 }
 
 function bootAuthListener() {

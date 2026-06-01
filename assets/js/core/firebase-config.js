@@ -1,12 +1,12 @@
-// Firebase configuration
+// Firebase configuration (Sincronizado con el juego - Web App)
 const firebaseConfig = {
-  apiKey: "AIzaSyC96wxMCMOmkU_0K4H1DtmXn64iMIdhWf0",
-  authDomain: "panterweb-a9112.firebaseapp.com",
-  projectId: "panterweb-a9112",
-  storageBucket: "panterweb-a9112.firebasestorage.app",
-  messagingSenderId: "301865974545",
-  appId: "1:301865974545:web:1912eaa7d2a95b615caab0",
-  measurementId: "G-98S29GR5Q8"
+  apiKey: "AIzaSyBzrbcb2CVkURpbjp8biki9lg7G9uscecA",
+  authDomain: "nuestratierra-2bb4a.firebaseapp.com",
+  projectId: "nuestratierra-2bb4a",
+  storageBucket: "nuestratierra-2bb4a.firebasestorage.app",
+  messagingSenderId: "507313127250",
+  appId: "1:507313127250:web:3b43fd414ce810d391c48b",
+  measurementId: "G-9M0QRJNWMT"
 };
 
 import("https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js").then(({ initializeApp }) => {

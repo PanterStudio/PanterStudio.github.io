@@ -7,7 +7,6 @@
   // Set this to `false` to re-enable the admin visibility checks.
   const SITE_VISIBILITY_DISABLED = true;
   const PAGES = {
-    minijuegos: 'pages/minijuegos.html',
     perfil: 'pages/perfil.html',
     donaciones: 'pages/donaciones.html',
     personal: 'pages/personal.html',

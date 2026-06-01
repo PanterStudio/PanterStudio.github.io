@@ -3,6 +3,17 @@
   'use strict';
   console.log('[ui-enhancements] loaded');
   try { document.body.dataset.uiEnh = '1'; } catch(e){}
+  // Enforce dark mode
+  (function(){
+    try {
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (document.body) {
+        document.body.dataset.theme = 'dark';
+        document.body.classList.add('dark-mode');
+        if (metaTheme) metaTheme.setAttribute('content', '#08151b');
+      }
+    } catch(e) { console.warn('dark-mode init failed', e); }
+  })();
   const leftPanel = document.getElementById('leftPanel');
   const rightPanel = document.getElementById('rightPanel');
   const leftTrigger = document.querySelector('.left-trigger');

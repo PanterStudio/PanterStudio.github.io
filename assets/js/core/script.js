@@ -265,23 +265,17 @@ async function getUserProfile(uid) {
     return snap.exists() ? snap.data() : null;
 }
 
-// Mostrar modal automáticamente al cargar
-window.addEventListener('load', () => {
-    const modal = document.getElementById('preregistroModal');
-    if (modal) {
-        setTimeout(() => {
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-            updatePromoCapacityDisplay(preregistrosActuales);
-        }, 1500); // Aparece después de 1.5 segundos
-    }
-});
+
 
 // Función para cerrar el modal promocional
 function closePromoModal() {
     const modal = document.getElementById('preregistroModal');
     if (modal) {
         modal.classList.remove('active');
+        modal.hidden = true;
+        if (!document.getElementById('authModal')?.hidden || !document.getElementById('usernameModal')?.hidden) {
+            return;
+        }
         document.body.style.overflow = 'auto';
     }
 }
@@ -487,54 +481,69 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function updateAuthUi(user) {
-        const authLabel = document.getElementById('authUserLabel');
-        const loginBtn = document.getElementById('loginAuthBtn');
-        const logoutBtn = document.getElementById('logoutAuthBtn');
-        const authSignalDot = document.getElementById('authSignalDot');
-        const authSignalText = document.getElementById('authSignalText');
-        const authRoleBadge = document.getElementById('authRoleBadge');
+        const authLabels = Array.from(document.querySelectorAll('[data-auth-user-label]'));
+        const loginBtns = Array.from(document.querySelectorAll('[data-open-auth-modal]'));
+        const logoutBtns = Array.from(document.querySelectorAll('[data-auth-logout]'));
+        const authSignalDots = Array.from(document.querySelectorAll('[data-auth-signal-dot]'));
+        const authSignalTexts = Array.from(document.querySelectorAll('[data-auth-signal-text]'));
+        const authRoleBadges = Array.from(document.querySelectorAll('[data-auth-role-badge]'));
         const adminNavLink = document.getElementById('adminNavLink');
         const adminSideLink = document.getElementById('adminPanelSideLink');
 
-        if (!authLabel || !loginBtn || !logoutBtn) return;
+        if (!authLabels.length || !loginBtns.length || !logoutBtns.length) return;
 
         const email = user?.email || '';
         const displayName = user?.displayName || '';
         const { isAdmin, role } = user ? await resolveAdminAccess(user) : { isAdmin: false, role: 'viewer' };
 
         if (user) {
-            authLabel.textContent = displayName
+            const authText = displayName
                 ? `${displayName} (${email})`
                 : email;
-            loginBtn.disabled = true;
-            loginBtn.hidden = true;
-            logoutBtn.hidden = false;
+            authLabels.forEach((label) => {
+                label.textContent = authText;
+            });
+            loginBtns.forEach((button) => {
+                button.disabled = true;
+                button.hidden = true;
+            });
+            logoutBtns.forEach((button) => {
+                button.hidden = false;
+            });
 
-            if (authSignalDot) {
-                authSignalDot.classList.remove('auth-signal-guest', 'auth-signal-online', 'auth-signal-admin');
-                authSignalDot.classList.add(isAdmin ? 'auth-signal-admin' : 'auth-signal-online');
-            }
-            if (authSignalText) {
-                authSignalText.textContent = isAdmin ? 'Conectado (Admin)' : 'Conectado';
-            }
-            if (authRoleBadge) {
-                authRoleBadge.hidden = !isAdmin;
-                if (isAdmin) authRoleBadge.textContent = getRoleLabel(role).toUpperCase();
-            }
+            authSignalDots.forEach((dot) => {
+                dot.classList.remove('auth-signal-guest', 'auth-signal-online', 'auth-signal-admin', 'auth-signal-logged');
+                dot.classList.add(isAdmin ? 'auth-signal-admin' : 'auth-signal-online');
+            });
+            authSignalTexts.forEach((label) => {
+                label.textContent = isAdmin ? 'Conectado (Admin)' : 'Conectado';
+            });
+            authRoleBadges.forEach((badge) => {
+                badge.hidden = !isAdmin;
+                if (isAdmin) badge.textContent = getRoleLabel(role).toUpperCase();
+            });
         } else {
-            authLabel.textContent = 'Invitado';
-            loginBtn.disabled = false;
-            loginBtn.hidden = false;
-            logoutBtn.hidden = true;
+            authLabels.forEach((label) => {
+                label.textContent = 'Invitado';
+            });
+            loginBtns.forEach((button) => {
+                button.disabled = false;
+                button.hidden = false;
+            });
+            logoutBtns.forEach((button) => {
+                button.hidden = true;
+            });
 
-            if (authSignalDot) {
-                authSignalDot.classList.remove('auth-signal-online', 'auth-signal-admin');
-                authSignalDot.classList.add('auth-signal-guest');
-            }
-            if (authSignalText) {
-                authSignalText.textContent = 'Invitado';
-            }
-            if (authRoleBadge) authRoleBadge.hidden = true;
+            authSignalDots.forEach((dot) => {
+                dot.classList.remove('auth-signal-online', 'auth-signal-admin', 'auth-signal-logged');
+                dot.classList.add('auth-signal-guest');
+            });
+            authSignalTexts.forEach((label) => {
+                label.textContent = 'Invitado';
+            });
+            authRoleBadges.forEach((badge) => {
+                badge.hidden = true;
+            });
         }
 
         if (adminNavLink) adminNavLink.hidden = !isAdmin;
@@ -544,14 +553,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupAuthModal() {
         const modal = document.getElementById('authModal');
         const closeBtn = document.getElementById('authModalCloseBtn');
-        const loginOpenBtn = document.getElementById('loginAuthBtn');
+        const loginOpenBtns = Array.from(document.querySelectorAll('[data-open-auth-modal]'));
         const tabRegister = document.getElementById('authTabRegister');
         const tabLogin = document.getElementById('authTabLogin');
         const registerForm = document.getElementById('authRegisterForm');
         const loginForm = document.getElementById('authLoginForm');
         const message = document.getElementById('authModalMessage');
 
-        if (!modal || !loginOpenBtn || !tabRegister || !tabLogin || !registerForm || !loginForm || !message) return;
+        if (!modal || !loginOpenBtns.length || !tabRegister || !tabLogin || !registerForm || !loginForm || !message) return;
 
         function setMode(mode) {
             const isRegister = mode === 'register';
@@ -576,7 +585,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        loginOpenBtn.addEventListener('click', openModal);
+        loginOpenBtns.forEach((button) => {
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                openModal();
+            });
+        });
         tabRegister.addEventListener('click', () => setMode('register'));
         tabLogin.addEventListener('click', () => setMode('login'));
 
@@ -605,8 +619,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const loginForm = document.getElementById('authLoginForm');
         const message = document.getElementById('authModalMessage');
         const googleBtn = document.getElementById('googleAuthModalBtn');
-        const logoutBtn = document.getElementById('logoutAuthBtn');
-        if (!logoutBtn || !registerForm || !loginForm || !message || !googleBtn) return;
+        const logoutBtns = Array.from(document.querySelectorAll('[data-auth-logout]'));
+        if (!logoutBtns.length || !registerForm || !loginForm || !message || !googleBtn) return;
         userAuthInitialized = true;
         let authObserverBound = false;
 
@@ -743,13 +757,15 @@ document.addEventListener('DOMContentLoaded', () => {
             await startGoogleSignIn(true);
         });
 
-        logoutBtn.addEventListener('click', async () => {
-            if (!(await ensureAuthReady(false))) return;
-            try {
-                await window.signOut(window.auth);
-            } catch (err) {
-                console.error('Error al cerrar sesion:', err);
-            }
+        logoutBtns.forEach((button) => {
+            button.addEventListener('click', async () => {
+                if (!(await ensureAuthReady(false))) return;
+                try {
+                    await window.signOut(window.auth);
+                } catch (err) {
+                    console.error('Error al cerrar sesion:', err);
+                }
+            });
         });
     }
 
@@ -997,6 +1013,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     : 'Meta comunitaria en marcha';
             }
 
+            const hubRegistros = document.getElementById('hubRegistros');
+            if (hubRegistros) {
+                hubRegistros.textContent = String(totalRegistros);
+            }
+
             updatePromoCapacityDisplay(totalRegistros);
             updatePreregistroButtonState(totalRegistros);
         });
@@ -1095,7 +1116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const appRoutes = ['juegos.html', 'aplicaciones.html'];
+    const appRoutes = ['actualizaciones.html', 'imagenes.html'];
     const navDropdowns = document.querySelectorAll('.nav-dropdown');
 
     navDropdowns.forEach((dropdown) => {

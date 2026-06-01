@@ -1,190 +1,152 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#1e70c8">
-    <title>Minijuegos - Panter Studio</title>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
-    <link rel="icon" href="https://i.imgur.com/GYjAGS7.png" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minijuegos — Panter Studio</title>
+    <link rel="icon" href="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
     <script src="../assets/js/core/firebase-config.js"></script>
-    <script src="../assets/js/site-visibility.js"></script>
+    <style>
+        .game-card {
+            background: var(--bg-glass-card);
+            border: var(--border-glass);
+            border-radius: var(--border-radius-lg);
+            padding: 2.5rem;
+            max-width: 650px;
+            margin: 2rem auto;
+            text-align: center;
+            box-shadow: var(--shadow-glow-sm);
+        }
+        .game-title {
+            color: var(--color-primary-light);
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+        .game-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        .game-box {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px dashed var(--border-glass-hover);
+        }
+        .order-bubble {
+            background: var(--bg-glass-strong);
+            border: 1px solid var(--color-accent);
+            border-radius: 20px;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            animation: pulse 1.8s infinite;
+        }
+        .item-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 320px;
+            margin-top: 1rem;
+        }
+        .item-btn {
+            background: var(--bg-glass-card);
+            border: var(--border-glass);
+            color: var(--text-primary);
+            padding: 0.8rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all var(--transition-fast);
+        }
+        .item-btn:hover {
+            background: var(--color-primary);
+            border-color: var(--color-primary-light);
+            transform: translateY(-2px);
+        }
+        .status-text {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-top: 1rem;
+        }
+        .success-text { color: var(--color-primary-light); }
+        .error-text { color: var(--color-accent); }
+    </style>
 </head>
-<body data-site-root="..">
+<body data-site-root=".." data-theme="dark" class="dark-mode">
     <div id="tsparticles"></div>
-    <header>
-        <img src="https://i.imgur.com/GYjAGS7.png" alt="Logo Panter Studio" class="logo-img">
-        <button id="dark-mode-toggle" class="dark-mode-toggle">🌙</button>
-    </header>
-
     <nav>
-        <a href="../index.html">Inicio</a>
-        <div class="nav-dropdown">
-            <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">Aplicaciones</button>
-            <div class="nav-dropdown-menu">
-                <a href="juegos.html">Juegos</a>
-                <a href="aplicaciones.html">Aplicaciones</a>
-            </div>
+        <div class="nav-left">
+            <a href="../index.html" class="nav-logo">
+                <img src="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" alt="Panter Studio">
+                <span>Panter Studio</span>
+            </a>
         </div>
-        <a href="minijuegos.html" class="active">Minijuegos</a>
-        <a href="actualizaciones.html">Actualizaciones</a>
-        <a href="donaciones.html">Apoyanos</a>
-        <a href="personal.html">Personal</a>
-        <a href="perfil.html">Mi Perfil</a>
-        <a href="preregistro.html">Pre-registro</a>
+        <div class="nav-middle">
+            <a href="../index.html">Inicio</a>
+            <div class="nav-dropdown">
+                <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">Novedades</button>
+                <div class="nav-dropdown-menu">
+                    <a href="actualizaciones.html">Actualizaciones</a>
+                    <a href="imagenes.html">Galeria</a>
+                </div>
+            </div>
+            <a href="minijuegos.html" class="active">Minijuegos</a>
+            <a href="donaciones.html">Apoyanos</a>
+            <a href="personal.html">Personal</a>
+            <a href="perfil.html">Mi Perfil</a>
+            <a href="meinteresa.html">Me Interesa</a>
+        </div>
     </nav>
 
     <div class="container">
-
-        <!-- Hero -->
-        <section class="mg-hero">
-            <div class="mg-hero-text">
-                <span class="mg-hero-tag">GANA MONEDAS</span>
-                <h2>Minijuegos Panter Studio</h2>
-                <p>Juega cada dia y gana monedas que puedes <strong>canjear por esmeraldas</strong>. La tasa es <strong>5 000 monedas = 50 esmeraldas</strong>. Cada juego otorga su premio una vez cada 24 horas.</p>
+        <section class="game-card">
+            <h2 class="game-title">☕ La Tiendita Express</h2>
+            <p class="game-subtitle">¡Atiende a los clientes sirviendo productos típicos colombianos antes de que se acabe el tiempo! Gana hasta 3 partidas al día para recibir monedas de recompensa para tu perfil.</p>
+            
+            <div id="authNotice" class="game-box">
+                <p>Inicia sesión en tu cuenta de Panter Studio para jugar y recibir recompensas.</p>
+                <a href="perfil.html" class="btn" style="margin-top: 1rem;">Ir a mi perfil / Iniciar Sesión</a>
             </div>
-            <div class="mg-hero-right">
-                <div class="mg-coin-display" id="mgUserCoins" hidden>
-                    <span class="mg-coin-big" id="mgCoinValue">0</span>
-                    <small>tus monedas 🪙</small>
-                    <span class="mg-coin-usd" id="mgCoinUsd">≈ 0 💎</span>
+
+            <div id="gameContainer" class="game-box" style="display: none;">
+                <div id="gameIntro">
+                    <p style="margin-bottom: 1.5rem;">Sirve 3 pedidos correctamente. Cada pedido consiste en un producto combinado. ¡Tienes 20 segundos!</p>
+                    <button id="startBtn" class="btn">Empezar a Jugar</button>
+                    <p id="limitNotice" style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted);"></p>
                 </div>
-                <a href="perfil.html" class="btn mg-hero-action">Ver mi perfil</a>
-            </div>
-        </section>
 
-        <!-- Guest notice -->
-        <div class="mg-guest-notice" id="mgGuestNotice">
-            🔒 <a href="perfil.html">Inicia sesion</a> para ganar monedas al jugar. Puedes jugar sin cuenta pero no se guardan las recompensas.
-        </div>
+                <div id="gamePlay" style="display: none; width: 100%; text-align: center;">
+                    <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 1rem;">
+                        <span>⏱️ Tiempo: <strong id="timerVal">20</strong>s</span>
+                        <span>👥 Atendidos: <strong id="scoreVal">0</strong>/3</span>
+                    </div>
 
-        <!-- Games -->
-        <section class="mg-games-section">
-            <h3>Juegos 3D Disponibles</h3>
-            <div class="mg-games-grid">
+                    <div class="order-bubble" id="orderText">Cargando pedido...</div>
 
-                <article class="mg-game-card">
-                    <div class="mg-game-header">
-                        <span class="mg-game-icon">🏎️</span>
-                        <div class="mg-game-meta">
-                            <h4>Neon Runner 3D</h4>
-                            <p>Esquiva obstaculos en una pista infinita con velocidad creciente.</p>
-                        </div>
+                    <div class="item-buttons">
+                        <button class="item-btn" onclick="pressItem('☕ Tinto')">☕ Tinto</button>
+                        <button class="item-btn" onclick="pressItem('🫓 Arepa')">🫓 Arepa</button>
+                        <button class="item-btn" onclick="pressItem('🍩 Buñuelo')">🍩 Buñuelo</button>
+                        <button class="item-btn" onclick="pressItem('🥟 Empanada')">🥟 Empanada</button>
                     </div>
-                    <div class="mg-game-area">
-                        <p class="mg-game-prompt">Controles PC: <strong>A / D</strong> o <strong>← / →</strong> · Movil: botones tactiles.</p>
-                        <p class="mg-game-sub">Objetivo: sobrevivir el mayor tiempo posible.</p>
-                    </div>
-                    <div class="mg-game-footer">
-                        <a class="btn mg-play-btn" href="games/neon-runner-3d.html" target="_blank" rel="noopener noreferrer">Abrir juego</a>
-                        <span class="mg-cooldown-text">Se abre en una pestaña nueva</span>
-                    </div>
-                </article>
 
-                <article class="mg-game-card">
-                    <div class="mg-game-header">
-                        <span class="mg-game-icon">🧬</span>
-                        <div class="mg-game-meta">
-                            <h4>2048 Esteroides</h4>
-                            <p>¡Fusiona números y usa poderes especiales para llegar más lejos que nunca!</p>
-                        </div>
-                    </div>
-                    <div class="mg-game-area">
-                        <p class="mg-game-prompt">Controles PC/Móvil: <strong>Flechas</strong> o <strong>Desliza</strong>.</p>
-                        <p class="mg-game-sub">Objetivo: ¡alcanza la mayor ficha posible usando los esteroides!</p>
-                    </div>
-                    <div class="mg-game-footer">
-                            <a class="btn mg-play-btn" href="games/2048.html" target="_blank" rel="noopener noreferrer">Abrir juego</a>
-                            <span class="mg-cooldown-text">Se abre en una pestaña nueva</span>
-                        </div>
-                    </article>
-
-                    <article class="mg-game-card">
-                        <div class="mg-game-header">
-                            <span class="mg-game-icon">🚚</span>
-                            <div class="mg-game-meta">
-                                <h4>Transportes Paisa V2</h4>
-                                <p>Administra tu flota, gana COP y conviértelos en monedas del sitio.</p>
-                            </div>
-                        </div>
-                        <div class="mg-game-area">
-                            <p class="mg-game-prompt">Controles: Mouse y botones UI.</p>
-                            <p class="mg-game-sub">Objetivo: ¡Haz crecer tu empresa y gana monedas!</p>
-                        </div>
-                        <div class="mg-game-footer">
-                            <a class="btn mg-play-btn" href="games/transportes_paisa_v2.html" target="_blank" rel="noopener noreferrer">Abrir juego</a>
-                            <span class="mg-cooldown-text">Se abre en una pestaña nueva</span>
-                    </div>
-                </article>
-
-                <article class="mg-game-card">
-                    <div class="mg-game-header">
-                        <span class="mg-game-icon">🚀</span>
-                        <div class="mg-game-meta">
-                            <h4>Sky Collector 3D</h4>
-                            <p>Recoge cristales y evita minas en una zona aerea de alta densidad.</p>
-                        </div>
-                    </div>
-                    <div class="mg-game-area">
-                        <p class="mg-game-prompt">Controles PC: <strong>WASD</strong> · Movil: cruceta tactil.</p>
-                        <p class="mg-game-sub">Objetivo: sumar la mayor cantidad de cristales en 60 segundos.</p>
-                    </div>
-                    <div class="mg-game-footer">
-                        <a class="btn mg-play-btn" href="games/sky-collector-3d.html" target="_blank" rel="noopener noreferrer">Abrir juego</a>
-                        <span class="mg-cooldown-text">Se abre en una pestaña nueva</span>
-                    </div>
-                </article>
-
-                <article class="mg-game-card">
-                    <div class="mg-game-header">
-                        <span class="mg-game-icon">🛡️</span>
-                        <div class="mg-game-meta">
-                            <h4>Orbital Survivor 3D</h4>
-                            <p>Sobrevive a oleadas de drones que se acercan desde el anillo orbital.</p>
-                        </div>
-                    </div>
-                    <div class="mg-game-area">
-                        <p class="mg-game-prompt">Controles PC: <strong>A / D</strong> para orbitar · <strong>Espacio</strong> para impulso.</p>
-                        <p class="mg-game-sub">Objetivo: mantener tus escudos activos hasta el final de la cuenta regresiva.</p>
-                    </div>
-                    <div class="mg-game-footer">
-                        <a class="btn mg-play-btn" href="games/orbital-survivor-3d.html" target="_blank" rel="noopener noreferrer">Abrir juego</a>
-                        <span class="mg-cooldown-text">Se abre en una pestaña nueva</span>
-                    </div>
-                </article>
-
-            </div>
-        </section>
-
-        <!-- How it works -->
-        <section class="mg-info-section">
-            <h3>Como funcionan las monedas</h3>
-            <div class="mg-info-grid">
-                <div class="mg-info-item">
-                    <span class="mg-info-icon">🎮</span>
-                    <h4>Juegos 3D reales</h4>
-                    <p>Ahora cada experiencia corre en su propia pagina con escena 3D en tiempo real.</p>
-                </div>
-                <div class="mg-info-item">
-                    <span class="mg-info-icon">📱</span>
-                    <h4>Optimizados para movil</h4>
-                    <p>Todos incluyen controles tactiles para jugar en celular sin teclado.</p>
-                </div>
-                <div class="mg-info-item">
-                    <span class="mg-info-icon">🆕</span>
-                    <h4>Pestana nueva</h4>
-                    <p>Al abrir un juego no pierdes esta pagina; se ejecuta en otra pestana.</p>
-                </div>
-                <div class="mg-info-item">
-                    <span class="mg-info-icon">⚙️</span>
-                    <h4>Desarrollo activo</h4>
-                    <p>Seguiremos agregando mas juegos 3D y eventos especiales para la comunidad.</p>
+                    <div id="feedbackText" class="status-text"></div>
                 </div>
             </div>
         </section>
-
     </div>
 
     <footer>
@@ -192,6 +154,183 @@
     </footer>
 
     <script src="../assets/js/core/script.js"></script>
-    <script src="../assets/js/pages/minijuegos.js"></script>
+    <script>
+        let currentOrder = [];
+        let userInputs = [];
+        let score = 0;
+        let timeLeft = 20;
+        let gameTimer = null;
+        let isPlaying = false;
+        let gamesPlayedToday = 0;
+
+        const itemsPool = ['☕ Tinto', '🫓 Arepa', '🍩 Buñuelo', '🥟 Empanada'];
+
+        function waitForFirebase(timeout = 7000) {
+            return new Promise((resolve) => {
+                if (window.auth && window.db && window.fsDoc) return resolve(true);
+                const start = Date.now();
+                const timer = setInterval(() => {
+                    if (window.auth && window.db && window.fsDoc) {
+                        clearInterval(timer);
+                        resolve(true);
+                    } else if (Date.now() - start > timeout) {
+                        clearInterval(timer);
+                        resolve(false);
+                    }
+                }, 100);
+            });
+        }
+
+        async function initGame() {
+            await waitForFirebase();
+            window.auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    document.getElementById('authNotice').style.display = 'none';
+                    document.getElementById('gameContainer').style.display = 'flex';
+                    checkDailyLimits(user.uid);
+                } else {
+                    document.getElementById('authNotice').style.display = 'flex';
+                    document.getElementById('gameContainer').style.display = 'none';
+                }
+            });
+        }
+
+        function checkDailyLimits(uid) {
+            const today = new Date().toDateString();
+            const key = `panterMG_tiendita_${uid}`;
+            const s = localStorage.getItem(key);
+            let count = 0;
+            if (s) {
+                const data = JSON.parse(s);
+                if (data.date === today) {
+                    count = data.count || 0;
+                }
+            }
+            gamesPlayedToday = count;
+            document.getElementById('limitNotice').textContent = `Partidas ganadas hoy: ${gamesPlayedToday}/3`;
+        }
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            if (gamesPlayedToday >= 3) {
+                alert('Ya has alcanzado el límite de 3 recompensas diarias de este minijuego. ¡Vuelve mañana!');
+                return;
+            }
+            startGame();
+        });
+
+        function startGame() {
+            score = 0;
+            timeLeft = 20;
+            isPlaying = true;
+            document.getElementById('gameIntro').style.display = 'none';
+            document.getElementById('gamePlay').style.display = 'block';
+            document.getElementById('scoreVal').textContent = score;
+            document.getElementById('timerVal').textContent = timeLeft;
+            document.getElementById('feedbackText').className = 'status-text';
+            document.getElementById('feedbackText').textContent = '';
+            
+            generateNewOrder();
+            
+            gameTimer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timerVal').textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    endGame(false);
+                }
+            }, 1000);
+        }
+
+        function generateNewOrder() {
+            userInputs = [];
+            // Generate order of 2 items
+            const item1 = itemsPool[Math.floor(Math.random() * itemsPool.length)];
+            let item2 = itemsPool[Math.floor(Math.random() * itemsPool.length)];
+            while (item2 === item1) {
+                item2 = itemsPool[Math.floor(Math.random() * itemsPool.length)];
+            }
+            currentOrder = [item1, item2];
+            document.getElementById('orderText').textContent = `Quiero: ${currentOrder.join(' y ')}`;
+        }
+
+        function pressItem(item) {
+            if (!isPlaying) return;
+            userInputs.push(item);
+            
+            // Check if correct so far
+            const currentIndex = userInputs.length - 1;
+            if (userInputs[currentIndex] !== currentOrder[currentIndex]) {
+                document.getElementById('feedbackText').className = 'status-text error-text';
+                document.getElementById('feedbackText').textContent = '❌ ¡Pedido incorrecto! Intenta otra vez.';
+                userInputs = [];
+                return;
+            }
+
+            if (userInputs.length === currentOrder.length) {
+                score++;
+                document.getElementById('scoreVal').textContent = score;
+                document.getElementById('feedbackText').className = 'status-text success-text';
+                document.getElementById('feedbackText').textContent = '✅ ¡Servido a tiempo!';
+                
+                if (score >= 3) {
+                    endGame(true);
+                } else {
+                    setTimeout(generateNewOrder, 600);
+                }
+            }
+        }
+
+        async function endGame(won) {
+            clearInterval(gameTimer);
+            isPlaying = false;
+            
+            if (won) {
+                document.getElementById('feedbackText').className = 'status-text success-text';
+                document.getElementById('feedbackText').textContent = '🎉 ¡Ganaste! Has atendido a todos tus clientes.';
+                
+                const user = window.auth.currentUser;
+                if (user) {
+                    try {
+                        const userDocRef = window.fsDoc(window.db, 'users', user.uid);
+                        const userSnap = await window.getDoc(userDocRef);
+                        if (userSnap.exists()) {
+                            const currentCoins = userSnap.data().coins || 0;
+                            const reward = 15; // 15 coins per win
+                            await window.updateDoc(userDocRef, { coins: currentCoins + reward });
+                            
+                            // Log activity
+                            await window.addDoc(window.collection(window.db, 'users', user.uid, 'activity'), {
+                                type: 'game_win',
+                                description: 'Victoria en La Tiendita Express',
+                                coins: reward,
+                                createdAt: new Date().toISOString()
+                            });
+
+                            // Update daily limit count
+                            const today = new Date().toDateString();
+                            const key = `panterMG_tiendita_${user.uid}`;
+                            gamesPlayedToday++;
+                            localStorage.setItem(key, JSON.stringify({ date: today, count: gamesPlayedToday }));
+                        }
+                    } catch (e) {
+                        console.error('Error awarding coins:', e);
+                    }
+                }
+            } else {
+                document.getElementById('feedbackText').className = 'status-text error-text';
+                document.getElementById('feedbackText').textContent = '⏱️ Se acabó el tiempo. ¡Inténtalo de nuevo!';
+            }
+
+            setTimeout(() => {
+                document.getElementById('gameIntro').style.display = 'block';
+                document.getElementById('gamePlay').style.display = 'none';
+                if (window.auth.currentUser) {
+                    checkDailyLimits(window.auth.currentUser.uid);
+                }
+            }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
 </body>
 </html>
+

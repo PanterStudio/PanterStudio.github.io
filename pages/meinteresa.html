@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="¿Te interesa Nuestra Tierra Job Simulator? Haz clic y que el equipo sepa que estás esperando el juego.">
+    <title>Me Interesa — Panter Studio</title>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
+    <link rel="icon" href="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    <script src="../assets/js/core/firebase-config.js"></script>
+    <style>
+        /* ===== ME INTERESA PAGE STYLES ===== */
+        .mi-hero {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+        }
+        .mi-hero-bg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.55);
+        }
+        .mi-hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(0deg, rgba(5,5,7,0.95) 0%, rgba(5,5,7,0.4) 60%, transparent 100%);
+        }
+        .mi-hero-content {
+            position: relative;
+            z-index: 2;
+            padding: 2.5rem;
+        }
+        .mi-hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            background: rgba(0,200,83,0.15);
+            border: 1px solid var(--color-primary);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--color-primary-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+        }
+        .mi-hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            line-height: 1.05;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, #fff 30%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .mi-hero-sub {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            margin: 0;
+            max-width: 560px;
+            line-height: 1.5;
+        }
+
+        /* Counter card */
+        .mi-counter-card {
+            background: var(--bg-glass-card);
+            border: var(--border-glass);
+            border-radius: 16px;
+            padding: 2.5rem;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        .mi-counter-card::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--color-primary-dark), var(--color-primary), var(--color-primary-light));
+            border-radius: 16px 16px 0 0;
+        }
+        .mi-counter-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+        .mi-counter-number {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 8vw, 5rem);
+            font-weight: 800;
+            color: var(--color-primary-light);
+            line-height: 1;
+            text-shadow: 0 0 40px rgba(0,200,83,0.3);
+            margin-bottom: 0.25rem;
+        }
+        .mi-counter-sub {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2.5rem;
+            font-weight: 500;
+        }
+
+        /* CTA Button */
+        .mi-btn-main {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            max-width: 400px;
+            padding: 1.1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 800;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+            letter-spacing: 0.3px;
+            position: relative;
+            overflow: hidden;
+        }
+        .mi-btn-main.not-voted {
+            background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+            color: #fff;
+            box-shadow: 0 8px 30px rgba(0,200,83,0.25);
+        }
+        .mi-btn-main.not-voted:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 40px rgba(0,200,83,0.35);
+        }
+        .mi-btn-main.voted {
+            background: rgba(0,200,83,0.08);
+            color: var(--color-primary-light);
+            border: 2px solid rgba(0,200,83,0.3);
+            cursor: default;
+        }
+        .mi-btn-main:active:not(.voted) {
+            transform: translateY(-1px) scale(0.99);
+        }
+        .mi-btn-icon {
+            font-size: 1.4rem;
+            line-height: 1;
+            transition: transform 0.3s;
+        }
+        .mi-btn-main.not-voted:hover .mi-btn-icon {
+            transform: scale(1.2) rotate(-10deg);
+        }
+
+        /* Pulse animation on button */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 8px 30px rgba(0,200,83,0.25); }
+            50% { box-shadow: 0 8px 50px rgba(0,200,83,0.5); }
+        }
+        .mi-btn-main.not-voted:not(:hover) {
+            animation: pulse-glow 3s infinite;
+        }
+
+        .mi-note {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 1rem;
+            margin-bottom: 0;
+        }
+
+        /* Info grid */
+        .mi-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .mi-info-card {
+            background: rgba(10,11,13,0.5);
+            border: var(--border-glass);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            transition: all 0.2s;
+        }
+        .mi-info-card:hover {
+            background: var(--bg-glass-card-hover);
+            border-color: rgba(255,255,255,0.07);
+            transform: translateY(-2px);
+        }
+        .mi-info-icon {
+            font-size: 1.75rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .mi-info-card h4 {
+            font-size: 0.95rem;
+            margin: 0 0 4px 0;
+            font-weight: 700;
+            font-family: var(--font-family);
+        }
+        .mi-info-card p {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* Status message */
+        #miStatus {
+            min-height: 24px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 0.75rem;
+            transition: all 0.3s;
+        }
+        #miStatus.success { color: var(--color-primary-light); }
+        #miStatus.error { color: #f87171; }
+        #miStatus.info { color: var(--text-muted); }
+
+        /* Celebration animation */
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.06); }
+            60% { transform: scale(0.98); }
+            100% { transform: scale(1); }
+        }
+        .celebrate {
+            animation: celebrate 0.5s var(--ease-elastic);
+        }
+    </style>
+</head>
+<body data-site-root=".." data-theme="dark" class="dark-mode">
+    <div id="tsparticles"></div>
+
+    <!-- NAV -->
+    <nav>
+        <div class="nav-left">
+            <a href="../index.html" class="nav-logo">
+                <img src="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" alt="Panter Studio">
+                <span>Panter Studio</span>
+            </a>
+        </div>
+        <div class="nav-middle">
+            <a href="../index.html">Inicio</a>
+            <div class="nav-dropdown">
+                <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">Novedades</button>
+                <div class="nav-dropdown-menu">
+                    <a href="actualizaciones.html">Actualizaciones</a>
+                    <a href="imagenes.html">Galeria</a>
+                </div>
+            </div>
+            <a href="minijuegos.html">Minijuegos</a>
+            <a href="donaciones.html">Apoyanos</a>
+            <a href="personal.html">Personal</a>
+            <a href="perfil.html">Mi Perfil</a>
+            <a href="meinteresa.html" class="active">Me Interesa</a>
+        </div>
+    </nav>
+
+    <div class="container" style="padding-top: 1rem;">
+
+        <!-- HERO -->
+        <div class="mi-hero">
+            <img src="https://media.discordapp.net/attachments/1475940325280321556/1500515683736223744/Nuestra_Tierra_Job_Simulator.png?ex=6a1da1a1&is=6a1c5021&hm=4b631211f8be9a6f6d14c6af439ddab1f3745a986980ed10f4d103fe59beeeb9&=&format=webp&quality=lossless&width=1730&height=508" 
+                 alt="Nuestra Tierra Job Simulator" 
+                 class="mi-hero-bg">
+            <div class="mi-hero-overlay"></div>
+            <div class="mi-hero-content">
+                <div class="mi-hero-tag">🎮 En Desarrollo</div>
+                <h1 class="mi-hero-title">Nuestra Tierra<br>Job Simulator</h1>
+                <p class="mi-hero-sub">
+                    El primer simulador de trabajos con identidad colombiana. Recorre el campo, atiende tu tienda y vive la cultura desde adentro.
+                </p>
+            </div>
+        </div>
+
+        <!-- MAIN LAYOUT -->
+        <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; max-width: 860px; margin: 0 auto;">
+
+            <!-- COUNTER & CTA CARD -->
+            <div class="mi-counter-card">
+                <p class="mi-counter-label">Personas interesadas</p>
+                <div class="mi-counter-number" id="miContador">—</div>
+                <p class="mi-counter-sub">personas ya dijeron <strong style="color:var(--color-primary-light);">¡Me Interesa!</strong></p>
+
+                <button id="miInteresaBtn" class="mi-btn-main not-voted" onclick="registrarInteres()">
+                    <span class="mi-btn-icon">💚</span>
+                    <span id="miBtnText">¡Me Interesa el Juego!</span>
+                </button>
+
+                <p id="miStatus" class="info">Cargando estado...</p>
+                <p class="mi-note">Anónimo · Sin correo · Sin spam · Solo un clic</p>
+            </div>
+
+            <!-- INFO CARDS -->
+            <div class="mi-info-grid">
+                <div class="mi-info-card">
+                    <span class="mi-info-icon">🎮</span>
+                    <div>
+                        <h4>¿Qué es este juego?</h4>
+                        <p>Un simulador móvil de trabajos y la vida cotidiana colombiana. Cultiva, atiende tu negocio y explora el mundo.</p>
+                    </div>
+                </div>
+                <div class="mi-info-card">
+                    <span class="mi-info-icon">🛠️</span>
+                    <div>
+                        <h4>¿En qué etapa está?</h4>
+                        <p>Desarrollo activo. El estudio construye la base del juego y comparte avances semanales en las novedades.</p>
+                    </div>
+                </div>
+                <div class="mi-info-card">
+                    <span class="mi-info-icon">💡</span>
+                    <div>
+                        <h4>¿Por qué marcar interés?</h4>
+                        <p>Cada clic le muestra al equipo cuántas personas esperan el juego. Ayuda a priorizar el desarrollo.</p>
+                    </div>
+                </div>
+                <div class="mi-info-card">
+                    <span class="mi-info-icon">📢</span>
+                    <div>
+                        <h4>¿Cómo me entero del lanzamiento?</h4>
+                        <p>Sigue las <a href="actualizaciones.html" style="color:var(--color-primary-light);">novedades</a> del estudio o únete al Discord para actualizaciones en tiempo real.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LINK TO UPDATES -->
+            <div style="text-align: center; padding: 1.5rem 0;">
+                <p style="color:var(--text-secondary); margin-bottom:1rem; font-size:0.95rem;">¿Quieres seguir el desarrollo de cerca?</p>
+                <a href="actualizaciones.html" class="btn" style="margin-right: 0.75rem;">Ver Novedades</a>
+                <a href="../index.html" class="btn btn-ghost">Volver al Inicio</a>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="../assets/js/core/script.js"></script>
+    <script>
+    // ===== ME INTERESA LOGIC =====
+    const LS_KEY_INTERES = 'panter_meinteresa_voted';
+    const COLLECTION_INTERES = 'interesados';
+    const DOC_COUNTER = 'contador';
+
+    // Check if user already voted (localStorage)
+    function yaVoto() {
+        return localStorage.getItem(LS_KEY_INTERES) === '1';
+    }
+
+    function marcarVotado() {
+        localStorage.setItem(LS_KEY_INTERES, '1');
+    }
+
+    function waitForFirebase(timeout = 8000) {
+        return new Promise((resolve) => {
+            if (window.db && window.fsDoc && window.getDoc && window.updateDoc) return resolve(true);
+            const start = Date.now();
+            const t = setInterval(() => {
+                if (window.db && window.fsDoc && window.getDoc && window.updateDoc) {
+                    clearInterval(t); resolve(true);
+                } else if (Date.now() - start > timeout) {
+                    clearInterval(t); resolve(false);
+                }
+            }, 100);
+        });
+    }
+
+    function setStatus(msg, type = 'info') {
+        const el = document.getElementById('miStatus');
+        if (!el) return;
+        el.textContent = msg;
+        el.className = type;
+    }
+
+    function setContador(n) {
+        const el = document.getElementById('miContador');
+        if (!el) return;
+        el.textContent = typeof n === 'number' ? n.toLocaleString() : n;
+    }
+
+    function setVotedState() {
+        const btn = document.getElementById('miInteresaBtn');
+        const txt = document.getElementById('miBtnText');
+        if (btn) {
+            btn.classList.remove('not-voted');
+            btn.classList.add('voted');
+            btn.setAttribute('disabled', 'true');
+        }
+        if (txt) txt.textContent = '¡Ya marcaste tu interés!';
+        setStatus('✅ ¡Gracias por tu apoyo! Ya estás en la lista.', 'success');
+    }
+
+    async function cargarContador() {
+        const ok = await waitForFirebase();
+        if (!ok) {
+            setContador('—');
+            setStatus('No se pudo conectar. Intenta de nuevo.', 'error');
+            return;
+        }
+        try {
+            const docRef = window.fsDoc(window.db, COLLECTION_INTERES, DOC_COUNTER);
+            const snap = await window.getDoc(docRef);
+            const total = snap.exists() ? (snap.data().total || 0) : 0;
+            setContador(total);
+
+            if (yaVoto()) {
+                setVotedState();
+            } else {
+                setStatus('¿Te interesa el juego? ¡Haz clic y cuéntanos!', 'info');
+            }
+        } catch (e) {
+            console.warn('Error cargando contador:', e);
+            setContador('—');
+            setStatus('Error al cargar datos. Intenta recargar la página.', 'error');
+        }
+    }
+
+    async function registrarInteres() {
+        if (yaVoto()) return;
+
+        const btn = document.getElementById('miInteresaBtn');
+        if (btn) btn.setAttribute('disabled', 'true');
+        setStatus('Registrando tu interés...', 'info');
+
+        const ok = await waitForFirebase();
+        if (!ok) {
+            setStatus('Sin conexión. Intenta de nuevo.', 'error');
+            if (btn) btn.removeAttribute('disabled');
+            return;
+        }
+
+        try {
+            const docRef = window.fsDoc(window.db, COLLECTION_INTERES, DOC_COUNTER);
+            const snap = await window.getDoc(docRef);
+            const currentTotal = snap.exists() ? (snap.data().total || 0) : 0;
+            const newTotal = currentTotal + 1;
+
+            await window.setDoc(docRef, {
+                total: newTotal,
+                updatedAt: new Date().toISOString()
+            }, { merge: true });
+
+            // Mark voted locally
+            marcarVotado();
+
+            // Update UI
+            setContador(newTotal);
+            const counterEl = document.getElementById('miContador');
+            if (counterEl) counterEl.classList.add('celebrate');
+            setTimeout(() => counterEl?.classList.remove('celebrate'), 600);
+
+            setVotedState();
+
+        } catch (e) {
+            console.error('Error registrando interés:', e);
+            setStatus('No se pudo registrar. Intenta de nuevo.', 'error');
+            if (btn) btn.removeAttribute('disabled');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', cargarContador);
+    </script>
+</body>
+</html>
