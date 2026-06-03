@@ -1420,3 +1420,58 @@ function preventScroll(side, isOpen) {
         }
     }
 }
+
+/* ========================================
+   HAMBURGER MENU — Mobile Nav Toggle
+   ======================================== */
+(function() {
+    function initHamburger() {
+        const nav = document.querySelector('nav');
+        const btn = document.querySelector('.nav-hamburger');
+        if (!nav || !btn) return;
+
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            nav.classList.toggle('nav-open');
+            const isOpen = nav.classList.contains('nav-open');
+            btn.setAttribute('aria-expanded', isOpen);
+            // Bloquear scroll body mientras el menú está abierto
+            document.body.style.overflow = isOpen ? 'hidden' : '';
+        });
+
+        // Cerrar al hacer clic fuera del nav
+        document.addEventListener('click', function(e) {
+            if (!nav.contains(e.target)) {
+                nav.classList.remove('nav-open');
+                btn.setAttribute('aria-expanded', 'false');
+                document.body.style.overflow = '';
+            }
+        });
+
+        // Cerrar al pulsar un link del menú móvil
+        const mobileLinks = nav.querySelectorAll('.nav-mobile-menu a');
+        mobileLinks.forEach(function(link) {
+            link.addEventListener('click', function() {
+                nav.classList.remove('nav-open');
+                btn.setAttribute('aria-expanded', 'false');
+                document.body.style.overflow = '';
+            });
+        });
+
+        // Cerrar con Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && nav.classList.contains('nav-open')) {
+                nav.classList.remove('nav-open');
+                btn.setAttribute('aria-expanded', 'false');
+                document.body.style.overflow = '';
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initHamburger);
+    } else {
+        initHamburger();
+    }
+})();
+

@@ -1428,37 +1428,273 @@ footer p { margin: 0; font-size: 0.9rem; color: var(--text-muted); }
   100% { background-position: 200% 0; }
 }
 
-/* Mobile Responsive */
+/* ========================================
+   HAMBURGER NAV — solo visible en móvil
+   ======================================== */
+.nav-hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+  padding: 0;
+}
+.nav-hamburger:hover { background: rgba(0,200,83,0.15); border-color: var(--color-primary); }
+.nav-hamburger span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  transition: all 0.3s var(--ease-elastic);
+  transform-origin: center;
+}
+/* Estado abierto — X */
+nav.nav-open .nav-hamburger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+nav.nav-open .nav-hamburger span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+nav.nav-open .nav-hamburger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Menú desplegable mobile */
+.nav-mobile-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: var(--bg-glass-strong);
+  border: var(--border-glass);
+  border-radius: 16px;
+  padding: 0.75rem;
+  flex-direction: column;
+  gap: 4px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+  animation: menuDrop 0.3s var(--ease-elastic);
+  z-index: 998;
+}
+@keyframes menuDrop {
+  from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+nav.nav-open .nav-mobile-menu { display: flex; }
+
+.nav-mobile-menu a,
+.nav-mobile-menu .nav-dropdown-toggle {
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-bottom: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.nav-mobile-menu a:hover,
+.nav-mobile-menu .nav-dropdown-toggle:hover {
+  background: rgba(0,200,83,0.08);
+  color: var(--color-primary-light);
+  padding-left: 1.25rem;
+}
+.nav-mobile-menu a.active { color: var(--color-primary-light); background: rgba(0,200,83,0.06); }
+.nav-mobile-menu hr {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  margin: 4px 0;
+}
+/* Sub-items del dropdown dentro del menú mobile */
+.nav-mobile-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 1rem;
+}
+.nav-mobile-sub a {
+  font-size: 0.88rem;
+  padding: 0.6rem 1rem;
+  color: var(--text-muted);
+}
+
+/* ========================================
+   MOBILE RESPONSIVE — ≤768px
+   ======================================== */
 @media (max-width: 768px) {
+
+  /* —— NAV —— */
   nav {
     top: 10px;
-    padding: 0.5rem 1rem;
-    margin: 0.5rem auto;
-    border-radius: 30px;
+    padding: 0.5rem 0.85rem;
+    margin: 0.5rem 0.75rem;
+    width: calc(100% - 1.5rem);
+    border-radius: 50px;
+    overflow: visible;
+    position: sticky;
   }
-  .nav-logo span {
-    display: none;
+  .nav-logo span { display: none; }
+  .nav-middle { display: none; }          /* Ocultar links de escritorio */
+  .nav-hamburger { display: flex; }       /* Mostrar botón hamburguesa */
+
+  /* —— TIPOGRAFÍA —— */
+  h1 { font-size: clamp(1.7rem, 8vw, 2.4rem); }
+  h2 { font-size: clamp(1.35rem, 6vw, 1.9rem); }
+  h3 { font-size: clamp(1.1rem, 5vw, 1.5rem); }
+  p  { font-size: 0.97rem; }
+
+  /* —— CONTENEDOR —— */
+  .container { padding: 1.25rem 0.85rem; }
+
+  /* —— CARDS —— */
+  .card:hover,
+  .hub-card:hover { transform: none; }  /* Sin hover-lift en táctil */
+
+  /* —— MODALES —— */
+  .promo-content, .auth-modal-card, .username-modal-card {
+    max-width: 100%;
+    margin: 0 0.5rem;
+    border-radius: 14px;
   }
-  .nav-middle {
-    gap: 0.5rem;
-    padding: 0;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  nav a, .nav-dropdown-toggle {
-    font-size: 0.85rem;
-    padding: 0.5rem;
-  }
-  
-  .container { padding: 2rem 1rem; }
-  
+
+  /* —— PROMO / PREREGISTRO —— */
   .promo-benefits { grid-template-columns: 1fr; }
-  .promo-countdown { grid-template-columns: 1fr; gap: 1rem; }
-  
-  .side-panel { width: 85vw; max-width: 320px; }
-  
-  .index-preregistro-highlight { padding: 1.5rem; }
+  .promo-countdown { grid-template-columns: repeat(2,1fr); gap: 0.75rem; }
+  .index-preregistro-highlight { padding: 1.25rem; }
+
+  /* —— SIDE PANELS —— */
+  .side-panel { width: 90vw; max-width: 340px; }
+
+  /* —— HUB LAUNCHER (index) —— */
+  .hub-status-bar {
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .hub-status-servers { gap: 0.75rem; flex-wrap: wrap; }
+  .server-status-item { font-size: 0.78rem; }
+  .hub-grid { grid-template-columns: 1fr; }
+  .hub-hero-premium { min-height: 220px; }
+  .hub-metrics { gap: 1rem; flex-wrap: wrap; }
+  .metric-item strong { font-size: 1.5rem; }
+  .studio-info-strip { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .hub-card { padding: 1.25rem; }
+  .hub-card-actions { flex-direction: column; }
+  .hub-card-actions .btn { width: 100%; text-align: center; }
+  .flex-row { gap: 1rem; }
+
+  /* —— DONACIONES —— */
+  .donation-tabs {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .donation-tab-btn {
+    font-size: 0.82rem;
+    padding: 8px 12px;
+    flex: 1 1 auto;
+    text-align: center;
+  }
+  .donation-panel.active {
+    grid-template-columns: 1fr;
+  }
+  .donation-center { padding: 1.1rem; }
+
+  /* —— PERFIL —— */
+  .profile-stats-grid,
+  .profile-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.75rem !important;
+  }
+  .profile-sidebar { width: 100% !important; }
+
+  /* —— PERSONAL / EQUIPO —— */
+  .grid-container {
+    grid-template-columns: 1fr !important;
+    gap: 1rem;
+  }
+
+  /* —— FOOTER —— */
+  footer {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+    padding: 1.25rem 1rem;
+  }
+  .footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+  .footer-links a { margin: 0; }
+
+  /* —— LEADERBOARD —— */
+  .leaderboard-row { font-size: 0.82rem; padding: 0.6rem 0.75rem; }
+
+  /* —— DONATIONS HERO —— */
+  .donations-hero { flex-direction: column; }
+  .donations-hero-visual { max-width: 100% !important; }
 }
+
+/* ========================================
+   MOBILE PEQUEÑO — ≤480px
+   ======================================== */
+@media (max-width: 480px) {
+
+  nav { margin: 0.4rem 0.5rem; width: calc(100% - 1rem); }
+  .container { padding: 1rem 0.65rem; }
+
+  h1 { font-size: clamp(1.5rem, 9vw, 2rem); }
+
+  /* HUB */
+  .hub-status-bar { display: none; }  /* Ocultar barra de estado en móvil muy pequeño */
+  .studio-info-strip { grid-template-columns: 1fr; }
+  .hub-right-col { gap: 1rem; }
+
+  /* PROMO countdown en 1 col */
+  .promo-countdown { grid-template-columns: 1fr; }
+
+  /* DONACIONES */
+  .donation-tab-btn { font-size: 0.78rem; padding: 7px 8px; }
+  .method-card { padding: 1rem; }
+  .method-icon { width: 40px !important; height: 40px !important; }
+
+  /* PERFIL stats 1 col */
+  .profile-stats-grid { grid-template-columns: 1fr !important; }
+
+  /* MINIJUEGOS terminal */
+  .ai-terminal-container { border-radius: 12px !important; }
+  .ai-header-panel { padding: 1rem !important; }
+  .ai-core-orb { width: 60px !important; height: 60px !important; }
+  .ai-console-feed { height: 220px !important; }
+  .ai-actions-panel { flex-direction: column !important; align-items: stretch !important; }
+  .ai-action-btn { font-size: 0.82rem !important; padding: 0.7rem !important; }
+
+  /* VIDEOS */
+  .vid-header h1 { font-size: 1.8rem; }
+  .vid-header { padding: 1.5rem 0.5rem 1rem; }
+
+  /* ME INTERESA */
+  .mi-hero { min-height: 180px; }
+  .mi-hero-content { padding: 1.25rem; }
+  .mi-hero-title { font-size: clamp(1.5rem, 8vw, 2rem); }
+
+  /* CARDS generales */
+  .card { padding: 1.1rem; }
+  .card:hover { transform: none; }
+
+  /* LEADERBOARD */
+  .leaderboard-row { font-size: 0.78rem; }
+
+  /* BOTONES */
+  .btn { padding: 0.65rem 1.25rem; font-size: 0.92rem; }
+}
+
 
 /* ========================================
    STUDIO HUB STYLES
