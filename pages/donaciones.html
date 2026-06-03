@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#1e70c8">
     <title>Apoyanos - Panter Studio</title>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
+    <meta name="google-adsense-account" content="ca-pub-8870488962578785">
     <link rel="icon" href="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
@@ -29,6 +30,7 @@
                 <div class="nav-dropdown-menu">
                     <a href="actualizaciones.html">Actualizaciones</a>
                     <a href="imagenes.html">Galeria</a>
+                    <a href="videos.html">Videos</a>
                 </div>
             </div>
             <a href="minijuegos.html">Minijuegos</a>
@@ -60,15 +62,380 @@
             </div>
         </section>
 
-        <!-- Botones rápidos de pago (debajo del hero) -->
-        <div class="payment-buttons payment-buttons--below" style="max-width:980px;margin:18px auto 0;">
-            <a id="paypalBtn" class="btn-payment" href="https://www.paypal.com/donate/?hosted_button_id=9LJTEL67CKJP4" target="_blank" rel="noopener noreferrer">Apoyar — PayPal</a>
-            <a id="nequiBtn" class="btn-payment" href="tel:+573102987151" title="Nequi: 3102987151" rel="noopener"><img class="btn-icon" src="https://logosenvector.com/logo/img/nequi-icono-37698.png" alt="Nequi"/>Apoyar — Nequi</a>
-            <a id="breveBtn" class="btn-payment" href="#" target="_blank" rel="noopener">Apoyar — Breve</a>
-            <a id="patreonBtn" class="btn-payment" href="#" target="_blank" rel="noopener">Apoyar — Patreon</a>
+         <!-- Centro de Donaciones Interactivo -->
+        <style>
+            /* Compactación del Hero */
+            .donations-hero {
+                padding: 1.2rem 1.8rem !important;
+                margin-top: 1rem !important;
+                min-height: auto !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                flex-wrap: wrap !important;
+                gap: 1.5rem !important;
+            }
+            .donations-hero-content {
+                flex: 1 !important;
+                min-width: 280px !important;
+            }
+            .donations-hero h1 {
+                font-size: 1.6rem !important;
+                margin: 0.2rem 0 !important;
+            }
+            .donations-hero p {
+                font-size: 0.88rem !important;
+                margin: 0 !important;
+                opacity: 0.8;
+                line-height: 1.4 !important;
+            }
+            .donations-badge {
+                font-size: 0.7rem !important;
+                padding: 2px 8px !important;
+                margin: 0 !important;
+            }
+            .donations-hero-visual {
+                margin: 0 !important;
+                padding: 0.8rem 1.2rem !important;
+                max-width: 320px !important;
+                width: 100% !important;
+                flex-shrink: 0 !important;
+            }
+            .donaciones-progress {
+                margin-bottom: 0.4rem !important;
+            }
+            .donations-goal-text {
+                font-size: 0.8rem !important;
+                margin: 0 !important;
+                text-align: center;
+            }
+            
+            .donation-center {
+                max-width: 980px;
+                margin: 1.5rem auto;
+                background: rgba(18, 22, 33, 0.85);
+                border: 1px solid rgba(0, 176, 255, 0.2);
+                border-radius: var(--border-radius-lg);
+                padding: 1.8rem;
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                box-shadow: 0 0 30px rgba(0, 176, 255, 0.1), inset 0 0 15px rgba(255, 255, 255, 0.02);
+            }
+            .donation-tabs {
+                display: flex;
+                gap: 10px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                padding-bottom: 1rem;
+                margin-bottom: 1.5rem;
+                overflow-x: auto;
+            }
+            .donation-tab-btn {
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                color: var(--text-muted);
+                padding: 10px 18px;
+                border-radius: var(--border-radius);
+                cursor: pointer;
+                font-weight: 600;
+                font-size: 0.9rem;
+                white-space: nowrap;
+                transition: all 0.3s ease;
+            }
+            .donation-tab-btn:hover {
+                background: rgba(0, 176, 255, 0.08);
+                border-color: rgba(0, 176, 255, 0.3);
+                color: #00b0ff;
+            }
+            .donation-tab-btn.active {
+                background: #00b0ff;
+                border-color: #00b0ff;
+                color: #fff;
+                box-shadow: 0 0 15px rgba(0, 176, 255, 0.4);
+            }
+            .donation-panel {
+                display: none;
+                animation: fadeIn 0.4s ease forwards;
+            }
+            .donation-panel.active {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 1.5rem;
+            }
+            .method-card {
+                background: rgba(10, 14, 23, 0.5);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: var(--border-radius);
+                padding: 1.5rem;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                position: relative;
+                overflow: hidden;
+                transition: all 0.3s ease;
+            }
+            .method-card:hover {
+                border-color: rgba(0, 176, 255, 0.3);
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            }
+            .method-icon {
+                width: 50px;
+                height: 50px;
+                object-fit: contain;
+                margin-bottom: 0.8rem;
+            }
+            .method-title {
+                font-size: 1.1rem;
+                font-weight: 700;
+                color: #fff;
+                margin-bottom: 0.5rem;
+            }
+            .method-desc {
+                font-size: 0.85rem;
+                color: var(--text-muted);
+                margin-bottom: 1.2rem;
+                line-height: 1.4;
+            }
+            .method-btn {
+                width: 100%;
+                background: #00b0ff;
+                color: #fff;
+                border: none;
+                padding: 10px;
+                border-radius: var(--border-radius);
+                font-weight: 600;
+                cursor: pointer;
+                text-decoration: none;
+                transition: background 0.2s;
+            }
+            .method-btn:hover {
+                background: #0081cb;
+            }
+            .method-btn.outline {
+                background: transparent;
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                color: #fff;
+            }
+            .method-btn.outline:hover {
+                border-color: #00b0ff;
+                background: rgba(0, 176, 255, 0.05);
+            }
+            /* QR modal / visualizer */
+            .qr-visualizer {
+                display: none;
+                flex-direction: column;
+                align-items: center;
+                margin-top: 1rem;
+                padding-top: 1rem;
+                border-top: 1px dashed rgba(255, 255, 255, 0.1);
+                width: 100%;
+                animation: slideDown 0.3s ease forwards;
+            }
+            .qr-visualizer.active {
+                display: flex;
+            }
+            .qr-img {
+                width: 140px;
+                height: 140px;
+                background: white;
+                padding: 5px;
+                border-radius: var(--border-radius);
+                margin-bottom: 0.8rem;
+                object-fit: contain;
+            }
+            .copy-field {
+                display: flex;
+                width: 100%;
+                gap: 5px;
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: var(--border-radius);
+                padding: 6px 10px;
+                font-size: 0.8rem;
+                color: #e2e8f0;
+                align-items: center;
+                justify-content: space-between;
+                font-family: monospace;
+            }
+            .copy-btn {
+                background: rgba(0, 176, 255, 0.1);
+                border: 1px solid rgba(0, 176, 255, 0.3);
+                color: #00b0ff;
+                padding: 3px 8px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.72rem;
+                font-weight: 600;
+                transition: all 0.2s;
+            }
+            .copy-btn:hover {
+                background: #00b0ff;
+                color: #fff;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(5px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes slideDown {
+                from { opacity: 0; transform: translateY(-5px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        </style>
+
+        <!-- ★ Anuncio superior (banner horizontal) -->
+        <div class="ad-slot-wrapper" id="ad-top">
+            <span class="ad-slot-label">Publicidad</span>
+            <div class="ad-slot-inner">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-8870488962578785"
+                     data-ad-slot="AUTO"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
         </div>
 
-        <!-- Contenido eliminado: solo se mantienen hero y botones rápidos de apoyo arriba -->
+        <div class="donation-center">
+            <div class="donation-tabs">
+                <button class="donation-tab-btn active" onclick="switchDonationTab('internacional')">🌎 Internacional</button>
+                <button class="donation-tab-btn" onclick="switchDonationTab('colombia')">🇨🇴 Colombia (Nequi/Daviplata)</button>
+            </div>
+
+            <!-- Tab: Internacional -->
+            <div id="panel-internacional" class="donation-panel active">
+                <div class="method-card">
+                    <img class="method-icon" src="https://logodownload.org/wp-content/uploads/2014/10/paypal-logo-0.png" alt="PayPal">
+                    <div class="method-title">PayPal</div>
+                    <div class="method-desc">Dona de forma rápida y segura utilizando tu cuenta de PayPal o tarjetas internacionales.</div>
+                    <a id="paypalBtn" class="method-btn" href="https://www.paypal.com/donate/?hosted_button_id=9LJTEL67CKJP4" target="_blank" rel="noopener noreferrer">Apoyar con PayPal</a>
+                </div>
+                <div class="method-card">
+                    <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2" class="method-icon" style="fill:#ff424d;"><g transform="matrix(.47407 0 0 .47407 .383 .422)"><clipPath id="prefix__a"><path d="M0 0h1080v1080H0z"/></clipPath><g clip-path="url(#prefix__a)"><path d="M1033.05 324.45c-.19-137.9-107.59-250.92-233.6-291.7-156.48-50.64-362.86-43.3-512.28 27.2-181.1 85.46-237.99 272.66-240.11 459.36-1.74 153.5 13.58 557.79 241.62 560.67 169.44 2.15 194.67-216.18 273.07-321.33 55.78-74.81 127.6-95.94 216.01-117.82 151.95-37.61 255.51-157.53 255.29-316.38z" fill-rule="nonzero"/></g></g></svg>
+                    <div class="method-title">Patreon</div>
+                    <div class="method-desc">Conviértete en patrocinador mensual y accede a roles especiales y actualizaciones exclusivas del desarrollo.</div>
+                    <a id="patreonBtn" class="method-btn outline" href="#" target="_blank" rel="noopener">Ir a Patreon</a>
+                </div>
+                <div class="method-card">
+                    <svg viewBox="25.060000000000002 195.72000000000006 496.54 157.63999999999996" xmlns="http://www.w3.org/2000/svg" class="method-icon"><linearGradient id="a" gradientUnits="userSpaceOnUse" x1="25.76" x2="514.24" y1="270" y2="270"><stop offset="0" stop-color="#00b6ed"/><stop offset="1" stop-color="#29a737"/></linearGradient><path d="M470.26 198.47c40.03 4.75 50.61 45.33 20.66 70.37 30.68 6.87 30.1 52.85 4.09 66.08-2.89 1.47-14.61 5.86-17.1 5.86H395c-2.71 0-4.78-2.44-4.33-5.12 3.85-22.9 13.8-44.85 18.91-67.6l-19.82-62.7c-.44-1.39-.22-2.91.6-4.12l.31-.46a4.833 4.833 0 0 1 4.32-2.1c24.07 1.56 52.09-2.96 75.27-.21zm-9.18 26.02c-10.52-1.28-25.58 0-36.72 0-.92 0-2.15 2.2-2.07 3.51.09 1.45 8.07 26.37 8.83 27.6 3.28 5.28 38.89 4.46 44.3-6.06 6.83-13.27-.96-23.43-14.34-25.05zm-36.73 90.28c7.86 1.99 35.56 0 45.91 0 3.77 0 12.55-6.46 13.85-10.63 8.95-28.84-35.16-23.4-51.36-22.3-1.45.86-9.46 26.19-10.07 29.76-.27 1.55.67 2.9 1.68 3.16zM103.01 198.47c28.16 2.58 46.94 19.79 38.93 49.64-2.74 10.2-8.04 13.95-15.21 20.73 31.87 7.39 29.9 55.37 2.12 67.18-2.57 1.09-14.74 4.76-16.66 4.76H28.03c-1.1 0-2.97-3.32-2.01-4.93l19.73-67.76-19.73-64.7c-.95-1.61.9-4.92 2.01-4.92 23.47 0 52.26-2.08 74.98 0zm-42.85 26.02c-1.47 1.17-1.77 1.28-1.71 3.16.08 2.55 8.75 28.93 10.06 29.8 14.42.66 44.86 6.11 45.86-15.48.35-7.68-6.71-17.49-14.43-17.49H60.15zm0 90.28c8.09 2.05 36.78 0 47.44 0 8.16 0 14.73-10.54 13.87-18.45-2.4-21.86-37.72-14.38-52.95-14.52-1.31.88-9.45 26.4-10.04 29.8-.27 1.56.67 2.91 1.68 3.16zM264.45 293.35c.46 21.38 29.03 29.22 44.94 18.15 3.68-2.56 4.02-7.4 9.34-7.24 1.78.05 19.93 5.2 20.55 6.07 4.39 6.21-13.01 22.02-18.31 25-32.04 18.03-80.9.59-85.43-38.32-5.3-45.48 19.56-79.85 67.75-72.33 20.51 3.2 40.73 21.84 40.73 43.42v22.95c0 1.26-1.03 2.3-2.3 2.3h-77.28zm52.02-22.96c-1.91-29.85-49.13-28.58-52.03 0z"/><path d="M187.17 224.49c4.79 1.48.59 21.42 3.06 21.44 1.68-9.36 13.18-21.44 22.95-21.44h32.13c.95 0 2.37 2.56 2.36 3.83-.03 3.23-5.82 5.07-11.44 13.1-2.44 3.48-4.9 11.82-7.63 13.79-6.49 4.7-24.65-2.98-34.04 6.51-1.06 1.07-4.96 4.13-5.1 9.43v67.33c0 1.26-1.03 2.3-2.3 2.3h-24.48c-1.26 0-2.3-1.03-2.3-2.3V226.77c0-.16 2.13-2.3 2.3-2.3 5.3 0 20.94-1.1 24.48 0zM357.25 257.64c0-.45.34-.81.79-.82 5.27-.07 34.86-.45 36.5.54 5.13 3.06 6.23 21.15-3.77 22.3-3.59.41-27.77.16-32.46.11-.44 0-.79-.36-.8-.8l-.27-21.33z"/><g fill="url(#a)"><path d="M470.26 198.47c40.03 4.75 50.61 45.33 20.66 70.37 30.68 6.87 30.1 52.85 4.09 66.08-2.89 1.47-14.61 5.86-17.1 5.86H395c-2.71 0-4.78-2.44-4.33-5.12 3.85-22.9 13.8-44.85 18.91-67.6l-19.82-62.7c-.44-1.39-.22-2.91.6-4.12l.31-.46a4.833 4.833 0 0 1 4.32-2.1c24.07 1.56 52.09-2.96 75.27-.21zm-9.18 26.02c-10.52-1.28-25.58 0-36.72 0-.92 0-2.15 2.2-2.07 3.51.09 1.45 8.07 26.37 8.83 27.6 3.28 5.28 38.89 4.46 44.3-6.06 6.83-13.27-.96-23.43-14.34-25.05zm-36.73 90.28c7.86 1.99 35.56 0 45.91 0 3.77 0 12.55-6.46 13.85-10.63 8.95-28.84-35.16-23.4-51.36-22.3-1.45.86-9.46 26.19-10.07 29.76-.27 1.55.67 2.9 1.68 3.16zM103.01 198.47c28.16 2.58 46.94 19.79 38.93 49.64-2.74 10.2-8.04 13.95-15.21 20.73 31.87 7.39 29.9 55.37 2.12 67.18-2.57 1.09-14.74 4.76-16.66 4.76H28.03c-1.1 0-2.97-3.32-2.01-4.93l19.73-67.76-19.73-64.7c-.95-1.61.9-4.92 2.01-4.92 23.47 0 52.26-2.08 74.98 0zm-42.85 26.02c-1.47 1.17-1.77 1.28-1.71 3.16.08 2.55 8.75 28.93 10.06 29.8 14.42.66 44.86 6.11 45.86-15.48.35-7.68-6.71-17.49-14.43-17.49H60.15zm0 90.28c8.09 2.05 36.78 0 47.44 0 8.16 0 14.73-10.54 13.87-18.45-2.4-21.86-37.72-14.38-52.95-14.52-1.31.88-9.45 26.4-10.04 29.8-.27 1.56.67 2.91 1.68 3.16zM264.45 293.35c.46 21.38 29.03 29.22 44.94 18.15 3.68-2.56 4.02-7.4 9.34-7.24 1.78.05 19.93 5.2 20.55 6.07 4.39 6.21-13.01 22.02-18.31 25-32.04 18.03-80.9.59-85.43-38.32-5.3-45.48 19.56-79.85 67.75-72.33 20.51 3.2 40.73 21.84 40.73 43.42v22.95c0 1.26-1.03 2.3-2.3 2.3h-77.28zm52.02-22.96c-1.91-29.85-49.13-28.58-52.03 0z"/><path d="M187.17 224.49c4.79 1.48.59 21.42 3.06 21.44 1.68-9.36 13.18-21.44 22.95-21.44h32.13c.95 0 2.37 2.56 2.36 3.83-.03 3.23-5.82 5.07-11.44 13.1-2.44 3.48-4.9 11.82-7.63 13.79-6.49 4.7-24.65-2.98-34.04 6.51-1.06 1.07-4.96 4.13-5.1 9.43v67.33c0 1.26-1.03 2.3-2.3 2.3h-24.48c-1.26 0-2.3-1.03-2.3-2.3V226.77c0-.16 2.13-2.3 2.3-2.3 5.3 0 20.94-1.1 24.48 0zM357.25 257.64c0-.45.34-.81.79-.82 5.27-.07 34.86-.45 36.5.54 5.13 3.06 6.23 21.15-3.77 22.3-3.59.41-27.77.16-32.46.11-.44 0-.79-.36-.8-.8l-.27-21.33z"/></g></svg>
+                    <div class="method-title">Ko-fi / Tarjeta</div>
+                    <div class="method-desc">Apoya con tu tarjeta de débito o crédito directamente sin necesidad de crear cuentas adicionales.</div>
+                    <a id="kofiBtn" class="method-btn outline" href="https://ko-fi.com/panterstudio" target="_blank" rel="noopener">Apoyar en Ko-fi</a>
+                </div>
+            </div>
+
+            <!-- Tab: Colombia -->
+            <div id="panel-colombia" class="donation-panel">
+                <div class="method-card">
+                    <svg viewBox="25.060000000000002 195.72000000000006 496.54 157.63999999999996" xmlns="http://www.w3.org/2000/svg" class="method-icon"><linearGradient id="a" gradientUnits="userSpaceOnUse" x1="25.76" x2="514.24" y1="270" y2="270"><stop offset="0" stop-color="#00b6ed"/><stop offset="1" stop-color="#29a737"/></linearGradient><path d="M470.26 198.47c40.03 4.75 50.61 45.33 20.66 70.37 30.68 6.87 30.1 52.85 4.09 66.08-2.89 1.47-14.61 5.86-17.1 5.86H395c-2.71 0-4.78-2.44-4.33-5.12 3.85-22.9 13.8-44.85 18.91-67.6l-19.82-62.7c-.44-1.39-.22-2.91.6-4.12l.31-.46a4.833 4.833 0 0 1 4.32-2.1c24.07 1.56 52.09-2.96 75.27-.21zm-9.18 26.02c-10.52-1.28-25.58 0-36.72 0-.92 0-2.15 2.2-2.07 3.51.09 1.45 8.07 26.37 8.83 27.6 3.28 5.28 38.89 4.46 44.3-6.06 6.83-13.27-.96-23.43-14.34-25.05zm-36.73 90.28c7.86 1.99 35.56 0 45.91 0 3.77 0 12.55-6.46 13.85-10.63 8.95-28.84-35.16-23.4-51.36-22.3-1.45.86-9.46 26.19-10.07 29.76-.27 1.55.67 2.9 1.68 3.16zM103.01 198.47c28.16 2.58 46.94 19.79 38.93 49.64-2.74 10.2-8.04 13.95-15.21 20.73 31.87 7.39 29.9 55.37 2.12 67.18-2.57 1.09-14.74 4.76-16.66 4.76H28.03c-1.1 0-2.97-3.32-2.01-4.93l19.73-67.76-19.73-64.7c-.95-1.61.9-4.92 2.01-4.92 23.47 0 52.26-2.08 74.98 0zm-42.85 26.02c-1.47 1.17-1.77 1.28-1.71 3.16.08 2.55 8.75 28.93 10.06 29.8 14.42.66 44.86 6.11 45.86-15.48.35-7.68-6.71-17.49-14.43-17.49H60.15zm0 90.28c8.09 2.05 36.78 0 47.44 0 8.16 0 14.73-10.54 13.87-18.45-2.4-21.86-37.72-14.38-52.95-14.52-1.31.88-9.45 26.4-10.04 29.8-.27 1.56.67 2.91 1.68 3.16zM264.45 293.35c.46 21.38 29.03 29.22 44.94 18.15 3.68-2.56 4.02-7.4 9.34-7.24 1.78.05 19.93 5.2 20.55 6.07 4.39 6.21-13.01 22.02-18.31 25-32.04 18.03-80.9.59-85.43-38.32-5.3-45.48 19.56-79.85 67.75-72.33 20.51 3.2 40.73 21.84 40.73 43.42v22.95c0 1.26-1.03 2.3-2.3 2.3h-77.28zm52.02-22.96c-1.91-29.85-49.13-28.58-52.03 0z"/><path d="M187.17 224.49c4.79 1.48.59 21.42 3.06 21.44 1.68-9.36 13.18-21.44 22.95-21.44h32.13c.95 0 2.37 2.56 2.36 3.83-.03 3.23-5.82 5.07-11.44 13.1-2.44 3.48-4.9 11.82-7.63 13.79-6.49 4.7-24.65-2.98-34.04 6.51-1.06 1.07-4.96 4.13-5.1 9.43v67.33c0 1.26-1.03 2.3-2.3 2.3h-24.48c-1.26 0-2.3-1.03-2.3-2.3V226.77c0-.16 2.13-2.3 2.3-2.3 5.3 0 20.94-1.1 24.48 0zM357.25 257.64c0-.45.34-.81.79-.82 5.27-.07 34.86-.45 36.5.54 5.13 3.06 6.23 21.15-3.77 22.3-3.59.41-27.77.16-32.46.11-.44 0-.79-.36-.8-.8l-.27-21.33z"/><g fill="url(#a)"><path d="M470.26 198.47c40.03 4.75 50.61 45.33 20.66 70.37 30.68 6.87 30.1 52.85 4.09 66.08-2.89 1.47-14.61 5.86-17.1 5.86H395c-2.71 0-4.78-2.44-4.33-5.12 3.85-22.9 13.8-44.85 18.91-67.6l-19.82-62.7c-.44-1.39-.22-2.91.6-4.12l.31-.46a4.833 4.833 0 0 1 4.32-2.1c24.07 1.56 52.09-2.96 75.27-.21zm-9.18 26.02c-10.52-1.28-25.58 0-36.72 0-.92 0-2.15 2.2-2.07 3.51.09 1.45 8.07 26.37 8.83 27.6 3.28 5.28 38.89 4.46 44.3-6.06 6.83-13.27-.96-23.43-14.34-25.05zm-36.73 90.28c7.86 1.99 35.56 0 45.91 0 3.77 0 12.55-6.46 13.85-10.63 8.95-28.84-35.16-23.4-51.36-22.3-1.45.86-9.46 26.19-10.07 29.76-.27 1.55.67 2.9 1.68 3.16zM103.01 198.47c28.16 2.58 46.94 19.79 38.93 49.64-2.74 10.2-8.04 13.95-15.21 20.73 31.87 7.39 29.9 55.37 2.12 67.18-2.57 1.09-14.74 4.76-16.66 4.76H28.03c-1.1 0-2.97-3.32-2.01-4.93l19.73-67.76-19.73-64.7c-.95-1.61.9-4.92 2.01-4.92 23.47 0 52.26-2.08 74.98 0zm-42.85 26.02c-1.47 1.17-1.77 1.28-1.71 3.16.08 2.55 8.75 28.93 10.06 29.8 14.42.66 44.86 6.11 45.86-15.48.35-7.68-6.71-17.49-14.43-17.49H60.15zm0 90.28c8.09 2.05 36.78 0 47.44 0 8.16 0 14.73-10.54 13.87-18.45-2.4-21.86-37.72-14.38-52.95-14.52-1.31.88-9.45 26.4-10.04 29.8-.27 1.56.67 2.91 1.68 3.16zM264.45 293.35c.46 21.38 29.03 29.22 44.94 18.15 3.68-2.56 4.02-7.4 9.34-7.24 1.78.05 19.93 5.2 20.55 6.07 4.39 6.21-13.01 22.02-18.31 25-32.04 18.03-80.9.59-85.43-38.32-5.3-45.48 19.56-79.85 67.75-72.33 20.51 3.2 40.73 21.84 40.73 43.42v22.95c0 1.26-1.03 2.3-2.3 2.3h-77.28zm52.02-22.96c-1.91-29.85-49.13-28.58-52.03 0z"/><path d="M187.17 224.49c4.79 1.48.59 21.42 3.06 21.44 1.68-9.36 13.18-21.44 22.95-21.44h32.13c.95 0 2.37 2.56 2.36 3.83-.03 3.23-5.82 5.07-11.44 13.1-2.44 3.48-4.9 11.82-7.63 13.79-6.49 4.7-24.65-2.98-34.04 6.51-1.06 1.07-4.96 4.13-5.1 9.43v67.33c0 1.26-1.03 2.3-2.3 2.3h-24.48c-1.26 0-2.3-1.03-2.3-2.3V226.77c0-.16 2.13-2.3 2.3-2.3 5.3 0 20.94-1.1 24.48 0zM357.25 257.64c0-.45.34-.81.79-.82 5.27-.07 34.86-.45 36.5.54 5.13 3.06 6.23 21.15-3.77 22.3-3.59.41-27.77.16-32.46.11-.44 0-.79-.36-.8-.8l-.27-21.33z"/></g></svg>
+                    <div class="method-title">Nequi</div>
+                    <div class="method-desc">Transfiere directamente desde tu Nequi en Colombia. Abre el código QR o copia el número.</div>
+                    <button class="method-btn" onclick="toggleQRVisualizer('nequi-qr')">Ver QR o Celular</button>
+                    
+                    <div id="nequi-qr" class="qr-visualizer">
+                        <img class="qr-img" src="../recursos/nequi_qr.png" alt="Nequi QR" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://nequi.com.co';">
+                        <div class="copy-field">
+                            <span>Cel: 3102987151</span>
+                            <button class="copy-btn" onclick="copyToClipboard('3102987151', this)">Copiar</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="method-card">
+                    <svg height="1291" viewBox="5.88 9.87 291 157.1" width="2500" xmlns="http://www.w3.org/2000/svg" class="method-icon"><path d="m153.43 60.84c.42-3.45 1.29-6.41 2.48-9.25 2.61-6.21 5.48-12.32 8.04-18.56 3.42-8.35 9.89-11.83 18.52-12.17 6.29-.25 12.44.37 18.34 2.7.79.31 1.26.38 1.66-.55.42-.96 1.09-1.81 1.62-2.73.87-1.54 1-3.06.08-4.7-1.14-2.05-.68-3.81 1.09-4.77 1.74-.94 4.01-.42 4.93 1.14 1.03 1.76.57 3.8-1.3 4.96-.93.58-1.46 1.26-1.55 2.33-.03.39-.12.8-.27 1.16-1.35 3.25-1.68 6.2-.08 9.77 1.89 4.22.64 8.89-.66 13.24-5.51 18.45-14.87 34.74-27.79 48.99-2.55 2.81-5.58 4.92-9.58 5.04-.79.03-1.14.6-1.58 1.06-5.6 5.88-11.84 10.78-19.79 13.15-4.89 1.46-9.92 1.65-14.96 1.69-2.74.02-5.04-1.05-6.79-3.18-6.47-7.86-11.01-16.64-12.7-26.77-.19-1.14-.57-2.29-.28-3.69 3.74 3.02 7.53 5.76 11.8 7.74 5.6 2.61 11.36 4.18 17.5 2.19 2.51-.81 5.07-1.75 6.17-4.55.34-.87.78-.43 1.18-.14 1.72 1.24 3.42 2.51 5.13 3.77 2.35 1.74 4.79 3.3 7.56 4.34 4.67 1.76 8.72.75 12.2-2.7 4.36-4.32 7.71-9.44 10.99-14.58 6.57-10.3 11.83-21.26 15.92-32.77.94-2.64 1.28-5.4 1.24-8.21-.06-3.49-1.72-5.88-4.86-7.3-4.59-2.08-9.45-2.44-14.39-2.17-1.06.06-2.11.21-3.16.34-6.14.72-10.51 3.8-13.28 9.42-3.31 6.71-6.23 13.58-9.38 20.35-.93 1.99-1.97 3.87-4.05 5.41zm-11.73 33.67c-.27-.02-.53-.08-.78-.05-1.08.15-2.3 1.4-3.13-.49-.07-.15-1.51.03-1.22 1.01.33 1.13-.1 1.72-.93 2.32-1.12.81-1.64 1.89-1.08 3.28.54 1.36 1.75 1.25 2.86 1.21 1.65-.05 3.29-.24 4.94-.26.74-.01 1.72-.06 1.89 1 .14.92-.32 1.67-1.08 2.2-.95.66-2.09.78-3.17 1.07-.64.17-1.65.06-1.33 1.19.33 1.15 1.14.4 1.74.28 1.37-.26 2.78-1.51 4.01.37.22.34.87-.1 1.22-.37.48-.36.14-.69-.18-.94-1.11-.88-.51-1.62.23-2.27.96-.84 1.3-1.83.81-3.01-.54-1.31-1.65-1.58-2.94-1.5-1.71.1-3.43.23-5.14.19-.61-.01-1.63.18-1.72-.88-.06-.78.38-1.41 1.11-1.73.66-.29 1.37-.48 2.04-.75.84-.34 1.76-.64 1.85-1.87zm-130.35 60.54c0-2.12-.02-4.24.01-6.37.02-1.45.18-2.93 2.13-2.94s2.13 1.41 2.13 2.91c0 3.85.03 7.69-.02 11.54-.01 1.04.25 1.52 1.36 1.67 4.76.64 9.39.38 13.77-1.76 5.01-2.45 8.06-9.62 1.67-14.83-3.6-2.94-7.85-3.66-12.24-4.01-3.66-.29-7.27.11-10.8 1.11-1.24.35-2.47.55-2.99-.95-.49-1.44.34-2.45 1.62-2.98 2.8-1.17 5.78-1.37 8.77-1.44 5.42-.13 10.73.51 15.7 2.8 4.51 2.08 7.79 5.27 8.62 10.4.91 5.66-2.36 11.32-8.11 13.88-5.82 2.6-11.93 2.89-18.12 1.84-2.46-.42-3.31-1.59-3.49-4.11-.01-.13-.01-.27-.01-.4v-6.36zm50.69-18.06c1.96-.01 3.44 1 4.82 2.16 2.77 2.33 4.82 5.26 6.75 8.28 2.78 4.36 5.11 8.94 7.14 13.69.26.6.47 1.24.58 1.88.26 1.55-.25 2.8-1.81 3.31-1.65.54-2.43-.57-2.97-1.89-2.39-5.82-5.15-11.45-8.68-16.68-1.11-1.65-2.33-3.21-3.95-4.42-1.22-.91-2.39-.94-3.64-.05-1.71 1.21-2.95 2.85-4.1 4.55-3.44 5.05-6.13 10.49-8.47 16.11-.6 1.45-1.19 2.97-3.24 2.36-1.61-.48-2.29-2.34-1.48-4.31 3.04-7.36 6.66-14.41 11.87-20.52 1.9-2.22 4.02-4.22 7.18-4.47z" fill="#e01a19"/><path d="m236.69 162.37c.06 1.82-.51 2.97-2.05 3.29-1.56.32-2.25-.76-2.77-2-2.55-6.12-5.41-12.09-9.29-17.51-.27-.38-.55-.75-.85-1.1-3.53-4.19-5.37-4.2-8.73.09-4.23 5.43-7.17 11.58-9.87 17.86-.18.43-.33.87-.54 1.28-.5.95-1.22 1.59-2.38 1.42-1.1-.16-1.77-.88-2.1-1.88-.25-.77-.23-1.57.09-2.34 3.2-7.6 6.9-14.91 12.36-21.2.13-.15.26-.3.4-.44 4.57-4.76 8.09-4.86 12.65-.06 5.89 6.21 9.54 13.8 12.86 21.56.18.4.19.89.22 1.03zm21.42-.23c.01-.04.08-.65.31-1.18 2.86-6.8 6.25-13.31 10.83-19.14 1.27-1.62 2.68-3.13 4.41-4.28 2.69-1.79 4.9-1.75 7.56.08 2.22 1.53 3.92 3.57 5.48 5.72 3.9 5.4 6.95 11.27 9.55 17.38.23.54.44 1.13.49 1.7.14 1.56-.43 2.8-2.02 3.21-1.54.39-2.28-.64-2.81-1.91-2.14-5.22-4.62-10.27-7.59-15.06-1.19-1.92-2.48-3.77-4.14-5.32-2.07-1.93-3.41-1.98-5.49-.03-2.59 2.44-4.36 5.49-6.11 8.54-2.21 3.86-4.11 7.86-5.79 11.98-.49 1.19-1.25 2.14-2.69 1.82-1.51-.33-2.13-1.44-1.99-3.51z" fill="#8c8a8e"/><path d="m96.41 166.45c-1.62-.04-2.9-.83-4.08-1.85-2.19-1.88-3.85-4.2-5.38-6.61-3.19-5.05-5.75-10.42-7.93-15.97-.36-.93-.74-1.88-.44-2.9.32-1.06.88-1.95 2.13-2.08 1.22-.12 1.79.66 2.17 1.66 1.33 3.53 2.81 7 4.5 10.37 1.68 3.38 3.41 6.74 5.88 9.64 2.37 2.78 3.94 2.84 6.27.06 3.75-4.47 6.09-9.75 8.44-15.01.75-1.69 1.37-3.44 2.09-5.15.41-.97 1.03-1.76 2.24-1.56 1.2.19 1.81 1.02 2.03 2.15.14.72.09 1.45-.18 2.15-2.8 7.17-6.06 14.11-10.76 20.28-1.01 1.32-2.15 2.53-3.5 3.52-1.03.78-2.15 1.33-3.48 1.3z" fill="#e01a19"/><path d="m141.71 140.39c-3.67.13-6.88.42-10.05 1.28-1.4.38-3.35.9-3.84-1.17-.44-1.87 1.33-2.36 2.76-2.71 9-2.23 17.84-2.23 26.39 1.9 1.21.58 2.29 1.35 3.24 2.28 2.45 2.39 2.39 5.27-.11 7.64-1.44 1.37-3.25 2.03-5.1 2.56-3.61 1.03-7.3 1.28-11.03 1.16-1.15-.04-2.18-.4-2.17-1.78.01-1.41 1.06-1.68 2.21-1.7 2.85-.05 5.7-.2 8.5-.81.58-.13 1.16-.29 1.71-.52 1.26-.53 2.38-1.22 2.46-2.81s-1.11-2.19-2.23-2.73c-4.16-2.05-8.62-2.56-12.74-2.59zm30.65 5.85c0 1.86.03 3.71-.01 5.57-.08 4.09 1.81 6.93 5.63 8.43 4.08 1.6 8.3 1.5 12.54.96 1.53-.19 2.99-.22 3.24 1.6.24 1.78-1.12 2.31-2.65 2.51-3.83.51-7.65.58-11.48 0-7.72-1.18-12.29-6.16-12.57-13.99-.14-3.9-.05-7.82-.01-11.73.02-2.06 1.09-3.26 2.72-3.24 1.62.02 2.57 1.2 2.6 3.33.02 2.19 0 4.38-.01 6.56zm78.27 6.13c0 3.45.02 6.9-.01 10.34-.01 2.06-.79 3.05-2.36 2.98-1.87-.09-2.47-1.36-2.47-2.98-.02-6.83-.07-13.66.03-20.49.02-1.61-.47-2.05-2.01-1.96-2.12.12-4.24.05-6.37 0-1.26-.03-2.58-.38-2.68-1.82-.1-1.39 1.21-1.75 2.34-1.98.64-.13 1.31-.16 1.97-.16 6.17-.01 12.34-.01 18.51 0 .6 0 1.21-.02 1.78.11 1.1.25 2.4.5 2.29 1.99-.1 1.36-1.25 1.81-2.45 1.85-1.99.08-3.98.05-5.97.05-2.62.01-2.62 0-2.62 2.53.02 3.18.02 6.36.02 9.54z" fill="#8c8a8e"/><path d="m124.36 151.99c0 3.77.02 7.54-.01 11.31-.01 2.17-.83 3.19-2.42 3.14-1.55-.05-2.42-1.16-2.42-3.23-.01-7.61-.01-15.22 0-22.83 0-2.09.86-3.23 2.38-3.27 1.57-.05 2.46 1.12 2.47 3.36.02 3.84 0 7.68 0 11.52zm54.76-100.86c1.91.17 3.82.3 5.73.53.46.06 1.15.07 1.22.79.07.64-.25 1.15-.74 1.54-1 .81-2.26.89-3.41.83-3.77-.18-7.54-.45-11.17-1.62-3.77-1.21-4.96-3.1-4.14-6.91 1.07-4.99 4.15-8.95 7.05-12.97.5-.7 1.17-.46 1.78-.12.74.41.67.98.37 1.69-1.09 2.65-2.9 4.89-4.26 7.38-.73 1.33-1.55 2.62-1.96 4.1-.6 2.19.09 3.6 2.24 4.32 2.37.79 4.84.57 7.29.44z" fill="#e01a19"/><path d="m139.38 155.61c0 2.52-.02 5.04.01 7.56.01 1.62-.72 2.51-2.36 2.53-1.67.03-2.65-.72-2.65-2.48 0-5.11.02-10.21-.01-15.32-.01-1.73.85-2.69 2.48-2.69 1.61 0 2.57.89 2.55 2.64-.04 2.58-.02 5.17-.02 7.76z" fill="#8c8a8e"/><path d="m141.7 94.51c-.08 1.22-1 1.53-1.85 1.88-.67.27-1.38.46-2.04.75-.72.32-1.17.95-1.11 1.73.09 1.07 1.11.87 1.72.88 1.71.04 3.43-.09 5.14-.19 1.29-.07 2.4.19 2.94 1.5.48 1.18.15 2.17-.81 3.01-.74.65-1.34 1.39-.23 2.27.32.25.65.58.18.94-.35.26-1 .7-1.22.37-1.23-1.88-2.64-.63-4.01-.37-.6.12-1.41.87-1.74-.28-.32-1.13.69-1.02 1.33-1.19 1.08-.29 2.22-.41 3.17-1.07.76-.53 1.23-1.27 1.08-2.2-.17-1.06-1.15-1.01-1.89-1-1.65.01-3.29.21-4.94.26-1.11.03-2.32.14-2.86-1.21-.56-1.39-.04-2.47 1.08-3.28.83-.6 1.26-1.19.93-2.32-.28-.98 1.16-1.16 1.22-1.01.84 1.88 2.06.63 3.13.49.25-.04.5.02.78.04z" fill="#fff"/></svg>
+                    <div class="method-title">Daviplata</div>
+                    <div class="method-desc">Envía tu donación usando Daviplata. Abre el código QR para escanearlo o copia el número.</div>
+                    <button class="method-btn outline" onclick="toggleQRVisualizer('daviplata-qr')">Ver QR o Celular</button>
+                    
+                    <div id="daviplata-qr" class="qr-visualizer">
+                        <img class="qr-img" src="../recursos/breve_qr.png" alt="Daviplata QR" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://daviplata.com';">
+                        <div class="copy-field">
+                            <span>Cel: 3102987151</span>
+                            <button class="copy-btn" onclick="copyToClipboard('3102987151', this)">Copiar</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="method-card">
+                    <svg viewBox="25.060000000000002 195.72000000000006 496.54 157.63999999999996" xmlns="http://www.w3.org/2000/svg" class="method-icon"><linearGradient id="a" gradientUnits="userSpaceOnUse" x1="25.76" x2="514.24" y1="270" y2="270"><stop offset="0" stop-color="#00b6ed"/><stop offset="1" stop-color="#29a737"/></linearGradient><path d="M470.26 198.47c40.03 4.75 50.61 45.33 20.66 70.37 30.68 6.87 30.1 52.85 4.09 66.08-2.89 1.47-14.61 5.86-17.1 5.86H395c-2.71 0-4.78-2.44-4.33-5.12 3.85-22.9 13.8-44.85 18.91-67.6l-19.82-62.7c-.44-1.39-.22-2.91.6-4.12l.31-.46a4.833 4.833 0 0 1 4.32-2.1c24.07 1.56 52.09-2.96 75.27-.21zm-9.18 26.02c-10.52-1.28-25.58 0-36.72 0-.92 0-2.15 2.2-2.07 3.51.09 1.45 8.07 26.37 8.83 27.6 3.28 5.28 38.89 4.46 44.3-6.06 6.83-13.27-.96-23.43-14.34-25.05zm-36.73 90.28c7.86 1.99 35.56 0 45.91 0 3.77 0 12.55-6.46 13.85-10.63 8.95-28.84-35.16-23.4-51.36-22.3-1.45.86-9.46 26.19-10.07 29.76-.27 1.55.67 2.9 1.68 3.16zM103.01 198.47c28.16 2.58 46.94 19.79 38.93 49.64-2.74 10.2-8.04 13.95-15.21 20.73 31.87 7.39 29.9 55.37 2.12 67.18-2.57 1.09-14.74 4.76-16.66 4.76H28.03c-1.1 0-2.97-3.32-2.01-4.93l19.73-67.76-19.73-64.7c-.95-1.61.9-4.92 2.01-4.92 23.47 0 52.26-2.08 74.98 0zm-42.85 26.02c-1.47 1.17-1.77 1.28-1.71 3.16.08 2.55 8.75 28.93 10.06 29.8 14.42.66 44.86 6.11 45.86-15.48.35-7.68-6.71-17.49-14.43-17.49H60.15zm0 90.28c8.09 2.05 36.78 0 47.44 0 8.16 0 14.73-10.54 13.87-18.45-2.4-21.86-37.72-14.38-52.95-14.52-1.31.88-9.45 26.4-10.04 29.8-.27 1.56.67 2.91 1.68 3.16zM264.45 293.35c.46 21.38 29.03 29.22 44.94 18.15 3.68-2.56 4.02-7.4 9.34-7.24 1.78.05 19.93 5.2 20.55 6.07 4.39 6.21-13.01 22.02-18.31 25-32.04 18.03-80.9.59-85.43-38.32-5.3-45.48 19.56-79.85 67.75-72.33 20.51 3.2 40.73 21.84 40.73 43.42v22.95c0 1.26-1.03 2.3-2.3 2.3h-77.28zm52.02-22.96c-1.91-29.85-49.13-28.58-52.03 0z"/><path d="M187.17 224.49c4.79 1.48.59 21.42 3.06 21.44 1.68-9.36 13.18-21.44 22.95-21.44h32.13c.95 0 2.37 2.56 2.36 3.83-.03 3.23-5.82 5.07-11.44 13.1-2.44 3.48-4.9 11.82-7.63 13.79-6.49 4.7-24.65-2.98-34.04 6.51-1.06 1.07-4.96 4.13-5.1 9.43v67.33c0 1.26-1.03 2.3-2.3 2.3h-24.48c-1.26 0-2.3-1.03-2.3-2.3V226.77c0-.16 2.13-2.3 2.3-2.3 5.3 0 20.94-1.1 24.48 0zM357.25 257.64c0-.45.34-.81.79-.82 5.27-.07 34.86-.45 36.5.54 5.13 3.06 6.23 21.15-3.77 22.3-3.59.41-27.77.16-32.46.11-.44 0-.79-.36-.8-.8l-.27-21.33z"/><g fill="url(#a)"><path d="M470.26 198.47c40.03 4.75 50.61 45.33 20.66 70.37 30.68 6.87 30.1 52.85 4.09 66.08-2.89 1.47-14.61 5.86-17.1 5.86H395c-2.71 0-4.78-2.44-4.33-5.12 3.85-22.9 13.8-44.85 18.91-67.6l-19.82-62.7c-.44-1.39-.22-2.91.6-4.12l.31-.46a4.833 4.833 0 0 1 4.32-2.1c24.07 1.56 52.09-2.96 75.27-.21zm-9.18 26.02c-10.52-1.28-25.58 0-36.72 0-.92 0-2.15 2.2-2.07 3.51.09 1.45 8.07 26.37 8.83 27.6 3.28 5.28 38.89 4.46 44.3-6.06 6.83-13.27-.96-23.43-14.34-25.05zm-36.73 90.28c7.86 1.99 35.56 0 45.91 0 3.77 0 12.55-6.46 13.85-10.63 8.95-28.84-35.16-23.4-51.36-22.3-1.45.86-9.46 26.19-10.07 29.76-.27 1.55.67 2.9 1.68 3.16zM103.01 198.47c28.16 2.58 46.94 19.79 38.93 49.64-2.74 10.2-8.04 13.95-15.21 20.73 31.87 7.39 29.9 55.37 2.12 67.18-2.57 1.09-14.74 4.76-16.66 4.76H28.03c-1.1 0-2.97-3.32-2.01-4.93l19.73-67.76-19.73-64.7c-.95-1.61.9-4.92 2.01-4.92 23.47 0 52.26-2.08 74.98 0zm-42.85 26.02c-1.47 1.17-1.77 1.28-1.71 3.16.08 2.55 8.75 28.93 10.06 29.8 14.42.66 44.86 6.11 45.86-15.48.35-7.68-6.71-17.49-14.43-17.49H60.15zm0 90.28c8.09 2.05 36.78 0 47.44 0 8.16 0 14.73-10.54 13.87-18.45-2.4-21.86-37.72-14.38-52.95-14.52-1.31.88-9.45 26.4-10.04 29.8-.27 1.56.67 2.91 1.68 3.16zM264.45 293.35c.46 21.38 29.03 29.22 44.94 18.15 3.68-2.56 4.02-7.4 9.34-7.24 1.78.05 19.93 5.2 20.55 6.07 4.39 6.21-13.01 22.02-18.31 25-32.04 18.03-80.9.59-85.43-38.32-5.3-45.48 19.56-79.85 67.75-72.33 20.51 3.2 40.73 21.84 40.73 43.42v22.95c0 1.26-1.03 2.3-2.3 2.3h-77.28zm52.02-22.96c-1.91-29.85-49.13-28.58-52.03 0z"/><path d="M187.17 224.49c4.79 1.48.59 21.42 3.06 21.44 1.68-9.36 13.18-21.44 22.95-21.44h32.13c.95 0 2.37 2.56 2.36 3.83-.03 3.23-5.82 5.07-11.44 13.1-2.44 3.48-4.9 11.82-7.63 13.79-6.49 4.7-24.65-2.98-34.04 6.51-1.06 1.07-4.96 4.13-5.1 9.43v67.33c0 1.26-1.03 2.3-2.3 2.3h-24.48c-1.26 0-2.3-1.03-2.3-2.3V226.77c0-.16 2.13-2.3 2.3-2.3 5.3 0 20.94-1.1 24.48 0zM357.25 257.64c0-.45.34-.81.79-.82 5.27-.07 34.86-.45 36.5.54 5.13 3.06 6.23 21.15-3.77 22.3-3.59.41-27.77.16-32.46.11-.44 0-.79-.36-.8-.8l-.27-21.33z"/></g></svg>
+                    <div class="method-title">Breve / Transfiya</div>
+                    <div class="method-desc">Envía transferencias interbancarias directas usando Transfiya con nuestro número de celular.</div>
+                    <button class="method-btn outline" onclick="toggleQRVisualizer('breve-qr')">Ver QR o Celular</button>
+                    
+                    <div id="breve-qr" class="qr-visualizer">
+                        <img class="qr-img" src="../recursos/breve_qr.png" alt="Breve QR" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://breve.com';">
+                        <div class="copy-field">
+                            <span>Cel: 3102987151</span>
+                            <button class="copy-btn" onclick="copyToClipboard('3102987151', this)">Copiar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ★ Anuncio inferior (banner horizontal) -->
+        <div class="ad-slot-wrapper" id="ad-bottom">
+            <span class="ad-slot-label">Publicidad</span>
+            <div class="ad-slot-inner">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-8870488962578785"
+                     data-ad-slot="AUTO"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>
+
+        <script>
+            function switchDonationTab(tabId) {
+                // Desactivar todos los botones
+                document.querySelectorAll('.donation-tab-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                // Desactivar todos los paneles
+                document.querySelectorAll('.donation-panel').forEach(panel => {
+                    panel.classList.remove('active');
+                });
+                
+                // Activar seleccionado
+                const activeBtn = Array.from(document.querySelectorAll('.donation-tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
+                if (activeBtn) activeBtn.classList.add('active');
+                
+                const activePanel = document.getElementById('panel-' + tabId);
+                if (activePanel) activePanel.classList.add('active');
+            }
+
+            function toggleQRVisualizer(id) {
+                const el = document.getElementById(id);
+                if (el) {
+                    const isCurrentlyActive = el.classList.contains('active');
+                    // Cerrar todos los visualizadores abiertos
+                    document.querySelectorAll('.qr-visualizer').forEach(v => v.classList.remove('active'));
+                    // Alternar seleccionado
+                    if (!isCurrentlyActive) {
+                        el.classList.add('active');
+                    }
+                }
+            }
+
+            function copyToClipboard(text, btnElement) {
+                navigator.clipboard.writeText(text).then(() => {
+                    const originalText = btnElement.textContent;
+                    btnElement.textContent = '¡Copiado!';
+                    btnElement.style.background = '#00c853';
+                    btnElement.style.borderColor = '#00c853';
+                    btnElement.style.color = '#fff';
+                    setTimeout(() => {
+                        btnElement.textContent = originalText;
+                        btnElement.style.background = '';
+                        btnElement.style.borderColor = '';
+                        btnElement.style.color = '';
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Error al copiar:', err);
+                });
+            }
+        </script>
     </div>
 
     <footer>
@@ -79,4 +446,3 @@
     <script src="../assets/js/pages/donaciones.js"></script>
 </body>
 </html>
-

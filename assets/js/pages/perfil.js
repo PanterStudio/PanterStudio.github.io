@@ -4,9 +4,9 @@
 
   /* ── Constantes ── */
   const REFERRAL_STORAGE_KEY  = 'panterPendingReferralCode';
-  const COINS_PER_EXCHANGE    = 5000;
+  const COINS_PER_EXCHANGE    = 50000;
   const EMERALDS_PER_EXCHANGE = 50;
-  const MIN_REDEEM_COINS      = 5000;
+  const MIN_REDEEM_COINS      = 50000;
   const REDEEM_COLLECTION     = 'coin_redemptions';
 
   const ROLE_LABELS = {
@@ -40,11 +40,16 @@
   const profileCoins                  = $('profileCoins');
   const profileCoinsDollars           = $('profileCoinsDollars');
   const profileLevel                  = $('profileLevel');
+  const profileLevelText              = $('profileLevelText');
+  const profileLevelBarFill           = $('profileLevelBarFill');
   const profileRole                   = $('profileRole');
+  const profileRoleText               = $('profileRoleText');
   const profileJoinDate               = $('profileJoinDate');
   const profileBadges                 = $('profileBadges');
+  const profileBadgesSidebar          = $('profileBadgesSidebar');
   const profileUid                    = $('profileUid');
   const profileStreak                 = $('profileStreak');
+  const profileStreakText             = $('profileStreakText');
   const profileVerificationStatusSide = $('profileVerificationStatusSide');
   const profileProviderSide           = $('profileProviderSide');
   const profilePreregisterStatusSide  = $('profilePreregisterStatusSide');
@@ -57,10 +62,11 @@
   const profileSponsorSummary         = $('profileSponsorSummary');
   const profileAdminTools             = $('profileAdminTools');
   const profileGamesPlayedToday       = $('profileGamesPlayedToday');
-  const gameLevel                     = $('gameLevel');
-  const gameJobsCompleted             = $('gameJobsCompleted');
-  const gameHoursPlayed               = $('gameHoursPlayed');
+  const gameUsername                  = $('gameUsername');
+  const gameConductorId               = $('gameConductorId');
   const gameCoins                     = $('gameCoins');
+  const gameEmeralds                  = $('gameEmeralds');
+  const gameLastSync                  = $('gameLastSync');
 
   const sponsorBadge     = $('sponsorBadge');
   const sponsorLevelName = $('sponsorLevelName');
@@ -96,6 +102,7 @@
   /* ── Estado ── */
   let currentUser     = null;
   let currentUserData = null;
+  let currentConductorData = null;
   let settings        = {};
   let supportSnapshot = { total: 0, count: 0, sponsor: null };
   let preregSnapshot  = { registered: false, data: null };
@@ -193,36 +200,40 @@
   }
 
   async function getUserData(uid) {
-    try { const s = await window.getDoc(window.fsDoc(window.db, 'users', uid)); return s.exists() ? s.data() || null : null; } catch { return null; }
+    try { const s = await window.getDoc(window.fsDoc(window.db, 'conductores', uid)); return s.exists() ? s.data() || null : null; } catch { return null; }
+  }
+
+  async function getConductorData(uid) {
+    return getUserData(uid);
   }
 
   async function createUserDoc(user, extras = {}) {
     const now  = new Date().toISOString();
     const name = extras.displayName || user.displayName || user.email?.split('@')[0] || 'Miembro';
     const payload = {
-      displayName: name, username: extras.username || name, email: user.email || '',
+      displayName: name, nombre_usuario: name, username: extras.username || name, email: user.email || '',
       avatar: '😊', bio: '', favoriteProject: 'Nuestra Tierra Job Simulator',
       country: 'Colombia', coins: 0, emeralds: 0, level: 'visitor',
       referralCode: generateReferralCode(user.uid), referredBy: null,
       referralCount: 0, referralCoins: 0, streak: 0, lastDaily: null,
       role: extras.role || 'viewer', createdAt: now, updatedAt: now
     };
-    await window.setDoc(window.fsDoc(window.db, 'users', user.uid), payload, { merge: true });
+    await window.setDoc(window.fsDoc(window.db, 'conductores', user.uid), payload, { merge: true });
     return payload;
   }
 
   async function updateUserData(uid, data) {
-    await window.setDoc(window.fsDoc(window.db, 'users', uid), { ...data, updatedAt: new Date().toISOString() }, { merge: true });
+    await window.setDoc(window.fsDoc(window.db, 'conductores', uid), { ...data, updatedAt: new Date().toISOString() }, { merge: true });
   }
 
   async function addActivity(uid, type, description, coins = 0) {
-    try { await window.addDoc(window.collection(window.db, 'users', uid, 'activity'), { type, description, coins, createdAt: new Date().toISOString() }); }
+    try { await window.addDoc(window.collection(window.db, 'conductores', uid, 'activity'), { type, description, coins, createdAt: new Date().toISOString() }); }
     catch (e) { console.warn('Activity:', e); }
   }
 
   async function getActivity(uid, limit = 8) {
     try {
-      const s = await window.getDocs(window.collection(window.db, 'users', uid, 'activity'));
+      const s = await window.getDocs(window.collection(window.db, 'conductores', uid, 'activity'));
       return s.docs.map(d => ({ id: d.id, ...d.data() }))
         .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
         .slice(0, limit);
@@ -231,7 +242,7 @@
 
   async function isUsernameTaken(username, excludeUid = '') {
     if (!window.db || !window.getDocs || !window.query || !window.collection || !window.where) return false;
-    const s = await window.getDocs(window.query(window.collection(window.db, 'users'), window.where('username', '==', username)));
+    const s = await window.getDocs(window.query(window.collection(window.db, 'conductores'), window.where('username', '==', username)));
     return s.docs.some(d => d.id !== excludeUid);
   }
 
@@ -250,7 +261,7 @@
     if (!refCode) return { applied: false, reason: 'not-provided', reward: 0 };
     const n = normalizeCode(refCode); if (!n) return { applied: false, reason: 'not-provided', reward: 0 };
     try {
-      const snap = await window.getDocs(window.collection(window.db, 'users'));
+      const snap = await window.getDocs(window.collection(window.db, 'conductores'));
       const referrer = snap.docs.find(d => String(d.data()?.referralCode || '').toUpperCase() === n);
       if (!referrer) return { applied: false, reason: 'invalid', reward: 0 };
       if (referrer.id === newUid) return { applied: false, reason: 'self', reward: 0 };
@@ -340,14 +351,15 @@
   function badge(label, tone) { return `<span class="bp${tone ? ' ' + tone : ''}">${esc(label)}</span>`; }
 
   function renderBadges(data, user) {
-    if (!profileBadges) return;
     const b = [];
     if (user?.emailVerified)                       b.push(badge('✓ Email', 'g'));
     if (preregSnapshot.registered)                 b.push(badge('Pre-reg', 'b'));
     if (Number(data.referralCount || 0) > 0)       b.push(badge(data.referralCount + ' refs', 'pu'));
     if (supportSnapshot.total > 0)                 b.push(badge('Patroc.', 'go'));
     if (SPECIAL_ACCESS_ROLES.has(String(data.role || '').toLowerCase())) b.push(badge(roleLabel(data.role), 'r'));
-    profileBadges.innerHTML = b.join('');
+    const badgesHtml = b.join('');
+    if (profileBadges) profileBadges.innerHTML = badgesHtml;
+    if (profileBadgesSidebar) profileBadgesSidebar.innerHTML = badgesHtml;
   }
 
   function renderSponsorLevel(level) {
@@ -375,7 +387,7 @@
   function renderProfile() {
     if (!currentUser || !currentUserData) return;
     const d    = currentUserData;
-    const name = String(d.displayName || d.username || currentUser.displayName || currentUser.email?.split('@')[0] || 'Miembro');
+    const name = String(d.nombre_usuario || d.displayName || d.username || currentUser.displayName || currentUser.email?.split('@')[0] || 'Miembro');
     const role = String(d.role || 'viewer').toLowerCase();
     const set  = (el, v) => { if (el) el.textContent = v; };
 
@@ -386,15 +398,27 @@
         profileAvatarLetter.textContent = d.avatar || '😊';
       }
     }
+    const levelStr = String(d.rango || d.nivel || getLevelName(d.level));
     set(profileDisplayName, name);
     set(profileEmail, currentUser.email || '');
-    set(profileUid, 'UID: ' + String(currentUser.uid || '').slice(0, 12));
+    set(profileUid, 'ID Juego: ' + String(d.id_usuario || d.uid || currentUser.uid || '').slice(0, 12).toUpperCase());
     set(profileCoins, String(Number(d.coins || 0)));
     if (profileCoinsDollars) profileCoinsDollars.textContent = formatEmeralds(d.emeralds || 0);
-    set(profileLevel, getLevelName(d.level));
+    set(profileLevel, levelStr);
+    set(profileLevelText, levelStr);
     set(profileRole, roleLabel(role));
+    set(profileRoleText, roleLabel(role));
     set(profileJoinDate, formatDate(d.createdAt));
     set(profileStreak, String(Number(d.streak || 0)));
+    set(profileStreakText, String(Number(d.streak || 0)));
+    
+    // Set level progress bar fill based on streak
+    const streak = Number(d.streak || 0);
+    const progressPercent = Math.min(100, Math.max(5, (streak % 7 || (streak > 0 ? 7 : 0)) / 7 * 100));
+    if (profileLevelBarFill) {
+      profileLevelBarFill.style.width = `${progressPercent}%`;
+    }
+
     set(profileVerificationStatusSide, currentUser.emailVerified ? 'Sí' : 'No');
     set(profileProviderSide, providerLabel(currentUser));
     set(profilePreregisterStatusSide, preregSnapshot.registered ? 'Activo' : 'Pendiente');
@@ -414,10 +438,24 @@
     set(profileGamesPlayedToday, `${gp}/3`);
 
     // Sincronización de estadísticas del juego
-    set(gameLevel, d.gameStats?.level !== undefined ? String(d.gameStats.level) : '—');
-    set(gameJobsCompleted, d.gameStats?.jobsCompleted !== undefined ? String(d.gameStats.jobsCompleted) : '—');
-    set(gameHoursPlayed, d.gameStats?.hoursPlayed !== undefined ? `${Number(d.gameStats.hoursPlayed).toFixed(1)}h` : '—');
-    set(gameCoins, d.gameStats?.coins !== undefined ? String(d.gameStats.coins) : '—');
+    if (currentConductorData) {
+      set(gameUsername, currentConductorData.nombre_usuario || '—');
+      set(gameConductorId, currentConductorData.id_usuario || '—');
+      set(gameCoins, currentConductorData.dinero !== undefined ? String(currentConductorData.dinero) : '—');
+      set(gameEmeralds, currentConductorData.esmeraldas !== undefined ? String(currentConductorData.esmeraldas) : '—');
+      if (currentConductorData.last_sync_unix) {
+        const syncDate = new Date(currentConductorData.last_sync_unix * 1000);
+        set(gameLastSync, syncDate.toLocaleString());
+      } else {
+        set(gameLastSync, '—');
+      }
+    } else {
+      set(gameUsername, '—');
+      set(gameConductorId, '—');
+      set(gameCoins, '—');
+      set(gameEmeralds, '—');
+      set(gameLastSync, '—');
+    }
 
     renderSponsorLevel(d.level);
     renderStreakDays(d.streak || 0);
@@ -493,15 +531,16 @@
   /* ── Auth state handler ── */
   async function handleAuthStateChange(user) {
     currentUser = user;
-    if (!user) { currentUserData = null; showAuth(); return; }
+    if (!user) { currentUserData = null; currentConductorData = null; showAuth(); return; }
     currentUserData = await getUserData(user.uid);
+    currentConductorData = await getConductorData(user.uid);
     if (!currentUserData) {
       try {
         currentUserData = await createUserDoc(user, { displayName: user.displayName || user.email?.split('@')[0] || 'Miembro' });
       } catch (err) {
         if (isPermDenied(err)) {
           currentUserData = { displayName: user.displayName || user.email?.split('@')[0] || 'Miembro', username: user.email?.split('@')[0] || 'Miembro', email: user.email || '', avatar: '😊', bio: '', favoriteProject: '', country: '', coins: 0, emeralds: 0, level: 'visitor', referralCode: generateReferralCode(user.uid), referredBy: null, referralCount: 0, referralCoins: 0, streak: 0, lastDaily: null, role: 'viewer', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-          setAuthMessage('Firestore bloqueó el perfil (permission-denied). Ajusta reglas de "users".', 'error');
+          setAuthMessage('Firestore bloqueó el perfil (permission-denied). Ajusta reglas de "conductores".', 'error');
         } else throw err;
       }
     }
@@ -581,8 +620,8 @@
       setAuthMessage('Conectando con Google...');
       const provider = new window.GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
-      setAuthMessage('Redirigiendo a Google...');
-      await window.signInWithRedirect(window.auth, provider);
+      setAuthMessage('Iniciando sesión...');
+      await window.signInWithPopup(window.auth, provider);
     } catch (err) {
       console.error('Google Sign-In Error:', err);
       setAuthMessage(getAuthError(err), 'error');
@@ -633,6 +672,132 @@
     if (redeemMessage) { redeemMessage.textContent = r.msg; redeemMessage.className = r.ok ? 'success' : 'error'; }
     if (r.ok) { if (redeemAmountInput) redeemAmountInput.value = ''; renderProfile(); await loadDashboardData(); }
     redeemBtn.disabled = false;
+  });
+
+  /* Transferencia de Fondos (PanterPay) */
+  $('transferBtn')?.addEventListener('click', async () => {
+    if (!currentUser) return;
+    const btn = $('transferBtn');
+    const msg = $('transferMessage');
+    const destInput = $('transferDest');
+    const amountInput = $('transferAmount');
+    const currencySelect = $('transferCurrency');
+
+    if (!btn || !msg || !destInput || !amountInput || !currencySelect) return;
+
+    const dest = String(destInput.value).trim();
+    const amount = parseInt(amountInput.value, 10);
+    const currency = currencySelect.value;
+
+    if (!dest) { msg.textContent = 'Ingresa el UID o Código de Conductor.'; msg.className = 'error'; return; }
+    if (isNaN(amount) || amount <= 0) { msg.textContent = 'Ingresa una cantidad válida mayor a 0.'; msg.className = 'error'; return; }
+
+    btn.disabled = true;
+    const userCoins = Number(currentUserData?.coins || 0);
+    msg.textContent = 'Buscando destinatario...';
+    msg.className = '';
+
+    try {
+      let recipientUid = null;
+      let recipientName = 'Otro Conductor';
+
+      // 1. Comprobar si dest es UID completo en conductores
+      if (dest.length > 15) {
+        const rSnap = await window.getDoc(window.fsDoc(window.db, 'conductores', dest));
+        if (rSnap.exists()) {
+          recipientUid = dest;
+          recipientName = rSnap.data().displayName || rSnap.data().username || 'Conductor';
+        }
+      }
+
+      // 2. Si no se encuentra, buscar en conductores por id_usuario (Código corto)
+      if (!recipientUid) {
+        const q = window.query(window.collection(window.db, 'conductores'), window.where('id_usuario', '==', dest.toUpperCase()));
+        const qSnap = await window.getDocs(q);
+        if (!qSnap.empty) {
+          const docData = qSnap.docs[0];
+          recipientUid = docData.id;
+          recipientName = docData.data().nombre_usuario || 'Conductor';
+        }
+      }
+
+      if (!recipientUid) {
+        msg.textContent = 'Destinatario no encontrado.';
+        msg.className = 'error';
+        btn.disabled = false;
+        return;
+      }
+
+      if (recipientUid === currentUser.uid) {
+        msg.textContent = 'No puedes transferirte fondos a ti mismo.';
+        msg.className = 'error';
+        btn.disabled = false;
+        return;
+      }
+
+      // 3. Procesar Transferencia según moneda
+      const senderName = currentUser.displayName || currentUser.email.split('@')[0] || 'Conductor';
+
+      if (currency === 'coins') {
+        // Transferencia de Monedas Web
+        if (userCoins < amount) {
+          msg.textContent = 'No tienes suficientes monedas web.';
+          msg.className = 'error';
+          btn.disabled = false;
+          return;
+        }
+
+        // Realizar actualizaciones
+        const senderDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+        const recDocRef = window.fsDoc(window.db, 'conductores', recipientUid);
+
+        // Descontar al emisor
+        const newSenderCoins = userCoins - amount;
+        await window.updateDoc(senderDocRef, { coins: newSenderCoins });
+
+        // Sumar al receptor
+        const recSnap = await window.getDoc(recDocRef);
+        if (recSnap.exists()) {
+          const currentRecCoins = recSnap.data().coins || 0;
+          await window.updateDoc(recDocRef, { coins: currentRecCoins + amount });
+        } else {
+          // Si no tiene registro en la web aún
+          await window.setDoc(recDocRef, {
+            uid: recipientUid,
+            displayName: recipientName,
+            coins: amount,
+            emeralds: 0
+          });
+        }
+
+        // Historial emisor
+        await addActivity(currentUser.uid, 'transfer_sent', `PanterPay: Envío de ${amount} 🪙 a ${recipientName}`, -amount);
+        // Historial receptor
+        await addActivity(recipientUid, 'transfer_received', `PanterPay: Recibiste ${amount} 🪙 de ${senderName}`, amount);
+
+        msg.textContent = `¡Transferencia de ${amount} 🪙 a ${recipientName} realizada!`;
+        msg.className = 'success';
+
+      } else {
+        msg.textContent = 'Moneda no permitida para transferencias.';
+        msg.className = 'error';
+        btn.disabled = false;
+        return;
+      }
+
+      // Limpiar y Recargar datos
+      destInput.value = '';
+      amountInput.value = '';
+      renderProfile();
+      await loadDashboardData();
+
+    } catch (err) {
+      console.error(err);
+      msg.textContent = 'Error al procesar la transferencia.';
+      msg.className = 'error';
+    }
+
+    btn.disabled = false;
   });
 
   /* Editar perfil */
@@ -693,8 +858,10 @@
   editProfileForm?.addEventListener('submit', async e => {
     e.preventDefault(); if (!currentUser) return;
     const avatarImgUrl = String(editProfileImageInput?.value || '').trim();
+    const nameVal = String($('editDisplayName')?.value || '').trim();
     const p = {
-      displayName:     String($('editDisplayName')?.value     || '').trim(),
+      displayName:     nameVal,
+      nombre_usuario:  nameVal,
       bio:             String($('editBio')?.value             || '').trim(),
       favoriteProject: String($('editFavoriteProject')?.value || '').trim(),
       country:         String($('editCountry')?.value         || '').trim(),
@@ -702,7 +869,7 @@
       avatarImg:       avatarImgUrl || ''
     };
     await updateUserData(currentUser.uid, p);
-    await window.updateProfile(currentUser, { displayName: p.displayName });
+    await window.updateProfile(currentUser, { displayName: nameVal });
     await addActivity(currentUser.uid, 'profile', 'Perfil actualizado', 0);
     currentUserData = { ...currentUserData, ...p };
     renderProfile();

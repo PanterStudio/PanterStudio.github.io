@@ -9,6 +9,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="description" content="Panter Studio Game Dev — Hub oficial del estudio indie. Sigue el desarrollo de Nuestra Tierra Job Simulator, gana monedas en minijuegos y únete a la comunidad fundadora.">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
+    <meta name="google-adsense-account" content="ca-pub-8870488962578785">
     <title>Inicio — Panter Studio</title>
     <link rel="icon" href="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" type="image/png">
     <link rel="apple-touch-icon" href="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&">
@@ -205,6 +206,7 @@
                 <div class="nav-dropdown-menu">
                     <a href="pages/actualizaciones.html">Actualizaciones</a>
                     <a href="pages/imagenes.html">Galeria</a>
+                    <a href="pages/videos.html">Videos</a>
                 </div>
             </div>
             <a href="pages/minijuegos.html">Minijuegos</a>
@@ -214,14 +216,7 @@
             <a href="pages/meinteresa.html">Me Interesa</a>
             <a href="pages/admin/admin.html" id="adminNavLink" hidden>Panel Admin</a>
         </div>
-        <div class="nav-right">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <span data-auth-signal-dot class="auth-signal-dot auth-signal-guest" aria-hidden="true"></span>
-                <span data-auth-signal-text class="auth-signal-text" style="font-size:0.8rem; font-weight:600; color:var(--text-secondary);">Invitado</span>
-                <button data-open-auth-modal class="btn btn-sm" style="padding:0.45rem 1rem; font-size:0.82rem;">Mi Perfil</button>
-                <button data-auth-logout class="btn btn-ghost btn-sm" style="padding:0.45rem 1rem; font-size:0.82rem;" hidden>Salir</button>
-            </div>
-        </div>
+        <div class="nav-right"></div>
     </nav>
 
     <!-- MAIN CONTAINER -->
@@ -361,7 +356,7 @@
                             <strong class="coins-highlight" id="hubCoins">—</strong>
                         </div>
                         <div class="account-stat-box">
-                            <span>Esmeraldas</span>
+                            <span><img src="recursos/iconos/esmeralda.png" alt="Esmeralda" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;">Esmeraldas</span>
                             <strong class="emeralds-highlight" id="hubEmeralds">—</strong>
                         </div>
                         <div class="account-stat-box">
@@ -381,7 +376,7 @@
                 <!-- TOP MILLONARIOS / LEADERBOARD -->
                 <div class="leaderboard-card">
                     <div class="leaderboard-header">
-                        <h3>🏆 Top Millonarios</h3>
+                        <h3><img src="recursos/iconos/trofeo.png" alt="Trofeo" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;">Top Millonarios</h3>
                         <span>COMUNIDAD</span>
                     </div>
                     <div class="leaderboard-list" id="homeLeaderboard">
@@ -412,14 +407,14 @@
                 </div>
 
                 <!-- MINIJUEGO RÁPIDO -->
-                <div class="minijuego-quick">
+                <div class="minijuego-quick" style="border-color: rgba(0, 176, 255, 0.2); background: linear-gradient(135deg, rgba(0, 176, 255, 0.06), rgba(0, 176, 255, 0.02));">
                     <div class="minijuego-quick-header">
-                        <span style="font-size:1.5rem;">☕</span>
-                        <h3>La Tiendita Express</h3>
+                        <span style="font-size:1.5rem;">🤖</span>
+                        <h3>Módulo Panter Core AI</h3>
                     </div>
-                    <p>Atiende clientes con productos típicos colombianos. Gana hasta 3 recompensas diarias y sube en el ranking de monedas.</p>
+                    <p>Accede a la terminal interactiva. Realiza misiones de transporte, calcula el riesgo de básculas y gana monedas web para canjear por esmeraldas.</p>
                     <a href="pages/minijuegos.html" class="btn btn-sm" style="width:100%; justify-content:center;">
-                        Jugar Ahora →
+                        Acceder a la Terminal →
                     </a>
                 </div>
 
@@ -458,6 +453,20 @@
         </div>
     </div>
 
+        <!-- ★ Anuncio inferior -->
+        <div class="ad-slot-wrapper ad-horizontal" id="ad-bottom">
+            <span class="ad-slot-label">Publicidad</span>
+            <div class="ad-slot-inner">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-8870488962578785"
+                     data-ad-slot="AUTO"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>
+
     <footer>
         <p>© 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
         <div class="footer-links">
@@ -478,10 +487,10 @@
     (function() {
         function waitForFirebase(timeout = 8000) {
             return new Promise((resolve) => {
-                if (window.auth && window.db && window.fsCollection) return resolve(true);
+                if (window.auth && window.db && window.collection) return resolve(true);
                 const start = Date.now();
                 const t = setInterval(() => {
-                    if (window.auth && window.db && window.fsCollection) {
+                    if (window.auth && window.db && window.collection) {
                         clearInterval(t); resolve(true);
                     } else if (Date.now() - start > timeout) {
                         clearInterval(t); resolve(false);
@@ -493,25 +502,42 @@
         // -- Leaderboard --
         async function loadLeaderboard() {
             const ok = await waitForFirebase();
-            if (!ok || !window.fsQuery || !window.fsOrderBy || !window.fsLimit || !window.getDocs) return;
+            if (!ok || !window.collection || !window.getDocs) return;
             try {
-                const q = window.fsQuery(
-                    window.fsCollection(window.db, 'users'),
-                    window.fsOrderBy('coins', 'desc'),
-                    window.fsLimit(5)
-                );
-                const snap = await window.getDocs(q);
+                const snap = await window.getDocs(window.collection(window.db, 'conductores'));
                 const lb = document.getElementById('homeLeaderboard');
                 if (!lb) return;
+                
+                const list = [];
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    list.push({
+                        nombre_usuario: data.nombre_usuario,
+                        username: data.username,
+                        displayName: data.displayName,
+                        coins: Number(data.coins || 0)
+                    });
+                });
+                
+                // Ordenar por monedas descendente
+                list.sort((a, b) => b.coins - a.coins);
+                
+                // Mostrar los mejores 5
+                const top5 = list.slice(0, 5);
+                
                 lb.innerHTML = '';
-                const medals = ['🥇','🥈','🥉'];
+                const medals = [
+                    '<img src="recursos/iconos/1er-premio.png" alt="🥇" style="width:20px;height:20px;vertical-align:middle;">',
+                    '<img src="recursos/iconos/segundo-lugar.png" alt="🥈" style="width:20px;height:20px;vertical-align:middle;">',
+                    '<img src="recursos/iconos/3er-lugar.png" alt="🥉" style="width:20px;height:20px;vertical-align:middle;">'
+                ];
                 const topClasses = ['top-1','top-2','top-3'];
                 let rank = 0;
-                snap.forEach(doc => {
+                
+                top5.forEach(d => {
                     rank++;
-                    const d = doc.data();
-                    const username = d.username || d.displayName || 'Anónimo';
-                    const coins = d.coins || 0;
+                    const username = d.nombre_usuario || d.username || d.displayName || 'Anónimo';
+                    const coins = d.coins;
                     const cls = rank <= 3 ? topClasses[rank-1] : '';
                     const medal = rank <= 3 ? medals[rank-1] : rank;
                     lb.innerHTML += `
@@ -521,10 +547,10 @@
                                 <span class="leaderboard-avatar">👤</span>
                                 <span class="leaderboard-name">${username}</span>
                             </div>
-                            <div class="leaderboard-value">🪙 ${coins.toLocaleString()}</div>
+                            <div class="leaderboard-value"><img src="recursos/iconos/moneda.png" alt="Moneda" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"> ${coins.toLocaleString()}</div>
                         </div>`;
                 });
-                if (snap.empty) {
+                if (top5.length === 0) {
                     lb.innerHTML = '<p style="text-align:center;font-size:0.8rem;color:var(--text-muted);padding:1rem;">¡Sé el primero en la tabla!</p>';
                 }
             } catch(e) { console.warn('Leaderboard error:', e); }
@@ -533,12 +559,12 @@
         // -- Devlogs --
         async function loadDevlogs() {
             const ok = await waitForFirebase();
-            if (!ok || !window.fsQuery || !window.fsOrderBy || !window.fsLimit || !window.getDocs) return;
+            if (!ok || !window.query || !window.orderBy || !window.limit || !window.getDocs) return;
             try {
-                const q = window.fsQuery(
-                    window.fsCollection(window.db, 'devlogs'),
-                    window.fsOrderBy('createdAt', 'desc'),
-                    window.fsLimit(3)
+                const q = window.query(
+                    window.collection(window.db, 'devlogs'),
+                    window.orderBy('createdAt', 'desc'),
+                    window.limit(3)
                 );
                 const snap = await window.getDocs(q);
                 const grid = document.getElementById('homeDevlogsGrid');
@@ -575,18 +601,21 @@
             }
         }
 
-        // -- Pre-registro stats --
         async function loadPreregStats() {
-            // Load "Me Interesa" counter
+            // Load "Me Interesa" counter real-time
             const ok = await waitForFirebase();
-            if (!ok || !window.getDoc || !window.fsDoc) return;
+            if (!ok || !window.query || !window.collection || !window.where || !window.onSnapshot) return;
             try {
-                const snap = await window.getDoc(window.fsDoc(window.db, 'interesados', 'contador'));
-                const total = snap.exists() ? (snap.data().total || 0) : 0;
-                const statEl = document.getElementById('statRegistrados');
-                const widgetEl = document.getElementById('widgetInteresados');
-                if (statEl) statEl.textContent = total.toLocaleString();
-                if (widgetEl) widgetEl.textContent = total.toLocaleString();
+                const q = window.query(window.collection(window.db, 'conductores'), window.where('interested', '==', true));
+                window.onSnapshot(q, (snap) => {
+                    const total = snap.size;
+                    const statEl = document.getElementById('statRegistrados');
+                    const widgetEl = document.getElementById('widgetInteresados');
+                    if (statEl) statEl.textContent = total.toLocaleString();
+                    if (widgetEl) widgetEl.textContent = total.toLocaleString();
+                }, (e) => {
+                    console.warn('Interesados listener error:', e);
+                });
             } catch(e) { console.warn('Interesados counter error:', e); }
         }
 
@@ -612,18 +641,21 @@
                     }
                     // Load user data from Firestore
                     try {
-                        const docSnap = await window.fsGetDoc(window.fsDoc(window.db, 'users', user.uid));
+                        const docSnap = await window.getDoc(window.fsDoc(window.db, 'conductores', user.uid));
                         if (docSnap.exists()) {
                             const d = docSnap.data();
                             if (coinsEl) coinsEl.textContent = (d.coins || 0).toLocaleString();
                             if (emeraldsEl) emeraldsEl.textContent = (d.emeralds || 0).toLocaleString();
-                            if (gamesEl) gamesEl.textContent = (d.gamesPlayed || 0).toLocaleString();
-                            if (rankEl) rankEl.textContent = d.rank || 'Novato';
-                            if (nameEl) nameEl.textContent = d.username || user.displayName || 'Jugador';
+                            if (gamesEl) {
+                                // load streak/game count
+                                gamesEl.textContent = (d.streak || 0) + ' días';
+                            }
+                            if (rankEl) rankEl.textContent = d.level ? (d.level.charAt(0).toUpperCase() + d.level.slice(1)) : 'Visitante';
+                            if (nameEl) nameEl.textContent = d.nombre_usuario || d.username || user.displayName || 'Jugador';
                             // Show leaderboard self position
                             if (lbSelf) lbSelf.textContent = `Tu posición: buscando... · ${(d.coins||0).toLocaleString()} 🪙`;
                         }
-                    } catch(e) { console.warn('User data error:', e); }
+                    } catch(e) { console.warn('Load user widget details error:', e); }
                 } else {
                     if (nameEl) nameEl.textContent = 'Invitado';
                     if (statusEl) statusEl.textContent = 'No has iniciado sesión';
@@ -641,7 +673,7 @@
             const ok = await waitForFirebase();
             if (!ok) return;
             try {
-                const snap = await window.fsGetDoc(window.fsDoc(window.db, 'settings', 'stats'));
+                const snap = await window.getDoc(window.fsDoc(window.db, 'settings', 'stats'));
                 if (snap.exists()) {
                     const d = snap.data();
                     const el = document.getElementById('statJugadores');
@@ -662,3 +694,4 @@
     </script>
 </body>
 </html>
+

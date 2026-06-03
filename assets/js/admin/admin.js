@@ -51,7 +51,7 @@ const ROLE_ALIASES = {
 
 const PANEL_ACCESS_ROLES = new Set(['founder_ceo', 'administrador', 'programador', 'modelador']);
 
-const EMAIL_ANALYSIS_COLLECTIONS = ['users', 'preregistros', 'donations', 'sponsors'];
+const EMAIL_ANALYSIS_COLLECTIONS = ['conductores', 'preregistros', 'donations', 'sponsors'];
 
 const gate = document.getElementById('adminGate');
 const panel = document.getElementById('adminPanel');
@@ -291,7 +291,7 @@ async function loadCeoUsers() {
     try {
         const emailIndexMap = new Map();
 
-        const usersSnapshot = await window.getDocs(window.collection(window.db, 'users'));
+        const usersSnapshot = await window.getDocs(window.collection(window.db, 'conductores'));
         usersSnapshot.docs.forEach((docSnap) => {
             const data = docSnap.data() || {};
             const email = String(data.email || '').trim().toLowerCase();
@@ -302,11 +302,11 @@ async function loadCeoUsers() {
                 name: String(data.username || data.displayName || '').trim(),
                 role: isFounderEmail(email) ? 'founder_ceo' : normalizeCeoRole(data.role),
                 isAdmin: Boolean(data.isAdmin),
-                sources: ['users']
+                sources: ['conductores']
             });
         });
 
-        const extraCollections = EMAIL_ANALYSIS_COLLECTIONS.filter((name) => name !== 'users');
+        const extraCollections = EMAIL_ANALYSIS_COLLECTIONS.filter((name) => name !== 'conductores');
         const extraSnapshots = await Promise.all(
             extraCollections.map(async (collectionName) => {
                 try {
@@ -352,7 +352,7 @@ async function saveCeoUserRole(uid, role) {
     const userItem = ceoUsersList.find((item) => item.uid === uid);
     if (!userItem) return;
     if (!userItem.uid) {
-        setCeoMessage('Este correo no tiene cuenta en users. No se puede asignar rol aun.', true);
+        setCeoMessage('Este correo no tiene cuenta en conductores. No se puede asignar rol aun.', true);
         return;
     }
     if (isFounderEmail(userItem.email)) {
@@ -361,7 +361,7 @@ async function saveCeoUserRole(uid, role) {
     }
 
     try {
-        await window.setDoc(window.fsDoc(window.db, 'users', uid), {
+        await window.setDoc(window.fsDoc(window.db, 'conductores', uid), {
             role: normalizedRole,
             isAdmin: canRoleAccessPanel(normalizedRole),
             roleUpdatedAt: new Date().toISOString(),
@@ -880,7 +880,7 @@ async function resolveUserAccess(user) {
 
     if (window.db && window.fsDoc && window.getDoc) {
         try {
-            const profileRef = window.fsDoc(window.db, 'users', user.uid);
+            const profileRef = window.fsDoc(window.db, 'conductores', user.uid);
             const profileSnap = await window.getDoc(profileRef);
             if (profileSnap.exists()) {
                 profileData = profileSnap.data() || null;
@@ -920,15 +920,33 @@ function updateProfileUI(user, role) {
 
 async function handleAuthStateChange(user) {
     currentUser = user;
+    const loginBtn = document.getElementById('adminLoginBtn');
+    
     if (!user) {
-        redirectToHome('Debes iniciar sesión con una cuenta admin para acceder al panel.');
+        if (gateMessage) {
+            gateMessage.textContent = 'Inicia sesión con tu cuenta de administrador de Google para poder guardar cambios en la base de datos.';
+            gateMessage.style.color = 'var(--admin-text-secondary)';
+        }
+        if (loginBtn) {
+            loginBtn.style.display = 'block';
+        }
         return;
+    }
+
+    if (loginBtn) {
+        loginBtn.style.display = 'none';
     }
 
     const { isAdmin, role } = await resolveUserAccess(user);
 
     if (!isAdmin) {
-        redirectToHome('Tu cuenta no tiene permisos de administrador.');
+        if (gateMessage) {
+            gateMessage.textContent = '❌ Tu cuenta (' + user.email + ') no tiene permisos de administrador en este panel.';
+            gateMessage.style.color = 'red';
+        }
+        if (loginBtn) {
+            loginBtn.style.display = 'block';
+        }
         return;
     }
 
@@ -987,9 +1005,187 @@ function bindEvents() {
     // Admin create-update bindings
     if (adminCreateUpdateForm) adminCreateUpdateForm.addEventListener('submit', handleAdminCreateUpdate);
     if (adminCreateUpdateReset) adminCreateUpdateReset.addEventListener('click', () => { if (adminCreateUpdateForm) adminCreateUpdateForm.reset(); setAdminCreateUpdateMessage(''); });
+
+    // Video updates module (YouTube search)
+    const ytApiKeyInput = document.getElementById('youtubeApiKey');
+    const searchYtBtn = document.getElementById('adminSearchYtBtn');
+    const resultsContainer = document.getElementById('ytResultsContainer');
+    const resultsList = document.getElementById('ytResultsList');
+    const importVidsBtn = document.getElementById('adminImportVidsBtn');
+    const videosMsg = document.getElementById('adminVideosMsg');
+
+    // Load saved API key
+    if (ytApiKeyInput) {
+        const savedKey = localStorage.getItem('panterYtApiKey') || '';
+        ytApiKeyInput.value = savedKey;
+    }
+
+    let foundVideos = [];
+
+    if (searchYtBtn) {
+        searchYtBtn.addEventListener('click', async () => {
+            const key = ytApiKeyInput.value.trim();
+            if (!key) {
+                videosMsg.textContent = '❌ Por favor ingresa una API Key válida.';
+                videosMsg.style.color = 'var(--color-primary-light)';
+                return;
+            }
+            localStorage.setItem('panterYtApiKey', key);
+            videosMsg.textContent = '🔍 Buscando videos en YouTube...';
+            videosMsg.style.color = '';
+
+            try {
+                // Search query
+                const queryStr = encodeURIComponent('Nuestra Tierra Job Simulator');
+                const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=15&q=${queryStr}&type=video&key=${key}`;
+                
+                const res = await fetch(url);
+                if (!res.ok) {
+                    const data = await res.json();
+                    throw new Error(data.error?.message || 'Error en la petición a YouTube');
+                }
+                const data = await res.json();
+                
+                foundVideos = data.items || [];
+                if (foundVideos.length === 0) {
+                    videosMsg.textContent = '⚠️ No se encontraron videos relacionados.';
+                    resultsContainer.style.display = 'none';
+                    return;
+                }
+
+                // Check existing videos in Firestore to avoid duplicate imports
+                let existingIds = new Set();
+                try {
+                    const snap = await window.getDocs(window.collection(window.db, 'videos'));
+                    snap.forEach(doc => {
+                        const vidData = doc.data();
+                        const m = vidData.url?.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
+                        if (m) existingIds.add(m[1]);
+                    });
+                } catch (dbErr) {
+                    console.warn('No se pudieron precargar videos existentes para filtrar:', dbErr);
+                }
+
+                resultsList.innerHTML = '';
+                let displayedCount = 0;
+
+                foundVideos.forEach((item, index) => {
+                    const videoId = item.id.videoId;
+                    if (!videoId) return;
+
+                    const title = item.snippet.title;
+                    const channel = item.snippet.channelTitle;
+                    const thumb = item.snippet.thumbnails?.default?.url || '';
+                    const isAlreadyImported = existingIds.has(videoId);
+
+                    const div = document.createElement('div');
+                    div.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px;border-bottom:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);border-radius:6px;';
+                    div.innerHTML = `
+                        <input type="checkbox" id="yt_check_${index}" value="${index}" ${isAlreadyImported ? 'disabled' : 'checked'} style="width:18px;height:18px;cursor:pointer;">
+                        <img src="${thumb}" style="width:70px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0;">
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:0.85rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-primary);">${title}</div>
+                            <div style="font-size:0.75rem;color:var(--color-secondary);">${channel}</div>
+                        </div>
+                        ${isAlreadyImported ? '<span style="font-size:0.7rem;color:var(--text-muted);background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:4px;">Ya agregado</span>' : ''}
+                    `;
+                    resultsList.appendChild(div);
+                    displayedCount++;
+                });
+
+                if (displayedCount > 0) {
+                    resultsContainer.style.display = 'block';
+                    videosMsg.textContent = `✅ Búsqueda completada. Se encontraron ${displayedCount} videos.`;
+                    videosMsg.style.color = '#10b981';
+                } else {
+                    videosMsg.textContent = '⚠️ No se encontraron nuevos videos que no estén ya importados.';
+                    resultsContainer.style.display = 'none';
+                }
+
+            } catch (err) {
+                console.error(err);
+                videosMsg.textContent = `❌ Error: ${err.message}`;
+                videosMsg.style.color = 'red';
+                resultsContainer.style.display = 'none';
+            }
+        });
+    }
+
+    if (importVidsBtn) {
+        importVidsBtn.addEventListener('click', async () => {
+            const checkboxes = resultsList.querySelectorAll('input[type="checkbox"]:checked');
+            if (checkboxes.length === 0) {
+                videosMsg.textContent = '⚠️ Selecciona al menos un video para importar.';
+                videosMsg.style.color = 'var(--color-primary-light)';
+                return;
+            }
+
+            videosMsg.textContent = `📥 Importando ${checkboxes.length} videos...`;
+            videosMsg.style.color = '';
+
+            try {
+                // Get the current max order to append videos properly at the end
+                let maxOrder = 0;
+                try {
+                    const snap = await window.getDocs(window.collection(window.db, 'videos'));
+                    snap.forEach(doc => {
+                        const d = doc.data();
+                        if (d.orden > maxOrder) maxOrder = d.orden;
+                    });
+                } catch(e) {}
+
+                let importedCount = 0;
+                for (const cb of checkboxes) {
+                    const idx = parseInt(cb.value);
+                    const item = foundVideos[idx];
+                    const videoId = item.id.videoId;
+                    if (!videoId) continue;
+
+                    maxOrder++;
+                    await window.addDoc(window.collection(window.db, 'videos'), {
+                        title: item.snippet.title,
+                        channel: item.snippet.channelTitle,
+                        url: `https://www.youtube.com/watch?v=${videoId}`,
+                        thumbnail: item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || '',
+                        duration: '', // default empty
+                        orden: maxOrder
+                    });
+                    importedCount++;
+                }
+
+                videosMsg.textContent = `🎉 ¡Éxito! Se importaron ${importedCount} videos correctamente.`;
+                videosMsg.style.color = '#10b981';
+                resultsContainer.style.display = 'none';
+
+            } catch (err) {
+                console.error(err);
+                videosMsg.textContent = `❌ Error al importar: ${err.message}`;
+                videosMsg.style.color = 'red';
+            }
+        });
+    }
 }
 
 function bootAuthListener() {
+    // Bind global login button click event
+    const adminLoginBtn = document.getElementById('adminLoginBtn');
+    if (adminLoginBtn && !adminLoginBtn.dataset.bound) {
+        adminLoginBtn.dataset.bound = "true";
+        adminLoginBtn.addEventListener('click', async () => {
+            try {
+                if (window.auth && window.GoogleAuthProvider && window.signInWithPopup) {
+                    const provider = new window.GoogleAuthProvider();
+                    await window.signInWithPopup(window.auth, provider);
+                } else {
+                    alert('El servicio de autenticación de Firebase no está listo. Inténtalo de nuevo en unos segundos.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error al iniciar sesión: ' + err.message);
+            }
+        });
+    }
+
     if (!window.auth || !window.onAuthStateChanged) {
         showGateError('Inicializando autenticación...');
         return false;
@@ -998,7 +1194,10 @@ function bootAuthListener() {
     window.onAuthStateChanged(window.auth, (user) => {
         handleAuthStateChange(user).catch((err) => {
             console.error('Error validando acceso admin:', err);
-            redirectToHome('No se pudo validar tu acceso al panel.');
+            if (gateMessage) {
+                gateMessage.textContent = 'No se pudo validar tu acceso al panel.';
+                gateMessage.style.color = 'red';
+            }
         });
     });
 

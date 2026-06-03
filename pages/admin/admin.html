@@ -9,6 +9,7 @@
     <link rel="icon" href="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="../../assets/css/admin.css">
     <script src="../../assets/js/core/firebase-config.js"></script>
 </head>
 <body class="admin-page" data-site-root="../..">
@@ -27,6 +28,7 @@
             <img src="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" alt="Logo Panter Studio" class="admin-logo">
             <h1>Panel Administrativo</h1>
             <p id="adminGateMessage" class="admin-message">Verificando acceso...</p>
+            <button id="adminLoginBtn" class="btn" style="margin-top: 15px; display: none;">Iniciar Sesión con Google</button>
         </section>
 
         <section class="admin-panel" id="adminPanel" hidden>
@@ -106,6 +108,29 @@
                         </div>
                     </form>
                     <p id="adminCreateUpdateMsg" class="admin-message" style="margin-top:8px"></p>
+                </div>
+            </section>
+
+            <section class="admin-section" id="adminVideosSection">
+                <header class="admin-section-header">
+                    <h3>Actualizar Videos de la Comunidad</h3>
+                </header>
+                <div class="admin-section-intro">
+                    <p>Busca videos sobre <strong>Nuestra Tierra Job Simulator</strong> en YouTube e impórtalos directamente a la sección de videos de la web.</p>
+                </div>
+                <div style="margin-top:12px;max-width:760px;">
+                    <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+                        <input id="youtubeApiKey" type="password" placeholder="Ingresa tu YouTube API Key" style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);">
+                        <button id="adminSearchYtBtn" class="btn">🔍 Buscar nuevos videos</button>
+                    </div>
+                    <p class="admin-hint" style="margin-bottom:12px;font-size:0.75rem;color:var(--text-muted);">La API Key se guarda localmente en tu navegador de forma segura.</p>
+                    
+                    <div id="ytResultsContainer" style="display:none;margin-top:16px;">
+                        <h4 style="margin-bottom:8px;color:var(--text-primary);">Resultados encontrados en YouTube:</h4>
+                        <div id="ytResultsList" style="max-height:300px;overflow-y:auto;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:8px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px;"></div>
+                        <button id="adminImportVidsBtn" class="btn" style="background:var(--color-secondary);border-color:var(--color-secondary);">📥 Importar videos seleccionados</button>
+                    </div>
+                    <p id="adminVideosMsg" class="admin-message" style="margin-top:8px"></p>
                 </div>
             </section>
 
@@ -190,7 +215,7 @@
                         </div>
                     </div>
                 </div>
-                <p class="admin-section-intro">Analiza correos de toda la base disponible (users, preregistros, donations y sponsors), filtra por búsqueda y asigna roles del equipo. Acceso al panel: administrador, programador y modelador (además del CEO).</p>
+                <p class="admin-section-intro">Analiza correos de toda la base disponible (conductores, preregistros, donations y sponsors), filtra por búsqueda y asigna roles del equipo. Acceso al panel: administrador, programador y modelador (además del CEO).</p>
 
                 <div class="admin-filter-row">
                     <input type="search" id="adminCeoEmailSearch" placeholder="Buscar por correo o nombre">

@@ -105,7 +105,7 @@ function generateSuggestions(base) {
 async function isUsernameTaken(username, excludeUid = '') {
     if (!window.db || !window.getDocs || !window.query || !window.collection || !window.where) return false;
     const snap = await window.getDocs(
-        window.query(window.collection(window.db, 'users'), window.where('username', '==', username))
+        window.query(window.collection(window.db, 'conductores'), window.where('username', '==', username))
     );
     return snap.docs.some((doc) => doc.id !== excludeUid);
 }
@@ -182,7 +182,7 @@ async function findReferrerByCode(refCode) {
     if (!normalized || !window.db || !window.getDocs || !window.collection) return null;
 
     try {
-        const snap = await window.getDocs(window.collection(window.db, 'users'));
+        const snap = await window.getDocs(window.collection(window.db, 'conductores'));
         const referrer = snap.docs.find((doc) => normalizeReferralCode(doc.data()?.referralCode) === normalized);
         return referrer || null;
     } catch (err) {
@@ -207,14 +207,14 @@ async function applyReferralCode(refCode, newUserUid, currentProfile = null) {
 
     const reward = DEFAULT_REFERRAL_REWARD;
     const referrerData = referrer.data() || {};
-    await window.setDoc(window.fsDoc(window.db, 'users', referrer.id), {
+    await window.setDoc(window.fsDoc(window.db, 'conductores', referrer.id), {
         referralCount: Number(referrerData.referralCount || 0) + 1,
         referralCoins: Number(referrerData.referralCoins || 0) + reward,
         coins: Number(referrerData.coins || 0) + reward,
         updatedAt: new Date().toISOString()
     }, { merge: true });
 
-    await window.setDoc(window.fsDoc(window.db, 'users', newUserUid), {
+    await window.setDoc(window.fsDoc(window.db, 'conductores', newUserUid), {
         referredBy: normalized,
         updatedAt: new Date().toISOString()
     }, { merge: true });
@@ -234,9 +234,10 @@ async function saveUserProfile(user, username, options = {}) {
     );
     const finalUsername = usernameResolution.username || username;
 
-    await window.setDoc(window.fsDoc(window.db, 'users', user.uid), {
+    await window.setDoc(window.fsDoc(window.db, 'conductores', user.uid), {
         username: finalUsername,
         displayName: finalUsername,
+        nombre_usuario: finalUsername,
         email: user.email || '',
         role: existingProfile?.role || (isFounder ? 'founder_ceo' : 'viewer'),
         isAdmin: typeof existingProfile?.isAdmin === 'boolean' ? existingProfile.isAdmin : isFounder,
@@ -261,7 +262,7 @@ async function saveUserProfile(user, username, options = {}) {
 
 async function getUserProfile(uid) {
     if (!window.db || !window.getDoc || !window.fsDoc) return null;
-    const snap = await window.getDoc(window.fsDoc(window.db, 'users', uid));
+    const snap = await window.getDoc(window.fsDoc(window.db, 'conductores', uid));
     return snap.exists() ? snap.data() : null;
 }
 
@@ -433,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'auth/email-already-in-use': 'Este correo ya esta registrado.',
             'auth/weak-password': 'La contrasena es muy debil. Usa al menos 6 caracteres.',
             'auth/network-request-failed': 'Error de red. Revisa tu conexion e intenta de nuevo.',
-            'permission-denied': 'Firestore rechazo la operacion. Revisa las reglas para la coleccion users y que el usuario autenticado pueda crear su propio perfil.'
+            'permission-denied': 'Firestore rechazo la operacion. Revisa las reglas para la coleccion conductores y que el usuario autenticado pueda crear su propio perfil.'
         };
 
         const message = map[code] || 'No fue posible completar la autenticacion.';
@@ -697,7 +698,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     } catch (profileErr) {
                         if (isPermissionDeniedError(profileErr)) {
                             canCloseModal = false;
-                            message.textContent = 'La cuenta SI se creo en Authentication, pero Firestore bloqueo crear el perfil (permission-denied). Inicia sesion y ajusta reglas de la coleccion users.';
+                            message.textContent = 'La cuenta SI se creo en Authentication, pero Firestore bloqueo crear el perfil (permission-denied). Inicia sesion y ajusta reglas de la coleccion conductores.';
                         } else {
                             throw profileErr;
                         }
@@ -744,8 +745,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (useModalMessage) message.textContent = 'Conectando con Google...';
                 const provider = new window.GoogleAuthProvider();
                 provider.setCustomParameters({ prompt: 'select_account' });
-                if (useModalMessage) message.textContent = 'Redirigiendo a Google...';
-                await window.signInWithRedirect(window.auth, provider);
+                if (useModalMessage) message.textContent = 'Iniciando sesión...';
+                await window.signInWithPopup(window.auth, provider);
             } catch (err) {
                 console.error('Error en login con Google:', err);
                 if (useModalMessage) message.textContent = `Error: ${getAuthErrorMessage(err)}`;
@@ -1116,7 +1117,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const appRoutes = ['actualizaciones.html', 'imagenes.html'];
+    const appRoutes = ['actualizaciones.html', 'imagenes.html', 'videos.html', 'meinteresa.html'];
     const navDropdowns = document.querySelectorAll('.nav-dropdown');
 
     navDropdowns.forEach((dropdown) => {
@@ -1163,17 +1164,30 @@ document.addEventListener('DOMContentLoaded', () => {
     if (darkModeToggle) {
         const body = document.body;
 
-        const isDarkMode = localStorage.getItem('darkMode') === 'true';
+        const isDarkMode = localStorage.getItem('darkMode') !== 'false'; // Default to true if not set
         if (isDarkMode) {
+            body.setAttribute('data-theme', 'dark');
             body.classList.add('dark-mode');
             darkModeToggle.textContent = '☀️';
+        } else {
+            body.setAttribute('data-theme', 'light');
+            body.classList.remove('dark-mode');
+            darkModeToggle.textContent = '🌙';
         }
 
         darkModeToggle.addEventListener('click', () => {
-            body.classList.toggle('dark-mode');
-            const isDark = body.classList.contains('dark-mode');
-            localStorage.setItem('darkMode', isDark);
-            darkModeToggle.textContent = isDark ? '☀️' : '🌙';
+            const hasDark = body.getAttribute('data-theme') === 'dark';
+            if (hasDark) {
+                body.setAttribute('data-theme', 'light');
+                body.classList.remove('dark-mode');
+                localStorage.setItem('darkMode', 'false');
+                darkModeToggle.textContent = '🌙';
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                body.classList.add('dark-mode');
+                localStorage.setItem('darkMode', 'true');
+                darkModeToggle.textContent = '☀️';
+            }
         });
     }
 

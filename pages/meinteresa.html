@@ -6,6 +6,7 @@
     <meta name="description" content="¿Te interesa Nuestra Tierra Job Simulator? Haz clic y que el equipo sepa que estás esperando el juego.">
     <title>Me Interesa — Panter Studio</title>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
+    <meta name="google-adsense-account" content="ca-pub-8870488962578785">
     <link rel="icon" href="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
@@ -262,6 +263,7 @@
                 <div class="nav-dropdown-menu">
                     <a href="actualizaciones.html">Actualizaciones</a>
                     <a href="imagenes.html">Galeria</a>
+                    <a href="videos.html">Videos</a>
                 </div>
             </div>
             <a href="minijuegos.html">Minijuegos</a>
@@ -273,6 +275,20 @@
     </nav>
 
     <div class="container" style="padding-top: 1rem;">
+
+        <!-- ★ Anuncio superior -->
+        <div class="ad-slot-wrapper ad-horizontal" id="ad-top">
+            <span class="ad-slot-label">Publicidad</span>
+            <div class="ad-slot-inner">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-8870488962578785"
+                     data-ad-slot="AUTO"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>
 
         <!-- HERO -->
         <div class="mi-hero">
@@ -349,6 +365,20 @@
         </div>
     </div>
 
+        <!-- ★ Anuncio inferior -->
+        <div class="ad-slot-wrapper ad-horizontal" id="ad-bottom">
+            <span class="ad-slot-label">Publicidad</span>
+            <div class="ad-slot-inner">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-8870488962578785"
+                     data-ad-slot="AUTO"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>
+
     <footer>
         <p>© 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
     </footer>
@@ -356,25 +386,15 @@
     <script src="../assets/js/core/script.js"></script>
     <script>
     // ===== ME INTERESA LOGIC =====
-    const LS_KEY_INTERES = 'panter_meinteresa_voted';
-    const COLLECTION_INTERES = 'interesados';
-    const DOC_COUNTER = 'contador';
-
-    // Check if user already voted (localStorage)
-    function yaVoto() {
-        return localStorage.getItem(LS_KEY_INTERES) === '1';
-    }
-
-    function marcarVotado() {
-        localStorage.setItem(LS_KEY_INTERES, '1');
-    }
+    let currentUser = null;
+    let isInterested = false;
 
     function waitForFirebase(timeout = 8000) {
         return new Promise((resolve) => {
-            if (window.db && window.fsDoc && window.getDoc && window.updateDoc) return resolve(true);
+            if (window.db && window.fsDoc && window.getDoc && window.setDoc && window.auth && window.collection && window.query && window.where && window.getDocs) return resolve(true);
             const start = Date.now();
             const t = setInterval(() => {
-                if (window.db && window.fsDoc && window.getDoc && window.updateDoc) {
+                if (window.db && window.fsDoc && window.getDoc && window.setDoc && window.auth && window.collection && window.query && window.where && window.getDocs) {
                     clearInterval(t); resolve(true);
                 } else if (Date.now() - start > timeout) {
                     clearInterval(t); resolve(false);
@@ -396,16 +416,24 @@
         el.textContent = typeof n === 'number' ? n.toLocaleString() : n;
     }
 
-    function setVotedState() {
+    function setVotedState(voted) {
         const btn = document.getElementById('miInteresaBtn');
         const txt = document.getElementById('miBtnText');
-        if (btn) {
-            btn.classList.remove('not-voted');
-            btn.classList.add('voted');
-            btn.setAttribute('disabled', 'true');
+        if (voted) {
+            if (btn) {
+                btn.classList.remove('not-voted');
+                btn.classList.add('voted');
+            }
+            if (txt) txt.textContent = '¡Ya marcaste tu interés! (Quitar)';
+            setStatus('✅ ¡Gracias! Has marcado que te interesa el juego.', 'success');
+        } else {
+            if (btn) {
+                btn.classList.add('not-voted');
+                btn.classList.remove('voted');
+            }
+            if (txt) txt.textContent = '¡Me Interesa el Juego!';
+            setStatus('¿Te interesa el juego? ¡Haz clic y cuéntanos!', 'info');
         }
-        if (txt) txt.textContent = '¡Ya marcaste tu interés!';
-        setStatus('✅ ¡Gracias por tu apoyo! Ya estás en la lista.', 'success');
     }
 
     async function cargarContador() {
@@ -415,63 +443,94 @@
             setStatus('No se pudo conectar. Intenta de nuevo.', 'error');
             return;
         }
-        try {
-            const docRef = window.fsDoc(window.db, COLLECTION_INTERES, DOC_COUNTER);
-            const snap = await window.getDoc(docRef);
-            const total = snap.exists() ? (snap.data().total || 0) : 0;
-            setContador(total);
 
-            if (yaVoto()) {
-                setVotedState();
-            } else {
-                setStatus('¿Te interesa el juego? ¡Haz clic y cuéntanos!', 'info');
-            }
+        // 1. Obtener conteo total consultando usuarios con interested == true
+        try {
+            const q = window.query(window.collection(window.db, 'conductores'), window.where('interested', '==', true));
+            const snap = await window.getDocs(q);
+            setContador(snap.size);
         } catch (e) {
-            console.warn('Error cargando contador:', e);
+            console.warn('Error cargando contador total:', e);
             setContador('—');
-            setStatus('Error al cargar datos. Intenta recargar la página.', 'error');
         }
+
+        // 2. Escuchar cambios de Auth para ver si el usuario ya votó
+        window.auth.onAuthStateChanged(async (user) => {
+            const btn = document.getElementById('miInteresaBtn');
+            const txt = document.getElementById('miBtnText');
+            
+            if (user) {
+                currentUser = user;
+                try {
+                    const userDocRef = window.fsDoc(window.db, 'conductores', user.uid);
+                    const userSnap = await window.getDoc(userDocRef);
+                    if (userSnap.exists()) {
+                        isInterested = !!userSnap.data().interested;
+                    } else {
+                        isInterested = false;
+                    }
+                    setVotedState(isInterested);
+                } catch (e) {
+                    console.warn('Error obteniendo estado de interes del usuario:', e);
+                    setStatus('Error al verificar tu perfil.', 'error');
+                }
+            } else {
+                currentUser = null;
+                isInterested = false;
+                if (btn) {
+                    btn.classList.add('not-voted');
+                    btn.classList.remove('voted');
+                    btn.removeAttribute('disabled');
+                }
+                if (txt) txt.textContent = '¡Me Interesa el Juego!';
+                setStatus('Conéctate en "Mi Perfil" para registrar tu interés.', 'info');
+            }
+        });
     }
 
     async function registrarInteres() {
-        if (yaVoto()) return;
-
-        const btn = document.getElementById('miInteresaBtn');
-        if (btn) btn.setAttribute('disabled', 'true');
-        setStatus('Registrando tu interés...', 'info');
-
         const ok = await waitForFirebase();
         if (!ok) {
             setStatus('Sin conexión. Intenta de nuevo.', 'error');
-            if (btn) btn.removeAttribute('disabled');
             return;
         }
 
-        try {
-            const docRef = window.fsDoc(window.db, COLLECTION_INTERES, DOC_COUNTER);
-            const snap = await window.getDoc(docRef);
-            const currentTotal = snap.exists() ? (snap.data().total || 0) : 0;
-            const newTotal = currentTotal + 1;
+        if (!currentUser) {
+            setStatus('⚠️ Debes iniciar sesión en la pestaña "Mi Perfil" primero.', 'error');
+            return;
+        }
 
-            await window.setDoc(docRef, {
-                total: newTotal,
+        const btn = document.getElementById('miInteresaBtn');
+        if (btn) btn.setAttribute('disabled', 'true');
+        setStatus('Guardando...', 'info');
+
+        try {
+            const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+            const nextState = !isInterested;
+
+            // Actualizar el estado del usuario en Firestore (incluyendo updatedAt para cumplir las reglas)
+            await window.setDoc(userDocRef, {
+                interested: nextState,
                 updatedAt: new Date().toISOString()
             }, { merge: true });
 
-            // Mark voted locally
-            marcarVotado();
+            isInterested = nextState;
+            setVotedState(isInterested);
 
-            // Update UI
+            // Re-calcular total
+            const q = window.query(window.collection(window.db, 'conductores'), window.where('interested', '==', true));
+            const snap = await window.getDocs(q);
+            const newTotal = snap.size;
             setContador(newTotal);
+
             const counterEl = document.getElementById('miContador');
             if (counterEl) counterEl.classList.add('celebrate');
             setTimeout(() => counterEl?.classList.remove('celebrate'), 600);
 
-            setVotedState();
-
         } catch (e) {
             console.error('Error registrando interés:', e);
-            setStatus('No se pudo registrar. Intenta de nuevo.', 'error');
+            setStatus('No se pudo guardar. Intenta de nuevo.', 'error');
+        } finally {
             if (btn) btn.removeAttribute('disabled');
         }
     }
@@ -480,3 +539,4 @@
     </script>
 </body>
 </html>
+

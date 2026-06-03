@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -10,79 +10,430 @@
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
     <script src="../assets/js/core/firebase-config.js"></script>
     <style>
-        .game-card {
-            background: var(--bg-glass-card);
-            border: var(--border-glass);
-            border-radius: var(--border-radius-lg);
-            padding: 2.5rem;
-            max-width: 650px;
+        /* Cyber AI Terminal Styling */
+        .ai-terminal-container {
+            max-width: 850px;
             margin: 2rem auto;
-            text-align: center;
-            box-shadow: var(--shadow-glow-sm);
+            background: rgba(18, 22, 33, 0.85);
+            border: 1px solid rgba(0, 176, 255, 0.2);
+            border-radius: var(--border-radius-lg);
+            box-shadow: 0 0 30px rgba(0, 176, 255, 0.15), inset 0 0 20px rgba(0, 176, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
-        .game-title {
-            color: var(--color-primary-light);
-            font-size: 1.8rem;
-            margin-bottom: 0.5rem;
-        }
-        .game-subtitle {
-            font-size: 0.95rem;
-            color: var(--text-secondary);
-            margin-bottom: 2rem;
-        }
-        .game-box {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            min-height: 250px;
+
+        /* AI Interactive Holographic Core */
+        .ai-header-panel {
+            padding: 1.8rem;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            border: 1px dashed var(--border-glass-hover);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            background: rgba(10, 14, 23, 0.5);
         }
-        .order-bubble {
-            background: var(--bg-glass-strong);
-            border: 1px solid var(--color-accent);
-            border-radius: 20px;
-            padding: 1rem 2rem;
-            font-size: 1.1rem;
+        .ai-core-orb {
+            width: 85px;
+            height: 85px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 176, 255, 0.3) 0%, transparent 70%);
+            border: 3px solid #00b0ff;
+            box-shadow: 0 0 20px #00b0ff, inset 0 0 15px #00b0ff;
+            position: relative;
+            transition: all 0.5s var(--ease-smooth);
+            animation: orbBreathe 2.5s infinite alternate ease-in-out;
+        }
+        .ai-core-orb::before {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            border: 1px dashed rgba(0, 176, 255, 0.3);
+            animation: spinRing 12s linear infinite;
+        }
+        .ai-core-orb::after {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #00b0ff;
+            animation: spinRing 3s linear infinite reverse;
+        }
+
+        /* States of the AI Core */
+        .ai-core-orb.thinking {
+            border-color: #fbbf24;
+            background-color: rgba(251, 191, 36, 0.1);
+            box-shadow: 0 0 30px #fbbf24, inset 0 0 20px #fbbf24;
+        }
+        .ai-core-orb.thinking::after { border-top-color: #fbbf24; }
+        .ai-core-orb.success {
+            border-color: #00c853;
+            background-color: rgba(0, 200, 83, 0.1);
+            box-shadow: 0 0 30px #00c853, inset 0 0 20px #00c853;
+        }
+        .ai-core-orb.success::after { border-top-color: #00c853; }
+        .ai-core-orb.error {
+            border-color: #ef4444;
+            background-color: rgba(239, 68, 68, 0.1);
+            box-shadow: 0 0 30px #ef4444, inset 0 0 20px #ef4444;
+        }
+        .ai-core-orb.error::after { border-top-color: #ef4444; }
+
+        @keyframes orbBreathe {
+            from { transform: scale(0.96); opacity: 0.85; }
+            to { transform: scale(1.04); opacity: 1; }
+        }
+        @keyframes spinRing {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .ai-status-text {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #00b0ff;
             font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 1.5rem;
-            animation: pulse 1.8s infinite;
+            text-shadow: 0 0 10px rgba(0,176,255,0.4);
+            transition: color 0.3s;
         }
-        .item-buttons {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            width: 100%;
-            max-width: 320px;
-            margin-top: 1rem;
+
+        /* Console Feed */
+        .ai-console-feed {
+            flex-grow: 1;
+            padding: 1.5rem;
+            min-height: 320px;
+            max-height: 400px;
+            overflow-y: auto;
+            background: rgba(10, 14, 23, 0.8);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
-        .item-btn {
-            background: var(--bg-glass-card);
-            border: var(--border-glass);
-            color: var(--text-primary);
-            padding: 0.8rem;
+
+        /* Conversational Bubble Design */
+        .console-entry {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            animation: entryFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes entryFade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .entry-label {
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+        .entry-label.user { color: #00b0ff; }
+        .entry-label.ai { color: #00c853; }
+        
+        .entry-body {
+            font-size: 0.95rem;
+            color: #e2e8f0;
+            line-height: 1.5;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 10px 14px;
             border-radius: var(--border-radius);
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: all var(--transition-fast);
+            border: 1px solid rgba(255,255,255,0.04);
+            display: inline-block;
+            max-width: 90%;
         }
-        .item-btn:hover {
-            background: var(--color-primary);
-            border-color: var(--color-primary-light);
+        .entry-body.user {
+            background: rgba(0, 176, 255, 0.04);
+            border-color: rgba(0, 176, 255, 0.12);
+        }
+
+        /* AI Glass Control Board */
+        .ai-control-board {
+            padding: 1.5rem;
+            background: rgba(18, 22, 33, 0.9);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .board-buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+        }
+        
+        /* Cyber Action Chips */
+        .cyber-chip {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: var(--border-radius);
+            padding: 12px;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .cyber-chip:hover:not(:disabled) {
+            background: rgba(0, 176, 255, 0.06);
+            border-color: rgba(0, 176, 255, 0.4);
+            box-shadow: 0 0 12px rgba(0, 176, 255, 0.15);
             transform: translateY(-2px);
         }
-        .status-text {
-            font-size: 1rem;
-            font-weight: 700;
-            margin-top: 1rem;
+        .cyber-chip:active:not(:disabled) {
+            transform: translateY(0);
         }
-        .success-text { color: var(--color-primary-light); }
-        .error-text { color: var(--color-accent); }
+        .cyber-chip:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .cyber-chip.gold {
+            border-color: rgba(212, 175, 55, 0.2);
+        }
+        .cyber-chip.gold:hover:not(:disabled) {
+            background: rgba(212, 175, 55, 0.06);
+            border-color: #d4af37;
+            box-shadow: 0 0 12px rgba(212, 175, 55, 0.2);
+        }
+
+        /* Pulse loading animation */
+        .cyber-loader {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+            padding: 4px 14px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .loader-dot {
+            width: 6px;
+            height: 6px;
+            background: #00b0ff;
+            border-radius: 50%;
+            animation: loadDot 1.2s infinite ease-in-out;
+        }
+        .loader-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loader-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes loadDot {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+            40% { transform: scale(1.2); opacity: 1; }
+        }
+
+        /* Holographic Casino Styles */
+        .casino-screen {
+            display: none;
+            padding: 1.5rem;
+            background: linear-gradient(180deg, rgba(16, 20, 35, 0.95) 0%, rgba(10, 12, 22, 0.98) 100%);
+            border-top: 1px solid rgba(0, 176, 255, 0.2);
+            border-bottom: 1px solid rgba(0, 176, 255, 0.2);
+            flex-direction: column;
+            align-items: center;
+            gap: 1.2rem;
+            animation: entryFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .casino-title {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #ffd700;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+            margin-bottom: 0.5rem;
+        }
+        /* Blackjack Visuals */
+        .blackjack-table {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .blackjack-hand-section {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .hand-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .hand-score {
+            font-size: 0.8rem;
+            font-weight: 800;
+            background: rgba(0, 176, 255, 0.15);
+            color: #00b0ff;
+            padding: 2px 8px;
+            border-radius: 20px;
+            box-shadow: 0 0 8px rgba(0, 176, 255, 0.2);
+        }
+        .hand-score.dealer {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.2);
+        }
+        .cards-list {
+            display: flex;
+            gap: 8px;
+            min-height: 80px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .cyber-card {
+            width: 50px;
+            height: 75px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #fff;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            animation: cardDeal 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+            text-shadow: 0 0 5px rgba(255,255,255,0.3);
+        }
+        .cyber-card.player-card {
+            border-color: rgba(0, 176, 255, 0.4);
+            box-shadow: 0 0 10px rgba(0, 176, 255, 0.15);
+        }
+        .cyber-card.dealer-card {
+            border-color: rgba(239, 68, 68, 0.4);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.15);
+        }
+        .cyber-card.hidden-card {
+            background: linear-gradient(135deg, rgba(0, 176, 255, 0.2) 0%, rgba(10, 14, 23, 0.9) 100%);
+            border-color: #00b0ff;
+            color: #00b0ff;
+        }
+        @keyframes cardDeal {
+            from { transform: translateY(-20px) scale(0.7) rotate(-5deg); opacity: 0; }
+            to { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        /* Roulette Visuals */
+        .roulette-board {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.2rem;
+        }
+        .roulette-visual-track {
+            position: relative;
+            width: 100%;
+            max-width: 480px;
+            height: 60px;
+            background: #0a0e17;
+            border: 2px solid rgba(0, 176, 255, 0.2);
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+        }
+        .roulette-ticker {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: #ffd700;
+            z-index: 10;
+            box-shadow: 0 0 8px #ffd700;
+        }
+        .roulette-spinner-row {
+            display: flex;
+            gap: 4px;
+            padding-left: 50%;
+            transition: transform 3s cubic-bezier(0.1, 0.8, 0.1, 1);
+            will-change: transform;
+        }
+        .roulette-pocket {
+            width: 55px;
+            height: 48px;
+            flex-shrink: 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.9rem;
+            color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .roulette-pocket.rojo {
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        .roulette-pocket.negro {
+            background: linear-gradient(135deg, #374151 0%, #111827 100%);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        .roulette-pocket.verde {
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+            border-color: #10b981;
+        }
+        
+        .chips-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .bet-chip {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 3px dashed #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            user-select: none;
+        }
+        .bet-chip.chip-rojo {
+            background: #ef4444;
+            border-color: #ffd700;
+            color: #fff;
+        }
+        .bet-chip.chip-negro {
+            background: #1f2937;
+            border-color: #ffd700;
+            color: #fff;
+        }
+        .bet-chip:hover {
+            transform: scale(1.15) rotate(15deg);
+            box-shadow: 0 0 12px rgba(255,255,255,0.4);
+        }
     </style>
 </head>
 <body data-site-root=".." data-theme="dark" class="dark-mode">
@@ -101,6 +452,7 @@
                 <div class="nav-dropdown-menu">
                     <a href="actualizaciones.html">Actualizaciones</a>
                     <a href="imagenes.html">Galeria</a>
+                    <a href="videos.html">Videos</a>
                 </div>
             </div>
             <a href="minijuegos.html" class="active">Minijuegos</a>
@@ -111,42 +463,57 @@
         </div>
     </nav>
 
-    <div class="container">
-        <section class="game-card">
-            <h2 class="game-title">☕ La Tiendita Express</h2>
-            <p class="game-subtitle">¡Atiende a los clientes sirviendo productos típicos colombianos antes de que se acabe el tiempo! Gana hasta 3 partidas al día para recibir monedas de recompensa para tu perfil.</p>
+    <div class="container" style="padding: 1.5rem 1rem;">
+        <h1 style="text-align: center; font-size: 2.2rem; margin-bottom: 0.5rem; letter-spacing: -1px; text-transform: uppercase;">Módulo de Inteligencia Virtual 🤖</h1>
+        <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem; max-width: 600px; margin-inline: auto; font-size: 0.95rem;">
+            Interactúa con la red de algoritmos de Panter Studio. Genera trabajos, calcula riesgos y enlázalos directamente con tu cuenta de Nuestra Tierra.
+        </p>
+
+        <div id="authNotice" class="ai-terminal-container" style="align-items: center; justify-content: center; flex-direction: column; gap: 1.5rem; padding: 4rem; text-align: center;">
+            <p style="font-weight:600; font-size:1.1rem; color: #f2f3f5;">Debes iniciar sesión con tu cuenta de Panter Studio para sincronizar tu billetera web y tus esmeraldas del juego móvil.</p>
+            <a href="perfil.html" class="btn" style="padding: 0.9rem 2.5rem; font-weight: 700; border-radius: var(--border-radius-lg);">Conectar Cuenta</a>
+        </div>
+
+        <div id="gameContainer" class="ai-terminal-container" style="display: none;">
             
-            <div id="authNotice" class="game-box">
-                <p>Inicia sesión en tu cuenta de Panter Studio para jugar y recibir recompensas.</p>
-                <a href="perfil.html" class="btn" style="margin-top: 1rem;">Ir a mi perfil / Iniciar Sesión</a>
+            <!-- HEADER CON EL NÚCLEO HOLOGRÁFICO -->
+            <div class="ai-header-panel">
+                <div class="ai-core-orb" id="aiCoreOrb"></div>
+                <div class="ai-status-text" id="aiStatusLabel">SISTEMA EN LÍNEA</div>
             </div>
 
-            <div id="gameContainer" class="game-box" style="display: none;">
-                <div id="gameIntro">
-                    <p style="margin-bottom: 1.5rem;">Sirve 3 pedidos correctamente. Cada pedido consiste en un producto combinado. ¡Tienes 20 segundos!</p>
-                    <button id="startBtn" class="btn">Empezar a Jugar</button>
-                    <p id="limitNotice" style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted);"></p>
-                </div>
-
-                <div id="gamePlay" style="display: none; width: 100%; text-align: center;">
-                    <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 1rem;">
-                        <span>⏱️ Tiempo: <strong id="timerVal">20</strong>s</span>
-                        <span>👥 Atendidos: <strong id="scoreVal">0</strong>/3</span>
+            <!-- FEED DE CONSOLA / LOGS -->
+            <div class="ai-console-feed" id="consoleFeed">
+                <!-- Mensaje de inicio -->
+                <div class="console-entry">
+                    <span class="entry-label ai">[PANTER CORE v3.1]</span>
+                    <div class="entry-body">
+                        Inicialización de sistema exitosa. Conexión establecida con la base de datos de <strong>Nuestra Tierra: Job Simulator</strong>. Por favor, selecciona una operación utilizando el panel de control inferior.
                     </div>
-
-                    <div class="order-bubble" id="orderText">Cargando pedido...</div>
-
-                    <div class="item-buttons">
-                        <button class="item-btn" onclick="pressItem('☕ Tinto')">☕ Tinto</button>
-                        <button class="item-btn" onclick="pressItem('🫓 Arepa')">🫓 Arepa</button>
-                        <button class="item-btn" onclick="pressItem('🍩 Buñuelo')">🍩 Buñuelo</button>
-                        <button class="item-btn" onclick="pressItem('🥟 Empanada')">🥟 Empanada</button>
-                    </div>
-
-                    <div id="feedbackText" class="status-text"></div>
                 </div>
             </div>
-        </section>
+
+            <!-- PANTALLA VISUAL DE CASINO -->
+            <div id="casinoVisualScreen" class="casino-screen"></div>
+
+            <!-- CARGA PULSANTE -->
+            <div class="cyber-loader" id="aiLoader" style="display: none;">
+                <div class="loader-dot"></div>
+                <div class="loader-dot"></div>
+                <div class="loader-dot"></div>
+                <span>Procesando secuencia de datos...</span>
+            </div>
+
+            <!-- PANEL DE CONTROL FLOTANTE -->
+            <div class="ai-control-board">
+                <div class="board-buttons-grid" id="actionPanel">
+                    <button class="cyber-chip" onclick="executeWork()"><img src="../recursos/iconos/maletin.png" alt="💼" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"> Trabajar (Seguro)</button>
+                    <button class="cyber-chip" onclick="executeRisk()"><img src="../recursos/iconos/sirena.png" alt="🚨" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"> Misión de Riesgo</button>
+                    <button class="cyber-chip" onclick="openGambleMenu()"><img src="../recursos/iconos/casino.png" alt="🎰" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"> Probar Suerte (Apuestas)</button>
+                    <button class="cyber-chip gold" onclick="executeRedeem()"><img src="../recursos/iconos/esmeralda.png" alt="💎" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"> Canjear por Esmeraldas</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <footer>
@@ -155,15 +522,13 @@
 
     <script src="../assets/js/core/script.js"></script>
     <script>
-        let currentOrder = [];
-        let userInputs = [];
-        let score = 0;
-        let timeLeft = 20;
-        let gameTimer = null;
-        let isPlaying = false;
-        let gamesPlayedToday = 0;
-
-        const itemsPool = ['☕ Tinto', '🫓 Arepa', '🍩 Buñuelo', '🥟 Empanada'];
+        let currentUser = null;
+        let userCoins = 0;
+        let cooldowns = {
+            work: Number(localStorage.getItem('panterAI_cooldown_work') || 0),
+            risk: Number(localStorage.getItem('panterAI_cooldown_risk') || 0)
+        };
+        let activeBlackjack = null;
 
         function waitForFirebase(timeout = 7000) {
             return new Promise((resolve) => {
@@ -181,13 +546,36 @@
             });
         }
 
-        async function initGame() {
+        async function initAIGame() {
             await waitForFirebase();
+            
+            // Cargar historial de chat si existe en caché
+            const savedChat = localStorage.getItem('panterAI_chat_history');
+            if (savedChat) {
+                document.getElementById('consoleFeed').innerHTML = savedChat;
+                scrollFeed();
+            }
+
             window.auth.onAuthStateChanged(async (user) => {
                 if (user) {
+                    currentUser = user;
                     document.getElementById('authNotice').style.display = 'none';
                     document.getElementById('gameContainer').style.display = 'flex';
-                    checkDailyLimits(user.uid);
+                    
+                    const userDocRef = window.fsDoc(window.db, 'conductores', user.uid);
+                    window.onSnapshot(userDocRef, (snap) => {
+                        if (snap.exists()) {
+                            const data = snap.data();
+                            userCoins = data.coins || 0;
+                            // Sincronizar cooldowns desde DB
+                            if (data.cooldownWork) {
+                                cooldowns.work = Math.max(cooldowns.work, Number(data.cooldownWork) || 0);
+                            }
+                            if (data.cooldownRisk) {
+                                cooldowns.risk = Math.max(cooldowns.risk, Number(data.cooldownRisk) || 0);
+                            }
+                        }
+                    });
                 } else {
                     document.getElementById('authNotice').style.display = 'flex';
                     document.getElementById('gameContainer').style.display = 'none';
@@ -195,142 +583,621 @@
             });
         }
 
-        function checkDailyLimits(uid) {
-            const today = new Date().toDateString();
-            const key = `panterMG_tiendita_${uid}`;
-            const s = localStorage.getItem(key);
-            let count = 0;
-            if (s) {
-                const data = JSON.parse(s);
-                if (data.date === today) {
-                    count = data.count || 0;
-                }
-            }
-            gamesPlayedToday = count;
-            document.getElementById('limitNotice').textContent = `Partidas ganadas hoy: ${gamesPlayedToday}/3`;
+        function scrollFeed() {
+            const feed = document.getElementById('consoleFeed');
+            feed.scrollTop = feed.scrollHeight;
         }
 
-        document.getElementById('startBtn').addEventListener('click', () => {
-            if (gamesPlayedToday >= 3) {
-                alert('Ya has alcanzado el límite de 3 recompensas diarias de este minijuego. ¡Vuelve mañana!');
-                return;
-            }
-            startGame();
-        });
-
-        function startGame() {
-            score = 0;
-            timeLeft = 20;
-            isPlaying = true;
-            document.getElementById('gameIntro').style.display = 'none';
-            document.getElementById('gamePlay').style.display = 'block';
-            document.getElementById('scoreVal').textContent = score;
-            document.getElementById('timerVal').textContent = timeLeft;
-            document.getElementById('feedbackText').className = 'status-text';
-            document.getElementById('feedbackText').textContent = '';
-            
-            generateNewOrder();
-            
-            gameTimer = setInterval(() => {
-                timeLeft--;
-                document.getElementById('timerVal').textContent = timeLeft;
-                if (timeLeft <= 0) {
-                    endGame(false);
-                }
-            }, 1000);
+        function saveChatHistory() {
+            const feed = document.getElementById('consoleFeed');
+            localStorage.setItem('panterAI_chat_history', feed.innerHTML);
         }
 
-        function generateNewOrder() {
-            userInputs = [];
-            // Generate order of 2 items
-            const item1 = itemsPool[Math.floor(Math.random() * itemsPool.length)];
-            let item2 = itemsPool[Math.floor(Math.random() * itemsPool.length)];
-            while (item2 === item1) {
-                item2 = itemsPool[Math.floor(Math.random() * itemsPool.length)];
-            }
-            currentOrder = [item1, item2];
-            document.getElementById('orderText').textContent = `Quiero: ${currentOrder.join(' y ')}`;
-        }
-
-        function pressItem(item) {
-            if (!isPlaying) return;
-            userInputs.push(item);
+        function setCoreState(state) {
+            const orb = document.getElementById('aiCoreOrb');
+            const label = document.getElementById('aiStatusLabel');
+            const loader = document.getElementById('aiLoader');
             
-            // Check if correct so far
-            const currentIndex = userInputs.length - 1;
-            if (userInputs[currentIndex] !== currentOrder[currentIndex]) {
-                document.getElementById('feedbackText').className = 'status-text error-text';
-                document.getElementById('feedbackText').textContent = '❌ ¡Pedido incorrecto! Intenta otra vez.';
-                userInputs = [];
-                return;
-            }
+            // Remove classes
+            orb.classList.remove('thinking', 'success', 'error');
+            loader.style.display = 'none';
 
-            if (userInputs.length === currentOrder.length) {
-                score++;
-                document.getElementById('scoreVal').textContent = score;
-                document.getElementById('feedbackText').className = 'status-text success-text';
-                document.getElementById('feedbackText').textContent = '✅ ¡Servido a tiempo!';
-                
-                if (score >= 3) {
-                    endGame(true);
-                } else {
-                    setTimeout(generateNewOrder, 600);
-                }
-            }
-        }
-
-        async function endGame(won) {
-            clearInterval(gameTimer);
-            isPlaying = false;
-            
-            if (won) {
-                document.getElementById('feedbackText').className = 'status-text success-text';
-                document.getElementById('feedbackText').textContent = '🎉 ¡Ganaste! Has atendido a todos tus clientes.';
-                
-                const user = window.auth.currentUser;
-                if (user) {
-                    try {
-                        const userDocRef = window.fsDoc(window.db, 'users', user.uid);
-                        const userSnap = await window.getDoc(userDocRef);
-                        if (userSnap.exists()) {
-                            const currentCoins = userSnap.data().coins || 0;
-                            const reward = 15; // 15 coins per win
-                            await window.updateDoc(userDocRef, { coins: currentCoins + reward });
-                            
-                            // Log activity
-                            await window.addDoc(window.collection(window.db, 'users', user.uid, 'activity'), {
-                                type: 'game_win',
-                                description: 'Victoria en La Tiendita Express',
-                                coins: reward,
-                                createdAt: new Date().toISOString()
-                            });
-
-                            // Update daily limit count
-                            const today = new Date().toDateString();
-                            const key = `panterMG_tiendita_${user.uid}`;
-                            gamesPlayedToday++;
-                            localStorage.setItem(key, JSON.stringify({ date: today, count: gamesPlayedToday }));
-                        }
-                    } catch (e) {
-                        console.error('Error awarding coins:', e);
-                    }
-                }
+            if (state === 'thinking') {
+                orb.classList.add('thinking');
+                label.textContent = 'PROCESANDO...';
+                label.style.color = '#fbbf24';
+                loader.style.display = 'flex';
+            } else if (state === 'success') {
+                orb.classList.add('success');
+                label.textContent = '¡COMPLETADO!';
+                label.style.color = '#00c853';
+            } else if (state === 'error') {
+                orb.classList.add('error');
+                label.textContent = 'MISIÓN FALLIDA / ESPERA';
+                label.style.color = '#ef4444';
             } else {
-                document.getElementById('feedbackText').className = 'status-text error-text';
-                document.getElementById('feedbackText').textContent = '⏱️ Se acabó el tiempo. ¡Inténtalo de nuevo!';
+                label.textContent = 'SISTEMA LISTO';
+                label.style.color = '#00b0ff';
             }
+            scrollFeed();
+        }
+
+        function logCommand(cmdText) {
+            const feed = document.getElementById('consoleFeed');
+            const html = `
+                <div class="console-entry">
+                    <span class="entry-label user">&gt; ACCIÓN: /${cmdText.toUpperCase()}</span>
+                    <div class="entry-body user">Iniciando...</div>
+                </div>
+            `;
+            feed.insertAdjacentHTML('beforeend', html);
+            scrollFeed();
+            saveChatHistory();
+        }
+
+        function formatMarkdown(text) {
+            return String(text)
+                .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+                .replace(/\*/g, ''); // Limpiar asteriscos huérfanos
+        }
+
+        function logAIResponse(title, text) {
+            const feed = document.getElementById('consoleFeed');
+            const cleanText = formatMarkdown(text);
+            const html = `
+                <div class="console-entry">
+                    <span class="entry-label ai">[PANTER AI]: ${title.toUpperCase()}</span>
+                    <div class="entry-body">${cleanText}</div>
+                </div>
+            `;
+            feed.insertAdjacentHTML('beforeend', html);
+            scrollFeed();
+            saveChatHistory();
+        }
+
+        // 💼 TRABAJAR (SEGURO)
+        async function executeWork() {
+            // Actualizar cooldown desde LocalStorage
+            cooldowns.work = Number(localStorage.getItem('panterAI_cooldown_work') || 0);
+
+            if (cooldowns.work > Date.now()) {
+                const totalSecs = Math.ceil((cooldowns.work - Date.now()) / 1000);
+                const mins = Math.floor(totalSecs / 60);
+                const secs = totalSecs % 60;
+                logCommand('trabajar');
+                setCoreState('thinking');
+                setTimeout(() => {
+                    setCoreState('error');
+                    logAIResponse('cargando energía', `Tu conductor está descansando en la vía. Espera ${mins}m y ${secs}s para continuar.`);
+                }, 450);
+                return;
+            }
+
+            logCommand('trabajar');
+            setCoreState('thinking');
+
+            const scenarios = [
+                { title: 'Trabajo Terminado', desc: 'Condujiste tu camión de carga de Bogotá a Ibagué.', earn: Math.floor(Math.random() * 200) + 150 },
+                { title: 'Reparto Exitoso', desc: 'Entregaste repuestos y neumáticos nuevos en el taller de Manizales.', earn: Math.floor(Math.random() * 250) + 150 },
+                { title: 'Servicio Completado', desc: 'Ayudaste a remolcar un vehículo varado en La Línea.', earn: Math.floor(Math.random() * 300) + 200 }
+            ];
+            const sc = scenarios[Math.floor(Math.random() * scenarios.length)];
+            
+            // 5 minutos de cooldown
+            const targetCooldown = Date.now() + 300000;
+            cooldowns.work = targetCooldown;
+            localStorage.setItem('panterAI_cooldown_work', targetCooldown);
+
+            try {
+                const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                const newCoins = (Number(userCoins) || 0) + sc.earn;
+                
+                await window.setDoc(userDocRef, { 
+                    coins: newCoins, 
+                    cooldownWork: targetCooldown,
+                    updatedAt: new Date().toISOString() 
+                }, { merge: true });
+                
+                try {
+                    await window.addDoc(window.collection(window.db, 'conductores', currentUser.uid, 'activity'), {
+                        type: 'work',
+                        description: `${sc.title} (+${sc.earn} 🪙)`,
+                        coins: sc.earn,
+                        createdAt: new Date().toISOString()
+                    });
+                } catch (e) {
+                    console.warn("Actividad no registrada:", e);
+                }
+
+                setTimeout(() => {
+                    setCoreState('success');
+                    logAIResponse(sc.title, `${sc.desc} Recibes +$${sc.earn} monedas. Saldo total: $${newCoins} 🪙.`);
+                }, 900);
+            } catch (err) {
+                console.error(err);
+                setCoreState('error');
+                logAIResponse('falla de base de datos', `No se pudo guardar el progreso. Detalle del sistema: ${err.message || err}`);
+            }
+        }
+
+        // 🚨 CRÍMEN (MISIÓN DE RIESGO)
+        async function executeRisk() {
+            // Actualizar cooldown desde LocalStorage
+            cooldowns.risk = Number(localStorage.getItem('panterAI_cooldown_risk') || 0);
+
+            if (cooldowns.risk > Date.now()) {
+                const totalSecs = Math.ceil((cooldowns.risk - Date.now()) / 1000);
+                const mins = Math.floor(totalSecs / 60);
+                const secs = totalSecs % 60;
+                logCommand('mision_riesgo');
+                setCoreState('thinking');
+                setTimeout(() => {
+                    setCoreState('error');
+                    logAIResponse('zona vigilada', `La policía de carreteras ronda la zona. Espera ${mins}m y ${secs}s para enfriar la ruta.`);
+                }, 400);
+                return;
+            }
+
+            logCommand('mision_riesgo');
+            setCoreState('thinking');
+            
+            // 5 minutos de cooldown
+            const targetCooldown = Date.now() + 300000;
+            cooldowns.risk = targetCooldown;
+            localStorage.setItem('panterAI_cooldown_risk', targetCooldown);
+
+            const win = Math.random() < 0.45;
+            const amount = Math.floor(Math.random() * 350) + 200;
+
+            try {
+                const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                let finalCoins = (Number(userCoins) || 0);
+                let title = '';
+                let desc = '';
+
+                if (win) {
+                    finalCoins += amount;
+                    title = 'Misión Completada';
+                    desc = `¡Lograste evadir la báscula de pesaje con sobrecarga! Ganancia: +$${amount} monedas.`;
+                } else {
+                    finalCoins = Math.max(0, finalCoins - amount);
+                    title = 'Multa de Tránsito';
+                    desc = `Un oficial te detuvo en vía por exceso de velocidad. Te aplican una multa de -$${amount} monedas.`;
+                }
+
+                await window.setDoc(userDocRef, { 
+                    coins: finalCoins, 
+                    cooldownRisk: targetCooldown,
+                    updatedAt: new Date().toISOString() 
+                }, { merge: true });
+                
+                try {
+                    await window.addDoc(window.collection(window.db, 'conductores', currentUser.uid, 'activity'), {
+                        type: 'crime',
+                        description: win ? `Evadir peaje (+${amount} 🪙)` : `Multa de policía (-${amount} 🪙)`,
+                        coins: win ? amount : -amount,
+                        createdAt: new Date().toISOString()
+                    });
+                } catch (e) {
+                    console.warn("Actividad no registrada:", e);
+                }
+
+                setTimeout(() => {
+                    setCoreState(win ? 'success' : 'error');
+                    logAIResponse(title, `${desc} Saldo total: $${finalCoins} 🪙.`);
+                }, 1000);
+
+            } catch (err) {
+                console.error(err);
+                setCoreState('error');
+                logAIResponse('falla de base de datos', `No se pudo guardar el progreso. Detalle del sistema: ${err.message || err}`);
+            }
+        }
+
+        // 💎 ENLAZAR / CANJEAR
+        async function executeRedeem() {
+            logCommand('canjear_esmeraldas');
+            setCoreState('thinking');
+
+            setTimeout(async () => {
+                if (userCoins < 50000) {
+                    setCoreState('error');
+                    logAIResponse('Faltan Monedas', 'Necesitas al menos $50,000 monedas web (🪙) para canjearlas por esmeraldas reales.');
+                    return;
+                }
+
+                const today = new Date().toDateString();
+                const limitKey = `panterMG_canje_limit_${currentUser.uid}`;
+                const limitData = JSON.parse(localStorage.getItem(limitKey) || '{"date":"","count":0}');
+                let dailyCount = limitData.date === today ? limitData.count : 0;
+
+                if (dailyCount >= 2) {
+                    setCoreState('error');
+                    logAIResponse('Límite Diario', 'Ya has alcanzado el máximo de 2 canjes diarios permitidos.');
+                    return;
+                }
+
+                try {
+                    const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                    const conductorDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                    
+                    const updatedCoins = userCoins - 50000;
+                    await window.setDoc(userDocRef, { coins: updatedCoins, updatedAt: new Date().toISOString() }, { merge: true });
+
+                    const conductorSnap = await window.getDoc(conductorDocRef);
+                    if (conductorSnap.exists()) {
+                        const curEm = Number(conductorSnap.data().esmeraldas || 0);
+                        await window.updateDoc(conductorDocRef, {
+                            esmeraldas: curEm + 50,
+                            last_sync_unix: Date.now() / 1000
+                        });
+                    } else {
+                        await window.setDoc(conductorDocRef, {
+                            uid: currentUser.uid,
+                            email: currentUser.email || '',
+                            esmeraldas: 50,
+                            dinero: 500,
+                            nombre_usuario: currentUser.displayName || 'Conductor',
+                            id_usuario: currentUser.uid.substring(0, 6).toUpperCase(),
+                            last_sync_unix: Date.now() / 1000
+                        });
+                    }
+
+                    // Aislamos el registro de actividad para evitar fallos de permisos
+                    try {
+                        await window.addDoc(window.collection(window.db, 'conductores', currentUser.uid, 'activity'), {
+                            type: 'exchange',
+                            description: 'Canje de Bote de Economía (50000 🪙 → +50 💎)',
+                            coins: -50000,
+                            createdAt: new Date().toISOString()
+                        });
+                    } catch (e) {
+                        console.warn("Actividad no registrada:", e);
+                    }
+
+                    dailyCount++;
+                    localStorage.setItem(limitKey, JSON.stringify({ date: today, count: dailyCount }));
+
+                    setCoreState('success');
+                    logAIResponse('Canje Exitoso', '¡Canje realizado! Hemos descontado 50,000 monedas y sumado 50 esmeraldas reales (💎) a tu cuenta de Nuestra Tierra.');
+
+                } catch (err) {
+                    console.error(err);
+                    setCoreState('error');
+                    logAIResponse('Error en Conexión', 'Hubo un fallo al intentar conectar con la base de datos de Nuestra Tierra.');
+                }
+            }, 900);
+        }
+
+        // APUESTAS
+        function openGambleMenu() {
+            logCommand('probar_suerte');
+            setCoreState('thinking');
+            // Mostrar pantalla de chat de nuevo
+            document.getElementById('consoleFeed').style.display = 'flex';
+            scrollFeed();
+            // Ocultar pantalla visual por defecto
+            document.getElementById('casinoVisualScreen').style.display = 'none';
+            document.getElementById('casinoVisualScreen').innerHTML = '';
+            
+            setTimeout(() => {
+                setCoreState('idle');
+                logAIResponse('Mesa de Juegos', 'Elige en qué juego deseas probar suerte para duplicar tus monedas:');
+                
+                const actionPanel = document.getElementById('actionPanel');
+                actionPanel.innerHTML = `
+                    <button class="cyber-chip" onclick="startBlackjackGame()"><span style="font-size:1.1rem;">🃏</span> Blackjack</button>
+                    <button class="cyber-chip" onclick="showRouletteBet()"><span style="font-size:1.1rem;">🎡</span> Ruleta de Colores</button>
+                    <button class="cyber-chip gold" onclick="resetControls()"><span style="font-size:1.1rem;">🔙</span> Regresar</button>
+                `;
+            }, 500);
+        }
+
+        function resetControls() {
+            document.getElementById('consoleFeed').style.display = 'flex';
+            scrollFeed();
+            document.getElementById('casinoVisualScreen').style.display = 'none';
+            document.getElementById('casinoVisualScreen').innerHTML = '';
+            const actionPanel = document.getElementById('actionPanel');
+            actionPanel.innerHTML = `
+                <button class="cyber-chip" onclick="executeWork()"><img src="../recursos/iconos/maletin.png" alt="💼" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"> Trabajar (Seguro)</button>
+                <button class="cyber-chip" onclick="executeRisk()"><img src="../recursos/iconos/sirena.png" alt="🚨" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"> Misión de Riesgo</button>
+                <button class="cyber-chip" onclick="openGambleMenu()"><img src="../recursos/iconos/casino.png" alt="🎰" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"> Probar Suerte (Apuestas)</button>
+                <button class="cyber-chip gold" onclick="executeRedeem()"><img src="../recursos/iconos/esmeralda.png" alt="💎" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"> Canjear por Esmeraldas</button>
+            `;
+            setCoreState('idle');
+        }
+
+        // RULETA VISUAL
+        function showRouletteBet() {
+            logCommand('apostar_ruleta');
+            setCoreState('thinking');
+            document.getElementById('casinoVisualScreen').style.display = 'none';
+            setTimeout(() => {
+                setCoreState('idle');
+                logAIResponse('Elige tu Apuesta', 'Selecciona la cantidad de monedas a apostar en la ruleta (Rojo o Negro duplica tus monedas):');
+                
+                const actionPanel = document.getElementById('actionPanel');
+                actionPanel.innerHTML = `
+                    <button class="cyber-chip" onclick="spinRoulette(200)">Apostar $200 🪙</button>
+                    <button class="cyber-chip" onclick="spinRoulette(500)">Apostar $500 🪙</button>
+                    <button class="cyber-chip gold" onclick="openGambleMenu()">🔙 Regresar</button>
+                `;
+            }, 400);
+        }
+
+        function spinRoulette(betAmount) {
+            if (userCoins < betAmount) {
+                setCoreState('error');
+                logAIResponse('Sin Monedas', `No cuentas con suficientes monedas para realizar esta apuesta ($${betAmount} 🪙).`);
+                openGambleMenu();
+                return;
+            }
+            logCommand(`apuesta_ruleta_monto_${betAmount}`);
+            setCoreState('thinking');
+
+            // Ocultar pantalla de chat
+            document.getElementById('consoleFeed').style.display = 'none';
+
+            // Renderizar la pista de Ruleta interactiva
+            const screen = document.getElementById('casinoVisualScreen');
+            screen.style.display = 'flex';
+            
+            // Generar bolsillos mezclados
+            const pockets = [];
+            const colors = ['rojo', 'negro'];
+            for (let i = 0; i < 40; i++) {
+                let color = colors[i % 2];
+                if (i === 15 || i === 30) color = 'verde';
+                pockets.push({ color, num: i === 15 || i === 30 ? 0 : Math.floor(Math.random() * 36) + 1 });
+            }
+
+            screen.innerHTML = `
+                <div class="casino-title">🎡 RULETA HOLOGRÁFICA (Apuesta: $${betAmount} 🪙)</div>
+                <div class="roulette-board" style="width: 100%;">
+                    <div class="roulette-visual-track">
+                        <div class="roulette-ticker"></div>
+                        <div class="roulette-spinner-row" id="rouletteSpinner" style="transform: translateX(0);">
+                            ${pockets.map(p => `<div class="roulette-pocket ${p.color}">${p.num}</div>`).join('')}
+                        </div>
+                    </div>
+                    <div style="text-align: center; color: var(--text-secondary); font-size: 0.8rem; margin: 5px 0;">Elige un color para girar la ruleta:</div>
+                    <div class="chips-container" id="rouletteChips">
+                        <div class="bet-chip chip-rojo" onclick="executeRouletteSpin(${betAmount}, 'Rojo', ${JSON.stringify(pockets)})">ROJO</div>
+                        <div class="bet-chip chip-negro" onclick="executeRouletteSpin(${betAmount}, 'Negro', ${JSON.stringify(pockets)})">NEGRO</div>
+                    </div>
+                </div>
+            `;
+            setCoreState('idle');
+        }
+
+        async function executeRouletteSpin(betAmount, playerBetColor, pockets) {
+            // Desactivar chips para evitar doble clic
+            const chips = document.getElementById('rouletteChips');
+            if (chips) chips.style.pointerEvents = 'none';
+
+            logCommand(`apuesta_${playerBetColor.toLowerCase()}`);
+            setCoreState('thinking');
+
+            // Elegir un bolsillo ganador aleatorio al final de la pista (entre 22 y 35)
+            const winIdx = Math.floor(Math.random() * 14) + 22; 
+            const winner = pockets[winIdx];
+
+            const spinner = document.getElementById('rouletteSpinner');
+            if (spinner) {
+                // Cada pocket mide 55px de ancho + 4px de gap = 59px. 
+                // Centramos el elemento restando el ancho aproximado de la pantalla
+                const offset = (winIdx * 59) - 210;
+                spinner.style.transform = `translateX(-${offset}px)`;
+            }
+
+            setTimeout(async () => {
+                let resultColor = winner.color === 'rojo' ? 'Rojo' : (winner.color === 'negro' ? 'Negro' : 'Verde');
+                let finalCoins = userCoins;
+                let won = resultColor === playerBetColor;
+                let earnings = won ? betAmount : -betAmount;
+                finalCoins += earnings;
+
+                try {
+                    const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                    await window.setDoc(userDocRef, { coins: finalCoins, updatedAt: new Date().toISOString() }, { merge: true });
+                    try {
+                        await window.addDoc(window.collection(window.db, 'conductores', currentUser.uid, 'activity'), {
+                            type: 'gamble',
+                            description: won ? `Gano en Ruleta (+${earnings} 🪙)` : `Perdio en Ruleta (-${betAmount} 🪙)`,
+                            coins: earnings,
+                            createdAt: new Date().toISOString()
+                        });
+                    } catch (e) {
+                        console.warn("Actividad no registrada:", e);
+                    }
+
+                    setCoreState(won ? 'success' : 'error');
+                    logAIResponse('Resultado de la Ruleta', `Apostaste al **${playerBetColor}** y cayó **${resultColor} (${winner.num})**. ${won ? `¡Felicidades! Ganas **+$${earnings} monedas**.` : `¡Qué mala suerte! Pierdes **-$${betAmount} monedas**.`} Saldo: **$${finalCoins} 🪙**.`);
+
+                } catch (err) {
+                    console.error(err);
+                }
+
+                // Esperar 2 segundos antes de volver al menú de apuestas
+                setTimeout(() => {
+                    openGambleMenu();
+                }, 2000);
+            }, 3000); // 3 segundos de animación
+        }
+
+        // BLACKJACK VISUAL
+        function updateBlackjackVisuals(hideDealerHiddenCard = false) {
+            const screen = document.getElementById('casinoVisualScreen');
+            if (!activeBlackjack) {
+                screen.style.display = 'none';
+                return;
+            }
+            screen.style.display = 'flex';
+            
+            const playerSum = activeBlackjack.player.reduce((a,b)=>a+b, 0);
+            const dealerCardsToSum = (activeBlackjack.dealer.length === 1 && !hideDealerHiddenCard) ? [activeBlackjack.dealer[0]] : activeBlackjack.dealer;
+            const dealerSum = dealerCardsToSum.reduce((a,b)=>a+b, 0);
+
+            screen.innerHTML = `
+                <div class="casino-title">🃏 MESA DE BLACKJACK (Apuesta: $${activeBlackjack.bet} 🪙)</div>
+                <div class="blackjack-table">
+                    <div class="blackjack-hand-section">
+                        <div class="hand-label">
+                            <span>MANO DEL CRUPIER</span>
+                            <span class="hand-score dealer">${dealerSum}</span>
+                        </div>
+                        <div class="cards-list">
+                            ${activeBlackjack.dealer.map(c => `<div class="cyber-card dealer-card">${c}</div>`).join('')}
+                            ${(activeBlackjack.dealer.length === 1 && !hideDealerHiddenCard) ? '<div class="cyber-card dealer-card hidden-card">?</div>' : ''}
+                        </div>
+                    </div>
+                    <div class="blackjack-hand-section">
+                        <div class="hand-label">
+                            <span>TUS CARTAS</span>
+                            <span class="hand-score">${playerSum}</span>
+                        </div>
+                        <div class="cards-list">
+                            ${activeBlackjack.player.map(c => `<div class="cyber-card player-card">${c}</div>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function startBlackjackGame() {
+            logCommand('jugar_blackjack');
+            setCoreState('thinking');
 
             setTimeout(() => {
-                document.getElementById('gameIntro').style.display = 'block';
-                document.getElementById('gamePlay').style.display = 'none';
-                if (window.auth.currentUser) {
-                    checkDailyLimits(window.auth.currentUser.uid);
+                if (userCoins < 500) {
+                    setCoreState('error');
+                    logAIResponse('Faltan Monedas', 'Necesitas tener al menos **$500 monedas** para jugar al Blackjack.');
+                    openGambleMenu();
+                    return;
                 }
-            }, 3000);
+
+                // Ocultar pantalla de chat
+                document.getElementById('consoleFeed').style.display = 'none';
+
+                const drawCard = () => Math.floor(Math.random() * 10) + 1;
+                activeBlackjack = {
+                    bet: 500,
+                    player: [drawCard(), drawCard()],
+                    dealer: [drawCard()]
+                };
+
+                const playerSum = activeBlackjack.player.reduce((a,b)=>a+b, 0);
+                const dealerSum = activeBlackjack.dealer[0];
+
+                setCoreState('idle');
+                updateBlackjackVisuals();
+                logAIResponse('Partida de Blackjack', `Apuesta: **$500 🪙**. Tus cartas suman: **${playerSum}**. Crupier muestra: **${dealerSum}**. ¿Pides carta o te plantas?`);
+
+                const actionPanel = document.getElementById('actionPanel');
+                actionPanel.innerHTML = `
+                    <button class="cyber-chip" onclick="bjHit()"><span style="font-size:1.1rem;">🃏</span> Pedir Carta</button>
+                    <button class="cyber-chip" onclick="bjStand()"><span style="font-size:1.1rem;">🛑</span> Plantarse</button>
+                `;
+            }, 600);
         }
 
-        document.addEventListener('DOMContentLoaded', initGame);
+        function bjHit() {
+            if (!activeBlackjack) return;
+            logCommand('pedir_carta');
+            setCoreState('thinking');
+
+            setTimeout(() => {
+                const card = Math.floor(Math.random() * 10) + 1;
+                activeBlackjack.player.push(card);
+                const playerSum = activeBlackjack.player.reduce((a,b)=>a+b, 0);
+                
+                updateBlackjackVisuals();
+
+                if (playerSum > 21) {
+                    setCoreState('error');
+                    resolveBlackjack(false, `¡Te pasaste! Tu suma de cartas es de **${playerSum}** (límite 21).`);
+                } else {
+                    setCoreState('idle');
+                    logAIResponse('Pedir Carta', `Has sacado un ${card}. Tus cartas suman: **${playerSum}**. Crupier muestra: **${activeBlackjack.dealer[0]}**.`);
+                }
+            }, 500);
+        }
+
+        function bjStand() {
+            if (!activeBlackjack) return;
+            logCommand('plantarse');
+            setCoreState('thinking');
+
+            setTimeout(() => {
+                let dealerSum = activeBlackjack.dealer.reduce((a,b)=>a+b, 0);
+                while (dealerSum < 17) {
+                    const card = Math.floor(Math.random() * 10) + 1;
+                    activeBlackjack.dealer.push(card);
+                    dealerSum = activeBlackjack.dealer.reduce((a,b)=>a+b, 0);
+                }
+
+                updateBlackjackVisuals(true);
+                const playerSum = activeBlackjack.player.reduce((a,b)=>a+b, 0);
+
+                if (dealerSum > 21) {
+                    resolveBlackjack(true, `¡El Crupier se pasó de 21! (Crupier: **${dealerSum}** vs Tú: **${playerSum}**)`);
+                } else if (playerSum > dealerSum) {
+                    resolveBlackjack(true, `¡Le ganaste al Crupier! Puntuación mayor. (Crupier: **${dealerSum}** vs Tú: **${playerSum}**)`);
+                } else if (playerSum === dealerSum) {
+                    resolveBlackjack(null, `¡Empate! Se devuelven las monedas apostadas. (Crupier: **${dealerSum}** vs Tú: **${playerSum}**)`);
+                } else {
+                    resolveBlackjack(false, `Perdiste. El Crupier sacó mejor puntuación. (Crupier: **${dealerSum}** vs Tú: **${playerSum}**)`);
+                }
+            }, 600);
+        }
+
+        async function resolveBlackjack(won, descText) {
+            if (!activeBlackjack) return;
+            
+            let finalCoins = userCoins;
+            let netAmount = 0;
+
+            if (won === true) {
+                netAmount = activeBlackjack.bet;
+                finalCoins += netAmount;
+                setCoreState('success');
+            } else if (won === false) {
+                netAmount = -activeBlackjack.bet;
+                finalCoins += netAmount;
+                setCoreState('error');
+            } else {
+                setCoreState('idle');
+            }
+
+            try {
+                const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                await window.setDoc(userDocRef, { coins: finalCoins, updatedAt: new Date().toISOString() }, { merge: true });
+                try {
+                    await window.addDoc(window.collection(window.db, 'conductores', currentUser.uid, 'activity'), {
+                        type: 'gamble',
+                        description: `Blackjack: ${won === true ? 'Ganó' : (won === false ? 'Perdió' : 'Empate')} (${netAmount} 🪙)`,
+                        coins: netAmount,
+                        createdAt: new Date().toISOString()
+                    });
+                } catch (e) {
+                    console.warn("Actividad no registrada:", e);
+                }
+
+                logAIResponse(won === true ? '¡Ganaste!' : (won === false ? 'Perdiste' : 'Empate'), `${descText} ${won === true ? `Sumas **+$${netAmount} monedas**.` : (won === false ? `Pagas **-$${activeBlackjack.bet} monedas**.` : 'Apuesta devuelta.')} Saldo: **$${finalCoins} 🪙**.`);
+
+            } catch (err) {
+                console.error(err);
+            }
+
+            activeBlackjack = null;
+            setTimeout(() => {
+                openGambleMenu();
+            }, 2500);
+        }
+
+        document.addEventListener('DOMContentLoaded', initAIGame);
     </script>
 </body>
 </html>
-
