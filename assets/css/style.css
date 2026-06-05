@@ -15,14 +15,14 @@
 /* 🎨 Variables CSS - Diseño Moderno Colombiano Premium */
 :root {
   /* Colores Base (Inspirados en la Esmeralda y el Oro Colombiano) */
-  --hue-primary: 145;
-  --sat-primary: 90%;
-  --light-primary: 40%;
+  --hue-primary: 200;
+  --sat-primary: 100%;
+  --light-primary: 50%;
   
-  --color-primary: #00c853; /* Esmeralda Vibrante */
-  --color-primary-glow: rgba(0, 200, 83, 0.15);
-  --color-primary-dark: #00600f;
-  --color-primary-light: #00e676;
+  --color-primary: #00b0ff; /* Esmeralda Vibrante */
+  --color-primary-glow: rgba(0, 176, 255, 0.15);
+  --color-primary-dark: #0070ba;
+  --color-primary-light: #40c4ff;
   
   --color-accent: #d4af37; /* Oro Colombiano */
   --color-accent-glow: rgba(212, 175, 55, 0.2);
@@ -43,11 +43,11 @@
   
   /* Bordes y Sombras */
   --border-glass: 1px solid rgba(255, 255, 255, 0.12);
-  --border-glass-hover: 1px solid rgba(0, 200, 83, 0.45);
+  --border-glass-hover: 1px solid rgba(0, 176, 255, 0.45);
   --border-radius: 10px;
   --border-radius-lg: 16px;
   
-  --shadow-glow-sm: 0 4px 24px -2px rgba(0, 200, 83, 0.15);
+  --shadow-glow-sm: 0 4px 24px -2px rgba(0, 176, 255, 0.15);
   --shadow-glow-md: 0 10px 30px -4px rgba(0, 0, 0, 0.3);
   --shadow-glow-lg: 0 20px 40px -6px rgba(0, 0, 0, 0.5);
   
@@ -78,7 +78,7 @@
   --bg-glass-card-hover: #e2e8f0;      /* Gris intermedio */
   
   --border-glass: 1px solid rgba(15, 23, 42, 0.2);
-  --border-glass-hover: 1px solid rgba(0, 200, 83, 0.7);
+  --border-glass-hover: 1px solid rgba(0, 176, 255, 0.7);
   
   --text-primary: #0f172a;       /* Slate oscuro */
   --text-secondary: #1e293b;     /* Slate grisáceo muy visible */
@@ -1447,7 +1447,7 @@ footer p { margin: 0; font-size: 0.9rem; color: var(--text-muted); }
   transition: background 0.2s;
   padding: 0;
 }
-.nav-hamburger:hover { background: rgba(0,200,83,0.15); border-color: var(--color-primary); }
+.nav-hamburger:hover { background: rgba(0, 176, 255,0.15); border-color: var(--color-primary); }
 .nav-hamburger span {
   display: block;
   width: 20px;
@@ -1504,11 +1504,11 @@ nav.nav-open .nav-mobile-menu { display: flex; }
 }
 .nav-mobile-menu a:hover,
 .nav-mobile-menu .nav-dropdown-toggle:hover {
-  background: rgba(0,200,83,0.08);
+  background: rgba(0, 176, 255,0.08);
   color: var(--color-primary-light);
   padding-left: 1.25rem;
 }
-.nav-mobile-menu a.active { color: var(--color-primary-light); background: rgba(0,200,83,0.06); }
+.nav-mobile-menu a.active { color: var(--color-primary-light); background: rgba(0, 176, 255,0.06); }
 .nav-mobile-menu hr {
   border: none;
   border-top: 1px solid rgba(255,255,255,0.06);
@@ -1542,7 +1542,13 @@ nav.nav-open .nav-mobile-menu { display: flex; }
     overflow: visible;
     position: sticky;
   }
-  .nav-logo span { display: none; }
+  .nav-logo span {
+    font-size: 0.88rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 130px;
+  }
   .nav-middle { display: none; }          /* Ocultar links de escritorio */
   .nav-hamburger { display: flex; }       /* Mostrar botón hamburguesa */
 
@@ -1972,7 +1978,7 @@ nav.nav-open .nav-mobile-menu { display: flex; }
 }
 
 .hub-hero-premium:hover {
-  border-color: rgba(0, 200, 83, 0.25);
+  border-color: rgba(0, 176, 255, 0.25);
   box-shadow: var(--shadow-glow-md);
 }
 
@@ -2087,12 +2093,12 @@ nav.nav-open .nav-mobile-menu { display: flex; }
   font-size: 1.8rem;
   font-weight: 800;
   font-family: var(--font-display);
-  color: rgba(0, 200, 83, 0.12);
+  color: rgba(0, 176, 255, 0.12);
   line-height: 1;
 }
 
 .step-card:hover .step-number {
-  color: rgba(0, 200, 83, 0.22);
+  color: rgba(0, 176, 255, 0.22);
 }
 
 .step-card h4 {
@@ -2363,8 +2369,8 @@ nav.nav-open .nav-mobile-menu { display: flex; }
 }
 
 .reward-node.unlocked {
-  background: rgba(0, 200, 83, 0.03);
-  border-color: rgba(0, 200, 83, 0.15);
+  background: rgba(0, 176, 255, 0.03);
+  border-color: rgba(0, 176, 255, 0.15);
 }
 
 .reward-info {
@@ -2393,7 +2399,7 @@ nav.nav-open .nav-mobile-menu { display: flex; }
 }
 
 .reward-badge.unlocked {
-  background: rgba(0, 200, 83, 0.15);
+  background: rgba(0, 176, 255, 0.15);
   color: var(--color-primary-light);
 }
 

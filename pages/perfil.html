@@ -21,8 +21,8 @@
   <link rel="preconnect" href="https://pagead2.googlesyndication.com">
   
   <!-- 🔖 Iconos -->
-  <link rel="icon" href="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" type="image/png">
-  <link rel="apple-touch-icon" href="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&">
+  <link rel="icon" href="../recursos/PSGD.png" type="image/png">
+  <link rel="apple-touch-icon" href="../recursos/PSGD.png">
   
   <!-- 🎨 Fuentes & Estilos -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -92,7 +92,7 @@
   body {
     background-color: #13161d !important;
     background-image: radial-gradient(ellipse at 30% 20%, rgba(0, 176, 255, 0.07) 0%, transparent 60%),
-                      radial-gradient(ellipse at 75% 80%, rgba(0, 200, 83, 0.06) 0%, transparent 55%) !important;
+                      radial-gradient(ellipse at 75% 80%, rgba(0, 176, 255, 0.06) 0%, transparent 55%) !important;
     background-attachment: fixed !important;
     color: var(--text-primary);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -446,6 +446,18 @@
   .bp.pu { border-color: rgba(168,85,247,.35);  color: #d8b4fe; }
   .bp.go { border-color: rgba(251,191,36,.35);  color: #fde68a; }
   .bp.r  { border-color: rgba(248,113,113,.35); color: #fda4af; }
+  .bp.aqua { border-color: rgba(0, 240, 255, 0.35); color: #80f0ff; }
+  .bp.beta {
+    background: linear-gradient(135deg, rgba(0, 176, 255, 0.2), rgba(30, 112, 200, 0.35));
+    border: 1px solid rgba(0, 176, 255, 0.6);
+    color: #e0f7ff;
+    text-shadow: 0 0 4px rgba(0, 176, 255, 0.6);
+    box-shadow: 0 0 8px rgba(0, 176, 255, 0.2);
+  }
+  @keyframes pulse-glow {
+    0% { transform: scale(1); box-shadow: 0 0 5px rgba(0, 176, 255, 0.15); }
+    100% { transform: scale(1.03); box-shadow: 0 0 15px rgba(0, 176, 255, 0.45); }
+  }
   
   /* ========================================
      KPI STRIP (Stats)
@@ -1483,7 +1495,7 @@
   <nav role="navigation" aria-label="Menú principal">
     <div class="nav-left">
       <a href="../index.html" class="nav-logo">
-        <img src="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" alt="Panter Studio">
+        <img src="../recursos/PSGD.png" alt="Panter Studio">
         <span>Panter Studio</span>
       </a>
     </div>
@@ -1527,7 +1539,7 @@
   <!-- 🔐 AUTH GATE (Login/Register) -->
   <main id="profileAuthSection" class="auth-gate" role="main">
     <div class="auth-card" role="dialog" aria-labelledby="authTitle">
-      <img src="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" alt="Panter Studio" class="auth-logo" width="64" height="64">
+      <img src="../recursos/PSGD.png" alt="Panter Studio" class="auth-logo" width="64" height="64">
       <h1 id="authTitle">Mi Perfil</h1>
       <p>Conéctate con tu cuenta de Google para ver tu progreso, monedas y recompensas.</p>
       
@@ -1616,12 +1628,12 @@
           <small>🪙 monedas</small>
           <small id="profileCoinsDollars" style="color:#a5f3fc;display:block"></small>
         </div>
-        <div style="display:flex;gap:var(--space-xs);flex-direction:row">
+        <div style="display:flex;gap:var(--space-xs);flex-direction:row;flex-wrap:wrap;justify-content:flex-end;align-items:center;">
+          <div id="profileAdminTools" hidden style="margin:0;">
+            <a href="admin/admin.html" class="pb gold sm" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px; font-weight:700;">🛡️ Panel Admin</a>
+          </div>
           <button class="pb prim sm" id="editProfileBtn">✏️ Editar</button>
           <button class="pb dng sm" id="logoutBtn">🚪 Salir</button>
-        </div>
-        <div id="profileAdminTools" hidden>
-          <a href="../admin/admin.html" class="pb gold sm" style="text-decoration:none;">🛡️ Admin</a>
         </div>
       </div>
     </div>
@@ -1677,6 +1689,18 @@
       <!-- ── CENTRO: Estado de Juego + Biblioteca de Juegos ── -->
       <div class="pg-mid">
         
+        <!-- 🧪 BETA TESTER CARD -->
+        <article class="pc" id="profileBetaTesterCard" hidden style="background: linear-gradient(135deg, rgba(0, 176, 255, 0.1), rgba(28, 33, 46, 0.95)); border: 1.5px solid rgba(0, 176, 255, 0.4); box-shadow: 0 8px 32px rgba(0, 176, 255, 0.15); margin-bottom: 1.25rem;">
+          <div style="display:flex; align-items:center; gap:16px;">
+            <div style="font-size:2.5rem; background:rgba(0, 176, 255, 0.15); border: 1px solid rgba(0, 176, 255, 0.3); border-radius:50%; width:64px; height:64px; display:flex; align-items:center; justify-content:center; flex-shrink:0; animation: pulse-glow 2s infinite alternate;">🧪</div>
+            <div>
+              <h3 style="color:#00b0ff; margin:0 0 4px 0; font-size:1.1rem; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">Beta Tester Oficial</h3>
+              <p style="color:var(--text-primary); font-size:0.85rem; margin:0; font-weight:600;">¡Eres parte del equipo de pruebas de Panter Studio!</p>
+              <p style="color:var(--text-muted); font-size:0.75rem; margin:4px 0 0 0;">Gracias por ayudarnos a probar y mejorar el simulador.</p>
+            </div>
+          </div>
+        </article>
+
         <!-- 🎮 ESTADO DEL JUEGO (Nuestra Tierra) -->
         <article class="pc" aria-labelledby="gameStatsTitle" style="border-color:#00b0ff;box-shadow:0 0 15px rgba(0, 176, 255, 0.1);">
           <div class="pc-h">

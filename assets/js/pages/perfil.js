@@ -10,14 +10,14 @@
   const REDEEM_COLLECTION     = 'coin_redemptions';
 
   const ROLE_LABELS = {
-    founder_ceo: 'Fundador / CEO', administrador: 'Administrador',
+    founder_ceo: 'Fundador / CEO', director: 'Director', administrador: 'Administrador',
     programador: 'Programador',    modelador: 'Modelador',
     usuario: 'Miembro',            viewer: 'Miembro',
     vip: 'VIP',                    community_manager: 'Community Manager',
     support_ops: 'Soporte',        youtuber: 'Youtuber',
     streamer: 'Streamer'
   };
-  const SPECIAL_ACCESS_ROLES = new Set(['founder_ceo','administrador','programador','modelador']);
+  const SPECIAL_ACCESS_ROLES = new Set(['founder_ceo','director','administrador','programador','modelador']);
 
   /* ── DOM ── */
   const $  = id  => document.getElementById(id);
@@ -61,6 +61,7 @@
   const profileSupportCount           = $('profileSupportCount');
   const profileSponsorSummary         = $('profileSponsorSummary');
   const profileAdminTools             = $('profileAdminTools');
+  const profileBetaTesterCard         = $('profileBetaTesterCard');
   const profileGamesPlayedToday       = $('profileGamesPlayedToday');
   const gameUsername                  = $('gameUsername');
   const gameConductorId               = $('gameConductorId');
@@ -353,10 +354,17 @@
   function renderBadges(data, user) {
     const b = [];
     if (user?.emailVerified)                       b.push(badge('✓ Email', 'g'));
+    if (data.betaTesterStatus === 'approved')      b.push(badge('Beta Tester', 'beta'));
     if (preregSnapshot.registered)                 b.push(badge('Pre-reg', 'b'));
     if (Number(data.referralCount || 0) > 0)       b.push(badge(data.referralCount + ' refs', 'pu'));
     if (supportSnapshot.total > 0)                 b.push(badge('Patroc.', 'go'));
-    if (SPECIAL_ACCESS_ROLES.has(String(data.role || '').toLowerCase())) b.push(badge(roleLabel(data.role), 'r'));
+    const r = String(data.role || '').toLowerCase();
+    if (SPECIAL_ACCESS_ROLES.has(r)) {
+      let tone = 'r'; // default red (Director/Founder)
+      if (r === 'administrador') tone = 'aqua';
+      if (r === 'programador' || r === 'modelador') tone = 'b';
+      b.push(badge(roleLabel(data.role), tone));
+    }
     const badgesHtml = b.join('');
     if (profileBadges) profileBadges.innerHTML = badgesHtml;
     if (profileBadgesSidebar) profileBadgesSidebar.innerHTML = badgesHtml;
@@ -387,6 +395,10 @@
   function renderProfile() {
     if (!currentUser || !currentUserData) return;
     const d    = currentUserData;
+    const isFounder = String(currentUser?.email || '').trim().toLowerCase() === 'pantergamey@gmail.com';
+    if (isFounder) {
+      d.role = 'founder_ceo';
+    }
     const name = String(d.nombre_usuario || d.displayName || d.username || currentUser.displayName || currentUser.email?.split('@')[0] || 'Miembro');
     const role = String(d.role || 'viewer').toLowerCase();
     const set  = (el, v) => { if (el) el.textContent = v; };
@@ -461,7 +473,8 @@
     renderStreakDays(d.streak || 0);
     checkDailyCooldown(d.lastDaily);
     renderBadges(d, currentUser);
-    if (profileAdminTools) profileAdminTools.hidden = !SPECIAL_ACCESS_ROLES.has(role);
+    if (profileAdminTools) profileAdminTools.hidden = !(SPECIAL_ACCESS_ROLES.has(role) || isFounder);
+    if (profileBetaTesterCard) profileBetaTesterCard.hidden = (d.betaTesterStatus !== 'approved');
   }
 
   function renderActivity(items) {

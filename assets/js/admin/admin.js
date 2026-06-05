@@ -1,4 +1,4 @@
-// Admin Panel - Minimal Base (Auth + Role + Basic Profile)
+// Admin Panel - Panter Studio Control Center
 
 const FOUNDER_CEO_EMAIL = 'pantergamey@gmail.com';
 const ADMIN_EMAILS_LS_KEY = 'panterAdminEmails';
@@ -15,43 +15,26 @@ function toSitePath(path) {
 
 const ROLE_LABELS = {
     founder_ceo: 'Fundador / CEO',
+    director: 'Director',
     administrador: 'Administrador',
     programador: 'Programador',
     modelador: 'Modelador',
-    admin_general: 'Admin General',
-    developer: 'Desarrollador',
-    modeler: 'Modelador',
-    community_manager: 'Community Manager',
-    support_ops: 'Soporte / Operaciones',
-    admin: 'Admin',
-    youtuber: 'Youtuber',
-    streamer: 'Streamer',
     usuario: 'Usuario',
     vip: 'VIP',
     viewer: 'Solo lectura'
 };
 
 const CEO_ASSIGNABLE_ROLES = {
+    director: 'Director',
     administrador: 'Administrador',
     programador: 'Programador',
     modelador: 'Modelador',
-    youtuber: 'Youtuber',
-    streamer: 'Streamer',
     usuario: 'Usuario',
     vip: 'VIP'
 };
 
-const ROLE_ALIASES = {
-    admin: 'administrador',
-    admin_general: 'administrador',
-    developer: 'programador',
-    modeler: 'modelador',
-    viewer: 'usuario'
-};
-
-const PANEL_ACCESS_ROLES = new Set(['founder_ceo', 'administrador', 'programador', 'modelador']);
-
-const EMAIL_ANALYSIS_COLLECTIONS = ['conductores', 'preregistros', 'donations', 'sponsors'];
+const PANEL_ACCESS_ROLES = new Set(['founder_ceo', 'director', 'administrador', 'programador', 'modelador']);
+const EMAIL_ANALYSIS_COLLECTIONS = ['conductores', 'preregistros'];
 
 const gate = document.getElementById('adminGate');
 const panel = document.getElementById('adminPanel');
@@ -60,37 +43,13 @@ const gateMessage = document.getElementById('adminGateMessage');
 const currentUserEl = document.getElementById('adminCurrentUser');
 const currentEmailEl = document.getElementById('adminCurrentEmail');
 const currentRoleLabelEl = document.getElementById('adminCurrentRoleLabel');
-const ceoToolsSection = document.getElementById('adminCeoTools');
+
+const ceoToolsSection = document.getElementById('tab-accounts');
+const sidebarAccountsTab = document.getElementById('sidebarAccountsTab');
 const ceoUsersMessageEl = document.getElementById('adminCeoUsersMessage');
 const ceoUsersTableBody = document.getElementById('adminCeoUsersTableBody');
 const ceoEmailSearchInput = document.getElementById('adminCeoEmailSearch');
 const ceoRefreshUsersBtn = document.getElementById('adminCeoRefreshUsersBtn');
-const founderAddAmountInput = document.getElementById('founderAddAmount');
-const founderAddNoteInput = document.getElementById('founderAddNote');
-const founderAddBtn = document.getElementById('founderAddBtn');
-const founderAddMessage = document.getElementById('founderAddMessage');
-const founderRemoveAmountInput = document.getElementById('founderRemoveAmount');
-const founderRemoveNoteInput = document.getElementById('founderRemoveNote');
-const founderRemoveBtn = document.getElementById('founderRemoveBtn');
-const founderRemoveMessage = document.getElementById('founderRemoveMessage');
-const adminToggleDonationsConfigBtn = document.getElementById('adminToggleDonationsConfigBtn');
-const adminDonationsConfigContainer = document.getElementById('adminDonationsConfigContainer');
-const donConfigGoalInput = document.getElementById('donConfigGoal');
-const donConfigPaypalInput = document.getElementById('donConfigPaypal');
-const donConfigNequiInput = document.getElementById('donConfigNequi');
-const donConfigBreveInput = document.getElementById('donConfigBreve');
-const donConfigPatreonInput = document.getElementById('donConfigPatreon');
-const donConfigPublicMessageInput = document.getElementById('donConfigPublicMessage');
-const donConfigSaveBtn = document.getElementById('donConfigSaveBtn');
-const donConfigResetBtn = document.getElementById('donConfigResetBtn');
-const donConfigMessage = document.getElementById('donConfigMessage');
-const previewProgressFill = document.getElementById('previewProgressFill');
-const previewPercent = document.getElementById('previewPercent');
-const previewGoalText = document.getElementById('previewGoalText');
-const previewCurrentText = document.getElementById('previewCurrentText');
-const previewPaypalBtn = document.getElementById('previewPaypalBtn');
-const previewNequiBtn = document.getElementById('previewNequiBtn');
-const previewBreveBtn = document.getElementById('previewBreveBtn');
 
 const logoutBtn = document.getElementById('adminLogoutBtn');
 const goHomeBtn = document.getElementById('adminGoHomeBtn');
@@ -104,33 +63,53 @@ let hasPlayedWelcome = false;
 let ceoUsersList = [];
 let currentUser = null;
 
-// Create updates UI refs (admin)
-const adminCreateUpdateForm = document.getElementById('adminCreateUpdateForm');
-const adminCreateUpdateProject = document.getElementById('adminCreateUpdateProject');
-const adminCreateUpdateTitle = document.getElementById('adminCreateUpdateTitle');
-const adminCreateUpdateSummary = document.getElementById('adminCreateUpdateSummary');
-const adminCreateUpdateContent = document.getElementById('adminCreateUpdateContent');
-const adminCreateUpdateImage = document.getElementById('adminCreateUpdateImage');
-const adminCreateUpdatePublished = document.getElementById('adminCreateUpdatePublished');
-const adminCreateUpdateReset = document.getElementById('adminCreateUpdateReset');
-const adminCreateUpdateMsg = document.getElementById('adminCreateUpdateMsg');
+// TAB Switching
+const tabButtons = document.querySelectorAll('.sidebar-tab');
+const tabPanes = document.querySelectorAll('.tab-pane');
+const sectionTitle = document.getElementById('sectionTitle');
+const sectionSub = document.getElementById('sectionSub');
 
-let adminProjectsCache = [];
+const tabInfo = {
+    dashboard: { title: 'Resumen General', sub: 'Estadisticas y resumen del Hub de Panter Studio.' },
+    betatesters: { title: 'Beta Testers', sub: 'Inscripciones para el equipo de pruebas en Android.' },
+    accounts: { title: 'Gestion de Cuentas (CEO)', sub: 'Miembros del equipo y niveles de rol autorizados.' },
+    support: { title: 'Soporte al Jugador', sub: 'Busqueda de usuarios y modificacion de saldo de monedas.' }
+};
+
+tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const tabName = btn.getAttribute('data-tab');
+        
+        tabButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        tabPanes.forEach(pane => pane.classList.remove('active'));
+        const activePane = document.getElementById(`tab-${tabName}`);
+        if (activePane) activePane.classList.add('active');
+        
+        if (tabInfo[tabName]) {
+            if (sectionTitle) sectionTitle.textContent = tabInfo[tabName].title;
+            if (sectionSub) sectionSub.textContent = tabInfo[tabName].sub;
+        }
+        
+        if (tabName === 'betatesters') {
+            loadBetaTesters();
+        } else if (tabName === 'accounts') {
+            loadCeoUsers();
+        }
+    });
+});
 
 function normalizeRole(role) {
-    const normalizedRaw = String(role || '').trim().toLowerCase();
-    const normalized = ROLE_ALIASES[normalizedRaw] || normalizedRaw;
-    return Object.prototype.hasOwnProperty.call(ROLE_LABELS, normalized) ? normalized : 'viewer';
+    const n = String(role || '').trim().toLowerCase();
+    if (n === 'admin' || n === 'admin_general') return 'administrador';
+    if (n === 'developer') return 'programador';
+    if (n === 'modeler') return 'modelador';
+    return Object.prototype.hasOwnProperty.call(ROLE_LABELS, n) ? n : 'usuario';
 }
 
 function getRoleLabel(role) {
-    return ROLE_LABELS[normalizeRole(role)] || ROLE_LABELS.viewer;
-}
-
-function normalizeCeoRole(role) {
-    const normalizedRaw = String(role || '').trim().toLowerCase();
-    const normalized = ROLE_ALIASES[normalizedRaw] || normalizedRaw;
-    return Object.prototype.hasOwnProperty.call(CEO_ASSIGNABLE_ROLES, normalized) ? normalized : 'usuario';
+    return ROLE_LABELS[normalizeRole(role)] || ROLE_LABELS.usuario;
 }
 
 function canRoleAccessPanel(role) {
@@ -154,47 +133,8 @@ function isValidEmailValue(value) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
 }
 
-function collectEmailsFromUnknownData(data, bag, depth = 0) {
-    if (!data || depth > 3) return;
-
-    if (typeof data === 'string') {
-        if (isValidEmailValue(data)) {
-            bag.add(data.trim().toLowerCase());
-        }
-        return;
-    }
-
-    if (Array.isArray(data)) {
-        data.forEach((item) => collectEmailsFromUnknownData(item, bag, depth + 1));
-        return;
-    }
-
-    if (typeof data === 'object') {
-        Object.values(data).forEach((value) => collectEmailsFromUnknownData(value, bag, depth + 1));
-    }
-}
-
-function extractEmailsFromDoc(data, docId = '') {
-    const bag = new Set();
-    const knownKeys = ['email', 'userEmail', 'donorEmail', 'contactEmail', 'ownerEmail', 'sponsorEmail'];
-
-    if (isValidEmailValue(docId)) {
-        bag.add(String(docId).trim().toLowerCase());
-    }
-
-    knownKeys.forEach((key) => {
-        if (isValidEmailValue(data?.[key])) {
-            bag.add(String(data[key]).trim().toLowerCase());
-        }
-    });
-
-    collectEmailsFromUnknownData(data, bag);
-    return [...bag];
-}
-
 function addEmailToIndex(indexMap, email, patch = {}) {
     if (!isValidEmailValue(email)) return;
-
     const normalizedEmail = String(email).trim().toLowerCase();
     const current = indexMap.get(normalizedEmail) || {
         uid: '',
@@ -222,7 +162,7 @@ function addEmailToIndex(indexMap, email, patch = {}) {
 }
 
 function createRoleOptions(selectedRole) {
-    const normalized = normalizeCeoRole(selectedRole);
+    const normalized = normalizeRole(selectedRole);
     return Object.entries(CEO_ASSIGNABLE_ROLES)
         .map(([value, label]) => `<option value="${value}"${value === normalized ? ' selected' : ''}>${label}</option>`)
         .join('');
@@ -250,8 +190,8 @@ function renderCeoUsersTable(filterText = '') {
         const canAssignRole = Boolean(user.uid);
         const currentRoleLabel = isFounder
             ? 'Fundador / CEO'
-            : (canAssignRole ? (CEO_ASSIGNABLE_ROLES[normalizeCeoRole(user.role)] || 'Usuario') : 'Sin cuenta');
-        const rowRole = isFounder ? 'founder_ceo' : normalizeCeoRole(user.role);
+            : (canAssignRole ? (CEO_ASSIGNABLE_ROLES[normalizeRole(user.role)] || 'Usuario') : 'Sin cuenta');
+        const rowRole = isFounder ? 'founder_ceo' : normalizeRole(user.role);
         const sources = Array.from(user.sources || []);
         const sourceHtml = sources.length
             ? sources.map((source) => `<span class="admin-role-pill">${source}</span>`).join(' ')
@@ -270,7 +210,7 @@ function renderCeoUsersTable(filterText = '') {
                     </select>
                 </td>
                 <td data-label="Accion">
-                    <button class="btn admin-role-save-btn" data-role-save="${user.uid}" ${isFounder || !canAssignRole ? 'disabled' : ''}>${canAssignRole ? 'Guardar' : 'N/A'}</button>
+                    <button class="btn btn-sm admin-role-save-btn" data-role-save="${user.uid}" ${isFounder || !canAssignRole ? 'disabled' : ''}>${canAssignRole ? 'Guardar' : 'N/A'}</button>
                 </td>
             </tr>
         `;
@@ -300,7 +240,7 @@ async function loadCeoUsers() {
             addEmailToIndex(emailIndexMap, email, {
                 uid: docSnap.id,
                 name: String(data.username || data.displayName || '').trim(),
-                role: isFounderEmail(email) ? 'founder_ceo' : normalizeCeoRole(data.role),
+                role: isFounderEmail(email) ? 'founder_ceo' : normalizeRole(data.role),
                 isAdmin: Boolean(data.isAdmin),
                 sources: ['conductores']
             });
@@ -323,10 +263,10 @@ async function loadCeoUsers() {
             if (!snap) return;
             snap.docs.forEach((docSnap) => {
                 const data = docSnap.data() || {};
-                const emails = extractEmailsFromDoc(data, docSnap.id);
-                emails.forEach((email) => {
+                const email = String(data.email || '').trim().toLowerCase();
+                if (isValidEmailValue(email)) {
                     addEmailToIndex(emailIndexMap, email, { sources: [collectionName] });
-                });
+                }
             });
         });
 
@@ -334,7 +274,7 @@ async function loadCeoUsers() {
             .sort((a, b) => String(a.email).localeCompare(String(b.email), 'es'));
 
         renderCeoUsersTable(ceoEmailSearchInput?.value || '');
-        setCeoMessage(`Correos unicos analizados: ${ceoUsersList.length} (fuentes: ${EMAIL_ANALYSIS_COLLECTIONS.join(', ')})`);
+        setCeoMessage(`Correos unicos analizados: ${ceoUsersList.length}`);
     } catch (err) {
         console.error('Error cargando usuarios del CEO:', err);
         setCeoMessage('Error analizando correos de la base. Intenta nuevamente.', true);
@@ -348,11 +288,11 @@ async function saveCeoUserRole(uid, role) {
         return;
     }
 
-    const normalizedRole = normalizeCeoRole(role);
+    const normalizedRole = normalizeRole(role);
     const userItem = ceoUsersList.find((item) => item.uid === uid);
     if (!userItem) return;
     if (!userItem.uid) {
-        setCeoMessage('Este correo no tiene cuenta en conductores. No se puede asignar rol aun.', true);
+        setCeoMessage('Este correo no tiene cuenta en conductores. No se puede asignar rol.', true);
         return;
     }
     if (isFounderEmail(userItem.email)) {
@@ -372,10 +312,10 @@ async function saveCeoUserRole(uid, role) {
         userItem.isAdmin = canRoleAccessPanel(normalizedRole);
 
         renderCeoUsersTable(ceoEmailSearchInput?.value || '');
-        setCeoMessage(`Rol actualizado: ${userItem.email} -> ${CEO_ASSIGNABLE_ROLES[normalizedRole]}`);
+        setCeoMessage(`Rol actualizado: ${userItem.email} -> ${ROLE_LABELS[normalizedRole]}`);
     } catch (err) {
         console.error('Error guardando rol CEO:', err);
-        setCeoMessage('No se pudo guardar el rol. Revisa permisos de Firestore.', true);
+        setCeoMessage('No se pudo guardar el rol. Revisa permisos.', true);
     }
 }
 
@@ -395,419 +335,276 @@ function bindCeoRoleActions() {
     });
 }
 
-// ---------- Admin updates helpers ----------
-async function loadAdminProjects() {
-    if (!window.db || !window.collection || !window.getDocs) return [];
+// ---------- Beta Testers Management ----------
+async function loadBetaTesters() {
+    const listContainer = document.getElementById('adminBetasList');
+    if (!listContainer) return;
+
+    listContainer.innerHTML = '<div style="color: var(--admin-text-secondary);">Cargando postulaciones...</div>';
+
     try {
-        const cols = ['games', 'applications', 'apps'];
-        const results = [];
-        for (const c of cols) {
-            try {
-                const snap = await window.getDocs(window.collection(window.db, c));
-                if (!snap) continue;
-                snap.docs.forEach(d => {
-                    const data = d.data() || {};
-                    results.push({ collection: c, id: String(d.id), title: String(data.title || data.name || data.id || d.id), type: c === 'games' ? 'juego' : 'aplicacion' });
+        const snap = await window.getDocs(window.collection(window.db, 'conductores'));
+        let applicants = [];
+
+        snap.forEach(docSnap => {
+            const data = docSnap.data();
+            if (data && data.betaTesterRequest) {
+                applicants.push({
+                    uid: docSnap.id,
+                    ...data
                 });
-            } catch (err) { /* ignore individual collection errors */ }
-        }
-        adminProjectsCache = results;
-        if (adminCreateUpdateProject) {
-            const opts = ['<option value="">(Selecciona un proyecto...)</option>'].concat(results.map(p => `<option value="${p.collection}::${p.id}">${p.title} (${p.type})</option>`));
-            adminCreateUpdateProject.innerHTML = opts.join('');
-        }
-        return results;
-    } catch (err) { console.warn('Error cargando proyectos para admin:', err); return []; }
-}
+            }
+        });
 
-function setAdminCreateUpdateMessage(text, isError = false) {
-    if (!adminCreateUpdateMsg) return;
-    adminCreateUpdateMsg.textContent = text || '';
-    adminCreateUpdateMsg.className = isError ? 'admin-message error' : 'admin-message';
-}
-
-async function handleAdminCreateUpdate(e) {
-    if (e && e.preventDefault) e.preventDefault();
-    const projVal = String(adminCreateUpdateProject?.value || '').trim();
-    const title = String(adminCreateUpdateTitle?.value || '').trim();
-    const summary = String(adminCreateUpdateSummary?.value || '').trim();
-    const content = String(adminCreateUpdateContent?.value || '').trim();
-    const image = String(adminCreateUpdateImage?.value || '').trim();
-    const published = Boolean(adminCreateUpdatePublished?.checked);
-
-    if (!title) return setAdminCreateUpdateMessage('El título es obligatorio.', true);
-    if (!content) return setAdminCreateUpdateMessage('El contenido es obligatorio.', true);
-    if (image && !/^https?:\/\//i.test(image)) return setAdminCreateUpdateMessage('La imagen debe ser una URL válida (http/https).', true);
-
-    const now = new Date().toISOString();
-    const updateId = `upd_${Date.now()}`;
-
-    let projectId = '';
-    let projectType = '';
-    let projectTitle = '';
-    if (projVal) {
-        const [col, id] = projVal.split('::');
-        projectId = id || '';
-        const found = adminProjectsCache.find(p => p.collection === col && p.id === id);
-        projectType = found ? found.type : (col === 'games' ? 'juego' : 'aplicacion');
-        projectTitle = found ? found.title : '';
-    }
-
-    const payload = {
-        id: updateId,
-        projectId,
-        projectType,
-        projectTitle,
-        title,
-        summary,
-        content,
-        image,
-        published,
-        date: now,
-        createdAt: now,
-        updatedAt: now,
-        createdByUid: currentUser?.uid || ''
-    };
-
-    try {
-        setAdminCreateUpdateMessage('Publicando actualización...');
-        await window.setDoc(window.fsDoc(window.db, 'project_updates', updateId), payload, { merge: true });
-        if (projectId) {
-            const col = projVal.split('::')[0];
-            try { await window.setDoc(window.fsDoc(window.db, col, projectId), { updatedAt: now, lastUpdateAt: now }, { merge: true }); } catch (err) { /* ignore */ }
+        if (applicants.length === 0) {
+            listContainer.innerHTML = '<div style="color: var(--admin-text-secondary);">No hay postulaciones registradas.</div>';
+            return;
         }
 
-        setAdminCreateUpdateMessage('Actualización publicada.');
-        if (adminCreateUpdateForm) adminCreateUpdateForm.reset();
+        applicants.sort((a,b) => String(b.betaTesterTimestamp || '').localeCompare(String(a.betaTesterTimestamp || '')));
+
+        listContainer.innerHTML = applicants.map((app) => {
+            const status = app.betaTesterStatus || 'pending';
+            let statusLabel = 'Pendiente 🟡';
+            if (status === 'approved') statusLabel = 'Aprobado 🟢';
+            if (status === 'rejected') statusLabel = 'Rechazado 🔴';
+
+            const skills = [];
+            if (app.betaTesterSkillBugs) skills.push('🐛 Reportar Bugs');
+            if (app.betaTesterSkillHours) skills.push('⏰ +5 horas/sem');
+            if (app.betaTesterSkillRecord) skills.push('📹 Grabar Pantalla');
+            if (app.betaTesterSkillDiscord) skills.push('💬 Discord Activo');
+
+            const skillsHtml = skills.length
+                ? skills.map(s => `<span class="admin-role-pill" style="font-size:0.75rem;">${s}</span>`).join(' ')
+                : '<span class="admin-role-pill" style="opacity:0.5;">Sin habilidades declaradas</span>';
+
+            return `
+                <div class="beta-card" data-beta-uid="${app.uid}">
+                    <div class="beta-card-header">
+                        <div>
+                            <div class="beta-card-name">${app.username || app.displayName || 'Sin Nombre'}</div>
+                            <div class="beta-card-discord">Discord: ${app.betaTesterDiscord || 'No especificado'}</div>
+                        </div>
+                        <span id="status-badge-${app.uid}"><span class="status-badge status-${status}">${statusLabel}</span></span>
+                    </div>
+                    <div class="beta-card-specs">
+                        <span class="spec-badge">📱 ${app.betaTesterDevice || 'Android'}</span>
+                        <span class="spec-badge">💾 RAM: ${app.betaTesterRAM || 'N/A'}</span>
+                        <span class="spec-badge">🤖 Version: ${app.betaTesterAndroidVersion || 'N/A'}</span>
+                    </div>
+                    <div class="beta-card-skills" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
+                        ${skillsHtml}
+                    </div>
+                    <div class="beta-card-motivation">
+                        <strong>Motivacion:</strong><br>
+                        ${app.betaTesterWhy || 'Sin respuesta.'}
+                    </div>
+                    <div class="beta-card-actions">
+                        <button class="btn btn-sm btn-block" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: #a7f3d0;" onclick="setBetaStatus('${app.uid}', 'approved')">Aprobar 🟢</button>
+                        <button class="btn btn-sm btn-block btn-danger" onclick="setBetaStatus('${app.uid}', 'rejected')">Rechazar 🔴</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
     } catch (err) {
-        console.error('Error creando actualización desde admin:', err);
-        setAdminCreateUpdateMessage('No se pudo publicar la actualización.', true);
+        console.error('Error cargando beta testers:', err);
+        listContainer.innerHTML = '<div style="color:var(--admin-danger);">Error al cargar postulaciones.</div>';
     }
 }
 
-function setupCeoTools(user, role) {
-    const isCeo = isFounderEmail(user?.email) || normalizeRole(role) === 'founder_ceo';
+window.setBetaStatus = async function(uid, status) {
+    if (!window.db || !window.fsDoc || !window.setDoc) return;
+    try {
+        const docRef = window.fsDoc(window.db, 'conductores', uid);
+        await window.setDoc(docRef, {
+            betaTesterStatus: status,
+            betaTesterStatusUpdatedAt: new Date().toISOString()
+        }, { merge: true });
 
-    if (!ceoToolsSection) return;
+        const badge = document.getElementById(`status-badge-${uid}`);
+        if (badge) {
+            let label = 'Pendiente 🟡';
+            if (status === 'approved') label = 'Aprobado 🟢';
+            if (status === 'rejected') label = 'Rechazado 🔴';
+            badge.innerHTML = `<span class="status-badge status-${status}">${label}</span>`;
+        }
 
-    if (!isCeo) {
-        ceoToolsSection.hidden = true;
-        return;
+        calculateStats();
+    } catch (err) {
+        console.error('Error actualizando estado beta:', err);
+        alert('No se pudo actualizar el estado.');
     }
+};
 
-    ceoToolsSection.hidden = false;
-    loadCeoUsers();
-    // bind founder funds action if UI present
-    if (founderAddBtn) {
-        founderAddBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            await handleFounderAddFunds();
-        });
-    }
-    if (founderRemoveBtn) {
-        founderRemoveBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            await handleFounderRemoveFunds();
-        });
-    }
-    // Donations config toggle and bindings (only for founder)
-    if (adminToggleDonationsConfigBtn && adminDonationsConfigContainer) {
-        adminToggleDonationsConfigBtn.addEventListener('click', () => {
-            try {
-                const isHidden = adminDonationsConfigContainer.hasAttribute('hidden');
-                if (isHidden) {
-                    // show immediately for better UX
-                    adminDonationsConfigContainer.removeAttribute('hidden');
-                    if (donConfigMessage) donConfigMessage.textContent = 'Cargando...';
-                    // load settings asynchronously, but don't block the UI
-                    loadDonationsAdminSettings().catch((err) => {
-                        console.warn('Error cargando settings donations:', err);
-                        if (donConfigMessage) donConfigMessage.textContent = 'No se pudo cargar configuración (ver consola).';
-                        updateDonationsPreview();
-                    });
-                } else {
-                    adminDonationsConfigContainer.setAttribute('hidden', '');
+// ---------- Dynamic Dashboard Stats ----------
+async function calculateStats() {
+    if (!window.db || !window.collection || !window.getDocs) return;
+    try {
+        const snap = await window.getDocs(window.collection(window.db, 'conductores'));
+        let totalUsers = 0;
+        let totalBetas = 0;
+        let approvedBetas = 0;
+        let totalCoins = 0;
+
+        snap.forEach(docSnap => {
+            totalUsers++;
+            const data = docSnap.data();
+            if (data) {
+                if (data.betaTesterRequest) {
+                    totalBetas++;
+                    if (data.betaTesterStatus === 'approved') {
+                        approvedBetas++;
+                    }
                 }
-            } catch (err) {
-                console.error('Error toggling donations config container:', err);
+                totalCoins += (parseFloat(data.saldo || data.monedas) || 0);
             }
         });
-    }
-    if (donConfigSaveBtn) {
-        donConfigSaveBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            await saveDonationsAdminSettings();
-            updateDonationsPreview();
-        });
-    }
-    if (donConfigResetBtn) {
-        donConfigResetBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            fillDonationsConfigUI(getDefaultDonationsConfig());
-            updateDonationsPreview();
-        });
-    }
 
-    // Live preview updates when inputs change
-    [donConfigGoalInput, donConfigPaypalInput, donConfigNequiInput, donConfigBreveInput, donConfigPatreonInput].forEach((el) => {
-        if (!el) return;
-        el.addEventListener('input', () => {
-            updateDonationsPreview();
-        });
-    });
+        const tu = document.getElementById('statTotalUsers');
+        const tb = document.getElementById('statTotalBetas');
+        const ab = document.getElementById('statApprovedBetas');
+        const tc = document.getElementById('statTotalCoins');
+
+        if (tu) tu.textContent = totalUsers;
+        if (tb) tb.textContent = totalBetas;
+        if (ab) ab.textContent = approvedBetas;
+        if (tc) tc.textContent = `${totalCoins.toLocaleString('es-ES')} 🪙`;
+    } catch (err) {
+        console.warn('Error calculando estadisticas:', err);
+    }
 }
 
-async function handleFounderAddFunds() {
-    if (!founderAddAmountInput || !founderAddBtn) return;
-    const raw = founderAddAmountInput.value;
-    const note = String(founderAddNoteInput?.value || '').trim();
-    const amount = parseFloat(String(raw).replace(',', '.'));
-    const rounded = Math.round((Number.isFinite(amount) ? amount : 0) * 100) / 100;
-    if (Number.isNaN(rounded) || rounded <= 0) {
-        if (founderAddMessage) founderAddMessage.textContent = 'Ingresa un monto valido mayor que 0.';
+// ---------- Support & Coins Editor ----------
+let activeSupportUserUid = null;
+
+async function searchSupportUser() {
+    const searchInput = document.getElementById('supportSearchEmail');
+    const msg = document.getElementById('supportSearchMessage');
+    const card = document.getElementById('supportUserCard');
+
+    if (!searchInput || !msg || !card) return;
+
+    const query = searchInput.value.trim().toLowerCase();
+    if (!query) {
+        msg.textContent = '⚠️ Introduce un nombre, apodo o correo valido.';
+        card.hidden = true;
         return;
     }
 
-    if (founderAddBtn) founderAddBtn.disabled = true;
-    if (founderAddMessage) founderAddMessage.textContent = 'Procesando...';
+    msg.textContent = 'Buscando jugador...';
+    card.hidden = true;
+    activeSupportUserUid = null;
 
-    // Preferred: add a donation document to 'donations' collection so progress sums include it
     try {
-        if (window.db && window.collection && window.addDoc) {
-            const payload = {
-                amount: rounded,
-                donorEmail: currentUser?.email || FOUNDER_CEO_EMAIL,
-                note: note || 'Fondos agregados manualmente por founder',
-                createdAt: new Date().toISOString(),
-                source: 'founder_manual'
-            };
-            const docRef = await window.addDoc(window.collection(window.db, 'donations'), payload);
-            if (founderAddMessage) founderAddMessage.textContent = 'Fondos agregados correctamente (Firestore).';
-            founderAddAmountInput.value = '';
-            if (founderAddNoteInput) founderAddNoteInput.value = '';
-            // dispatch event with doc id and payload so listeners can refresh
-            try { document.dispatchEvent(new CustomEvent('donationAdded', { detail: { id: docRef.id, ...payload } })); } catch(e){}
+        const snap = await window.getDocs(window.collection(window.db, 'conductores'));
+        let foundUsers = [];
+
+        snap.forEach(docSnap => {
+            const data = docSnap.data();
+            if (data) {
+                const email = String(data.email || '').toLowerCase();
+                const username = String(data.username || '').toLowerCase();
+                const displayName = String(data.displayName || '').toLowerCase();
+                
+                if (email === query || username.includes(query) || displayName.includes(query)) {
+                    foundUsers.push({
+                        uid: docSnap.id,
+                        ...data
+                    });
+                }
+            }
+        });
+
+        if (foundUsers.length === 0) {
+            msg.textContent = '❌ Jugador no encontrado.';
             return;
         }
 
-        // Fallback: persist to localStorage for offline/dev
-        const key = 'donations_local_pending_v1';
-        const existing = JSON.parse(localStorage.getItem(key) || '[]');
-        const payloadLocal = { amount: rounded, donorEmail: currentUser?.email || FOUNDER_CEO_EMAIL, note, createdAt: new Date().toISOString(), source: 'founder_local' };
-        existing.push(payloadLocal);
-        localStorage.setItem(key, JSON.stringify(existing));
-        if (founderAddMessage) founderAddMessage.textContent = 'Fondos guardados localmente (offline).';
-        founderAddAmountInput.value = '';
-        if (founderAddNoteInput) founderAddNoteInput.value = '';
-        try { document.dispatchEvent(new CustomEvent('donationAddedLocal', { detail: payloadLocal })); } catch(e){}
+        if (foundUsers.length > 1) {
+            msg.textContent = '';
+            const selectContainer = document.createElement('div');
+            selectContainer.style.cssText = 'margin-top: 10px; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);';
+            selectContainer.innerHTML = '<span style="font-size:0.85rem; color:var(--admin-text-secondary); margin-bottom: 4px;">Se encontraron varios jugadores. Elige uno:</span>';
+            
+            foundUsers.forEach(u => {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-sm';
+                btn.style.cssText = 'text-align: left; display: block; width: 100%; margin-bottom: 4px;';
+                btn.textContent = `${u.username || u.displayName || 'Sin Nombre'} (${u.email})`;
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    displaySelectedSupportUser(u);
+                    selectContainer.remove();
+                });
+                selectContainer.appendChild(btn);
+            });
+            msg.appendChild(selectContainer);
+            return;
+        }
+
+        displaySelectedSupportUser(foundUsers[0]);
+        msg.textContent = '';
     } catch (err) {
-        console.error('Error agregando fondos founder:', err);
-        if (founderAddMessage) founderAddMessage.textContent = 'Error al agregar fondos. Revisa la consola.';
-    } finally {
-        if (founderAddBtn) founderAddBtn.disabled = false;
+        console.error('Error buscando jugador de soporte:', err);
+        msg.textContent = 'Error al realizar la busqueda.';
     }
 }
 
-async function handleFounderRemoveFunds() {
-    if (!founderRemoveAmountInput || !founderRemoveBtn) return;
-    const raw = founderRemoveAmountInput.value;
-    const note = String(founderRemoveNoteInput?.value || '').trim();
-    const amount = parseFloat(String(raw).replace(',', '.'));
-    const rounded = Math.round((Number.isFinite(amount) ? amount : 0) * 100) / 100;
-    if (Number.isNaN(rounded) || rounded <= 0) {
-        if (founderRemoveMessage) founderRemoveMessage.textContent = 'Ingresa un monto valido mayor que 0.';
+function displaySelectedSupportUser(user) {
+    activeSupportUserUid = user.uid;
+    document.getElementById('supportUserTitle').textContent = user.username || user.displayName || 'Sin Nombre';
+    document.getElementById('supportUserEmailLabel').textContent = user.email || 'Sin correo';
+    document.getElementById('supportUserCurrentCoins').textContent = `${(user.saldo || 0).toLocaleString('es-ES')} 🪙`;
+    document.getElementById('supportUserCard').hidden = false;
+}
+
+async function saveSupportCoins() {
+    const amountInput = document.getElementById('supportCoinsAmount');
+    const actionMsg = document.getElementById('supportActionMessage');
+    if (!activeSupportUserUid || !amountInput || !actionMsg) return;
+
+    const diff = parseFloat(amountInput.value);
+    if (Number.isNaN(diff) || diff === 0) {
+        actionMsg.textContent = '⚠️ Especifica una cantidad distinta de 0.';
         return;
     }
 
-    if (founderRemoveBtn) founderRemoveBtn.disabled = true;
-    if (founderRemoveMessage) founderRemoveMessage.textContent = 'Procesando eliminación...';
+    actionMsg.textContent = 'Guardando saldo...';
 
     try {
-        if (window.db && window.collection && window.addDoc) {
-            const payload = {
-                amount: -rounded,
-                donorEmail: currentUser?.email || FOUNDER_CEO_EMAIL,
-                note: note || 'Fondos eliminados manualmente por founder',
-                createdAt: new Date().toISOString(),
-                source: 'founder_manual_remove'
-            };
-            const docRef = await window.addDoc(window.collection(window.db, 'donations'), payload);
-            if (founderRemoveMessage) founderRemoveMessage.textContent = 'Saldo eliminado correctamente (Firestore).';
-            founderRemoveAmountInput.value = '';
-            if (founderRemoveNoteInput) founderRemoveNoteInput.value = '';
-            try { document.dispatchEvent(new CustomEvent('donationAdded', { detail: { id: docRef.id, ...payload } })); } catch(e){}
-            return;
-        }
+        const userDocRef = window.fsDoc(window.db, 'conductores', activeSupportUserUid);
+        const snap = await window.getDoc(userDocRef);
 
-        // Fallback local
-        const key = 'donations_local_pending_v1';
-        const existing = JSON.parse(localStorage.getItem(key) || '[]');
-        const payloadLocal = { amount: -rounded, donorEmail: currentUser?.email || FOUNDER_CEO_EMAIL, note, createdAt: new Date().toISOString(), source: 'founder_local_remove' };
-        existing.push(payloadLocal);
-        localStorage.setItem(key, JSON.stringify(existing));
-        if (founderRemoveMessage) founderRemoveMessage.textContent = 'Cambio guardado localmente (offline).';
-        founderRemoveAmountInput.value = '';
-        if (founderRemoveNoteInput) founderRemoveNoteInput.value = '';
-        try { document.dispatchEvent(new CustomEvent('donationAddedLocal', { detail: payloadLocal })); } catch(e){}
+        if (snap.exists()) {
+            const currentVal = parseFloat(snap.data().saldo || 0) || 0;
+            const newVal = Math.max(0, currentVal + diff);
+
+            await window.setDoc(userDocRef, {
+                saldo: newVal,
+                updatedAt: new Date().toISOString()
+            }, { merge: true });
+
+            document.getElementById('supportUserCurrentCoins').textContent = `${newVal.toLocaleString('es-ES')} 🪙`;
+            actionMsg.textContent = `✅ Saldo actualizado exitosamente a ${newVal} 🪙.`;
+            amountInput.value = '';
+
+            calculateStats();
+        }
     } catch (err) {
-        console.error('Error eliminando fondos founder:', err);
-        if (founderRemoveMessage) founderRemoveMessage.textContent = 'Error al eliminar saldo. Revisa la consola.';
-    } finally {
-        if (founderRemoveBtn) founderRemoveBtn.disabled = false;
+        console.error('Error guardando saldo en soporte:', err);
+        actionMsg.textContent = 'No se pudo guardar el saldo.';
     }
 }
 
-function getDefaultDonationsConfig() {
-    return {
-        donationGoal: 500,
-        paypalLink: 'https://www.paypal.com/donate/?hosted_button_id=9LJTEL67CKJP4',
-        nequiLink: 'tel:+573102987151',
-        breveLink: '',
-        patreonLink: '',
-        
-        publicMessage: 'Gracias por tu apoyo. Cada aporte impulsa el desarrollo.'
-    };
-}
-
-function fillDonationsConfigUI(obj) {
-    if (!obj) obj = getDefaultDonationsConfig();
-    if (donConfigGoalInput) donConfigGoalInput.value = Number(obj.donationGoal || 0);
-    if (donConfigPaypalInput) donConfigPaypalInput.value = obj.paypalLink || '';
-    if (donConfigNequiInput) donConfigNequiInput.value = obj.nequiLink || '';
-    if (donConfigBreveInput) donConfigBreveInput.value = obj.breveLink || '';
-    if (donConfigPatreonInput) donConfigPatreonInput.value = obj.patreonLink || '';
-    if (donConfigPublicMessageInput) donConfigPublicMessageInput.value = obj.publicMessage || '';
-}
-
-function updateDonationsPreview() {
-    try {
-        const goal = Number(donConfigGoalInput?.value || 500);
-        const current = Math.round((goal || 0) * 0.4 * 100) / 100; // sample preview at 40%
-        const percent = goal ? Math.min(Math.round((current / goal) * 100), 100) : 0;
-        if (previewProgressFill) {
-            previewProgressFill.style.setProperty('--progress', `${percent}%`);
-            previewProgressFill.setAttribute('aria-valuenow', String(percent));
-            try {
-                previewProgressFill.setAttribute('data-animate', 'false');
-                // force reflow to restart animation
-                // eslint-disable-next-line no-unused-expressions
-                previewProgressFill.offsetWidth;
-                previewProgressFill.setAttribute('data-animate', 'true');
-            } catch (e) { /* ignore */ }
-        }
-        if (previewPercent) previewPercent.textContent = `${percent}%`;
-        if (previewGoalText) previewGoalText.textContent = `Meta: $${goal}`;
-        if (previewCurrentText) previewCurrentText.textContent = `Recaudado: $${current.toFixed(2)}`;
-
-        // Buttons
-        if (previewPaypalBtn) {
-            const href = String(donConfigPaypalInput?.value || previewPaypalBtn.getAttribute('href') || '#').trim();
-            if (href) previewPaypalBtn.href = href;
-        }
-        if (previewNequiBtn) {
-            const href = String(donConfigNequiInput?.value || previewNequiBtn.getAttribute('href') || '#').trim();
-            if (href) previewNequiBtn.href = href;
-        }
-        if (previewBreveBtn) {
-            const href = String(donConfigBreveInput?.value || previewBreveBtn.getAttribute('href') || '#').trim();
-            if (href) previewBreveBtn.href = href;
-        }
-    } catch (err) {
-        console.warn('Error actualizando preview donations:', err);
-    }
-}
-
-async function loadDonationsAdminSettings() {
-    // Try Firestore first
-    try {
-        if (window.db && window.fsDoc && window.getDoc) {
-            const docRef = window.fsDoc(window.db, 'settings', 'donations');
-            const snap = await window.getDoc(docRef);
-            if (snap && snap.exists && snap.exists()) {
-                const data = snap.data() || {};
-                fillDonationsConfigUI(data);
-                if (donConfigMessage) donConfigMessage.textContent = 'Configuración cargada (Firestore).';
-                updateDonationsPreview();
-                return;
-            }
-        }
-    } catch (err) {
-        console.warn('No se pudo leer settings donations desde Firestore:', err);
-    }
-
-    // Fallback localStorage
-    try {
-        const key = 'donations_settings_v1';
-        const raw = localStorage.getItem(key);
-        if (raw) {
-            const parsed = JSON.parse(raw);
-            fillDonationsConfigUI(parsed);
-            if (donConfigMessage) donConfigMessage.textContent = 'Configuración cargada (local).';
-            return;
-        }
-    } catch (err) {
-        console.warn('No se pudo leer configuración local donations:', err);
-    }
-
-    // Default
-    fillDonationsConfigUI(getDefaultDonationsConfig());
-    if (donConfigMessage) donConfigMessage.textContent = 'Usando configuración por defecto.';
-}
-
-async function saveDonationsAdminSettings() {
-    if (donConfigSaveBtn) donConfigSaveBtn.disabled = true;
-    if (donConfigMessage) donConfigMessage.textContent = 'Guardando...';
-
-    const payload = {
-        donationGoal: Number(donConfigGoalInput?.value || 0),
-        paypalLink: String(donConfigPaypalInput?.value || '').trim(),
-        nequiLink: String(donConfigNequiInput?.value || '').trim(),
-        breveLink: String(donConfigBreveInput?.value || '').trim(),
-        patreonLink: String(donConfigPatreonInput?.value || '').trim(),
-        
-        publicMessage: String(donConfigPublicMessageInput?.value || '').trim(),
-        updatedAt: new Date().toISOString(),
-        updatedBy: currentUser?.uid || ''
-    };
-
-    try {
-        if (window.db && window.fsDoc && window.setDoc) {
-            await window.setDoc(window.fsDoc(window.db, 'settings', 'donations'), payload, { merge: true });
-            if (donConfigMessage) donConfigMessage.textContent = 'Configuración guardada en Firestore.';
-            // notify listeners that donations config changed
-            try { document.dispatchEvent(new CustomEvent('donationsConfigSaved', { detail: payload })); } catch(e){}
-            updateDonationsPreview();
-            return;
-        }
-    } catch (err) {
-        console.error('Error guardando configuración donations en Firestore:', err);
-        if (donConfigMessage) donConfigMessage.textContent = 'Error guardando en Firestore. Se intentará guardar localmente.';
-    }
-
-    // Fallback localStorage
-    try {
-        const key = 'donations_settings_v1';
-        localStorage.setItem(key, JSON.stringify(payload));
-        if (donConfigMessage) donConfigMessage.textContent = 'Configuración guardada localmente.';
-        try { document.dispatchEvent(new CustomEvent('donationsConfigSaved', { detail: payload })); } catch(e){}
-        updateDonationsPreview();
-    } catch (err) {
-        console.error('No se pudo guardar configuración donations localmente:', err);
-        if (donConfigMessage) donConfigMessage.textContent = 'Error guardando configuración.';
-    } finally {
-        if (donConfigSaveBtn) donConfigSaveBtn.disabled = false;
-    }
-}
-
+// ---------- General Setup & Gate Helpers ----------
 function getAdminEmails() {
     try {
         const parsed = JSON.parse(localStorage.getItem(ADMIN_EMAILS_LS_KEY) || '[]');
         if (!Array.isArray(parsed)) return [...DEFAULT_ADMIN_EMAILS];
-
         const merged = [...DEFAULT_ADMIN_EMAILS, ...parsed]
             .map((email) => String(email || '').trim().toLowerCase())
             .filter(Boolean);
-
         return [...new Set(merged)];
     } catch {
         return [...DEFAULT_ADMIN_EMAILS];
@@ -861,11 +658,10 @@ function playWelcomeAnimation(user, role) {
 
     welcomeOverlay.hidden = false;
 
-    const duration = 3000;
     welcomeTimer = setTimeout(() => {
         hideWelcomeOverlay();
         welcomeTimer = null;
-    }, duration);
+    }, 3000);
 }
 
 async function resolveUserAccess(user) {
@@ -893,7 +689,6 @@ async function resolveUserAccess(user) {
     const isAdminByList = getAdminEmails().includes(email);
     let role = normalizeRole(profileData?.role || (isAdminByList ? 'administrador' : 'usuario'));
 
-    // Compatibilidad con cuentas antiguas que tenian isAdmin pero sin rol definido.
     if (Boolean(profileData?.isAdmin) && (!profileData?.role || role === 'usuario' || role === 'viewer')) {
         role = 'administrador';
     }
@@ -918,14 +713,20 @@ function updateProfileUI(user, role) {
     }
 }
 
+function setupCeoTools(user, role) {
+    const isCeo = isFounderEmail(user?.email) || normalizeRole(role) === 'founder_ceo';
+    if (sidebarAccountsTab) {
+        sidebarAccountsTab.hidden = !isCeo;
+    }
+}
+
 async function handleAuthStateChange(user) {
     currentUser = user;
     const loginBtn = document.getElementById('adminLoginBtn');
-    
+
     if (!user) {
         if (gateMessage) {
-            gateMessage.textContent = 'Inicia sesión con tu cuenta de administrador de Google para poder guardar cambios en la base de datos.';
-            gateMessage.style.color = 'var(--admin-text-secondary)';
+            gateMessage.textContent = 'Inicia sesión con tu cuenta de administrador de Google.';
         }
         if (loginBtn) {
             loginBtn.style.display = 'block';
@@ -941,7 +742,7 @@ async function handleAuthStateChange(user) {
 
     if (!isAdmin) {
         if (gateMessage) {
-            gateMessage.textContent = '❌ Tu cuenta (' + user.email + ') no tiene permisos de administrador en este panel.';
+            gateMessage.textContent = '❌ Tu cuenta (' + user.email + ') no tiene permisos de administrador.';
             gateMessage.style.color = 'red';
         }
         if (loginBtn) {
@@ -952,15 +753,16 @@ async function handleAuthStateChange(user) {
 
     if (gateMessage) {
         gateMessage.textContent = '';
-        gateMessage.className = 'admin-message';
     }
 
     updateProfileUI(user, role);
     showPanel();
     playWelcomeAnimation(user, role);
     setupCeoTools(user, role);
-    // Load projects for admin create-update UI
-    try { loadAdminProjects().catch(()=>{}); } catch(e) {}
+
+    // Initial load statistics & active beta testers tab checks
+    calculateStats();
+    loadBetaTesters();
 }
 
 async function handleLogout() {
@@ -976,17 +778,12 @@ async function handleLogout() {
 }
 
 function bindEvents() {
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', handleLogout);
-    }
-
+    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
     if (goHomeBtn) {
         goHomeBtn.addEventListener('click', () => {
             window.location.replace(toSitePath('index.html'));
         });
     }
-
-    // Dev panel removed — no handler
 
     if (ceoEmailSearchInput) {
         ceoEmailSearchInput.addEventListener('input', (event) => {
@@ -1001,173 +798,33 @@ function bindEvents() {
         });
     }
 
+    const refreshBetasBtn = document.getElementById('adminRefreshBetasBtn');
+    if (refreshBetasBtn) {
+        refreshBetasBtn.addEventListener('click', () => {
+            loadBetaTesters();
+        });
+    }
+
+    // Support trigger attachments
+    const searchSupportBtn = document.getElementById('supportSearchBtn');
+    if (searchSupportBtn) {
+        searchSupportBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            searchSupportUser();
+        });
+    }
+    const saveSupportCoinsBtn = document.getElementById('supportSaveCoinsBtn');
+    if (saveSupportCoinsBtn) {
+        saveSupportCoinsBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            saveSupportCoins();
+        });
+    }
+
     bindCeoRoleActions();
-    // Admin create-update bindings
-    if (adminCreateUpdateForm) adminCreateUpdateForm.addEventListener('submit', handleAdminCreateUpdate);
-    if (adminCreateUpdateReset) adminCreateUpdateReset.addEventListener('click', () => { if (adminCreateUpdateForm) adminCreateUpdateForm.reset(); setAdminCreateUpdateMessage(''); });
-
-    // Video updates module (YouTube search)
-    const ytApiKeyInput = document.getElementById('youtubeApiKey');
-    const searchYtBtn = document.getElementById('adminSearchYtBtn');
-    const resultsContainer = document.getElementById('ytResultsContainer');
-    const resultsList = document.getElementById('ytResultsList');
-    const importVidsBtn = document.getElementById('adminImportVidsBtn');
-    const videosMsg = document.getElementById('adminVideosMsg');
-
-    // Load saved API key
-    if (ytApiKeyInput) {
-        const savedKey = localStorage.getItem('panterYtApiKey') || '';
-        ytApiKeyInput.value = savedKey;
-    }
-
-    let foundVideos = [];
-
-    if (searchYtBtn) {
-        searchYtBtn.addEventListener('click', async () => {
-            const key = ytApiKeyInput.value.trim();
-            if (!key) {
-                videosMsg.textContent = '❌ Por favor ingresa una API Key válida.';
-                videosMsg.style.color = 'var(--color-primary-light)';
-                return;
-            }
-            localStorage.setItem('panterYtApiKey', key);
-            videosMsg.textContent = '🔍 Buscando videos en YouTube...';
-            videosMsg.style.color = '';
-
-            try {
-                // Search query
-                const queryStr = encodeURIComponent('Nuestra Tierra Job Simulator');
-                const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=15&q=${queryStr}&type=video&key=${key}`;
-                
-                const res = await fetch(url);
-                if (!res.ok) {
-                    const data = await res.json();
-                    throw new Error(data.error?.message || 'Error en la petición a YouTube');
-                }
-                const data = await res.json();
-                
-                foundVideos = data.items || [];
-                if (foundVideos.length === 0) {
-                    videosMsg.textContent = '⚠️ No se encontraron videos relacionados.';
-                    resultsContainer.style.display = 'none';
-                    return;
-                }
-
-                // Check existing videos in Firestore to avoid duplicate imports
-                let existingIds = new Set();
-                try {
-                    const snap = await window.getDocs(window.collection(window.db, 'videos'));
-                    snap.forEach(doc => {
-                        const vidData = doc.data();
-                        const m = vidData.url?.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
-                        if (m) existingIds.add(m[1]);
-                    });
-                } catch (dbErr) {
-                    console.warn('No se pudieron precargar videos existentes para filtrar:', dbErr);
-                }
-
-                resultsList.innerHTML = '';
-                let displayedCount = 0;
-
-                foundVideos.forEach((item, index) => {
-                    const videoId = item.id.videoId;
-                    if (!videoId) return;
-
-                    const title = item.snippet.title;
-                    const channel = item.snippet.channelTitle;
-                    const thumb = item.snippet.thumbnails?.default?.url || '';
-                    const isAlreadyImported = existingIds.has(videoId);
-
-                    const div = document.createElement('div');
-                    div.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px;border-bottom:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);border-radius:6px;';
-                    div.innerHTML = `
-                        <input type="checkbox" id="yt_check_${index}" value="${index}" ${isAlreadyImported ? 'disabled' : 'checked'} style="width:18px;height:18px;cursor:pointer;">
-                        <img src="${thumb}" style="width:70px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0;">
-                        <div style="flex:1;min-width:0;">
-                            <div style="font-size:0.85rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-primary);">${title}</div>
-                            <div style="font-size:0.75rem;color:var(--color-secondary);">${channel}</div>
-                        </div>
-                        ${isAlreadyImported ? '<span style="font-size:0.7rem;color:var(--text-muted);background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:4px;">Ya agregado</span>' : ''}
-                    `;
-                    resultsList.appendChild(div);
-                    displayedCount++;
-                });
-
-                if (displayedCount > 0) {
-                    resultsContainer.style.display = 'block';
-                    videosMsg.textContent = `✅ Búsqueda completada. Se encontraron ${displayedCount} videos.`;
-                    videosMsg.style.color = '#10b981';
-                } else {
-                    videosMsg.textContent = '⚠️ No se encontraron nuevos videos que no estén ya importados.';
-                    resultsContainer.style.display = 'none';
-                }
-
-            } catch (err) {
-                console.error(err);
-                videosMsg.textContent = `❌ Error: ${err.message}`;
-                videosMsg.style.color = 'red';
-                resultsContainer.style.display = 'none';
-            }
-        });
-    }
-
-    if (importVidsBtn) {
-        importVidsBtn.addEventListener('click', async () => {
-            const checkboxes = resultsList.querySelectorAll('input[type="checkbox"]:checked');
-            if (checkboxes.length === 0) {
-                videosMsg.textContent = '⚠️ Selecciona al menos un video para importar.';
-                videosMsg.style.color = 'var(--color-primary-light)';
-                return;
-            }
-
-            videosMsg.textContent = `📥 Importando ${checkboxes.length} videos...`;
-            videosMsg.style.color = '';
-
-            try {
-                // Get the current max order to append videos properly at the end
-                let maxOrder = 0;
-                try {
-                    const snap = await window.getDocs(window.collection(window.db, 'videos'));
-                    snap.forEach(doc => {
-                        const d = doc.data();
-                        if (d.orden > maxOrder) maxOrder = d.orden;
-                    });
-                } catch(e) {}
-
-                let importedCount = 0;
-                for (const cb of checkboxes) {
-                    const idx = parseInt(cb.value);
-                    const item = foundVideos[idx];
-                    const videoId = item.id.videoId;
-                    if (!videoId) continue;
-
-                    maxOrder++;
-                    await window.addDoc(window.collection(window.db, 'videos'), {
-                        title: item.snippet.title,
-                        channel: item.snippet.channelTitle,
-                        url: `https://www.youtube.com/watch?v=${videoId}`,
-                        thumbnail: item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || '',
-                        duration: '', // default empty
-                        orden: maxOrder
-                    });
-                    importedCount++;
-                }
-
-                videosMsg.textContent = `🎉 ¡Éxito! Se importaron ${importedCount} videos correctamente.`;
-                videosMsg.style.color = '#10b981';
-                resultsContainer.style.display = 'none';
-
-            } catch (err) {
-                console.error(err);
-                videosMsg.textContent = `❌ Error al importar: ${err.message}`;
-                videosMsg.style.color = 'red';
-            }
-        });
-    }
 }
 
 function bootAuthListener() {
-    // Bind global login button click event
     const adminLoginBtn = document.getElementById('adminLoginBtn');
     if (adminLoginBtn && !adminLoginBtn.dataset.bound) {
         adminLoginBtn.dataset.bound = "true";
@@ -1177,7 +834,7 @@ function bootAuthListener() {
                     const provider = new window.GoogleAuthProvider();
                     await window.signInWithPopup(window.auth, provider);
                 } else {
-                    alert('El servicio de autenticación de Firebase no está listo. Inténtalo de nuevo en unos segundos.');
+                    alert('El servicio de autenticación de Firebase no está listo. Reintenta.');
                 }
             } catch (err) {
                 console.error(err);
@@ -1207,7 +864,6 @@ function bootAuthListener() {
 function initAdminPanel() {
     bindEvents();
 
-    // Failsafe: si por cualquier motivo la capa quedó visible, se cierra sola a los 3 segundos.
     setTimeout(() => {
         hideWelcomeOverlay();
     }, 3000);
@@ -1218,7 +874,6 @@ function initAdminPanel() {
         bootAuthListener();
     }, { once: true });
 
-    // Fallback de seguridad por si firebaseReady no llega por algun bloqueo.
     setTimeout(() => {
         bootAuthListener();
     }, 2200);

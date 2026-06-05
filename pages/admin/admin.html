@@ -3,256 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#1e70c8">
+    <meta name="theme-color" content="#00b0ff">
     <title>Panel Administrativo - Panter Studio</title>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
-    <link rel="icon" href="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" type="image/png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="../../recursos/PSGD.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="../../assets/css/admin.css">
     <script src="../../assets/js/core/firebase-config.js"></script>
 </head>
 <body class="admin-page" data-site-root="../..">
     <div class="admin-bg-glow"></div>
+    
+    <!-- Welcome Overlay -->
     <div class="admin-welcome" id="adminWelcome" hidden>
         <div class="admin-welcome-card" role="status" aria-live="polite">
-            <p class="admin-welcome-kicker">Bienvenido al Panel</p>
-            <h2 id="adminWelcomeTitle">Hola, equipo Panter Studio</h2>
-            <p id="adminWelcomeSubtitle">Cargando tu espacio de trabajo...</p>
+            <p class="admin-welcome-kicker">Panter Studio</p>
+            <h2 id="adminWelcomeTitle">Bienvenido al Centro de Control</h2>
+            <p id="adminWelcomeSubtitle">Validando credenciales de acceso...</p>
             <div class="admin-welcome-line"></div>
         </div>
     </div>
 
+    <!-- Login Gate -->
     <main class="admin-shell">
         <section class="admin-gate" id="adminGate">
-            <img src="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" alt="Logo Panter Studio" class="admin-logo">
-            <h1>Panel Administrativo</h1>
-            <p id="adminGateMessage" class="admin-message">Verificando acceso...</p>
-            <button id="adminLoginBtn" class="btn" style="margin-top: 15px; display: none;">Iniciar Sesión con Google</button>
+            <img src="../../recursos/PSGD.png" alt="Logo Panter Studio" class="admin-logo">
+            <h1>Panter Panel</h1>
+            <p id="adminGateMessage" class="admin-message">Verificando tu cuenta...</p>
+            <button id="adminLoginBtn" class="btn" style="margin-top: 15px; display: none;">Iniciar Sesion con Google</button>
         </section>
 
+        <!-- Main Dashboard Panel -->
         <section class="admin-panel" id="adminPanel" hidden>
-            <header class="admin-topbar">
-                <div>
-                    <h2>Panel Base</h2>
-                    <p>Base mínima activa. Iremos agregando módulos poco a poco.</p>
-                </div>
-                <div class="admin-top-actions">
-                    <!-- Panel Desarrollo removido - sólo panel administrativo activo -->
-                    <button id="adminVisibilityBtn" class="btn">Visibilidad Páginas</button>
-                    <button id="adminGoHomeBtn" class="btn">Ir al inicio</button>
-                    <button id="adminLogoutBtn" class="btn">Cerrar sesion</button>
-                </div>
-            </header>
-
-            <section class="admin-hero">
-                <div class="admin-hero-copy">
-                    <span class="admin-kicker">Acceso y Rol</span>
-                    <h2>Perfil de administrador</h2>
-                    <p>Vista mínima del panel para validar sesión, identidad y permisos de rol.</p>
-                    <div class="admin-presence-grid">
-                        <article class="admin-presence-card">
-                            <span class="admin-presence-label">Nombre</span>
-                            <strong id="adminCurrentUser">Cargando...</strong>
-                        </article>
-                        <article class="admin-presence-card">
-                            <span class="admin-presence-label">Correo</span>
-                            <strong id="adminCurrentEmail">Cargando...</strong>
-                        </article>
-                        <article class="admin-presence-card">
-                            <span class="admin-presence-label">Rol</span>
-                            <strong id="adminCurrentRoleLabel">Cargando...</strong>
-                        </article>
+            <div class="dashboard-layout">
+                
+                <!-- Left Sidebar -->
+                <aside class="admin-sidebar">
+                    <div class="sidebar-brand">
+                        <img src="../../recursos/PSGD.png" alt="PS Logo">
+                        <span>Panter Panel</span>
                     </div>
-                </div>
-            </section>
-
-            <section class="admin-section" id="adminCreateUpdateSection">
-                <header class="admin-section-header">
-                    <h3>Agregar actualizacion</h3>
-                </header>
-                <div class="admin-section-intro">
-                    <p>Publica una actualización ligada a un proyecto (juego/aplicación) para que aparezca en la página pública.</p>
-                </div>
-                <div style="margin-top:12px;max-width:760px;">
-                    <form id="adminCreateUpdateForm" class="dev-form" autocomplete="off">
-                        <div>
-                            <label>Proyecto</label>
-                            <select id="adminCreateUpdateProject">
-                                <option value="">(Selecciona un proyecto...)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label>Título</label>
-                            <input type="text" id="adminCreateUpdateTitle" required placeholder="Título de la actualización">
-                        </div>
-                        <div>
-                            <label>Resumen (opcional)</label>
-                            <input type="text" id="adminCreateUpdateSummary" placeholder="Resumen breve">
-                        </div>
-                        <div>
-                            <label>Contenido</label>
-                            <textarea id="adminCreateUpdateContent" rows="5" required placeholder="Detalles de la actualización"></textarea>
-                        </div>
-                        <div>
-                            <label>Imagen URL (opcional)</label>
-                            <input type="url" id="adminCreateUpdateImage" placeholder="https://...">
-                        </div>
-                        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-                            <label>Publicar ahora</label>
-                            <input type="checkbox" id="adminCreateUpdatePublished" checked>
-                        </div>
-                        <div style="margin-top:10px;display:flex;gap:8px;">
-                            <button type="submit" class="btn">Publicar actualización</button>
-                            <button type="button" id="adminCreateUpdateReset" class="btn">Limpiar</button>
-                        </div>
-                    </form>
-                    <p id="adminCreateUpdateMsg" class="admin-message" style="margin-top:8px"></p>
-                </div>
-            </section>
-
-            <section class="admin-section" id="adminVideosSection">
-                <header class="admin-section-header">
-                    <h3>Actualizar Videos de la Comunidad</h3>
-                </header>
-                <div class="admin-section-intro">
-                    <p>Busca videos sobre <strong>Nuestra Tierra Job Simulator</strong> en YouTube e impórtalos directamente a la sección de videos de la web.</p>
-                </div>
-                <div style="margin-top:12px;max-width:760px;">
-                    <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
-                        <input id="youtubeApiKey" type="password" placeholder="Ingresa tu YouTube API Key" style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);">
-                        <button id="adminSearchYtBtn" class="btn">🔍 Buscar nuevos videos</button>
+                    <div class="sidebar-nav">
+                        <button class="sidebar-tab active" data-tab="dashboard">📊 Resumen</button>
+                        <button class="sidebar-tab" data-tab="betatesters">⚙️ Beta Testers</button>
+                        <button class="sidebar-tab" data-tab="accounts" id="sidebarAccountsTab" hidden>👥 Cuentas (CEO)</button>
+                        <button class="sidebar-tab" data-tab="support">💬 Soporte</button>
                     </div>
-                    <p class="admin-hint" style="margin-bottom:12px;font-size:0.75rem;color:var(--text-muted);">La API Key se guarda localmente en tu navegador de forma segura.</p>
-                    
-                    <div id="ytResultsContainer" style="display:none;margin-top:16px;">
-                        <h4 style="margin-bottom:8px;color:var(--text-primary);">Resultados encontrados en YouTube:</h4>
-                        <div id="ytResultsList" style="max-height:300px;overflow-y:auto;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:8px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px;"></div>
-                        <button id="adminImportVidsBtn" class="btn" style="background:var(--color-secondary);border-color:var(--color-secondary);">📥 Importar videos seleccionados</button>
+                    <div class="sidebar-footer">
+                        <button id="adminGoHomeBtn" class="btn btn-block">Ir al Inicio</button>
+                        <button id="adminLogoutBtn" class="btn btn-block btn-danger">Cerrar Sesion</button>
                     </div>
-                    <p id="adminVideosMsg" class="admin-message" style="margin-top:8px"></p>
-                </div>
-            </section>
+                </aside>
 
-            <section class="admin-users-section" id="adminCeoTools" hidden>
-                <header class="admin-section-header">
-                    <h3>Gestion de Cuentas (CEO)</h3>
-                    <button id="adminCeoRefreshUsersBtn" class="btn">Actualizar lista</button>
-                </header>
-                <div class="admin-section-intro">
-                    <p>Herramientas especiales para el Fundador/CEO: agregar fondos manuales a la sección de Apóyanos, administrar patrocinadores y ajustar metas.</p>
-                </div>
+                <!-- Dashboard Content Area -->
+                <div class="dashboard-content">
+                    <header class="content-header">
+                        <div>
+                            <h2 id="sectionTitle">Resumen General</h2>
+                            <p id="sectionSub">Estadisticas y resumen del Hub de Panter Studio.</p>
+                        </div>
+                        <div class="admin-user-pill">
+                            <span class="user-role-badge" id="adminCurrentRoleLabel">Cargando...</span>
+                            <span id="adminCurrentUser">Cargando...</span>
+                        </div>
+                    </header>
 
-                <div class="admin-ceo-funds" style="margin-top:16px;">
-                    <h4>Agregar fondos - Apoyanos</h4>
-                    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
-                        <input id="founderAddAmount" type="number" placeholder="Monto (USD)" min="0" step="0.01" style="padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
-                        <input id="founderAddNote" type="text" placeholder="Nota / Descripción (opcional)" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
-                        <button id="founderAddBtn" class="btn">Agregar fondos</button>
-                    </div>
-                    <p id="founderAddMessage" class="admin-message" style="margin-top:8px;"></p>
-                </div>
+                    <!-- TAB Pane: Dashboard -->
+                    <div class="tab-pane active" id="tab-dashboard">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <span class="stat-label">Total Conductores</span>
+                                <strong id="statTotalUsers">0</strong>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-label">Postulantes Beta</span>
+                                <strong id="statTotalBetas">0</strong>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-label">Monedas en Circulacion</span>
+                                <strong id="statTotalCoins">0 🪙</strong>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-label">Betas Aprobados</span>
+                                <strong id="statApprovedBetas">0</strong>
+                            </div>
+                        </div>
 
-                <div style="margin-top:12px;">
-                    <h4>Eliminar saldo - Apoyanos</h4>
-                    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
-                        <input id="founderRemoveAmount" type="number" placeholder="Monto a quitar (USD)" min="0" step="0.01" style="padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
-                        <input id="founderRemoveNote" type="text" placeholder="Nota / Motivo (opcional)" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
-                        <button id="founderRemoveBtn" class="btn">Eliminar saldo</button>
-                    </div>
-                    <p id="founderRemoveMessage" class="admin-message" style="margin-top:8px;"></p>
-                </div>
-
-                <div style="margin-top:18px;">
-                    <button id="adminToggleDonationsConfigBtn" class="btn" onclick="(function(){const c=document.getElementById('adminDonationsConfigContainer'); if(!c) return; if(c.hasAttribute('hidden')){c.removeAttribute('hidden');} else {c.setAttribute('hidden','');}})()">Configurar Apóyanos</button>
-                </div>
-
-                <div id="adminDonationsConfigContainer" class="admin-panel" hidden style="margin-top:12px;padding:12px;">
-                    <h4>Configuracion - Apoyanos</h4>
-                    <div id="donationsPreview" style="margin-bottom:12px;padding:12px;border-radius:8px;background:rgba(255,255,255,0.02);">
-                        <div style="margin-bottom:8px;">
-                            <div class="donaciones-progress" style="margin-bottom:8px;">
-                                <div class="progress-track" aria-hidden="true">
-                                    <div id="previewProgressFill" class="progress-fill" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" style="--progress:40%;"></div>
-                                </div>
-                                <div style="display:flex;gap:8px;align-items:center;margin-top:6px;">
-                                    <strong id="previewPercent">40%</strong>
-                                    <span id="previewGoalText">Meta: $500</span>
-                                    <span id="previewCurrentText" style="margin-left:auto;">Recaudado: $200</span>
+                        <div class="admin-card">
+                            <h3>Tu Perfil de Administrador</h3>
+                            <p>Detalles basicos sobre la cuenta de staff conectada actualmente.</p>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 15px;">
+                                <div class="profile-field">
+                                    <span>Correo Electronico</span>
+                                    <strong id="adminCurrentEmail">Cargando...</strong>
                                 </div>
                             </div>
                         </div>
-                        <div id="donationsPreviewButtons" style="display:flex;gap:8px;margin-top:8px;">
-                            <a id="previewPaypalBtn" class="btn-payment" href="#" target="_blank" rel="noopener">Apoyar — PayPal</a>
-                            <a id="previewNequiBtn" class="btn-payment" href="#" rel="noopener">Apoyar — Nequi</a>
-                            <a id="previewBreveBtn" class="btn-payment" href="#" rel="noopener">Apoyar — Breve</a>
+                    </div>
+
+                    <!-- TAB Pane: Beta Testers -->
+                    <div class="tab-pane" id="tab-betatesters">
+                        <div class="admin-card">
+                            <div class="card-header-actions">
+                                <h3>Inscripciones a Beta Tester</h3>
+                                <button id="adminRefreshBetasBtn" class="btn">Actualizar Lista</button>
+                            </div>
+                            <p>Lista de usuarios postulados para las pruebas alpha/beta del juego en Android.</p>
+                            
+                            <div id="adminBetasList" class="betas-grid">
+                                <div style="color: var(--admin-text-secondary);">Cargando postulantes...</div>
+                            </div>
                         </div>
                     </div>
-                    <div style="display:grid;grid-template-columns:1fr;gap:10px;margin-top:8px;">
-                        <label>Meta de donación (USD)
-                            <input id="donConfigGoal" type="number" min="0" step="0.01" placeholder="500" style="width:180px;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
-                        </label>
-                        <label>Enlace PayPal
-                            <input id="donConfigPaypal" type="url" placeholder="https://paypal.me/..." style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
-                        </label>
-                        <label>Enlace Nequi
-                            <input id="donConfigNequi" type="url" placeholder="https://nequi.com/..." style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
-                        </label>
-                        <label>Enlace Breve
-                            <input id="donConfigBreve" type="url" placeholder="https://tu.link/breve" style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
-                        </label>
-                        <label>Enlace Patreon
-                            <input id="donConfigPatreon" type="url" placeholder="https://patreon.com/..." style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);" />
-                        </label>
-                        
-                        <label>Mensaje público (texto mostrado en la página)
-                            <textarea id="donConfigPublicMessage" rows="3" style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(135,206,235,0.14);"></textarea>
-                        </label>
-                        <div style="display:flex;gap:8px;align-items:center;">
-                            <button id="donConfigSaveBtn" class="btn">Guardar configuración</button>
-                            <button id="donConfigResetBtn" class="btn">Restablecer</button>
-                            <span id="donConfigMessage" class="admin-message" style="margin-left:8px;"></span>
+
+                    <!-- TAB Pane: Accounts (CEO Only) -->
+                    <div class="tab-pane" id="tab-accounts">
+                        <div class="admin-card">
+                            <div class="card-header-actions">
+                                <h3>Gestion de Cuentas (CEO)</h3>
+                                <button id="adminCeoRefreshUsersBtn" class="btn">Actualizar Lista</button>
+                            </div>
+                            <p>Asigna roles del equipo de Panter Studio a los usuarios de la base de datos.</p>
+                            
+                            <div class="admin-filter-row" style="margin-top:15px; margin-bottom:15px;">
+                                <input type="search" id="adminCeoEmailSearch" placeholder="Buscar por correo o nombre" class="form-input" style="max-width: 480px;">
+                            </div>
+
+                            <p id="adminCeoUsersMessage" class="admin-message" style="margin-bottom:15px;"></p>
+
+                            <div class="admin-table-scroll">
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Correo</th>
+                                            <th>Nombre</th>
+                                            <th>Rol actual</th>
+                                            <th>Fuente</th>
+                                            <th>Nuevo rol</th>
+                                            <th>Accion</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="adminCeoUsersTableBody">
+                                        <tr><td colspan="7">Cargando usuarios...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <p class="admin-section-intro">Analiza correos de toda la base disponible (conductores, preregistros, donations y sponsors), filtra por búsqueda y asigna roles del equipo. Acceso al panel: administrador, programador y modelador (además del CEO).</p>
 
-                <div class="admin-filter-row">
-                    <input type="search" id="adminCeoEmailSearch" placeholder="Buscar por correo o nombre">
-                </div>
+                    <!-- TAB Pane: Support / Editor -->
+                    <div class="tab-pane" id="tab-support">
+                        <div class="admin-card">
+                            <h3>Soporte al Jugador</h3>
+                            <p>Busca un jugador por su correo electronico para visualizar sus datos y modificar su saldo de monedas.</p>
+                            
+                            <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                                <input type="text" id="supportSearchEmail" placeholder="Introduce el correo del jugador" class="form-input" style="flex:1; min-width: 250px;">
+                                <button id="supportSearchBtn" class="btn">🔍 Buscar Jugador</button>
+                            </div>
+                            <p id="supportSearchMessage" class="admin-message" style="margin-top: 10px;"></p>
 
-                <p id="adminCeoUsersMessage" class="admin-message"></p>
+                            <div id="supportUserCard" class="support-user-card" hidden style="margin-top: 20px; padding: 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px;">
+                                <h4 id="supportUserTitle" style="margin: 0 0 4px 0; color: #fff;">Usuario Encontrado</h4>
+                                <p id="supportUserEmailLabel" style="font-size: 0.85rem; color: var(--admin-text-secondary); margin: 0 0 15px 0;">correo@ejemplo.com</p>
+                                
+                                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                                    <div class="profile-field" style="min-width: 160px;">
+                                        <span>Saldo Actual</span>
+                                        <strong id="supportUserCurrentCoins" style="font-size: 1.4rem; color: var(--color-primary-light);">0 🪙</strong>
+                                    </div>
+                                </div>
 
-                <div class="admin-table-scroll">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Correo</th>
-                                <th>Nombre</th>
-                                <th>Rol actual</th>
-                                <th>Fuente</th>
-                                <th>Nuevo rol</th>
-                                <th>Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="adminCeoUsersTableBody">
-                            <tr>
-                                <td colspan="7">Cargando usuarios...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                <div style="display: flex; gap: 10px; max-width: 480px; align-items: flex-end; flex-wrap: wrap;">
+                                    <div class="form-group" style="flex: 1; min-width: 180px; margin-bottom: 0;">
+                                        <label class="form-label" for="supportCoinsAmount">Cantidad a Modificar</label>
+                                        <input type="number" id="supportCoinsAmount" class="form-input" placeholder="Ej: 50 o -20">
+                                    </div>
+                                    <button id="supportSaveCoinsBtn" class="btn" style="height: 44px; display: inline-flex; align-items: center;">💾 Guardar Cambios</button>
+                                </div>
+                                <p id="supportActionMessage" class="admin-message" style="margin-top: 15px;"></p>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-            </section>
+            </div>
         </section>
     </main>
 
     <script src="../../assets/js/admin/admin.js"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', ()=>{
-        const btn = document.getElementById('adminVisibilityBtn');
-        if (btn) btn.addEventListener('click', ()=>{ window.location.href = 'visibility.html'; });
-    });
-    </script>
 </body>
 </html>

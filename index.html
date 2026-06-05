@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#00c853">
+    <meta name="theme-color" content="#00b0ff">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
@@ -11,13 +11,40 @@
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
     <meta name="google-adsense-account" content="ca-pub-8870488962578785">
     <title>Inicio — Panter Studio</title>
-    <link rel="icon" href="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" type="image/png">
-    <link rel="apple-touch-icon" href="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&">
+    <link rel="icon" href="recursos/PSGD.png" type="image/png">
+    <link rel="apple-touch-icon" href="recursos/PSGD.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
     <style>
         /* ===== INDEX-SPECIFIC STYLES ===== */
+        /* Premium Leaderboard Overrides */
+        .leaderboard-row {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.01);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .leaderboard-row:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .leaderboard-row::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -150%;
+            width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            transform: skewX(-20deg);
+        }
+        .leaderboard-row:hover::after {
+            left: 150%;
+            transition: all 0.8s ease-in-out;
+        }
+
         .hub-hero-actions {
             display: flex;
             gap: 12px;
@@ -70,8 +97,8 @@
         }
         /* Minijuegos quick card */
         .minijuego-quick {
-            background: linear-gradient(135deg, rgba(0,200,83,0.06), rgba(0,200,83,0.02));
-            border: 1px solid rgba(0,200,83,0.12);
+            background: linear-gradient(135deg, rgba(0, 176, 255,0.06), rgba(0, 176, 255,0.02));
+            border: 1px solid rgba(0, 176, 255,0.12);
             border-radius: var(--border-radius-lg);
             padding: 1.25rem;
         }
@@ -195,7 +222,7 @@
     <nav>
         <div class="nav-left">
             <a href="index.html" class="nav-logo">
-                <img src="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" alt="Panter Studio">
+                <img src="recursos/PSGD.png" alt="Panter Studio">
                 <span>Panter Studio</span>
             </a>
         </div>
@@ -281,6 +308,7 @@
                         </p>
                         <div class="hub-hero-actions">
                             <a href="pages/meinteresa.html" class="btn btn-sm">💚 Me Interesa</a>
+                            <a href="pages/betatester.html" class="btn btn-ghost btn-sm" style="border-color:var(--color-primary); color:var(--color-primary-light);">⚙️ Conviertete en Beta Tester</a>
                             <a href="pages/actualizaciones.html" class="btn btn-ghost btn-sm">Ver Novedades</a>
                         </div>
                     </div>
@@ -291,10 +319,6 @@
                     <div class="info-strip-item">
                         <strong id="statRegistrados">—</strong>
                         <span>Interesados</span>
-                    </div>
-                    <div class="info-strip-item">
-                        <strong>1,000</strong>
-                        <span>Cupo Fundador</span>
                     </div>
                     <div class="info-strip-item">
                         <strong id="statJugadores">—</strong>
@@ -442,7 +466,7 @@
                 <div class="prereg-widget">
                     <div class="prereg-widget-header">
                         <h3>💚 Me Interesa</h3>
-                        <span style="font-size:0.7rem; color:var(--color-primary-light); font-weight:700; background:rgba(0,200,83,0.1); padding:2px 8px; border-radius:100px;">ABIERTO</span>
+                        <span style="font-size:0.7rem; color:var(--color-primary-light); font-weight:700; background:rgba(0, 176, 255,0.1); padding:2px 8px; border-radius:100px;">ABIERTO</span>
                     </div>
                     <p>Haz clic para que el equipo sepa que esperas <strong style="color:var(--text-primary);">Nuestra Tierra</strong>. Sin correo, sin spam.</p>
                     <div style="text-align:center; margin-bottom:0.75rem;">
@@ -531,11 +555,18 @@
                 const list = [];
                 snap.forEach(doc => {
                     const data = doc.data();
+                    const email = String(data.email || '').trim().toLowerCase();
+                    const isFounder = email === 'pantergamey@gmail.com';
                     list.push({
                         nombre_usuario: data.nombre_usuario,
                         username: data.username,
                         displayName: data.displayName,
-                        coins: Number(data.coins || 0)
+                        coins: Math.max(Number(data.coins || 0), Number(data.saldo || 0)),
+                        avatar: data.avatar || '',
+                        avatarImg: data.avatarImg || '',
+                        role: isFounder ? 'founder_ceo' : (data.role || 'viewer'),
+                        betaTesterStatus: data.betaTesterStatus || '',
+                        email: email
                     });
                 });
                 
@@ -543,7 +574,12 @@
                 list.sort((a, b) => b.coins - a.coins);
                 
                 // Mostrar los mejores 5
-                const top5 = list.slice(0, 5);
+                let top5 = list.slice(0, 5);
+                const founderItem = list.find(u => String(u.email || '').toLowerCase() === 'pantergamey@gmail.com');
+                const hasFounder = top5.some(u => String(u.email || '').toLowerCase() === 'pantergamey@gmail.com');
+                if (founderItem && !hasFounder) {
+                    top5.push(founderItem);
+                }
                 
                 lb.innerHTML = '';
                 const medals = [
@@ -552,22 +588,113 @@
                     '<img src="recursos/iconos/3er-lugar.png" alt="🥉" style="width:20px;height:20px;vertical-align:middle;">'
                 ];
                 const topClasses = ['top-1','top-2','top-3'];
-                let rank = 0;
                 
+                 const ROLE_LABELS = {
+                    founder_ceo: 'Fundador',
+                    director: 'Director',
+                    administrador: 'Admin',
+                    programador: 'Dev',
+                    modelador: '3D Mod',
+                    usuario: 'Miembro',
+                    viewer: 'Miembro',
+                    vip: 'VIP',
+                    community_manager: 'CM',
+                    support_ops: 'Soporte',
+                    youtuber: 'Youtuber',
+                    streamer: 'Streamer'
+                };
+
+                const roleBadgeTones = {
+                    founder_ceo: 'color: #fde68a; border: 1px solid rgba(251,191,36,.4); background: linear-gradient(135deg, rgba(251,191,36,.25), rgba(28,33,46,.8)); text-shadow: 0 0 4px rgba(251,191,36,.5); box-shadow: 0 0 8px rgba(251,191,36,.25);',
+                    director: 'color: #fca5a5; border: 1px solid rgba(239,68,68,.3); background: rgba(239,68,68,.08);',
+                    administrador: 'color: #80f0ff; border: 1px solid rgba(0,240,255,.3); background: rgba(0,240,255,.08);',
+                    programador: 'color: #fda4af; border: 1px solid rgba(248,113,113,.2); background: rgba(248,113,113,.08);',
+                    modelador: 'color: #93c5fd; border: 1px solid rgba(96,165,250,.2); background: rgba(96,165,250,.08);',
+                    community_manager: 'color: #d8b4fe; border: 1px solid rgba(168,85,247,.2); background: rgba(168,85,247,.08);',
+                    vip: 'color: #fde68a; border: 1px solid rgba(251,191,36,.2); background: rgba(251,191,36,.08);',
+                    youtuber: 'color: #fda4af; border: 1px solid rgba(248,113,113,.2); background: rgba(248,113,113,.08);',
+                    streamer: 'color: #fda4af; border: 1px solid rgba(248,113,113,.2); background: rgba(248,113,113,.08);',
+                    support_ops: 'color: #86efac; border: 1px solid rgba(74,222,128,.2); background: rgba(74,222,128,.08);'
+                };
+
+                let rank = 0;
                 top5.forEach(d => {
                     rank++;
                     const username = d.nombre_usuario || d.username || d.displayName || 'Anónimo';
                     const coins = d.coins;
                     const cls = rank <= 3 ? topClasses[rank-1] : '';
-                    const medal = rank <= 3 ? medals[rank-1] : rank;
+                    const medal = d.role === 'founder_ceo' ? '👑' : (rank <= 3 ? medals[rank-1] : rank);
+                    
+                    let avatarHtml = `<span class="leaderboard-avatar">👤</span>`;
+                    if (d.avatarImg) {
+                        avatarHtml = `<img src="${d.avatarImg}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.1);flex-shrink:0;margin-right:2px;">`;
+                    } else if (d.avatar) {
+                        avatarHtml = `<span class="leaderboard-avatar" style="font-size:1rem;margin-right:2px;">${d.avatar}</span>`;
+                    }
+
+                    const betaBadge = d.betaTesterStatus === 'approved' ? `<span style="font-size:0.55rem;padding:0px 4px;border-radius:3px;font-weight:700;letter-spacing:0.3px;color:#86efac; border:1px solid rgba(16,185,129,.2); background:rgba(16,185,129,.08);" title="Beta Tester Oficial">Beta</span>` : '';
+                    
+                    const role = String(d.role || 'viewer').toLowerCase();
+                    const roleLabel = ROLE_LABELS[role] || '';
+                    const roleBadge = (roleLabel && role !== 'viewer' && role !== 'usuario') ? `<span style="font-size:0.55rem;padding:0px 4px;border-radius:3px;font-weight:700;letter-spacing:0.3px;${roleBadgeTones[role] || 'color:var(--text-secondary);border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);'}">${roleLabel}</span>` : '';
+
+                    let rowStyle = 'padding: 0.5rem 0.75rem;';
+                    let nameStyle = 'font-size:0.8rem; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:90px;';
+                    
+                    const isBeta = d.betaTesterStatus === 'approved';
+
+                    if (role === 'founder_ceo') {
+                        // Founder/CEO golden effect
+                        rowStyle += ' background: linear-gradient(95deg, rgba(251,191,36,0.12), rgba(20,24,35,0.7)); border-color: rgba(251,191,36,0.45); box-shadow: 0 0 12px rgba(251,191,36,0.25);';
+                        nameStyle += ' color: #fbbf24; font-weight: 800; text-shadow: 0 0 8px rgba(251,191,36,0.4);';
+                    } else if (role === 'director') {
+                        // Director glowing red effect
+                        rowStyle += ' background: linear-gradient(95deg, rgba(239,68,68,0.1), rgba(20,24,35,0.7)); border-color: rgba(239,68,68,0.4); box-shadow: 0 0 10px rgba(239,68,68,0.22);';
+                        nameStyle += ' color: #fca5a5; font-weight: 700; text-shadow: 0 0 8px rgba(239,68,68,0.3);';
+                    } else if (role === 'administrador') {
+                        // Administrator glowing aquamarine effect
+                        rowStyle += ' background: linear-gradient(95deg, rgba(0,240,255,0.1), rgba(20,24,35,0.7)); border-color: rgba(0,240,255,0.45); box-shadow: 0 0 10px rgba(0,240,255,0.22);';
+                        nameStyle += ' color: #80f0ff; font-weight: 700; text-shadow: 0 0 8px rgba(0,240,255,0.3);';
+                    } else if (role === 'programador' || role === 'modelador') {
+                        // Dev/Creator sky blue glow
+                        rowStyle += ' background: linear-gradient(95deg, rgba(0,176,255,0.08), rgba(20,24,35,0.7)); border-color: rgba(0,176,255,0.4); box-shadow: 0 0 10px rgba(0,176,255,0.2);';
+                        nameStyle += ' color: #e0f7ff;';
+                    } else if (role === 'community_manager') {
+                        // CM Purple/Pink glow
+                        rowStyle += ' background: linear-gradient(95deg, rgba(168,85,247,0.1), rgba(20,24,35,0.7)); border-color: rgba(168,85,247,0.4); box-shadow: 0 0 10px rgba(168,85,247,0.2);';
+                        nameStyle += ' color: #f5d0fe;';
+                    } else if (role === 'support_ops') {
+                        // Support Green glow
+                        rowStyle += ' background: linear-gradient(95deg, rgba(16,185,129,0.08), rgba(20,24,35,0.7)); border-color: rgba(16,185,129,0.4); box-shadow: 0 0 10px rgba(16,185,129,0.2);';
+                        nameStyle += ' color: #a7f3d0;';
+                    } else if (role === 'youtuber' || role === 'streamer') {
+                        // Media Creators Bright Red/Purple
+                        rowStyle += ' background: linear-gradient(95deg, rgba(239,68,68,0.08), rgba(20,24,35,0.7)); border-color: rgba(239,68,68,0.35); box-shadow: 0 0 10px rgba(239,68,68,0.18);';
+                        nameStyle += ' color: #fda4af;';
+                    } else if (role === 'vip') {
+                        // VIP Purple glow
+                        rowStyle += ' background: linear-gradient(95deg, rgba(168,85,247,0.08), rgba(20,24,35,0.7)); border-color: rgba(168,85,247,0.35); box-shadow: 0 0 8px rgba(168,85,247,0.18);';
+                        nameStyle += ' color: #f3e8ff;';
+                    } else if (isBeta) {
+                        // Beta tester green glow
+                        rowStyle += ' background: linear-gradient(95deg, rgba(16,185,129,0.08), rgba(20,24,35,0.7)); border-color: rgba(16,185,129,0.4); box-shadow: 0 0 10px rgba(16,185,129,0.2);';
+                        nameStyle += ' color: #a7f3d0;';
+                    }
+
                     lb.innerHTML += `
-                        <div class="leaderboard-row ${cls}">
-                            <div class="leaderboard-user-info">
-                                <div class="leaderboard-rank">${medal}</div>
-                                <span class="leaderboard-avatar">👤</span>
-                                <span class="leaderboard-name">${username}</span>
+                        <div class="leaderboard-row ${cls}" style="${rowStyle}">
+                            <div class="leaderboard-user-info" style="gap: 8px;">
+                                <div class="leaderboard-rank" style="font-size:0.75rem; width:22px; height:22px; flex-shrink:0;">${medal}</div>
+                                ${avatarHtml}
+                                <div style="display:flex; flex-direction:column; gap:1px; min-width:0;">
+                                    <span class="leaderboard-name" style="${nameStyle}">${username}</span>
+                                    <div style="display:flex; align-items:center; gap:4px; margin-top:1px; flex-wrap:wrap;">
+                                        ${roleBadge}
+                                        ${betaBadge}
+                                    </div>
+                                </div>
                             </div>
-                            <div class="leaderboard-value"><img src="recursos/iconos/moneda.png" alt="Moneda" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;"> ${coins.toLocaleString()}</div>
+                            <div class="leaderboard-value" style="font-size:0.78rem;"><img src="recursos/iconos/moneda.png" alt="Moneda" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;"> ${coins.toLocaleString()}</div>
                         </div>`;
                 });
                 if (top5.length === 0) {

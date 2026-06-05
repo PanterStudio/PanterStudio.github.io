@@ -4,208 +4,373 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minijuegos — Panter Studio</title>
-    <link rel="icon" href="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" type="image/png">
+    <link rel="icon" href="../recursos/PSGD.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
     <script src="../assets/js/core/firebase-config.js"></script>
     <style>
-        /* Cyber AI Terminal Styling */
+        /* ══════════════════════════════════════════
+           PANTER CORE — AI MODULE EPIC DESIGN
+        ══════════════════════════════════════════ */
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700;900&display=swap');
+
+        /* ─── HERO BANNER ─── */
+        .ai-module-hero {
+            text-align: center;
+            padding: 3rem 1rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .ai-module-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,176,255,0.18) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 50% at 10% 80%, rgba(88,101,242,0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        .ai-hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: #00b0ff;
+            background: rgba(0,176,255,0.08);
+            border: 1px solid rgba(0,176,255,0.25);
+            border-radius: 100px;
+            padding: 0.28rem 0.85rem;
+            margin-bottom: 1rem;
+        }
+        .ai-hero-eyebrow-dot {
+            width: 6px; height: 6px;
+            background: #00c853;
+            border-radius: 50%;
+            animation: aiDotBlink 1.4s ease-in-out infinite;
+        }
+        @keyframes aiDotBlink {
+            0%,100%{opacity:1;} 50%{opacity:0.2;}
+        }
+        .ai-module-hero h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin: 0 0 0.6rem;
+            background: linear-gradient(135deg, #fff 0%, #00b0ff 50%, #5865f2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .ai-module-hero p {
+            color: var(--text-muted);
+            font-size: clamp(0.85rem, 2.5vw, 1rem);
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* ─── MAIN TERMINAL CONTAINER ─── */
         .ai-terminal-container {
-            max-width: 850px;
-            margin: 2rem auto;
-            background: rgba(18, 22, 33, 0.85);
-            border: 1px solid rgba(0, 176, 255, 0.2);
-            border-radius: var(--border-radius-lg);
-            box-shadow: 0 0 30px rgba(0, 176, 255, 0.15), inset 0 0 20px rgba(0, 176, 255, 0.05);
+            max-width: 900px;
+            margin: 0 auto 2rem;
+            background: rgba(10, 13, 24, 0.92);
+            border: 1px solid rgba(0, 176, 255, 0.18);
+            border-radius: 24px;
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.04),
+                0 0 60px rgba(0, 176, 255, 0.1),
+                0 20px 60px rgba(0,0,0,0.6);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
 
-        /* AI Interactive Holographic Core */
+        /* ─── HEADER PANEL ─── */
         .ai-header-panel {
-            padding: 1.8rem;
+            padding: 2.2rem 1.5rem 1.8rem;
             display: flex;
             flex-direction: column;
             align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            background: rgba(10, 14, 23, 0.5);
-        }
-        .ai-core-orb {
-            width: 85px;
-            height: 85px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(0, 176, 255, 0.3) 0%, transparent 70%);
-            border: 3px solid #00b0ff;
-            box-shadow: 0 0 20px #00b0ff, inset 0 0 15px #00b0ff;
+            gap: 0.6rem;
             position: relative;
-            transition: all 0.5s var(--ease-smooth);
-            animation: orbBreathe 2.5s infinite alternate ease-in-out;
+            background: linear-gradient(180deg, rgba(0,176,255,0.06) 0%, transparent 100%);
+            border-bottom: 1px solid rgba(0,176,255,0.1);
+            overflow: hidden;
         }
-        .ai-core-orb::before {
+        /* Scanline overlay */
+        .ai-header-panel::before {
             content: '';
             position: absolute;
-            inset: -8px;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,176,255,0.015) 2px,
+                rgba(0,176,255,0.015) 4px
+            );
+            pointer-events: none;
+        }
+        /* Corner accent lines */
+        .ai-header-panel::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00b0ff, transparent);
+            animation: scanLine 3s ease-in-out infinite;
+        }
+        @keyframes scanLine {
+            0%,100%{ opacity:0.4; } 50%{ opacity:1; }
+        }
+
+        /* ─── AI CORE ORB — Multi-ring ─── */
+        .ai-orb-wrapper {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .ai-orb-ring {
+            position: absolute;
             border-radius: 50%;
-            border: 1px dashed rgba(0, 176, 255, 0.3);
-            animation: spinRing 12s linear infinite;
+            border: 1px solid rgba(0,176,255,0.2);
+        }
+        .ai-orb-ring:nth-child(1) { width:120px; height:120px; animation: spinRing 20s linear infinite; border-style: dashed; }
+        .ai-orb-ring:nth-child(2) { width:105px; height:105px; animation: spinRing 8s linear infinite reverse; border-color: rgba(0,176,255,0.35); }
+        .ai-orb-ring:nth-child(3) { width: 90px; height: 90px; animation: spinRing 5s linear infinite; border-color: rgba(0,176,255,0.15); border-style: dashed; }
+        .ai-core-orb {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, rgba(0,240,255,0.5) 0%, rgba(0,100,180,0.3) 50%, transparent 80%);
+            border: 2px solid rgba(0,176,255,0.9);
+            box-shadow:
+                0 0 20px rgba(0,176,255,0.8),
+                0 0 50px rgba(0,176,255,0.3),
+                inset 0 0 20px rgba(0,176,255,0.4);
+            position: relative;
+            transition: all 0.5s ease;
+            animation: orbBreathe 2.5s ease-in-out infinite alternate;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
         }
         .ai-core-orb::after {
             content: '';
             position: absolute;
-            inset: 6px;
+            inset: 4px;
             border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-top-color: #00b0ff;
-            animation: spinRing 3s linear infinite reverse;
+            border: 1.5px solid rgba(255,255,255,0.15);
+            border-top-color: rgba(0,240,255,0.8);
+            animation: spinRing 2s linear infinite;
         }
 
-        /* States of the AI Core */
+        /* Orb states */
         .ai-core-orb.thinking {
             border-color: #fbbf24;
-            background-color: rgba(251, 191, 36, 0.1);
-            box-shadow: 0 0 30px #fbbf24, inset 0 0 20px #fbbf24;
+            background: radial-gradient(circle at 35% 35%, rgba(255,200,50,0.5) 0%, rgba(180,100,0,0.3) 60%, transparent 80%);
+            box-shadow: 0 0 25px rgba(251,191,36,0.8), 0 0 60px rgba(251,191,36,0.25), inset 0 0 20px rgba(251,191,36,0.4);
         }
         .ai-core-orb.thinking::after { border-top-color: #fbbf24; }
         .ai-core-orb.success {
             border-color: #00c853;
-            background-color: rgba(0, 200, 83, 0.1);
-            box-shadow: 0 0 30px #00c853, inset 0 0 20px #00c853;
+            background: radial-gradient(circle at 35% 35%, rgba(0,240,100,0.5) 0%, rgba(0,120,50,0.3) 60%, transparent 80%);
+            box-shadow: 0 0 25px rgba(0,200,83,0.8), 0 0 60px rgba(0,200,83,0.25), inset 0 0 20px rgba(0,200,83,0.4);
         }
         .ai-core-orb.success::after { border-top-color: #00c853; }
         .ai-core-orb.error {
             border-color: #ef4444;
-            background-color: rgba(239, 68, 68, 0.1);
-            box-shadow: 0 0 30px #ef4444, inset 0 0 20px #ef4444;
+            background: radial-gradient(circle at 35% 35%, rgba(255,60,60,0.5) 0%, rgba(180,0,0,0.3) 60%, transparent 80%);
+            box-shadow: 0 0 25px rgba(239,68,68,0.8), 0 0 60px rgba(239,68,68,0.25), inset 0 0 20px rgba(239,68,68,0.4);
         }
         .ai-core-orb.error::after { border-top-color: #ef4444; }
 
         @keyframes orbBreathe {
-            from { transform: scale(0.96); opacity: 0.85; }
-            to { transform: scale(1.04); opacity: 1; }
+            from { transform: scale(0.95); }
+            to   { transform: scale(1.05); }
         }
         @keyframes spinRing {
             from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            to   { transform: rotate(360deg); }
         }
 
+        /* Status text + coin bar */
         .ai-status-text {
-            margin-top: 10px;
-            font-size: 0.8rem;
+            margin-top: 2px;
+            font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.14em;
             color: #00b0ff;
-            font-weight: 700;
-            text-shadow: 0 0 10px rgba(0,176,255,0.4);
+            font-weight: 800;
+            text-shadow: 0 0 12px rgba(0,176,255,0.6);
             transition: color 0.3s;
         }
+        .ai-coin-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(0,176,255,0.06);
+            border: 1px solid rgba(0,176,255,0.15);
+            border-radius: 100px;
+            padding: 0.3rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #fff;
+            margin-top: 0.25rem;
+        }
+        .ai-coin-bar span { color: #fbbf24; font-size: 0.85rem; }
 
-        /* Console Feed */
+        /* ─── CONSOLE FEED ─── */
         .ai-console-feed {
             flex-grow: 1;
             padding: 1.5rem;
-            min-height: 320px;
-            max-height: 400px;
+            min-height: 280px;
+            max-height: 380px;
             overflow-y: auto;
-            background: rgba(10, 14, 23, 0.8);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background:
+                linear-gradient(180deg, rgba(5,8,18,0.0) 0%, rgba(5,8,18,0.6) 100%),
+                rgba(5, 8, 18, 0.8);
+            border-bottom: 1px solid rgba(0,176,255,0.08);
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 0.9rem;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0,176,255,0.3) transparent;
         }
+        .ai-console-feed::-webkit-scrollbar { width: 4px; }
+        .ai-console-feed::-webkit-scrollbar-track { background: transparent; }
+        .ai-console-feed::-webkit-scrollbar-thumb { background: rgba(0,176,255,0.3); border-radius: 4px; }
 
-        /* Conversational Bubble Design */
         .console-entry {
             display: flex;
             flex-direction: column;
             gap: 4px;
-            animation: entryFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: entryFade 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
         }
         @keyframes entryFade {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity:0; transform: translateY(12px); }
+            to   { opacity:1; transform: translateY(0); }
         }
         .entry-label {
-            font-size: 0.72rem;
+            font-size: 0.68rem;
             font-weight: 800;
             color: var(--text-muted);
-            letter-spacing: 0.05em;
+            letter-spacing: 0.06em;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
         }
         .entry-label.user { color: #00b0ff; }
-        .entry-label.ai { color: #00c853; }
-        
+        .entry-label.ai   { color: #00c853; }
         .entry-body {
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             color: #e2e8f0;
-            line-height: 1.5;
-            background: rgba(255, 255, 255, 0.02);
+            line-height: 1.55;
+            background: rgba(255,255,255,0.025);
             padding: 10px 14px;
-            border-radius: var(--border-radius);
-            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
             display: inline-block;
-            max-width: 90%;
+            max-width: 92%;
         }
         .entry-body.user {
-            background: rgba(0, 176, 255, 0.04);
-            border-color: rgba(0, 176, 255, 0.12);
+            background: rgba(0,176,255,0.05);
+            border-color: rgba(0,176,255,0.14);
         }
 
-        /* AI Glass Control Board */
+        /* ─── CONTROL BOARD ─── */
         .ai-control-board {
-            padding: 1.5rem;
-            background: rgba(18, 22, 33, 0.9);
+            padding: 1.4rem;
+            background: rgba(8,11,22,0.95);
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 0.85rem;
+            border-top: 1px solid rgba(0,176,255,0.08);
+        }
+        .board-section-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: rgba(0,176,255,0.5);
+            padding: 0 0.2rem;
         }
         .board-buttons-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
         }
-        
-        /* Cyber Action Chips */
+        @media (max-width: 500px) {
+            .board-buttons-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ─── ACTION CHIPS (card style) ─── */
         .cyber-chip {
             background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: var(--border-radius);
-            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.09);
+            border-radius: 14px;
+            padding: 0.85rem 1rem;
             color: #ffffff;
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.22s ease;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
             user-select: none;
             -webkit-user-select: none;
+            position: relative;
+            overflow: hidden;
         }
+        .cyber-chip::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            background: radial-gradient(circle at 50% 0%, rgba(0,176,255,0.12), transparent 70%);
+            transition: opacity 0.3s;
+        }
+        .cyber-chip:hover:not(:disabled)::before { opacity: 1; }
         .cyber-chip:hover:not(:disabled) {
-            background: rgba(0, 176, 255, 0.06);
-            border-color: rgba(0, 176, 255, 0.4);
-            box-shadow: 0 0 12px rgba(0, 176, 255, 0.15);
-            transform: translateY(-2px);
+            border-color: rgba(0,176,255,0.45);
+            box-shadow: 0 0 18px rgba(0,176,255,0.18), 0 4px 16px rgba(0,0,0,0.4);
+            transform: translateY(-3px);
         }
-        .cyber-chip:active:not(:disabled) {
-            transform: translateY(0);
-        }
-        .cyber-chip:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
+        .cyber-chip:active:not(:disabled) { transform: translateY(0); }
+        .cyber-chip:disabled { opacity: 0.35; cursor: not-allowed; }
         .cyber-chip.gold {
-            border-color: rgba(212, 175, 55, 0.2);
+            border-color: rgba(212,175,55,0.25);
+            background: rgba(212,175,55,0.04);
+        }
+        .cyber-chip.gold::before {
+            background: radial-gradient(circle at 50% 0%, rgba(212,175,55,0.12), transparent 70%);
         }
         .cyber-chip.gold:hover:not(:disabled) {
-            background: rgba(212, 175, 55, 0.06);
-            border-color: #d4af37;
-            box-shadow: 0 0 12px rgba(212, 175, 55, 0.2);
+            border-color: rgba(212,175,55,0.6);
+            box-shadow: 0 0 18px rgba(212,175,55,0.2), 0 4px 16px rgba(0,0,0,0.4);
         }
+        .chip-icon {
+            width: 22px; height: 22px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+        .chip-text { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
+        .chip-text strong { font-size: 0.88rem; font-weight: 800; }
+        .chip-text small { font-size: 0.68rem; color: rgba(255,255,255,0.4); font-weight: 500; }
 
         /* Pulse loading animation */
         .cyber-loader {
@@ -331,108 +496,553 @@
             to { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
         }
 
-        /* Roulette Visuals */
-        .roulette-board {
+        /* Casino Floor Lobby */
+        .casino-lobby {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 15px;
+            box-sizing: border-box;
+            background: radial-gradient(circle at center, #111827 0%, #030712 100%);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 215, 0, 0.15);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+        }
+        .lobby-header {
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        .lobby-header h3 {
+            font-size: 1.4rem;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .lobby-header p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin: 4px 0 0 0;
+        }
+        .casino-floor {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            width: 100%;
+            max-width: 700px;
+        }
+        .casino-table-zone {
+            background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+        .casino-table-zone:hover {
+            transform: translateY(-5px);
+            border-color: #ffd700;
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.15);
+        }
+        .table-visual {
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .table-visual.felt-green {
+            background: radial-gradient(circle, #0f5132 0%, #09341f 100%);
+            border-bottom: 3px solid #8a6f27;
+        }
+        .table-visual.felt-wheel {
+            background: radial-gradient(circle, #212529 0%, #111417 100%);
+            border-bottom: 3px solid #8a6f27;
+        }
+        .table-visual.felt-purple {
+            background: radial-gradient(circle, #3b135c 0%, #200736 100%);
+            border-bottom: 3px solid #8a6f27;
+        }
+        .felt-line {
+            position: absolute;
+            width: 80%;
+            height: 60%;
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            top: 20%;
+        }
+        .felt-cards {
+            font-size: 2.2rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            z-index: 2;
+        }
+        .mini-wheel-rotator {
+            font-size: 2.5rem;
+            animation: spinWheel 8s linear infinite;
+        }
+        @keyframes spinWheel {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .slots-visual {
+            font-size: 1.8rem;
+            letter-spacing: 5px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            animation: bounceSlots 1.5s ease-in-out infinite alternate;
+        }
+        @keyframes bounceSlots {
+            from { transform: translateY(-3px); }
+            to { transform: translateY(3px); }
+        }
+        .table-info {
+            padding: 10px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        .table-info h4 {
+            margin: 0 0 4px 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .table-info span {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        .lobby-exit {
+            margin-top: 10px;
+            width: 100%;
+            max-width: 200px;
+        }
+
+        /* Slots game styling */
+        .slots-container {
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 1.2rem;
+            padding: 15px;
+            box-sizing: border-box;
         }
-        .roulette-visual-track {
-            position: relative;
+        .slots-machine {
+            background: linear-gradient(135deg, #1f1a3a 0%, #0d0b18 100%);
+            border: 4px solid #ffd700;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.2);
             width: 100%;
-            max-width: 480px;
-            height: 60px;
-            background: #0a0e17;
-            border: 2px solid rgba(0, 176, 255, 0.2);
-            border-radius: 30px;
-            overflow: hidden;
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+            max-width: 340px;
             display: flex;
+            flex-direction: column;
             align-items: center;
+            gap: 15px;
         }
-        .roulette-ticker {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 4px;
-            height: 100%;
-            background: #ffd700;
-            z-index: 10;
-            box-shadow: 0 0 8px #ffd700;
-        }
-        .roulette-spinner-row {
-            display: flex;
-            gap: 4px;
-            padding-left: 50%;
-            transition: transform 3s cubic-bezier(0.1, 0.8, 0.1, 1);
-            will-change: transform;
-        }
-        .roulette-pocket {
-            width: 55px;
-            height: 48px;
-            flex-shrink: 0;
+        .slots-screen-reels {
+            background: #000;
+            border: 3px solid #3b2f0a;
             border-radius: 8px;
             display: flex;
+            gap: 10px;
+            padding: 12px;
+            justify-content: center;
+            width: 100%;
+            box-shadow: inset 0 0 15px rgba(0,0,0,1);
+        }
+        .slots-reel {
+            background: #111;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 6px;
+            width: 70px;
+            height: 80px;
+            display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 2.2rem;
             font-weight: 800;
-            font-size: 0.9rem;
-            color: #fff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+            position: relative;
+            overflow: hidden;
+        }
+        .slots-reel-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            transition: transform 0.1s linear;
+        }
+        .slots-reel-symbol {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .slots-paytable {
+            background: rgba(255,255,255,0.02);
             border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 10px;
+            width: 100%;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
         }
-        .roulette-pocket.rojo {
-            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        .slots-paytable-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
         }
-        .roulette-pocket.negro {
-            background: linear-gradient(135deg, #374151 0%, #111827 100%);
-            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        .slots-paytable-row:last-child {
+            margin-bottom: 0;
         }
-        .roulette-pocket.verde {
-            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
-            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-            box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
-            border-color: #10b981;
+
+        /* Roulette Canvas Visuals */
+        .roulette-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 10px;
+            box-sizing: border-box;
         }
-        
+        .roulette-wheel-wrapper {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            max-width: 100%;
+            margin: 0 auto;
+            border-radius: 50%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(0, 0, 0, 0.8);
+            background: #0d0f14;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #rouletteCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        .roulette-pointer {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%);
+            clip-path: polygon(50% 100%, 0 0, 100% 0);
+            z-index: 10;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+        .roulette-instructions {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin: 5px 0;
+            font-weight: 500;
+        }
         .chips-container {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             justify-content: center;
-            flex-wrap: wrap;
+            align-items: center;
+            width: 100%;
+            margin-top: 5px;
         }
         .bet-chip {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            border: 3px dashed #fff;
+            flex: 1;
+            max-width: 100px;
+            height: 48px;
+            border-radius: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            font-weight: 800;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            user-select: none;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 800;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            user-select: none;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .bet-chip.chip-rojo {
-            background: #ef4444;
-            border-color: #ffd700;
-            color: #fff;
+            background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+        .bet-chip.chip-rojo:hover {
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.7);
         }
         .bet-chip.chip-negro {
-            background: #1f2937;
-            border-color: #ffd700;
-            color: #fff;
+            background: linear-gradient(135deg, #374151 0%, #111827 100%);
+            box-shadow: 0 4px 15px rgba(17, 24, 39, 0.6);
+        }
+        .bet-chip.chip-negro:hover {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+        .bet-chip.chip-verde {
+            background: linear-gradient(135deg, #10b981 0%, #065f46 100%);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+        .bet-chip.chip-verde:hover {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.7);
         }
         .bet-chip:hover {
-            transform: scale(1.15) rotate(15deg);
-            box-shadow: 0 0 12px rgba(255,255,255,0.4);
+            transform: scale(1.08) translateY(-2px);
+        }
+        .bet-chip:active {
+            transform: scale(0.95) translateY(0);
+        }
+        .bet-chip:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Simulador de Ruta (Trabajo) */
+        .work-game-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 15px;
+            box-sizing: border-box;
+            background: #0d0f14;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 176, 255, 0.1);
+        }
+        .cargo-dock {
+            width: 100%;
+            max-width: 320px;
+            height: 180px;
+            background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+            border: 2px solid #475569;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.6);
+        }
+        .cargo-crate {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            animation: popCrate 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popCrate {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+        .work-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #1e293b;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .work-progress-fill {
+            height: 100%;
+            background: #00e5ff;
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+
+        /* Bypass de Seguridad (Riesgo) */
+        .risk-game-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 15px;
+            box-sizing: border-box;
+            background: #0d0f14;
+            border-radius: 12px;
+            border: 1px solid rgba(239, 68, 68, 0.15);
+        }
+        .bypass-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 220px;
+            margin: 0 auto;
+        }
+        .bypass-node {
+            aspect-ratio: 1;
+            background: #1e293b;
+            border: 2px solid #475569;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .bypass-node.active-node {
+            background: radial-gradient(circle, #059669 0%, #064e3b 100%);
+            border-color: #34d399;
+            box-shadow: 0 0 12px rgba(52, 211, 153, 0.4);
+            animation: pulseNode 1s infinite alternate;
+        }
+        .bypass-node.firewall-node {
+            background: radial-gradient(circle, #dc2626 0%, #7f1d1d 100%);
+            border-color: #fca5a5;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+        }
+        @keyframes pulseNode {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
+
+        /* Reactor de Energia (Crash) */
+        .reactor-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.2rem;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        .reactor-display {
+            background: #000;
+            border: 3px solid #ff5722;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 320px;
+            height: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(255, 87, 34, 0.4);
+        }
+        .reactor-multiplier {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #ff5722;
+            text-shadow: 0 0 15px rgba(255, 87, 34, 0.6);
+            z-index: 2;
+        }
+        .reactor-status {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 8px;
+            color: #a1a1aa;
+            z-index: 2;
+        }
+        .reactor-graph {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Detector de Cristales (Mines) */
+        .detector-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.2rem;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .detector-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        .detector-tile {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            border: 2px solid rgba(255,255,255,0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .detector-tile:hover {
+            border-color: #00b0ff;
+            transform: scale(1.05);
+        }
+        .detector-tile.revealed-crystal {
+            background: radial-gradient(circle, #0e7490 0%, #164e63 100%);
+            border-color: #06b6d4;
+            color: #22d3ee;
+            animation: pulseCrystal 0.5s ease-out;
+        }
+        .detector-tile.revealed-mine {
+            background: radial-gradient(circle, #b91c1c 0%, #7f1d1d 100%);
+            border-color: #ef4444;
+            color: #fca5a5;
+            animation: shakeTile 0.3s ease-in-out;
+        }
+        @keyframes pulseCrystal {
+            0% { transform: scale(0.8); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        @keyframes shakeTile {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        /* Orbita de Datos (Plinko) */
+        .orbita-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.2rem;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .orbita-board-canvas {
+            border: 2px solid rgba(0, 176, 255, 0.2);
+            border-radius: 12px;
+            background: #090d16;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            max-width: 100%;
         }
     </style>
 </head>
@@ -441,7 +1051,7 @@
     <nav>
         <div class="nav-left">
             <a href="../index.html" class="nav-logo">
-                <img src="https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&" alt="Panter Studio">
+                <img src="../recursos/PSGD.png" alt="Panter Studio">
                 <span>Panter Studio</span>
             </a>
         </div>
@@ -483,54 +1093,84 @@
         </nav>
     </nav>
 
-    <div class="container" style="padding: 1.5rem 1rem;">
-        <h1 style="text-align: center; font-size: 2.2rem; margin-bottom: 0.5rem; letter-spacing: -1px; text-transform: uppercase;">Módulo de Inteligencia Virtual 🤖</h1>
-        <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem; max-width: 600px; margin-inline: auto; font-size: 0.95rem;">
-            Interactúa con la red de algoritmos de Panter Studio. Genera trabajos, calcula riesgos y enlázalos directamente con tu cuenta de Nuestra Tierra.
-        </p>
+    <div class="container" style="padding: 1rem;">
 
-        <div id="authNotice" class="ai-terminal-container" style="align-items: center; justify-content: center; flex-direction: column; gap: 1.5rem; padding: 4rem; text-align: center;">
-            <p style="font-weight:600; font-size:1.1rem; color: #f2f3f5;">Debes iniciar sesión con tu cuenta de Panter Studio para sincronizar tu billetera web y tus esmeraldas del juego móvil.</p>
-            <a href="perfil.html" class="btn" style="padding: 0.9rem 2.5rem; font-weight: 700; border-radius: var(--border-radius-lg);">Conectar Cuenta</a>
+        <!-- ══ HERO ══ -->
+        <div class="ai-module-hero">
+            <div class="ai-hero-eyebrow">
+                <span class="ai-hero-eyebrow-dot"></span>
+                Panter Core v3.1 — En Línea
+            </div>
+            <h1>Módulo de<br>Inteligencia Virtual</h1>
+            <p>Interactúa con la red de algoritmos de Panter Studio. Genera trabajos, calcula riesgos y enlaza tus monedas con <strong>Nuestra Tierra</strong>.</p>
         </div>
 
-        <div id="gameContainer" class="ai-terminal-container" style="display: none;">
-            
-            <!-- HEADER CON EL NÚCLEO HOLOGRÁFICO -->
+        <!-- ══ AUTH NOTICE ══ -->
+        <div id="authNotice" class="ai-terminal-container" style="align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;padding:3.5rem 2rem;text-align:center;">
+            <div style="font-size:2.5rem;">🔒</div>
+            <div>
+                <p style="font-weight:700;font-size:1.05rem;color:#f2f3f5;margin:0 0 0.4rem;">Sesión requerida</p>
+                <p style="font-size:0.88rem;color:var(--text-muted);margin:0;">Inicia sesión para sincronizar tu billetera y tus esmeraldas del juego móvil.</p>
+            </div>
+            <a href="perfil.html" class="btn" style="padding:0.85rem 2.2rem;font-weight:700;border-radius:100px;">⚡ Conectar Cuenta</a>
+        </div>
+
+        <!-- ══ GAME CONTAINER ══ -->
+        <div id="gameContainer" class="ai-terminal-container" style="display:none;">
+
+            <!-- HEADER HOLOGRÁFICO -->
             <div class="ai-header-panel">
-                <div class="ai-core-orb" id="aiCoreOrb"></div>
+                <div class="ai-orb-wrapper">
+                    <div class="ai-orb-ring"></div>
+                    <div class="ai-orb-ring"></div>
+                    <div class="ai-orb-ring"></div>
+                    <div class="ai-core-orb" id="aiCoreOrb">🤖</div>
+                </div>
                 <div class="ai-status-text" id="aiStatusLabel">SISTEMA EN LÍNEA</div>
+                <div class="ai-coin-bar">🪙 Monedas: <span id="coinDisplay">—</span></div>
             </div>
 
-            <!-- FEED DE CONSOLA / LOGS -->
+            <!-- FEED CONSOLA -->
             <div class="ai-console-feed" id="consoleFeed">
-                <!-- Mensaje de inicio -->
                 <div class="console-entry">
-                    <span class="entry-label ai">[PANTER CORE v3.1]</span>
+                    <span class="entry-label ai">▶ PANTER CORE v3.1</span>
                     <div class="entry-body">
-                        Inicialización de sistema exitosa. Conexión establecida con la base de datos de <strong>Nuestra Tierra: Job Simulator</strong>. Por favor, selecciona una operación utilizando el panel de control inferior.
+                        Inicialización exitosa. Conexión con <strong>Nuestra Tierra: Job Simulator</strong> establecida. Selecciona una operación en el panel inferior.
                     </div>
                 </div>
             </div>
 
-            <!-- PANTALLA VISUAL DE CASINO -->
+            <!-- PANTALLA VISUAL CASINO -->
             <div id="casinoVisualScreen" class="casino-screen"></div>
 
-            <!-- CARGA PULSANTE -->
-            <div class="cyber-loader" id="aiLoader" style="display: none;">
+            <!-- LOADER -->
+            <div class="cyber-loader" id="aiLoader" style="display:none;">
                 <div class="loader-dot"></div>
                 <div class="loader-dot"></div>
                 <div class="loader-dot"></div>
                 <span>Procesando secuencia de datos...</span>
             </div>
 
-            <!-- PANEL DE CONTROL FLOTANTE -->
+            <!-- PANEL DE CONTROL -->
             <div class="ai-control-board">
+                <div class="board-section-label">— Operaciones disponibles —</div>
                 <div class="board-buttons-grid" id="actionPanel">
-                    <button class="cyber-chip" onclick="executeWork()"><img src="../recursos/iconos/maletin.png" alt="💼" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"> Trabajar (Seguro)</button>
-                    <button class="cyber-chip" onclick="executeRisk()"><img src="../recursos/iconos/sirena.png" alt="🚨" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"> Misión de Riesgo</button>
-                    <button class="cyber-chip" onclick="openGambleMenu()"><img src="../recursos/iconos/casino.png" alt="🎰" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"> Probar Suerte (Apuestas)</button>
-                    <button class="cyber-chip gold" onclick="executeRedeem()"><img src="../recursos/iconos/esmeralda.png" alt="💎" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;"> Canjear por Esmeraldas</button>
+                    <button class="cyber-chip" onclick="executeWork()">
+                        <img class="chip-icon" src="../recursos/iconos/maletin.png" alt="">
+                        <div class="chip-text"><strong>Trabajar</strong><small>Seguro · CD 7 min</small></div>
+                    </button>
+                    <button class="cyber-chip" onclick="executeRisk()">
+                        <img class="chip-icon" src="../recursos/iconos/sirena.png" alt="">
+                        <div class="chip-text"><strong>Misión de Riesgo</strong><small>Alto riesgo · CD 10 min</small></div>
+                    </button>
+                    <button class="cyber-chip" onclick="openGambleMenu()">
+                        <img class="chip-icon" src="../recursos/iconos/casino.png" alt="">
+                        <div class="chip-text"><strong>Probar Suerte</strong><small>Apuestas del casino</small></div>
+                    </button>
+                    <button class="cyber-chip gold" onclick="executeRedeem()">
+                        <img class="chip-icon" src="../recursos/iconos/esmeralda.png" alt="">
+                        <div class="chip-text"><strong>Canjear</strong><small>🪙 → Esmeraldas 💎</small></div>
+                    </button>
                 </div>
             </div>
         </div>
@@ -587,6 +1227,8 @@
                         if (snap.exists()) {
                             const data = snap.data();
                             userCoins = data.coins || 0;
+                            const cd = document.getElementById('coinDisplay');
+                            if (cd) cd.textContent = Number(userCoins).toLocaleString();
                             // Sincronizar cooldowns desde DB
                             if (data.cooldownWork) {
                                 cooldowns.work = Math.max(cooldowns.work, Number(data.cooldownWork) || 0);
@@ -676,143 +1318,760 @@
             saveChatHistory();
         }
 
-        // 💼 TRABAJAR (SEGURO)
-        async function executeWork() {
-            // Actualizar cooldown desde LocalStorage
-            cooldowns.work = Number(localStorage.getItem('panterAI_cooldown_work') || 0);
+        // 💼 TRABAJAR (SEGURO - NUEVOS MINIJUEGOS ARCADE)
+        let activeJobTimer = null;
+        let activeJobScore = 0;
+        let activeJobActive = false;
+        let activeJobType = 0; // 0: Road Racer, 1: Fuel Tapper, 2: Cargo Sorter
 
-            if (cooldowns.work > Date.now()) {
-                const totalSecs = Math.ceil((cooldowns.work - Date.now()) / 1000);
-                const mins = Math.floor(totalSecs / 60);
-                const secs = totalSecs % 60;
+        // Estado del juego 0 (Road Racer)
+        let truckLane = 1; // 0: Izq, 1: Centro, 2: Der
+        let obstacleGrid = [
+            [false, false, false],
+            [false, false, false],
+            [false, false, false]
+        ];
+
+        // Estado del juego 1 (Fuel Tapper)
+        let fuelIndicatorX = 0;
+        let fuelDir = 1;
+
+        // Estado del juego 2 (Cargo Sorter)
+        let conveyorY = 0;
+        const cargoItems = [
+            { emoji: '🍏', category: 'alimento' },
+            { emoji: '🍌', category: 'alimento' },
+            { emoji: '💻', category: 'tecnologia' },
+            { emoji: '🔌', category: 'tecnologia' },
+            { emoji: '💎', category: 'mineria' },
+            { emoji: '👑', category: 'mineria' }
+        ];
+        let currentCargoItem = null;
+
+        const WORK_COOLDOWN_MS  = 7  * 60 * 1000; // 7 minutos
+        const RISK_COOLDOWN_MS  = 10 * 60 * 1000; // 10 minutos
+
+        function formatCooldown(ms) {
+            const totalSec = Math.ceil(ms / 1000);
+            const m = Math.floor(totalSec / 60);
+            const s = totalSec % 60;
+            return m > 0 ? `${m}m ${s}s` : `${s}s`;
+        }
+
+        async function executeWork() {
+            // ── Verificar cooldown ──
+            const remaining = cooldowns.work - Date.now();
+            if (remaining > 0) {
                 logCommand('trabajar');
-                setCoreState('thinking');
-                setTimeout(() => {
-                    setCoreState('error');
-                    logAIResponse('cargando energía', `Tu conductor está descansando en la vía. Espera ${mins}m y ${secs}s para continuar.`);
-                }, 450);
+                setCoreState('error');
+                logAIResponse('⏳ En Espera', `Ya trabajaste recientemente. Podrás volver a trabajar en **${formatCooldown(remaining)}**.`);
                 return;
             }
 
             logCommand('trabajar');
             setCoreState('thinking');
 
-            const scenarios = [
-                { title: 'Trabajo Terminado', desc: 'Condujiste tu camión de carga de Bogotá a Ibagué.', earn: Math.floor(Math.random() * 200) + 150 },
-                { title: 'Reparto Exitoso', desc: 'Entregaste repuestos y neumáticos nuevos en el taller de Manizales.', earn: Math.floor(Math.random() * 250) + 150 },
-                { title: 'Servicio Completado', desc: 'Ayudaste a remolcar un vehículo varado en La Línea.', earn: Math.floor(Math.random() * 300) + 200 }
-            ];
-            const sc = scenarios[Math.floor(Math.random() * scenarios.length)];
-            
-            // 5 minutos de cooldown
-            const targetCooldown = Date.now() + 300000;
+            // ── Registrar cooldown preventivo (7 min desde ahora) ──
+            const targetCooldown = Date.now() + WORK_COOLDOWN_MS;
             cooldowns.work = targetCooldown;
             localStorage.setItem('panterAI_cooldown_work', targetCooldown);
+            
+            try {
+                const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                await window.setDoc(userDocRef, { 
+                    cooldownWork: targetCooldown,
+                    updatedAt: new Date().toISOString() 
+                }, { merge: true });
+            } catch (err) {
+                console.warn("Fallo al registrar cooldown preventivo:", err);
+            }
+
+            document.getElementById('consoleFeed').style.display = 'none';
+            const screen = document.getElementById('casinoVisualScreen');
+            screen.style.display = 'flex';
+
+            activeJobScore = 0;
+            activeJobActive = true;
+            activeJobType = Math.floor(Math.random() * 3);
+
+            if (activeJobType === 0) {
+                // 1. Road Racer (Evitar obstáculos)
+                truckLane = 1;
+                obstacleGrid = [
+                    [false, false, false],
+                    [false, false, false],
+                    [false, false, false]
+                ];
+                screen.innerHTML = `
+                    <div class="work-game-container" style="width: 100%;">
+                        <div class="casino-title">🚚 EVITA OBSTACULOS EN CARRETERA</div>
+                        <p style="font-size:0.8rem; color:var(--text-secondary); text-align:center; margin:0 0 10px 0;">¡Esquiva los obstaculos (🚧) usando los botones!</p>
+                        
+                        <div style="width:180px; height:150px; background:#111827; margin:0 auto 10px auto; border:2px solid #4b5563; border-radius:8px; display:grid; grid-template-rows: repeat(3, 1fr); padding:5px; box-sizing:border-box; position:relative;" id="roadGrid">
+                        </div>
+                        
+                        <div style="display:flex; gap:10px; justify-content:center; margin-bottom:10px; width:100%;">
+                            <button class="cyber-chip" onclick="moveTruck(-1)">◀ Izq</button>
+                            <button class="cyber-chip" onclick="moveTruck(1)">Der ▶</button>
+                        </div>
+                        
+                        <div class="work-progress-bar">
+                            <div class="work-progress-fill" id="workProgressBarFill" style="width: 100%;"></div>
+                        </div>
+                        <div style="font-weight: bold; color: #ffd700;" id="workScore">Ruta Completada: 0% (+$0 🪙)</div>
+                    </div>
+                `;
+                drawRoadGrid();
+            } else if (activeJobType === 1) {
+                // 2. Fuel Tapper (Recarga Precisa)
+                fuelIndicatorX = 0;
+                fuelDir = 1;
+                screen.innerHTML = `
+                    <div class="work-game-container" style="width: 100%;">
+                        <div class="casino-title">⛽ RECARGA PRECISA DE COMBUSTIBLE</div>
+                        <p style="font-size:0.8rem; color:var(--text-secondary); text-align:center; margin:0 0 10px 0;">¡Presiona RECARGAR cuando el indicador este en la zona verde!</p>
+                        
+                        <div style="width:100%; max-width:240px; height:30px; background:#1f2937; border-radius:15px; position:relative; overflow:hidden; border:2px solid #4b5563; margin:15px auto;">
+                            <div style="position:absolute; left:40%; width:20%; height:100%; background:rgba(16,185,129,0.4); border-left:2px solid #10b981; border-right:2px solid #10b981;"></div>
+                            <div id="fuelIndicator" style="position:absolute; top:0; bottom:0; left:0%; width:8px; background:#ffffff; box-shadow:0 0 8px #fff; border-radius:4px; transform:translateX(-50%);"></div>
+                        </div>
+                        
+                        <div style="display:flex; justify-content:center; margin-bottom:15px; width:100%;">
+                            <button class="cyber-chip" style="background:#10b981; width:140px;" onclick="tappedRefuel()">⛽ RECARGAR</button>
+                        </div>
+                        
+                        <div class="work-progress-bar">
+                            <div class="work-progress-fill" id="workProgressBarFill" style="width: 100%;"></div>
+                        </div>
+                        <div style="font-weight: bold; color: #ffd700;" id="workScore">Cargas Exitosas: 0 / 5 (+$0 🪙)</div>
+                    </div>
+                `;
+            } else {
+                // 3. Cargo Sorter (Clasificador de Mercancía)
+                conveyorY = 0;
+                currentCargoItem = cargoItems[Math.floor(Math.random() * cargoItems.length)];
+                screen.innerHTML = `
+                    <div class="work-game-container" style="width: 100%;">
+                        <div class="casino-title">📦 CLASIFICADOR DE MERCANCIA</div>
+                        <p style="font-size:0.8rem; color:var(--text-secondary); text-align:center; margin:0 0 10px 0;">¡Clasifica el articulo presionando su contenedor correcto!</p>
+                        
+                        <div style="width:200px; height:130px; background:#111827; border:2px solid #4b5563; border-radius:8px; margin:0 auto 10px auto; position:relative; overflow:hidden;" id="conveyorBelt">
+                            <div id="cargoItemEl" style="position:absolute; left:50%; top:0%; font-size:2.2rem; transform:translateX(-50%); transition:top 0.1s linear;">🍏</div>
+                        </div>
+                        
+                        <div style="display:flex; gap:6px; justify-content:center; margin-bottom:15px; width:100%;">
+                            <button class="cyber-chip" style="font-size:0.8rem; padding:8px;" onclick="classifyCargo('alimento')">🍏 Alimento</button>
+                            <button class="cyber-chip" style="font-size:0.8rem; padding:8px;" onclick="classifyCargo('tecnologia')">💻 Tecno</button>
+                            <button class="cyber-chip" style="font-size:0.8rem; padding:8px;" onclick="classifyCargo('mineria')">💎 Minero</button>
+                        </div>
+                        
+                        <div class="work-progress-bar">
+                            <div class="work-progress-fill" id="workProgressBarFill" style="width: 100%;"></div>
+                        </div>
+                        <div style="font-weight: bold; color: #ffd700;" id="workScore">Clasificados: 0 / 5 (+$0 🪙)</div>
+                    </div>
+                `;
+                updateConveyorItem();
+            }
+
+            const startTime = Date.now();
+            const duration = 6000;
+            const progressFill = document.getElementById('workProgressBarFill');
+
+            try {
+                initAudio();
+            } catch(e){}
+
+            let tickCount = 0;
+
+            activeJobTimer = setInterval(async () => {
+                const elapsed = Date.now() - startTime;
+                const remaining = Math.max(0, duration - elapsed);
+                const percent = (remaining / duration) * 100;
+                
+                if (progressFill) progressFill.style.width = percent + '%';
+
+                // Ticks específicos de cada minijuego
+                if (activeJobActive) {
+                    if (activeJobType === 0) {
+                        // Road Racer tick cada 500ms
+                        tickCount++;
+                        if (tickCount % 5 === 0) {
+                            // Mover obstáculos abajo
+                            obstacleGrid[2] = [...obstacleGrid[1]];
+                            obstacleGrid[1] = [...obstacleGrid[0]];
+                            obstacleGrid[0] = [false, false, false];
+                            
+                            // Spawn nuevo obstáculo (50% prob)
+                            if (Math.random() < 0.5) {
+                                obstacleGrid[0][Math.floor(Math.random() * 3)] = true;
+                            }
+                            
+                            // Verificar colisión
+                            if (obstacleGrid[2][truckLane]) {
+                                try {
+                                    playTickSound();
+                                } catch(e){}
+                                activeJobActive = false;
+                                clearInterval(activeJobTimer);
+                                drawRoadGrid();
+                                const scoreLabel = document.getElementById('workScore');
+                                if (scoreLabel) {
+                                    scoreLabel.innerHTML = `💥 ¡CHOQUE! Ruta fallida (+$${Math.floor(activeJobScore)} 🪙)`;
+                                    scoreLabel.style.color = '#ef4444';
+                                }
+                                setTimeout(async () => {
+                                    await finishActiveJob();
+                                }, 1500);
+                                return;
+                            }
+                            
+                            // Sumar puntos por sobrevivir
+                            activeJobScore += 4.2; 
+                            const scoreLabel = document.getElementById('workScore');
+                            const routePercent = Math.min(100, Math.floor(activeJobScore * 2));
+                            const earn = Math.min(50, Math.floor(activeJobScore));
+                            if (scoreLabel) {
+                                scoreLabel.innerHTML = `Ruta Completada: ${routePercent}% (+$${earn} 🪙)`;
+                            }
+                            drawRoadGrid();
+                        }
+                    } else if (activeJobType === 1) {
+                        // Fuel Tapper indicator movement
+                        fuelIndicatorX += fuelDir * 6;
+                        if (fuelIndicatorX >= 100 || fuelIndicatorX <= 0) fuelDir *= -1;
+                        const indicator = document.getElementById('fuelIndicator');
+                        if (indicator) indicator.style.left = fuelIndicatorX + '%';
+                    } else if (activeJobType === 2) {
+                        // Cargo Sorter conveyor movement
+                        conveyorY += 4;
+                        const itemEl = document.getElementById('cargoItemEl');
+                        if (itemEl) itemEl.style.top = conveyorY + '%';
+                        
+                        if (conveyorY >= 100) {
+                            // Falló en clasificar a tiempo
+                            conveyorY = 0;
+                            currentCargoItem = cargoItems[Math.floor(Math.random() * cargoItems.length)];
+                            updateConveyorItem();
+                        }
+                    }
+                }
+
+                if (remaining <= 0) {
+                    clearInterval(activeJobTimer);
+                    activeJobActive = false;
+                    await finishActiveJob();
+                }
+            }, 100);
+        }
+
+        // Helpers de Road Racer
+        function drawRoadGrid() {
+            const grid = document.getElementById('roadGrid');
+            if (!grid) return;
+            
+            grid.innerHTML = '';
+            for (let r = 0; r < 3; r++) {
+                const rowEl = document.createElement('div');
+                rowEl.style.display = 'grid';
+                rowEl.style.gridTemplateColumns = 'repeat(3, 1fr)';
+                rowEl.style.width = '100%';
+                rowEl.style.height = '100%';
+                
+                for (let c = 0; c < 3; c++) {
+                    const colEl = document.createElement('div');
+                    colEl.style.border = '1px dashed rgba(255,255,255,0.05)';
+                    colEl.style.display = 'flex';
+                    colEl.style.alignItems = 'center';
+                    colEl.style.justifyContent = 'center';
+                    colEl.style.fontSize = '1.3rem';
+                    
+                    if (r === 2 && c === truckLane) {
+                        colEl.innerText = obstacleGrid[2][c] ? '💥' : '🚚';
+                    } else if (obstacleGrid[r][c]) {
+                        colEl.innerText = '🚧';
+                    }
+                    rowEl.appendChild(colEl);
+                }
+                grid.appendChild(rowEl);
+            }
+        }
+
+        function moveTruck(dir) {
+            if (!activeJobActive || activeJobType !== 0) return;
+            truckLane = Math.max(0, Math.min(2, truckLane + dir));
+            try {
+                playTickSound();
+            } catch(e){}
+            
+            // Colisión inmediata al mover
+            if (obstacleGrid[2][truckLane]) {
+                activeJobActive = false;
+                clearInterval(activeJobTimer);
+                drawRoadGrid();
+                const scoreLabel = document.getElementById('workScore');
+                if (scoreLabel) {
+                    scoreLabel.innerHTML = `💥 ¡CHOQUE! Ruta fallida (+$${Math.floor(activeJobScore)} 🪙)`;
+                    scoreLabel.style.color = '#ef4444';
+                }
+                setTimeout(async () => {
+                    await finishActiveJob();
+                }, 1500);
+            } else {
+                drawRoadGrid();
+            }
+        }
+
+        // Helpers de Fuel Tapper
+        function tappedRefuel() {
+            if (!activeJobActive || activeJobType !== 1) return;
+            try {
+                playTickSound();
+            } catch(e){}
+            
+            const scoreLabel = document.getElementById('workScore');
+            
+            if (fuelIndicatorX >= 40 && fuelIndicatorX <= 60) {
+                // Éxito
+                activeJobScore++;
+                if (scoreLabel) {
+                    scoreLabel.innerHTML = `Cargas Exitosas: ${activeJobScore} / 5 (+$${activeJobScore * 10} 🪙)`;
+                    scoreLabel.style.color = '#00c853';
+                    setTimeout(() => { if (scoreLabel) scoreLabel.style.color = '#ffd700'; }, 300);
+                }
+                if (activeJobScore >= 5) {
+                    clearInterval(activeJobTimer);
+                    activeJobActive = false;
+                    finishActiveJob();
+                }
+            } else {
+                // Fallo
+                if (scoreLabel) {
+                    scoreLabel.style.color = '#ef4444';
+                    setTimeout(() => { if (scoreLabel) scoreLabel.style.color = '#ffd700'; }, 300);
+                }
+            }
+        }
+
+        // Helpers de Cargo Sorter
+        function updateConveyorItem() {
+            const el = document.getElementById('cargoItemEl');
+            if (el && currentCargoItem) {
+                el.innerText = currentCargoItem.emoji;
+                el.style.top = '0%';
+            }
+        }
+
+        function classifyCargo(category) {
+            if (!activeJobActive || activeJobType !== 2 || !currentCargoItem) return;
+            try {
+                playTickSound();
+            } catch(e){}
+
+            const scoreLabel = document.getElementById('workScore');
+
+            if (category === currentCargoItem.category) {
+                activeJobScore++;
+                if (scoreLabel) {
+                    scoreLabel.innerHTML = `Clasificados: ${activeJobScore} / 5 (+$${activeJobScore * 10} 🪙)`;
+                    scoreLabel.style.color = '#00c853';
+                    setTimeout(() => { if (scoreLabel) scoreLabel.style.color = '#ffd700'; }, 300);
+                }
+                if (activeJobScore >= 5) {
+                    clearInterval(activeJobTimer);
+                    activeJobActive = false;
+                    finishActiveJob();
+                }
+            } else {
+                if (scoreLabel) {
+                    scoreLabel.style.color = '#ef4444';
+                    setTimeout(() => { if (scoreLabel) scoreLabel.style.color = '#ffd700'; }, 300);
+                }
+            }
+
+            conveyorY = 0;
+            currentCargoItem = cargoItems[Math.floor(Math.random() * cargoItems.length)];
+            updateConveyorItem();
+        }
+
+        async function finishActiveJob() {
+            const screen = document.getElementById('casinoVisualScreen');
+            const scoreLabel = document.getElementById('workScore');
+            
+            let earn = 0;
+            let title = 'Trabajo';
+            let desc = '';
+
+            if (activeJobType === 0) {
+                earn = Math.min(50, Math.floor(activeJobScore));
+                title = 'Ruta Carretera';
+                desc = `Esquivaste los obstaculos y completaste parte del trayecto.`;
+            } else if (activeJobType === 1) {
+                earn = Math.min(50, activeJobScore * 10);
+                title = 'Recarga de Combustible';
+                desc = `Realizaste ${activeJobScore} recargas precisas de combustible.`;
+            } else {
+                earn = Math.min(50, activeJobScore * 10);
+                title = 'Clasificador de Mercancia';
+                desc = `Clasificaste correctamente ${activeJobScore} paquetes de carga.`;
+            }
+
+            const newCoins = (Number(userCoins) || 0) + earn;
+
+            if (scoreLabel) {
+                scoreLabel.innerHTML = `¡TIEMPO AGOTADO! Resultado: +$${earn} 🪙`;
+                scoreLabel.style.color = '#00c853';
+            }
 
             try {
                 const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
-                const newCoins = (Number(userCoins) || 0) + sc.earn;
-                
                 await window.setDoc(userDocRef, { 
                     coins: newCoins, 
-                    cooldownWork: targetCooldown,
                     updatedAt: new Date().toISOString() 
                 }, { merge: true });
                 
                 try {
                     await window.addDoc(window.collection(window.db, 'conductores', currentUser.uid, 'activity'), {
                         type: 'work',
-                        description: `${sc.title} (+${sc.earn} 🪙)`,
-                        coins: sc.earn,
+                        description: `${title} (+${earn} 🪙)`,
+                        coins: earn,
                         createdAt: new Date().toISOString()
                     });
                 } catch (e) {
                     console.warn("Actividad no registrada:", e);
                 }
 
-                setTimeout(() => {
-                    setCoreState('success');
-                    logAIResponse(sc.title, `${sc.desc} Recibes +$${sc.earn} monedas. Saldo total: $${newCoins} 🪙.`);
-                }, 900);
+                setCoreState('success');
+                logAIResponse('Trabajo Terminado', `${desc} ¡Recibes **+$${earn} monedas**! Saldo: **$${newCoins} 🪙**.`);
             } catch (err) {
                 console.error(err);
                 setCoreState('error');
-                logAIResponse('falla de base de datos', `No se pudo guardar el progreso. Detalle del sistema: ${err.message || err}`);
+                logAIResponse('Falla del Sistema', `No se pudo guardar el progreso. Detalle: ${err.message}`);
             }
+
+            setTimeout(() => {
+                resetControls();
+            }, 2500);
         }
 
-        // 🚨 CRÍMEN (MISIÓN DE RIESGO)
-        async function executeRisk() {
-            // Actualizar cooldown desde LocalStorage
-            cooldowns.risk = Number(localStorage.getItem('panterAI_cooldown_risk') || 0);
 
-            if (cooldowns.risk > Date.now()) {
-                const totalSecs = Math.ceil((cooldowns.risk - Date.now()) / 1000);
-                const mins = Math.floor(totalSecs / 60);
-                const secs = totalSecs % 60;
+        // 🚨 MISION DE RIESGO (CRIMEN - MULTIPLES MINIJUEGOS)
+        let activeRiskTimer = null;
+        let activeRiskActive = false;
+        let activeRiskType = 0; // 0: Bypass de Red, 1: Desactivar Alarma, 2: Conectar Cables
+        let riskHackedCount = 0;
+        let riskActiveNodeIdx = -1;
+        let riskFirewallNodes = []; // Guardar indices de los 3 firewalls
+        
+        let targetPin = '';
+        let currentPinInput = '';
+
+        let selectedLeftPort = null;
+        let connectedWires = 0;
+
+        async function executeRisk() {
+            // ── Verificar cooldown ──
+            const remaining = cooldowns.risk - Date.now();
+            if (remaining > 0) {
                 logCommand('mision_riesgo');
-                setCoreState('thinking');
-                setTimeout(() => {
-                    setCoreState('error');
-                    logAIResponse('zona vigilada', `La policía de carreteras ronda la zona. Espera ${mins}m y ${secs}s para enfriar la ruta.`);
-                }, 400);
+                setCoreState('error');
+                logAIResponse('⏳ En Espera', `Ya realizaste una misión recientemente. Podrás intentarlo de nuevo en **${formatCooldown(remaining)}**.`);
                 return;
             }
 
             logCommand('mision_riesgo');
             setCoreState('thinking');
             
-            // 5 minutos de cooldown
-            const targetCooldown = Date.now() + 300000;
+            // ── Registrar cooldown preventivo (10 min desde ahora) ──
+            const targetCooldown = Date.now() + RISK_COOLDOWN_MS;
             cooldowns.risk = targetCooldown;
             localStorage.setItem('panterAI_cooldown_risk', targetCooldown);
 
-            const win = Math.random() < 0.45;
-            const amount = Math.floor(Math.random() * 350) + 200;
+            try {
+                const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                await window.setDoc(userDocRef, { 
+                    cooldownRisk: targetCooldown,
+                    updatedAt: new Date().toISOString() 
+                }, { merge: true });
+            } catch (err) {
+                console.warn("Fallo al registrar cooldown preventivo:", err);
+            }
+
+            document.getElementById('consoleFeed').style.display = 'none';
+            const screen = document.getElementById('casinoVisualScreen');
+            screen.style.display = 'flex';
+
+            riskHackedCount = 0;
+            activeRiskActive = true;
+            activeRiskType = Math.floor(Math.random() * 3);
+
+            // Tiempos extremadamente cortos: 4 segundos
+            const startTime = Date.now();
+            const duration = 4000;
+
+            if (activeRiskType === 0) {
+                // 1. Bypass de Red (Más difícil: 7 nodos en 4s, 3 firewalls)
+                screen.innerHTML = `
+                    <div class="risk-game-container">
+                        <div class="casino-title">🚨 BYPASS DE SEGURIDAD EXTREMO</div>
+                        <p style="font-size:0.75rem; color:#ef4444; text-align:center; margin:0 0 10px 0;" id="riskInstructions">
+                            ¡HACKEA 7 NODOS VERDES EN 4 SEGUNDOS! Evita los 3 firewalls rojos.
+                        </p>
+                        <div class="bypass-grid" id="bypassGrid"></div>
+                        <div class="work-progress-bar">
+                            <div class="work-progress-fill" id="riskProgressBarFill" style="width: 100%; background:#ef4444;"></div>
+                        </div>
+                        <div style="font-weight: bold; color: #00e5ff;" id="riskScore">Nodos Hackeados: 0 / 7</div>
+                    </div>
+                `;
+                spawnBypassNodes();
+            } else if (activeRiskType === 1) {
+                // 2. Desactivar Alarma (PIN de 5 dígitos, sin fallos)
+                targetPin = '';
+                for (let i = 0; i < 5; i++) {
+                    targetPin += Math.floor(Math.random() * 9 + 1);
+                }
+                currentPinInput = '';
+                screen.innerHTML = `
+                    <div class="risk-game-container">
+                        <div class="casino-title">🔒 DESACTIVADOR DE ALARMA HACK</div>
+                        <p style="font-size:0.75rem; color:#ef4444; text-align:center; margin:0 0 10px 0;">¡Ingresa el PIN de 5 digitos en 4 segundos! ¡Un error y sonara la alarma!</p>
+                        <div style="font-size:1.8rem; letter-spacing:5px; color:#ef4444; font-weight:bold; text-shadow:0 0 10px rgba(239,68,68,0.5); margin-bottom:10px; text-align:center; width:100%;">PIN: ${targetPin}</div>
+                        <div id="pinDisplay" style="font-size:1.3rem; height:30px; color:#00e5ff; font-weight:bold; margin-bottom:10px; text-align:center; width:100%;">- - - - -</div>
+                        <div style="display:grid; grid-template-columns:repeat(3, 60px); gap:6px; justify-content:center; margin-bottom:10px; width:100%;">
+                            ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => `
+                                <button class="cyber-chip" style="padding:8px; font-size:1.1rem;" onclick="pressPinDigit(${num})">${num}</button>
+                            `).join('')}
+                        </div>
+                        <div class="work-progress-bar">
+                            <div class="work-progress-fill" id="riskProgressBarFill" style="width: 100%; background:#ef4444;"></div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // 3. Conectar Cables (4 cables, sin errores)
+                selectedLeftPort = null;
+                connectedWires = 0;
+                screen.innerHTML = `
+                    <div class="risk-game-container">
+                        <div class="casino-title">🔌 RECONEXION DE FUSIBLES</div>
+                        <p style="font-size:0.75rem; color:#ef4444; text-align:center; margin:0 0 10px 0;">¡Conecta los 4 cables en 4 segundos! ¡No cruces colores!</p>
+                        <div style="display:flex; justify-content:space-between; width:100%; max-width:260px; height:130px; margin:5px auto; position:relative;">
+                            <div style="display:flex; flex-direction:column; justify-content:space-around; height:100%;">
+                                <div id="left-rojo" onclick="clickPort('left','rojo')" style="width:20px; height:20px; border-radius:50%; background:#ef4444; border:2px solid #fff; cursor:pointer;"></div>
+                                <div id="left-azul" onclick="clickPort('left','azul')" style="width:20px; height:20px; border-radius:50%; background:#3b82f6; border:2px solid #fff; cursor:pointer;"></div>
+                                <div id="left-verde" onclick="clickPort('left','verde')" style="width:20px; height:20px; border-radius:50%; background:#10b981; border:2px solid #fff; cursor:pointer;"></div>
+                                <div id="left-amarillo" onclick="clickPort('left','amarillo')" style="width:20px; height:20px; border-radius:50%; background:#eab308; border:2px solid #fff; cursor:pointer;"></div>
+                            </div>
+                            <div id="wireStatusText" style="align-self:center; font-size:0.8rem; color:#ffd700; text-align:center; width:120px;">Conecta 4 cables</div>
+                            <div style="display:flex; flex-direction:column; justify-content:space-around; height:100%;">
+                                <div id="right-azul" onclick="clickPort('right','azul')" style="width:20px; height:20px; border-radius:50%; background:#3b82f6; border:2px solid #fff; cursor:pointer;"></div>
+                                <div id="right-amarillo" onclick="clickPort('right','amarillo')" style="width:20px; height:20px; border-radius:50%; background:#eab308; border:2px solid #fff; cursor:pointer;"></div>
+                                <div id="right-rojo" onclick="clickPort('right','rojo')" style="width:20px; height:20px; border-radius:50%; background:#ef4444; border:2px solid #fff; cursor:pointer;"></div>
+                                <div id="right-verde" onclick="clickPort('right','verde')" style="width:20px; height:20px; border-radius:50%; background:#10b981; border:2px solid #fff; cursor:pointer;"></div>
+                            </div>
+                        </div>
+                        <div class="work-progress-bar">
+                            <div class="work-progress-fill" id="riskProgressBarFill" style="width: 100%; background:#ef4444;"></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const progressFill = document.getElementById('riskProgressBarFill');
+
+            try {
+                initAudio();
+            } catch(e){}
+
+            activeRiskTimer = setInterval(async () => {
+                const elapsed = Date.now() - startTime;
+                const remaining = Math.max(0, duration - elapsed);
+                const percent = (remaining / duration) * 100;
+                
+                if (progressFill) progressFill.style.width = percent + '%';
+
+                if (remaining <= 0) {
+                    clearInterval(activeRiskTimer);
+                    if (activeRiskActive) {
+                        activeRiskActive = false;
+                        await finishRiskGame(false, 'El tiempo expiro antes de desactivar el sistema.');
+                    }
+                }
+            }, 100);
+        }
+
+        function spawnBypassNodes() {
+            if (!activeRiskActive || activeRiskType !== 0) return;
+            const grid = document.getElementById('bypassGrid');
+            if (!grid) return;
+
+            grid.innerHTML = '';
+            
+            // Generar 1 nodo verde activo y 3 firewalls rojos diferentes
+            riskActiveNodeIdx = Math.floor(Math.random() * 9);
+            
+            riskFirewallNodes = [];
+            while (riskFirewallNodes.length < 3) {
+                const idx = Math.floor(Math.random() * 9);
+                if (idx !== riskActiveNodeIdx && !riskFirewallNodes.includes(idx)) {
+                    riskFirewallNodes.push(idx);
+                }
+            }
+
+            for (let i = 0; i < 9; i++) {
+                const node = document.createElement('div');
+                node.className = 'bypass-node';
+                node.innerText = '⚙️';
+
+                if (i === riskActiveNodeIdx) {
+                    node.className += ' active-node';
+                    node.innerText = '🔓';
+                    node.onclick = () => {
+                        if (!activeRiskActive) return;
+                        riskHackedCount++;
+                        try {
+                            playTickSound();
+                        } catch(e){}
+
+                        const scoreLabel = document.getElementById('riskScore');
+                        if (scoreLabel) scoreLabel.innerText = `Nodos Hackeados: ${riskHackedCount} / 7`;
+
+                        if (riskHackedCount >= 7) {
+                            clearInterval(activeRiskTimer);
+                            activeRiskActive = false;
+                            finishRiskGame(true, '¡Bypass de red completado con exito!');
+                        } else {
+                            spawnBypassNodes();
+                        }
+                    };
+                } else if (riskFirewallNodes.includes(i)) {
+                    node.className += ' firewall-node';
+                    node.innerText = '🛡️';
+                    node.onclick = () => {
+                        if (!activeRiskActive) return;
+                        clearInterval(activeRiskTimer);
+                        activeRiskActive = false;
+                        finishRiskGame(false, '¡Cortocircuito de firewall detectado! Alarma activada.');
+                    };
+                }
+
+                grid.appendChild(node);
+            }
+        }
+
+        function pressPinDigit(num) {
+            if (!activeRiskActive || activeRiskType !== 1) return;
+            
+            // Validar de inmediato para fallo instantáneo
+            if (targetPin[currentPinInput.length] !== num.toString()) {
+                clearInterval(activeRiskTimer);
+                activeRiskActive = false;
+                finishRiskGame(false, '¡PIN incorrecto! Alarma activada.');
+                return;
+            }
+
+            currentPinInput += num;
+            const pinDisplay = document.getElementById('pinDisplay');
+            if (pinDisplay) pinDisplay.innerText = currentPinInput.padEnd(5, ' -').substring(0, 9);
+            
+            try {
+                playTickSound();
+            } catch(e){}
+
+            if (currentPinInput.length === 5) {
+                clearInterval(activeRiskTimer);
+                activeRiskActive = false;
+                finishRiskGame(true, '¡Codigo de desactivacion correcto!');
+            }
+        }
+
+        function clickPort(side, color) {
+            if (!activeRiskActive || activeRiskType !== 2) return;
+            try {
+                playTickSound();
+            } catch(e){}
+
+            const wireStatusText = document.getElementById('wireStatusText');
+
+            if (side === 'left') {
+                selectedLeftPort = color;
+                if (wireStatusText) wireStatusText.innerText = `Conecta el cable ${color.toUpperCase()}`;
+                
+                ['rojo', 'azul', 'verde', 'amarillo'].forEach(col => {
+                    const el = document.getElementById(`left-${col}`);
+                    if (el) el.style.boxShadow = (col === color) ? '0 0 10px #fff' : 'none';
+                });
+            } else if (side === 'right') {
+                if (!selectedLeftPort) {
+                    if (wireStatusText) wireStatusText.innerText = 'Selecciona puerto izquierdo!';
+                    return;
+                }
+                if (color === selectedLeftPort) {
+                    connectedWires++;
+                    if (wireStatusText) wireStatusText.innerText = `Cables: ${connectedWires} / 4`;
+                    
+                    const leftEl = document.getElementById(`left-${color}`);
+                    const rightEl = document.getElementById(`right-${color}`);
+                    if (leftEl) { leftEl.style.opacity = '0.3'; leftEl.onclick = null; leftEl.style.boxShadow = 'none'; }
+                    if (rightEl) { rightEl.style.opacity = '0.3'; rightEl.onclick = null; }
+                    
+                    selectedLeftPort = null;
+                    
+                    if (connectedWires >= 4) {
+                        clearInterval(activeRiskTimer);
+                        activeRiskActive = false;
+                        finishRiskGame(true, '¡Cableado reconectado con exito!');
+                    }
+                } else {
+                    clearInterval(activeRiskTimer);
+                    activeRiskActive = false;
+                    finishRiskGame(false, '¡Cortocircuito de cables!');
+                }
+            }
+        }
+
+        async function finishRiskGame(success, reason) {
+            const screen = document.getElementById('casinoVisualScreen');
+            
+            let amount = success ? 70 : 30; // Max 70 monedas exito, 30 multa
+            let finalCoins = (Number(userCoins) || 0);
+
+            if (success) {
+                finalCoins += amount;
+            } else {
+                finalCoins = Math.max(0, finalCoins - amount);
+            }
 
             try {
                 const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
-                let finalCoins = (Number(userCoins) || 0);
-                let title = '';
-                let desc = '';
-
-                if (win) {
-                    finalCoins += amount;
-                    title = 'Misión Completada';
-                    desc = `¡Lograste evadir la báscula de pesaje con sobrecarga! Ganancia: +$${amount} monedas.`;
-                } else {
-                    finalCoins = Math.max(0, finalCoins - amount);
-                    title = 'Multa de Tránsito';
-                    desc = `Un oficial te detuvo en vía por exceso de velocidad. Te aplican una multa de -$${amount} monedas.`;
-                }
-
                 await window.setDoc(userDocRef, { 
                     coins: finalCoins, 
-                    cooldownRisk: targetCooldown,
                     updatedAt: new Date().toISOString() 
                 }, { merge: true });
                 
                 try {
                     await window.addDoc(window.collection(window.db, 'conductores', currentUser.uid, 'activity'), {
                         type: 'crime',
-                        description: win ? `Evadir peaje (+${amount} 🪙)` : `Multa de policía (-${amount} 🪙)`,
-                        coins: win ? amount : -amount,
+                        description: success ? `Exito en Mision de Riesgo (+${amount} 🪙)` : `Fallo en Mision de Riesgo (-${amount} 🪙)`,
+                        coins: success ? amount : -amount,
                         createdAt: new Date().toISOString()
                     });
                 } catch (e) {
                     console.warn("Actividad no registrada:", e);
                 }
 
-                setTimeout(() => {
-                    setCoreState(win ? 'success' : 'error');
-                    logAIResponse(title, `${desc} Saldo total: $${finalCoins} 🪙.`);
-                }, 1000);
-
+                setCoreState(success ? 'success' : 'error');
+                logAIResponse(success ? 'Mision Completada' : 'Mision Fallida', `${reason} ${success ? `Ganancia: +$${amount} monedas.` : `Te aplican una multa de -$${amount} monedas.`} Saldo total: $${finalCoins} 🪙.`);
             } catch (err) {
                 console.error(err);
                 setCoreState('error');
-                logAIResponse('falla de base de datos', `No se pudo guardar el progreso. Detalle del sistema: ${err.message || err}`);
+                logAIResponse('Falla del Sistema', `No se pudo guardar el progreso. Detalle: ${err.message}`);
             }
+
+            setTimeout(() => {
+                resetControls();
+            }, 2500);
         }
 
         // 💎 ENLAZAR / CANJEAR
@@ -890,31 +2149,149 @@
             }, 900);
         }
 
-        // APUESTAS
+        // APUESTAS (LOBBY DE CASINO VISUAL DESDE ARRIBA)
+        let isSlotsSpinning = false;
+        let reactorMultiplier = 1.00;
+        let reactorActive = false;
+        let reactorCrashPoint = 1.00;
+        let reactorBet = 0;
+        let reactorInterval = null;
+
+        let detectorActive = false;
+        let detectorBet = 0;
+        let detectorMines = [];
+        let detectorRevealed = [];
+        let detectorCrystalsFound = 0;
+        const detectorMultipliers = [2.20, 4.80, 10.50, 23.00, 51.00, 110.00, 250.00, 600.00, 1500.00, 5000.00];
+
+        let orbitaActive = false;
+        let orbitaBet = 0;
+
         function openGambleMenu() {
-            logCommand('probar_suerte');
-            setCoreState('thinking');
-            // Mostrar pantalla de chat de nuevo
-            document.getElementById('consoleFeed').style.display = 'flex';
-            scrollFeed();
-            // Ocultar pantalla visual por defecto
-            document.getElementById('casinoVisualScreen').style.display = 'none';
-            document.getElementById('casinoVisualScreen').innerHTML = '';
+            logCommand('abrir_sala_juegos');
+            setCoreState('idle');
             
-            setTimeout(() => {
-                setCoreState('idle');
-                logAIResponse('Mesa de Juegos', 'Elige en qué juego deseas probar suerte para duplicar tus monedas:');
-                
-                const actionPanel = document.getElementById('actionPanel');
-                actionPanel.innerHTML = `
-                    <button class="cyber-chip" onclick="startBlackjackGame()"><span style="font-size:1.1rem;">🃏</span> Blackjack</button>
-                    <button class="cyber-chip" onclick="showRouletteBet()"><span style="font-size:1.1rem;">🎡</span> Ruleta de Colores</button>
-                    <button class="cyber-chip gold" onclick="resetControls()"><span style="font-size:1.1rem;">🔙</span> Regresar</button>
-                `;
-            }, 500);
+            if (rouletteWheelAnimation) {
+                cancelAnimationFrame(rouletteWheelAnimation);
+                rouletteWheelAnimation = null;
+            }
+            if (reactorInterval) {
+                clearInterval(reactorInterval);
+                reactorInterval = null;
+            }
+            isSpinning = false;
+            isSlotsSpinning = false;
+            reactorActive = false;
+            detectorActive = false;
+            orbitaActive = false;
+            
+            // Ocultar consola para dejar todo el espacio al casino visual
+            document.getElementById('consoleFeed').style.display = 'none';
+            
+            const screen = document.getElementById('casinoVisualScreen');
+            screen.style.display = 'flex';
+            
+            screen.innerHTML = `
+                <div class="casino-lobby">
+                    <div class="lobby-header">
+                        <h3>✨ SALA DE JUEGOS PANTER ✨</h3>
+                        <p>Selecciona una mesa en la sala interactiva para comenzar</p>
+                    </div>
+                    <div class="casino-floor">
+                        <!-- Estrategia 21 -->
+                        <div class="casino-table-zone" onclick="startBlackjackGame()">
+                            <div class="table-visual felt-green">
+                                <div class="felt-line"></div>
+                                <div class="felt-cards">🂡 🂱</div>
+                            </div>
+                            <div class="table-info">
+                                <h4>🃏 Estrategia 21</h4>
+                                <span>Limite 21 | Apuesta: $500 🪙</span>
+                            </div>
+                        </div>
+
+                        <!-- Orbita Giratoria -->
+                        <div class="casino-table-zone" onclick="showRouletteBet()">
+                            <div class="table-visual felt-wheel">
+                                <div class="mini-wheel-rotator">🎡</div>
+                            </div>
+                            <div class="table-info">
+                                <h4>🎡 Orbita Giratoria</h4>
+                                <span>Multiplicadores hasta 15x (Verde)</span>
+                            </div>
+                        </div>
+
+                        <!-- Recombinador Holografico -->
+                        <div class="casino-table-zone" onclick="showSlotsBet()">
+                            <div class="table-visual felt-purple">
+                                <div class="slots-visual">🎰 💎 🔥</div>
+                            </div>
+                            <div class="table-info">
+                                <h4>🎰 Recombinador Holografico</h4>
+                                <span>Gana hasta 50 veces tu apuesta!</span>
+                            </div>
+                        </div>
+
+                        <!-- Reactor de Energia -->
+                        <div class="casino-table-zone" onclick="showReactorBet()">
+                            <div class="table-visual felt-purple" style="background: radial-gradient(circle, #722409 0%, #300e02 100%);">
+                                <div class="slots-visual">⚡ 📈 💥</div>
+                            </div>
+                            <div class="table-info">
+                                <h4>⚡ Reactor de Energia</h4>
+                                <span>Multiplicador ascendente en tiempo real!</span>
+                            </div>
+                        </div>
+
+                        <!-- Detector de Cristales -->
+                        <div class="casino-table-zone" onclick="showDetectorBet()">
+                            <div class="table-visual felt-green" style="background: radial-gradient(circle, #024654 0%, #011c22 100%);">
+                                <div class="slots-visual">💎 ❓ 💥</div>
+                            </div>
+                            <div class="table-info">
+                                <h4>💎 Detector de Cristales</h4>
+                                <span>Encuentra cristales y evita sobrecargas!</span>
+                            </div>
+                        </div>
+
+                        <!-- Orbita de Datos -->
+                        <div class="casino-table-zone" onclick="showOrbitaBet()">
+                            <div class="table-visual felt-wheel" style="background: radial-gradient(circle, #041f3a 0%, #010d1a 100%);">
+                                <div class="slots-visual">🔴 🔵 🟣</div>
+                            </div>
+                            <div class="table-info">
+                                <h4>🔵 Orbita de Datos</h4>
+                                <span>Lanza paquetes de datos en la red!</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="cyber-chip gold lobby-exit" onclick="resetControls()">🔙 Salir de Apuestas</button>
+                </div>
+            `;
+            
+            // Cambiar los controles de abajo para acompañar el lobby
+            const actionPanel = document.getElementById('actionPanel');
+            actionPanel.innerHTML = `
+                <button class="cyber-chip gold" style="grid-column: span 4; margin: 0 auto; width: 100%; max-width: 280px;" onclick="resetControls()">🔙 Salir del Casino</button>
+            `;
         }
 
         function resetControls() {
+            if (rouletteWheelAnimation) {
+                cancelAnimationFrame(rouletteWheelAnimation);
+                rouletteWheelAnimation = null;
+            }
+            if (reactorInterval) {
+                clearInterval(reactorInterval);
+                reactorInterval = null;
+            }
+            isSpinning = false;
+            isSlotsSpinning = false;
+            reactorActive = false;
+            detectorActive = false;
+            orbitaActive = false;
+
             document.getElementById('consoleFeed').style.display = 'flex';
             scrollFeed();
             document.getElementById('casinoVisualScreen').style.display = 'none';
@@ -929,10 +2306,897 @@
             setCoreState('idle');
         }
 
-        // RULETA VISUAL
+        // SLOTS (RECOMBINADOR HOLOGRAFICO)
+        function showSlotsBet() {
+            logCommand('apostar_slots');
+            setCoreState('thinking');
+            document.getElementById('casinoVisualScreen').style.display = 'none';
+            setTimeout(() => {
+                setCoreState('idle');
+                logAIResponse('Apuestas Recombinador', 'Elige cuanto deseas apostar en el Recombinador Holografico:');
+                
+                const actionPanel = document.getElementById('actionPanel');
+                actionPanel.innerHTML = `
+                    <button class="cyber-chip" onclick="spinSlots(5)">Apostar $5 🪙</button>
+                    <button class="cyber-chip" onclick="spinSlots(10)">Apostar $10 🪙</button>
+                    <button class="cyber-chip" onclick="spinSlots(20)">Apostar $20 🪙</button>
+                    <button class="cyber-chip gold" onclick="openGambleMenu()">🔙 Regresar</button>
+                `;
+            }, 400);
+        }
+        
+        function spinSlots(betAmount) {
+            // Seguridad: Validar apuestas correctas
+            if (![5, 10, 20].includes(betAmount)) betAmount = 5;
+
+            if (userCoins < betAmount) {
+                setCoreState('error');
+                logAIResponse('Sin Monedas', `No cuentas con suficientes monedas para esta apuesta ($${betAmount} 🪙).`);
+                openGambleMenu();
+                return;
+            }
+            logCommand(`apuesta_slots_monto_${betAmount}`);
+            setCoreState('idle');
+            
+            document.getElementById('consoleFeed').style.display = 'none';
+            const screen = document.getElementById('casinoVisualScreen');
+            screen.style.display = 'flex';
+            
+            screen.innerHTML = `
+                <div class="casino-title">🎰 RECOMBINADOR HOLOGRAFICO (Apuesta: $${betAmount} 🪙)</div>
+                <div class="slots-container">
+                    <div class="slots-machine">
+                        <div class="slots-screen-reels">
+                            <div class="slots-reel" id="slotsReel1">🪙</div>
+                            <div class="slots-reel" id="slotsReel2">🍒</div>
+                            <div class="slots-reel" id="slotsReel3">🔥</div>
+                        </div>
+                        <div class="slots-paytable">
+                            <div class="slots-paytable-row" style="color:#ffd700; font-weight:bold;"><span>👑 👑 👑 (Coronas)</span> <span>50x</span></div>
+                            <div class="slots-paytable-row" style="color:#00b0ff;"><span>💎 💎 💎 (Esmeraldas)</span> <span>30x</span></div>
+                            <div class="slots-paytable-row" style="color:#ef4444;"><span>🔥 🔥 🔥 (Fuego)</span> <span>15x</span></div>
+                            <div class="slots-paytable-row" style="color:#ec4899;"><span>🍒 🍒 🍒 (Cerezas)</span> <span>8x</span></div>
+                            <div class="slots-paytable-row" style="color:#f59e0b;"><span>🪙 🪙 🪙 (Monedas)</span> <span>5x</span></div>
+                            <div class="slots-paytable-row" style="color:#a78bfa;"><span>2 simbolos iguales</span> <span>2x</span></div>
+                        </div>
+                    </div>
+                    <div class="roulette-instructions" id="slotsStatus">¡Prueba tu suerte y tira de la palanca!</div>
+                    <div class="chips-container" id="slotsControls">
+                        <button class="bet-chip chip-verde" style="max-width: 140px;" onclick="executeSlotsSpin(${betAmount})">Girar 🎰</button>
+                        <button class="bet-chip chip-negro" style="max-width: 140px;" onclick="openGambleMenu()">Volver</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function executeSlotsSpin(betAmount) {
+            if (isSlotsSpinning) return;
+            isSlotsSpinning = true;
+
+            try {
+                initAudio();
+            } catch(e){}
+
+            const controls = document.getElementById('slotsControls');
+            if (controls) {
+                const buttons = controls.querySelectorAll('button');
+                buttons.forEach(btn => btn.disabled = true);
+            }
+
+            const statusText = document.getElementById('slotsStatus');
+            if (statusText) statusText.innerText = 'Girando rodillos...';
+
+            logCommand(`girar_slots_${betAmount}`);
+            setCoreState('thinking');
+
+            const symbols = ['🪙', '🍒', '🔥', '💎', '👑'];
+            const reel1 = document.getElementById('slotsReel1');
+            const reel2 = document.getElementById('slotsReel2');
+            const reel3 = document.getElementById('slotsReel3');
+
+            let spins1 = 0, spins2 = 0, spins3 = 0;
+            const maxSpins1 = 15, maxSpins2 = 25, maxSpins3 = 35;
+
+            const interval = setInterval(() => {
+                if (spins1 < maxSpins1) {
+                    reel1.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+                    spins1++;
+                    if (spins1 % 3 === 0) playTickSound();
+                }
+                if (spins2 < maxSpins2) {
+                    reel2.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+                    spins2++;
+                    if (spins2 % 3 === 0) playTickSound();
+                }
+                if (spins3 < maxSpins3) {
+                    reel3.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+                    spins3++;
+                    if (spins3 % 3 === 0) playTickSound();
+                }
+
+                if (spins1 >= maxSpins1 && spins2 >= maxSpins2 && spins3 >= maxSpins3) {
+                    clearInterval(interval);
+                    evaluateSlotsResult(betAmount, reel1.innerText, reel2.innerText, reel3.innerText);
+                }
+            }, 70);
+        }
+
+        async function evaluateSlotsResult(betAmount, s1, s2, s3) {
+            isSlotsSpinning = false;
+            const statusText = document.getElementById('slotsStatus');
+            
+            let multiplier = 0;
+            let won = false;
+            let resultName = '';
+
+            if (s1 === s2 && s2 === s3) {
+                won = true;
+                if (s1 === '👑') { multiplier = 50; resultName = 'TRES CORONAS 👑'; }
+                else if (s1 === '💎') { multiplier = 30; resultName = 'TRES ESMERALDAS 💎'; }
+                else if (s1 === '🔥') { multiplier = 15; resultName = 'TRIPLE FUEGO 🔥'; }
+                else if (s1 === '🍒') { multiplier = 8; resultName = 'TRES CEREZAS 🍒'; }
+                else { multiplier = 5; resultName = 'TRES MONEDAS 🪙'; }
+            } else if (s1 === s2 || s1 === s3 || s2 === s3) {
+                won = true;
+                multiplier = 2;
+                resultName = 'PAREJA COINCIDENTE';
+            }
+
+            let earnings = 0;
+            if (won) {
+                earnings = betAmount * (multiplier - 1);
+            } else {
+                earnings = -betAmount;
+            }
+
+            let finalCoins = userCoins + earnings;
+
+            if (statusText) {
+                if (won) {
+                    statusText.innerHTML = `¡Ganaste! Obtenido: <strong style="color:#ffd700;">${resultName}</strong> (+${earnings} 🪙)`;
+                } else {
+                    statusText.innerHTML = `Sin suerte: <strong>${s1} | ${s2} | ${s3}</strong> (-${betAmount} 🪙)`;
+                }
+            }
+
+            try {
+                const docRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                await window.setDoc(docRef, { coins: finalCoins, updatedAt: new Date().toISOString() }, { merge: true });
+                try {
+                    await window.addDoc(window.collection(window.db, 'conductores', currentUser.uid, 'activity'), {
+                        type: 'gamble',
+                        description: won ? `Gano en Recombinador (+${earnings} 🪙)` : `Perdio en Recombinador (-${betAmount} 🪙)`,
+                        coins: earnings,
+                        createdAt: new Date().toISOString()
+                    });
+                } catch(e){}
+
+                setCoreState(won ? 'success' : 'error');
+                logAIResponse('Resultado de Recombinador', `Reeles: **${s1} | ${s2} | ${s3}**. ${won ? `¡Felicidades! Ganas **+$${earnings} monedas** (${resultName}).` : `Perdiste **-$${betAmount} monedas**.`} Saldo: **$${finalCoins} 🪙**.`);
+            } catch(e){
+                console.error(e);
+            }
+
+            // RE-HABILITAR CONTROLES DE MANERA INMEDIATA PARA SEGUIR JUGANDO SIN SALIR
+            setTimeout(() => {
+                const controls = document.getElementById('slotsControls');
+                if (controls) {
+                    const buttons = controls.querySelectorAll('button');
+                    buttons.forEach(btn => btn.disabled = false);
+                }
+                if (statusText) {
+                    statusText.innerText = '¡Tira de la palanca de nuevo!';
+                }
+            }, 1800);
+        }
+
+        // REACTOR DE ENERGIA (CRASH)
+        function showReactorBet() {
+            logCommand('apostar_reactor');
+            setCoreState('thinking');
+            document.getElementById('casinoVisualScreen').style.display = 'none';
+            setTimeout(() => {
+                setCoreState('idle');
+                logAIResponse('Apuestas Reactor', 'Elige cuanto deseas apostar en el Reactor de Energia (multiplicador variable):');
+                
+                const actionPanel = document.getElementById('actionPanel');
+                actionPanel.innerHTML = `
+                    <button class="cyber-chip" onclick="spinReactor(5)">Apostar $5 🪙</button>
+                    <button class="cyber-chip" onclick="spinReactor(10)">Apostar $10 🪙</button>
+                    <button class="cyber-chip" onclick="spinReactor(20)">Apostar $20 🪙</button>
+                    <button class="cyber-chip gold" onclick="openGambleMenu()">🔙 Regresar</button>
+                `;
+            }, 400);
+        }
+
+        function spinReactor(betAmount) {
+            // Seguridad: Validar apuestas correctas
+            if (![5, 10, 20].includes(betAmount)) betAmount = 5;
+
+            if (userCoins < betAmount) {
+                setCoreState('error');
+                logAIResponse('Sin Monedas', `No cuentas con suficientes monedas para esta apuesta ($${betAmount} 🪙).`);
+                openGambleMenu();
+                return;
+            }
+            logCommand(`apuesta_reactor_monto_${betAmount}`);
+            setCoreState('idle');
+
+            document.getElementById('consoleFeed').style.display = 'none';
+            const screen = document.getElementById('casinoVisualScreen');
+            screen.style.display = 'flex';
+
+            screen.innerHTML = `
+                <div class="casino-title">🔥 REACTOR DE ENERGIA (Apuesta: $${betAmount} 🪙)</div>
+                <div class="reactor-container">
+                    <div class="reactor-display">
+                        <div class="reactor-multiplier" id="reactorVal">1.00x</div>
+                        <div class="reactor-status" id="reactorStatus">Listo para encender</div>
+                        <canvas class="reactor-graph" id="reactorGraphCanvas" width="320" height="180"></canvas>
+                    </div>
+                    <div class="chips-container" id="reactorControls">
+                        <button class="bet-chip chip-verde" style="max-width: 140px;" onclick="executeReactorSpin(${betAmount})">Encender ⚡</button>
+                        <button class="bet-chip chip-negro" style="max-width: 140px;" onclick="openGambleMenu()">Volver</button>
+                    </div>
+                </div>
+            `;
+            drawReactorGraph(1);
+        }
+
+        function drawReactorGraph(mult) {
+            const canvas = document.getElementById('reactorGraphCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            ctx.clearRect(0,0,w,h);
+            ctx.beginPath();
+            ctx.moveTo(0, h);
+            
+            const progress = (mult - 1) / 5;
+            const targetX = Math.min(w * 0.8, w * 0.1 + progress * w);
+            const targetY = Math.max(h * 0.2, h - progress * h);
+            
+            ctx.quadraticCurveTo(w / 2, h, targetX, targetY);
+            ctx.strokeStyle = '#ff5722';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            ctx.shadowColor = '#ff5722';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(targetX, targetY, 6, 0, Math.PI*2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+
+        function executeReactorSpin(betAmount) {
+            if (reactorActive) return;
+            reactorActive = true;
+            reactorBet = betAmount;
+            reactorMultiplier = 1.00;
+            
+            if (Math.random() < 0.08) {
+                reactorCrashPoint = 1.00;
+            } else {
+                reactorCrashPoint = 1.01 + Math.pow(Math.random(), -1.3) * 0.05;
+                if (reactorCrashPoint > 50) reactorCrashPoint = 50;
+            }
+
+            try {
+                initAudio();
+            } catch(e){}
+
+            const controls = document.getElementById('reactorControls');
+            controls.innerHTML = `
+                <button class="bet-chip chip-rojo" style="max-width: 180px; flex: 2;" id="reactorRetirarBtn" onclick="cashoutReactor()">RETIRAR (1.00x)</button>
+            `;
+
+            const statusLabel = document.getElementById('reactorStatus');
+            statusLabel.innerText = 'REACTOR ONLINE';
+            statusLabel.style.color = '#00e676';
+
+            const valDiv = document.getElementById('reactorVal');
+            
+            reactorInterval = setInterval(async () => {
+                if (reactorMultiplier >= reactorCrashPoint) {
+                    clearInterval(reactorInterval);
+                    reactorActive = false;
+                    valDiv.innerText = '💥 OVERLOAD';
+                    valDiv.style.color = '#ef4444';
+                    statusLabel.innerText = `REACTOR SOBRECARGADO A ${reactorMultiplier.toFixed(2)}x`;
+                    statusLabel.style.color = '#ef4444';
+
+                    let finalCoins = userCoins - reactorBet;
+
+                    try {
+                        const docRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                        await window.setDoc(docRef, { coins: finalCoins, updatedAt: new Date().toISOString() }, { merge: true });
+                        try {
+                            await window.addDoc(window.collection(window.db, 'conductores', currentUser.uid, 'activity'), {
+                                type: 'gamble',
+                                description: `Reactor sobrecargado (-${reactorBet} 🪙)`,
+                                coins: -reactorBet,
+                                createdAt: new Date().toISOString()
+                            });
+                        } catch(e){}
+
+                        setCoreState('error');
+                        logAIResponse('Reactor Sobrecargado', `El reactor se sobrecargo a **${reactorMultiplier.toFixed(2)}x**. Perdiste **-$${reactorBet} monedas**. Saldo: **$${finalCoins} 🪙**.`);
+                    } catch(e){}
+
+                    setTimeout(() => {
+                        spinReactor(reactorBet);
+                    }, 2000);
+
+                } else {
+                    reactorMultiplier += 0.03 + (reactorMultiplier * 0.005);
+                    valDiv.innerText = reactorMultiplier.toFixed(2) + 'x';
+                    
+                    const retirarBtn = document.getElementById('reactorRetirarBtn');
+                    if (retirarBtn) {
+                        retirarBtn.innerText = `RETIRAR ($${Math.floor(reactorBet * reactorMultiplier)} 🪙)`;
+                    }
+                    drawReactorGraph(reactorMultiplier);
+                    if (Math.floor(reactorMultiplier * 10) % 5 === 0) playTickSound();
+                }
+            }, 80);
+        }
+
+        async function cashoutReactor() {
+            if (!reactorActive) return;
+            clearInterval(reactorInterval);
+            reactorActive = false;
+
+            const valDiv = document.getElementById('reactorVal');
+            const statusLabel = document.getElementById('reactorStatus');
+            valDiv.style.color = '#00c853';
+            statusLabel.innerText = `RETIRADO CON EXITO A ${reactorMultiplier.toFixed(2)}x`;
+            statusLabel.style.color = '#00c853';
+
+            const earnings = Math.floor(reactorBet * reactorMultiplier) - reactorBet;
+            let finalCoins = userCoins + earnings;
+
+            try {
+                const docRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                await window.setDoc(docRef, { coins: finalCoins, updatedAt: new Date().toISOString() }, { merge: true });
+                try {
+                    await window.addDoc(window.collection(window.db, 'conductores', currentUser.uid, 'activity'), {
+                        type: 'gamble',
+                        description: `Gano en Reactor (+${earnings} 🪙)`,
+                        coins: earnings,
+                        createdAt: new Date().toISOString()
+                    });
+                } catch(e){}
+
+                setCoreState('success');
+                logAIResponse('Retiro del Reactor', `Retiraste con exito a **${reactorMultiplier.toFixed(2)}x**. ¡Ganas **+$${earnings} monedas**! Saldo: **$${finalCoins} 🪙**.`);
+            } catch(e){}
+
+            setTimeout(() => {
+                spinReactor(reactorBet);
+            }, 2000);
+        }
+
+        // DETECTOR DE CRISTALES (MINAS)
+        function showDetectorBet() {
+            logCommand('apostar_detector');
+            setCoreState('thinking');
+            document.getElementById('casinoVisualScreen').style.display = 'none';
+            setTimeout(() => {
+                setCoreState('idle');
+                logAIResponse('Apuestas Detector', 'Elige cuanto deseas apostar en el Detector de Cristales (evita las sobrecargas):');
+                
+                const actionPanel = document.getElementById('actionPanel');
+                actionPanel.innerHTML = `
+                    <button class="cyber-chip" onclick="spinDetector(5)">Apostar $5 🪙</button>
+                    <button class="cyber-chip" onclick="spinDetector(10)">Apostar $10 🪙</button>
+                    <button class="cyber-chip" onclick="spinDetector(20)">Apostar $20 🪙</button>
+                    <button class="cyber-chip gold" onclick="openGambleMenu()">🔙 Regresar</button>
+                `;
+            }, 400);
+        }
+
+        function spinDetector(betAmount) {
+            // Seguridad: Validar apuestas correctas
+            if (![5, 10, 20].includes(betAmount)) betAmount = 5;
+
+            if (userCoins < betAmount) {
+                setCoreState('error');
+                logAIResponse('Sin Monedas', `No cuentas con suficientes monedas para esta apuesta ($${betAmount} 🪙).`);
+                openGambleMenu();
+                return;
+            }
+            logCommand(`apuesta_detector_monto_${betAmount}`);
+            setCoreState('idle');
+
+            detectorBet = betAmount;
+            detectorActive = true;
+            detectorCrystalsFound = 0;
+            detectorRevealed = Array(25).fill(false);
+            
+            detectorMines = [];
+            while(detectorMines.length < 15) {
+                const idx = Math.floor(Math.random() * 25);
+                if (!detectorMines.includes(idx)) detectorMines.push(idx);
+            }
+
+            document.getElementById('consoleFeed').style.display = 'none';
+            const screen = document.getElementById('casinoVisualScreen');
+            screen.style.display = 'flex';
+
+            renderDetectorBoard();
+        }
+
+        function renderDetectorBoard() {
+            const screen = document.getElementById('casinoVisualScreen');
+            const currentMult = detectorCrystalsFound === 0 ? 1.00 : detectorMultipliers[detectorCrystalsFound - 1];
+
+            screen.innerHTML = `
+                <div class="casino-title">💎 DETECTOR DE CRISTALES (Apuesta: $${detectorBet} 🪙)</div>
+                <div class="detector-container">
+                    <div class="roulette-instructions" id="detectorStatus">
+                        Cristales: <strong>${detectorCrystalsFound}</strong> | Multiplicador: <strong>${currentMult.toFixed(2)}x</strong>
+                    </div>
+                    <div class="detector-grid">
+                        ${Array(25).fill(0).map((_, i) => {
+                            let classes = 'detector-tile';
+                            let symbol = '❓';
+                            if (detectorRevealed[i]) {
+                                if (detectorMines.includes(i)) {
+                                    classes += ' revealed-mine';
+                                    symbol = '💥';
+                                } else {
+                                    classes += ' revealed-crystal';
+                                    symbol = '💎';
+                                }
+                            }
+                            return `<div class="${classes}" onclick="clickDetectorTile(${i})">${symbol}</div>`;
+                        }).join('')}
+                    </div>
+                    <div class="chips-container" id="detectorControls">
+                        <button class="bet-chip chip-verde" style="max-width: 200px;" id="detectorCashoutBtn" onclick="cashoutDetector()" ${detectorCrystalsFound === 0 ? 'disabled' : ''}>
+                            RETIRAR ($${Math.floor(detectorBet * currentMult)} 🪙)
+                        </button>
+                        <button class="bet-chip chip-negro" style="max-width: 120px;" onclick="openGambleMenu()">Volver</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function clickDetectorTile(idx) {
+            if (!detectorActive || detectorRevealed[idx]) return;
+            detectorRevealed[idx] = true;
+
+            try {
+                initAudio();
+                playTickSound();
+            } catch(e){}
+
+            if (detectorMines.includes(idx)) {
+                detectorActive = false;
+                detectorMines.forEach(mineIdx => detectorRevealed[mineIdx] = true);
+                renderDetectorBoard();
+
+                const statusLabel = document.getElementById('detectorStatus');
+                statusLabel.innerHTML = '💥 REACTOR SOBRECARGADO! Has perdido la apuesta.';
+                statusLabel.style.color = '#ef4444';
+
+                const cashBtn = document.getElementById('detectorCashoutBtn');
+                if (cashBtn) cashBtn.disabled = true;
+
+                let finalCoins = userCoins - detectorBet;
+
+                try {
+                    const docRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                    await window.setDoc(docRef, { coins: finalCoins, updatedAt: new Date().toISOString() }, { merge: true });
+                    try {
+                        await window.addDoc(window.collection(window.db, 'conductores', currentUser.uid, 'activity'), {
+                            type: 'gamble',
+                            description: `Detector: Detonacion (-${detectorBet} 🪙)`,
+                            coins: -detectorBet,
+                            createdAt: new Date().toISOString()
+                        });
+                    } catch(e){}
+
+                    setCoreState('error');
+                    logAIResponse('Detonacion de Mina', `Detonaste una sobrecarga. Perdiste **-$${detectorBet} monedas**. Saldo: **$${finalCoins} 🪙**.`);
+                } catch(e){}
+
+                setTimeout(() => {
+                    spinDetector(detectorBet);
+                }, 2000);
+
+            } else {
+                detectorCrystalsFound++;
+                
+                try {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.frequency.setValueAtTime(800 + detectorCrystalsFound * 50, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.1);
+                } catch(e){}
+
+                if (detectorCrystalsFound === 10) {
+                    cashoutDetector();
+                } else {
+                    renderDetectorBoard();
+                }
+            }
+        }
+
+        async function cashoutDetector() {
+            if (!detectorActive || detectorCrystalsFound === 0) return;
+            detectorActive = false;
+
+            const currentMult = detectorMultipliers[detectorCrystalsFound - 1];
+            const earnings = Math.floor(detectorBet * currentMult) - detectorBet;
+            let finalCoins = userCoins + earnings;
+
+            for (let i = 0; i < 25; i++) detectorRevealed[i] = true;
+            renderDetectorBoard();
+
+            const statusLabel = document.getElementById('detectorStatus');
+            statusLabel.innerHTML = `💎 RETIRADO CON EXITO CON ${detectorCrystalsFound} CRISTALES (+$${earnings} 🪙)`;
+            statusLabel.style.color = '#00c853';
+
+            try {
+                const docRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                await window.setDoc(docRef, { coins: finalCoins, updatedAt: new Date().toISOString() }, { merge: true });
+                try {
+                    await window.addDoc(window.collection(window.db, 'conductores', currentUser.uid, 'activity'), {
+                        type: 'gamble',
+                        description: `Detector: Retiro con ${detectorCrystalsFound} cristales (+${earnings} 🪙)`,
+                        coins: earnings,
+                        createdAt: new Date().toISOString()
+                    });
+                } catch(e){}
+
+                setCoreState('success');
+                logAIResponse('Retiro de Cristales', `Retiraste con exito con **${detectorCrystalsFound} cristales** (${currentMult.toFixed(2)}x). ¡Ganas **+$${earnings} monedas**! Saldo: **$${finalCoins} 🪙**.`);
+            } catch(e){}
+
+            setTimeout(() => {
+                spinDetector(detectorBet);
+            }, 2000);
+        }
+
+        // ORBITA DE DATOS (PLINKO)
+        function showOrbitaBet() {
+            logCommand('apostar_orbita');
+            setCoreState('thinking');
+            document.getElementById('casinoVisualScreen').style.display = 'none';
+            setTimeout(() => {
+                setCoreState('idle');
+                logAIResponse('Apuestas Orbita', 'Elige cuanto deseas apostar en la Caida de Datos (Orbita):');
+                
+                const actionPanel = document.getElementById('actionPanel');
+                actionPanel.innerHTML = `
+                    <button class="cyber-chip" onclick="spinOrbita(5)">Apostar $5 🪙</button>
+                    <button class="cyber-chip" onclick="spinOrbita(10)">Apostar $10 🪙</button>
+                    <button class="cyber-chip" onclick="spinOrbita(20)">Apostar $20 🪙</button>
+                    <button class="cyber-chip gold" onclick="openGambleMenu()">🔙 Regresar</button>
+                `;
+            }, 400);
+        }
+
+        function spinOrbita(betAmount) {
+            // Seguridad: Validar apuestas correctas
+            if (![5, 10, 20].includes(betAmount)) betAmount = 5;
+
+            if (userCoins < betAmount) {
+                setCoreState('error');
+                logAIResponse('Sin Monedas', `No cuentas con suficientes monedas para esta apuesta ($${betAmount} 🪙).`);
+                openGambleMenu();
+                return;
+            }
+            logCommand(`apuesta_orbita_monto_${betAmount}`);
+            setCoreState('idle');
+
+            orbitaBet = betAmount;
+            orbitaActive = false;
+
+            document.getElementById('consoleFeed').style.display = 'none';
+            const screen = document.getElementById('casinoVisualScreen');
+            screen.style.display = 'flex';
+
+            screen.innerHTML = `
+                <div class="casino-title">🔵 ORBITA DE DATOS (Apuesta: $${betAmount} 🪙)</div>
+                <div class="orbita-container">
+                    <canvas class="orbita-board-canvas" id="orbitaCanvas" width="300" height="260" style="width: 300px; height: 260px;"></canvas>
+                    <div class="roulette-instructions" id="orbitaStatus">¡Lanza el paquete de datos desde arriba!</div>
+                    <div class="chips-container" id="orbitaControls">
+                        <button class="bet-chip chip-verde" style="max-width: 140px;" id="orbitaLanzarBtn" onclick="executeOrbitaSpin()">Lanzar 🔵</button>
+                        <button class="bet-chip chip-negro" style="max-width: 140px;" onclick="openGambleMenu()">Volver</button>
+                    </div>
+                </div>
+            `;
+            drawOrbitaBoard();
+        }
+
+        function drawOrbitaBoard(ballX = null, ballY = null) {
+            const canvas = document.getElementById('orbitaCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            ctx.clearRect(0,0,w,h);
+
+            ctx.fillStyle = '#ffffff';
+            const rows = 8;
+            for(let r = 2; r < rows; r++) {
+                const cols = r + 1;
+                const rowY = 30 + r * 22;
+                const startX = w / 2 - (r * 12);
+                for(let c = 0; c < cols; c++) {
+                    const pegX = startX + c * 24;
+                    ctx.beginPath();
+                    ctx.arc(pegX, rowY, 3, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            }
+
+            const binsMult = [5.0, 2.0, 1.0, 0.5, 0.2, 0.5, 1.0, 2.0, 5.0];
+            const binW = w / binsMult.length;
+            const binY = h - 25;
+            
+            for(let i = 0; i < binsMult.length; i++) {
+                const bx = i * binW;
+                ctx.fillStyle = binsMult[i] >= 2.0 ? '#ff5722' : binsMult[i] >= 1.0 ? '#ffd700' : '#1f2937';
+                ctx.fillRect(bx + 2, binY, binW - 4, 20);
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 9px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(binsMult[i] + 'x', bx + binW/2, binY + 13);
+            }
+
+            if (ballX !== null && ballY !== null) {
+                ctx.beginPath();
+                ctx.arc(ballX, ballY, 6, 0, Math.PI*2);
+                ctx.fillStyle = '#00e5ff';
+                ctx.shadowColor = '#00e5ff';
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function executeOrbitaSpin() {
+            if (orbitaActive) return;
+            orbitaActive = true;
+
+            try {
+                initAudio();
+            } catch(e){}
+
+            const lanzarBtn = document.getElementById('orbitaLanzarBtn');
+            if (lanzarBtn) lanzarBtn.disabled = true;
+
+            const statusText = document.getElementById('orbitaStatus');
+            statusText.innerText = 'Paquete de datos cayendo...';
+
+            logCommand(`lanzar_orbita_${orbitaBet}`);
+            setCoreState('thinking');
+
+            const canvas = document.getElementById('orbitaCanvas');
+            const w = canvas.width;
+            const h = canvas.height;
+
+            let bx = w / 2;
+            let by = 15;
+            let row = 1;
+            const maxRows = 8;
+            
+            drawOrbitaBoard(bx, by);
+
+            const interval = setInterval(() => {
+                if (row < maxRows) {
+                    const dir = Math.random() < 0.5 ? -12 : 12;
+                    bx += dir;
+                    by += 22;
+                    row++;
+                    playTickSound();
+                    drawOrbitaBoard(bx, by);
+                } else {
+                    clearInterval(interval);
+                    const binsMult = [5.0, 2.0, 1.0, 0.5, 0.2, 0.5, 1.0, 2.0, 5.0];
+                    const binW = w / binsMult.length;
+                    let binIdx = Math.floor(bx / binW);
+                    if (binIdx < 0) binIdx = 0;
+                    if (binIdx >= binsMult.length) binIdx = binsMult.length - 1;
+
+                    const mult = binsMult[binIdx];
+                    evaluateOrbitaResult(mult);
+                }
+            }, 180);
+        }
+
+        async function evaluateOrbitaResult(mult) {
+            orbitaActive = false;
+            const statusText = document.getElementById('orbitaStatus');
+            const earnings = Math.floor(orbitaBet * mult) - orbitaBet;
+            let finalCoins = userCoins + earnings;
+            const won = mult >= 1.0;
+
+            if (statusText) {
+                statusText.innerHTML = `¡Paquete alineado! Multiplicador: <strong style="color:${won ? '#00c853' : '#ef4444'};">${mult}x</strong> (${earnings >= 0 ? '+' : ''}${earnings} 🪙)`;
+            }
+
+            try {
+                const docRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                await window.setDoc(docRef, { coins: finalCoins, updatedAt: new Date().toISOString() }, { merge: true });
+                try {
+                    await window.addDoc(window.collection(window.db, 'conductores', currentUser.uid, 'activity'), {
+                        type: 'gamble',
+                        description: `Caida de datos: ${mult}x (${earnings} 🪙)`,
+                        coins: earnings,
+                        createdAt: new Date().toISOString()
+                    });
+                } catch(e){}
+
+                setCoreState(won ? 'success' : 'error');
+                logAIResponse('Resultado de Caida de Datos', `El paquete de datos alineo en **${mult}x**. ${won ? `¡Felicidades! Ganas **+$${earnings} monedas**.` : `Pierdes **-$${Math.abs(earnings)} monedas**.`} Saldo: **$${finalCoins} 🪙**.`);
+            } catch(e){}
+
+            setTimeout(() => {
+                const lanzarBtn = document.getElementById('orbitaLanzarBtn');
+                if (lanzarBtn) lanzarBtn.disabled = false;
+                if (statusText) statusText.innerText = '¡Lanza el paquete de datos desde arriba!';
+            }, 1500);
+        }
+
+        // ORBITA GIRATORIA (RULETA)
+        let rouletteWheelAnimation = null;
+        let isSpinning = false;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playTickSound() {
+            try {
+                initAudio();
+                if (!audioCtx) return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.04);
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.04);
+            } catch (e) {}
+        }
+
+        function drawRouletteWheel(canvas, angle) {
+            const ctx = canvas.getContext('2d');
+            const cw = canvas.width;
+            const ch = canvas.height;
+            const cx = cw / 2;
+            const cy = ch / 2;
+            const r = Math.min(cw, ch) / 2 - 12;
+            
+            ctx.clearRect(0, 0, cw, ch);
+            
+            // Draw outer metallic rim
+            const outerGrad = ctx.createRadialGradient(cx, cy, r - 6, cx, cy, r + 8);
+            outerGrad.addColorStop(0, '#8a6f27');
+            outerGrad.addColorStop(0.4, '#ffd700');
+            outerGrad.addColorStop(0.6, '#fff7c2');
+            outerGrad.addColorStop(0.8, '#ffd700');
+            outerGrad.addColorStop(1, '#8a6f27');
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.lineWidth = 12;
+            ctx.strokeStyle = outerGrad;
+            ctx.stroke();
+            
+            // Draw inner shadow ring
+            ctx.beginPath();
+            ctx.arc(cx, cy, r - 6, 0, Math.PI * 2);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+            
+            const wheelNumbers = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+            const numSectors = wheelNumbers.length;
+            const sectorAngle = (Math.PI * 2) / numSectors;
+            
+            for (let i = 0; i < numSectors; i++) {
+                const currentSectorAngle = angle + i * sectorAngle;
+                
+                let color;
+                if (wheelNumbers[i] === 0) {
+                    color = '#10b981';
+                } else if (i % 2 === 1) {
+                    color = '#ef4444';
+                } else {
+                    color = '#1f2937';
+                }
+                
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, r - 6, currentSectorAngle, currentSectorAngle + sectorAngle);
+                ctx.closePath();
+                ctx.fillStyle = color;
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(cx, cy, r - 6, currentSectorAngle, currentSectorAngle + sectorAngle);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + (r - 6) * Math.cos(currentSectorAngle), cy + (r - 6) * Math.sin(currentSectorAngle));
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(currentSectorAngle + sectorAngle / 2);
+                
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 12px "Courier New", Courier, monospace';
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+                ctx.shadowBlur = 4;
+                
+                ctx.fillText(wheelNumbers[i], r - 24, 0);
+                ctx.restore();
+            }
+            
+            const centerR = 30;
+            ctx.beginPath();
+            ctx.arc(cx, cy, centerR, 0, Math.PI * 2);
+            const innerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, centerR);
+            innerGrad.addColorStop(0, '#ffffff');
+            innerGrad.addColorStop(0.2, '#ffd700');
+            innerGrad.addColorStop(0.8, '#8a6f27');
+            innerGrad.addColorStop(1, '#3b2f0a');
+            ctx.fillStyle = innerGrad;
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetY = 3;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            ctx.beginPath();
+            ctx.arc(cx, cy, centerR - 2, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+
         function showRouletteBet() {
             logCommand('apostar_ruleta');
             setCoreState('thinking');
+            
+            if (rouletteWheelAnimation) {
+                cancelAnimationFrame(rouletteWheelAnimation);
+                rouletteWheelAnimation = null;
+            }
+            isSpinning = false;
+            
             document.getElementById('casinoVisualScreen').style.display = 'none';
             setTimeout(() => {
                 setCoreState('idle');
@@ -940,14 +3204,17 @@
                 
                 const actionPanel = document.getElementById('actionPanel');
                 actionPanel.innerHTML = `
-                    <button class="cyber-chip" onclick="spinRoulette(200)">Apostar $200 🪙</button>
-                    <button class="cyber-chip" onclick="spinRoulette(500)">Apostar $500 🪙</button>
+                    <button class="cyber-chip" onclick="spinRoulette(5)">Apostar $5 🪙</button>
+                    <button class="cyber-chip" onclick="spinRoulette(10)">Apostar $10 🪙</button>
                     <button class="cyber-chip gold" onclick="openGambleMenu()">🔙 Regresar</button>
                 `;
             }, 400);
         }
 
         function spinRoulette(betAmount) {
+            // Seguridad: Validar apuestas correctas
+            if (![5, 10].includes(betAmount)) betAmount = 5;
+
             if (userCoins < betAmount) {
                 setCoreState('error');
                 logAIResponse('Sin Monedas', `No cuentas con suficientes monedas para realizar esta apuesta ($${betAmount} 🪙).`);
@@ -955,69 +3222,129 @@
                 return;
             }
             logCommand(`apuesta_ruleta_monto_${betAmount}`);
-            setCoreState('thinking');
+            setCoreState('idle');
 
-            // Ocultar pantalla de chat
+            if (rouletteWheelAnimation) {
+                cancelAnimationFrame(rouletteWheelAnimation);
+                rouletteWheelAnimation = null;
+            }
+            isSpinning = false;
+
             document.getElementById('consoleFeed').style.display = 'none';
-
-            // Renderizar la pista de Ruleta interactiva
             const screen = document.getElementById('casinoVisualScreen');
             screen.style.display = 'flex';
             
-            // Generar bolsillos mezclados
-            const pockets = [];
-            const colors = ['rojo', 'negro'];
-            for (let i = 0; i < 40; i++) {
-                let color = colors[i % 2];
-                if (i === 15 || i === 30) color = 'verde';
-                pockets.push({ color, num: i === 15 || i === 30 ? 0 : Math.floor(Math.random() * 36) + 1 });
-            }
-
             screen.innerHTML = `
-                <div class="casino-title">🎡 RULETA HOLOGRÁFICA (Apuesta: $${betAmount} 🪙)</div>
-                <div class="roulette-board" style="width: 100%;">
-                    <div class="roulette-visual-track">
-                        <div class="roulette-ticker"></div>
-                        <div class="roulette-spinner-row" id="rouletteSpinner" style="transform: translateX(0);">
-                            ${pockets.map(p => `<div class="roulette-pocket ${p.color}">${p.num}</div>`).join('')}
-                        </div>
+                <div class="casino-title">🎡 ORBITA GIRATORIA (Apuesta: $${betAmount} 🪙)</div>
+                <div class="roulette-container">
+                    <div class="roulette-wheel-wrapper">
+                        <canvas id="rouletteCanvas" width="560" height="560" style="width:280px; height:280px;"></canvas>
+                        <div class="roulette-pointer"></div>
                     </div>
-                    <div style="text-align: center; color: var(--text-secondary); font-size: 0.8rem; margin: 5px 0;">Elige un color para girar la ruleta:</div>
+                    <div class="roulette-instructions" id="rouletteStatus">Elige tu color para girar la ruleta:</div>
                     <div class="chips-container" id="rouletteChips">
-                        <div class="bet-chip chip-rojo" onclick="executeRouletteSpin(${betAmount}, 'Rojo', ${JSON.stringify(pockets)})">ROJO</div>
-                        <div class="bet-chip chip-negro" onclick="executeRouletteSpin(${betAmount}, 'Negro', ${JSON.stringify(pockets)})">NEGRO</div>
+                        <button class="bet-chip chip-rojo" onclick="executeRouletteSpin(${betAmount}, 'Rojo')">ROJO</button>
+                        <button class="bet-chip chip-verde" onclick="executeRouletteSpin(${betAmount}, 'Verde')">VERDE (15x)</button>
+                        <button class="bet-chip chip-negro" onclick="executeRouletteSpin(${betAmount}, 'Negro')">NEGRO</button>
                     </div>
                 </div>
             `;
-            setCoreState('idle');
+            
+            const canvas = document.getElementById('rouletteCanvas');
+            if (canvas) {
+                drawRouletteWheel(canvas, 0);
+            }
         }
 
-        async function executeRouletteSpin(betAmount, playerBetColor, pockets) {
-            // Desactivar chips para evitar doble clic
+        async function executeRouletteSpin(betAmount, playerBetColor) {
+            if (isSpinning) return;
+            isSpinning = true;
+            
+            try {
+                initAudio();
+            } catch(e){}
+
             const chips = document.getElementById('rouletteChips');
-            if (chips) chips.style.pointerEvents = 'none';
+            if (chips) {
+                const buttons = chips.querySelectorAll('button');
+                buttons.forEach(btn => btn.disabled = true);
+            }
+
+            const statusText = document.getElementById('rouletteStatus');
+            if (statusText) statusText.innerText = 'Girando la ruleta...';
 
             logCommand(`apuesta_${playerBetColor.toLowerCase()}`);
             setCoreState('thinking');
 
-            // Elegir un bolsillo ganador aleatorio al final de la pista (entre 22 y 35)
-            const winIdx = Math.floor(Math.random() * 14) + 22; 
-            const winner = pockets[winIdx];
-
-            const spinner = document.getElementById('rouletteSpinner');
-            if (spinner) {
-                // Cada pocket mide 55px de ancho + 4px de gap = 59px. 
-                // Centramos el elemento restando el ancho aproximado de la pantalla
-                const offset = (winIdx * 59) - 210;
-                spinner.style.transform = `translateX(-${offset}px)`;
+            const wheelNumbers = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+            const numSectors = wheelNumbers.length;
+            const sectorAngle = (Math.PI * 2) / numSectors;
+            
+            const winIdx = Math.floor(Math.random() * numSectors);
+            const winNumber = wheelNumbers[winIdx];
+            
+            let winColor = 'Verde';
+            if (winNumber !== 0) {
+                winColor = winIdx % 2 === 1 ? 'Rojo' : 'Negro';
             }
 
-            setTimeout(async () => {
-                let resultColor = winner.color === 'rojo' ? 'Rojo' : (winner.color === 'negro' ? 'Negro' : 'Verde');
-                let finalCoins = userCoins;
-                let won = resultColor === playerBetColor;
-                let earnings = won ? betAmount : -betAmount;
-                finalCoins += earnings;
+            const canvas = document.getElementById('rouletteCanvas');
+            
+            const duration = 4000;
+            const startAngle = 0;
+            
+            const spins = 5;
+            const targetAngle = (Math.PI * 2 * spins) + (Math.PI * 1.5) - (winIdx * sectorAngle) - (sectorAngle / 2) + (Math.random() * sectorAngle * 0.6 - sectorAngle * 0.3);
+
+            const startTime = performance.now();
+            let lastTickAngle = 0;
+            
+            function animate(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const currentAngle = startAngle + easeOut * targetAngle;
+                
+                if (canvas) {
+                    drawRouletteWheel(canvas, currentAngle);
+                }
+                
+                const angleDiff = currentAngle - lastTickAngle;
+                if (angleDiff >= sectorAngle) {
+                    playTickSound();
+                    lastTickAngle = currentAngle;
+                }
+                
+                if (progress < 1) {
+                    rouletteWheelAnimation = requestAnimationFrame(animate);
+                } else {
+                    finishSpin();
+                }
+            }
+            
+            rouletteWheelAnimation = requestAnimationFrame(animate);
+            
+            async function finishSpin() {
+                isSpinning = false;
+                
+                let won = winColor === playerBetColor;
+                let earnings = 0;
+                if (won) {
+                    if (playerBetColor === 'Verde') {
+                        earnings = betAmount * 15;
+                    } else {
+                        earnings = betAmount;
+                    }
+                } else {
+                    earnings = -betAmount;
+                }
+                
+                let finalCoins = userCoins + earnings;
+
+                if (statusText) {
+                    statusText.innerHTML = `¡Cayo en <strong style="color: ${winColor === 'Rojo' ? '#ef4444' : winColor === 'Negro' ? '#9ca3af' : '#10b981'}">${winColor} (${winNumber})</strong>!`;
+                }
 
                 try {
                     const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
@@ -1034,20 +3361,27 @@
                     }
 
                     setCoreState(won ? 'success' : 'error');
-                    logAIResponse('Resultado de la Ruleta', `Apostaste al **${playerBetColor}** y cayó **${resultColor} (${winner.num})**. ${won ? `¡Felicidades! Ganas **+$${earnings} monedas**.` : `¡Qué mala suerte! Pierdes **-$${betAmount} monedas**.`} Saldo: **$${finalCoins} 🪙**.`);
+                    logAIResponse('Resultado de la Ruleta', `Apostaste al **${playerBetColor}** y cayo **${winColor} (${winNumber})**. ${won ? `¡Felicidades! Ganas **+$${earnings} monedas**.` : `¡Que mala suerte! Pierdes **-$${betAmount} monedas**.`} Saldo: **$${finalCoins} 🪙**.`);
 
                 } catch (err) {
                     console.error(err);
                 }
 
-                // Esperar 2 segundos antes de volver al menú de apuestas
+                // CONTINUO JUGANDO DE MANERA INMEDIATA RE-HABILITANDO LAS APUESTAS
                 setTimeout(() => {
-                    openGambleMenu();
+                    const chips = document.getElementById('rouletteChips');
+                    if (chips) {
+                        const buttons = chips.querySelectorAll('button');
+                        buttons.forEach(btn => btn.disabled = false);
+                    }
+                    if (statusText) {
+                        statusText.innerText = 'Elige tu color para girar la ruleta:';
+                    }
                 }, 2000);
-            }, 3000); // 3 segundos de animación
+            }
         }
 
-        // BLACKJACK VISUAL
+        // ESTRATEGIA 21 (BLACKJACK)
         function updateBlackjackVisuals(hideDealerHiddenCard = false) {
             const screen = document.getElementById('casinoVisualScreen');
             if (!activeBlackjack) {
@@ -1061,7 +3395,7 @@
             const dealerSum = dealerCardsToSum.reduce((a,b)=>a+b, 0);
 
             screen.innerHTML = `
-                <div class="casino-title">🃏 MESA DE BLACKJACK (Apuesta: $${activeBlackjack.bet} 🪙)</div>
+                <div class="casino-title">🃏 ESTRATEGIA 21 (Apuesta: $${activeBlackjack.bet} 🪙)</div>
                 <div class="blackjack-table">
                     <div class="blackjack-hand-section">
                         <div class="hand-label">
@@ -1087,23 +3421,22 @@
         }
 
         function startBlackjackGame() {
-            logCommand('jugar_blackjack');
+            logCommand('jugar_estrategia_21');
             setCoreState('thinking');
 
             setTimeout(() => {
-                if (userCoins < 500) {
+                if (userCoins < 10) {
                     setCoreState('error');
-                    logAIResponse('Faltan Monedas', 'Necesitas tener al menos **$500 monedas** para jugar al Blackjack.');
+                    logAIResponse('Faltan Monedas', 'Necesitas tener al menos **$10 monedas** para jugar a Estrategia 21.');
                     openGambleMenu();
                     return;
                 }
 
-                // Ocultar pantalla de chat
                 document.getElementById('consoleFeed').style.display = 'none';
 
                 const drawCard = () => Math.floor(Math.random() * 10) + 1;
                 activeBlackjack = {
-                    bet: 500,
+                    bet: 10,
                     player: [drawCard(), drawCard()],
                     dealer: [drawCard()]
                 };
@@ -1113,7 +3446,7 @@
 
                 setCoreState('idle');
                 updateBlackjackVisuals();
-                logAIResponse('Partida de Blackjack', `Apuesta: **$500 🪙**. Tus cartas suman: **${playerSum}**. Crupier muestra: **${dealerSum}**. ¿Pides carta o te plantas?`);
+                logAIResponse('Partida de Estrategia 21', `Apuesta: **$10 🪙**. Tus cartas suman: **${playerSum}**. Crupier muestra: **${dealerSum}**. ¿Pides carta o te plantas?`);
 
                 const actionPanel = document.getElementById('actionPanel');
                 actionPanel.innerHTML = `
@@ -1137,7 +3470,7 @@
 
                 if (playerSum > 21) {
                     setCoreState('error');
-                    resolveBlackjack(false, `¡Te pasaste! Tu suma de cartas es de **${playerSum}** (límite 21).`);
+                    resolveBlackjack(false, `¡Te pasaste! Tu suma de cartas es de **${playerSum}** (limite 21).`);
                 } else {
                     setCoreState('idle');
                     logAIResponse('Pedir Carta', `Has sacado un ${card}. Tus cartas suman: **${playerSum}**. Crupier muestra: **${activeBlackjack.dealer[0]}**.`);
@@ -1162,13 +3495,13 @@
                 const playerSum = activeBlackjack.player.reduce((a,b)=>a+b, 0);
 
                 if (dealerSum > 21) {
-                    resolveBlackjack(true, `¡El Crupier se pasó de 21! (Crupier: **${dealerSum}** vs Tú: **${playerSum}**)`);
+                    resolveBlackjack(true, `¡El Crupier se paso de 21! (Crupier: **${dealerSum}** vs Tu: **${playerSum}**)`);
                 } else if (playerSum > dealerSum) {
-                    resolveBlackjack(true, `¡Le ganaste al Crupier! Puntuación mayor. (Crupier: **${dealerSum}** vs Tú: **${playerSum}**)`);
+                    resolveBlackjack(true, `¡Le ganaste al Crupier! Puntuacion mayor. (Crupier: **${dealerSum}** vs Tu: **${playerSum}**)`);
                 } else if (playerSum === dealerSum) {
-                    resolveBlackjack(null, `¡Empate! Se devuelven las monedas apostadas. (Crupier: **${dealerSum}** vs Tú: **${playerSum}**)`);
+                    resolveBlackjack(null, `¡Empate! Se devuelven las monedas apostadas. (Crupier: **${dealerSum}** vs Tu: **${playerSum}**)`);
                 } else {
-                    resolveBlackjack(false, `Perdiste. El Crupier sacó mejor puntuación. (Crupier: **${dealerSum}** vs Tú: **${playerSum}**)`);
+                    resolveBlackjack(false, `Perdiste. El Crupier saco mejor puntuacion. (Crupier: **${dealerSum}** vs Tu: **${playerSum}**)`);
                 }
             }, 600);
         }
@@ -1197,7 +3530,7 @@
                 try {
                     await window.addDoc(window.collection(window.db, 'conductores', currentUser.uid, 'activity'), {
                         type: 'gamble',
-                        description: `Blackjack: ${won === true ? 'Ganó' : (won === false ? 'Perdió' : 'Empate')} (${netAmount} 🪙)`,
+                        description: `Estrategia 21: ${won === true ? 'Gano' : (won === false ? 'Perdio' : 'Empate')} (${netAmount} 🪙)`,
                         coins: netAmount,
                         createdAt: new Date().toISOString()
                     });
@@ -1211,10 +3544,23 @@
                 console.error(err);
             }
 
+            const screen = document.getElementById('casinoVisualScreen');
+            const resultBanner = document.createElement('div');
+            resultBanner.style.textAlign = 'center';
+            resultBanner.style.color = won === true ? '#00c853' : won === false ? '#ef4444' : '#ffd700';
+            resultBanner.style.fontWeight = 'bold';
+            resultBanner.style.fontSize = '1.1rem';
+            resultBanner.style.marginTop = '15px';
+            resultBanner.innerHTML = won === true ? '¡GANASTE LA MANO!' : won === false ? 'PERDISTE LA MANO' : 'EMPATE';
+            screen.appendChild(resultBanner);
+
+            const actionPanel = document.getElementById('actionPanel');
+            actionPanel.innerHTML = `
+                <button class="cyber-chip" onclick="startBlackjackGame()"><span style="font-size:1.1rem;">🃏</span> Jugar Otra Mano</button>
+                <button class="cyber-chip gold" onclick="openGambleMenu()">Volver al Lobby</button>
+            `;
+            
             activeBlackjack = null;
-            setTimeout(() => {
-                openGambleMenu();
-            }, 2500);
         }
 
         document.addEventListener('DOMContentLoaded', initAIGame);
