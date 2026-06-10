@@ -7,14 +7,687 @@
     <title>Panel Administrativo - Panter Studio</title>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
     <link rel="icon" href="../../recursos/PSGD.png" type="image/png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="../../assets/css/admin.css">
     <script src="../../assets/js/core/firebase-config.js"></script>
+    <style>
+    /* ═══════════════════════════════════════
+       NUEVAS SECCIONES — ESTILOS ADICIONALES
+    ═══════════════════════════════════════ */
+
+    /* ── Sección labels en sidebar ── */
+    .sidebar-section-label {
+        font-size: 0.62rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--admin-text-muted);
+        padding: 0.6rem 1.1rem 0.2rem;
+        margin-top: 0.5rem;
+    }
+    .sidebar-divider {
+        height: 1px;
+        background: rgba(255,255,255,0.06);
+        margin: 0.6rem 0;
+    }
+
+    /* ── Kanban Board ── */
+    .kanban-board {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-top: 1.25rem;
+    }
+    .kanban-col {
+        background: rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 14px;
+        padding: 1rem;
+        min-height: 300px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .kanban-col-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    .kanban-col-count {
+        background: rgba(255,255,255,0.08);
+        border-radius: 100px;
+        padding: 2px 8px;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+    .kanban-col[data-col="ideas"] .kanban-col-header { color: #60a5fa; }
+    .kanban-col[data-col="progress"] .kanban-col-header { color: #fbbf24; }
+    .kanban-col[data-col="done"] .kanban-col-header { color: #34d399; }
+    .kanban-col[data-col="discarded"] .kanban-col-header { color: #f87171; }
+
+    .kanban-card {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 10px;
+        padding: 10px 12px;
+        cursor: grab;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+    .kanban-card:hover {
+        background: rgba(255,255,255,0.06);
+        border-color: rgba(0,176,255,0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+    .kanban-card-title {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 4px;
+    }
+    .kanban-card-desc {
+        font-size: 0.75rem;
+        color: var(--admin-text-secondary);
+        line-height: 1.4;
+    }
+    .kanban-card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 8px;
+    }
+    .kanban-tag {
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 100px;
+        border: 1px solid;
+    }
+    .tag-gameplay { color: #a78bfa; border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.1); }
+    .tag-ui       { color: #60a5fa; border-color: rgba(96,165,250,0.3); background: rgba(96,165,250,0.1); }
+    .tag-economia { color: #34d399; border-color: rgba(52,211,153,0.3); background: rgba(52,211,153,0.1); }
+    .tag-arte     { color: #f472b6; border-color: rgba(244,114,182,0.3); background: rgba(244,114,182,0.1); }
+    .tag-audio    { color: #fbbf24; border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.1); }
+    .tag-tecnico  { color: #f87171; border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.1); }
+
+    .priority-badge {
+        font-size: 0.6rem;
+        font-weight: 800;
+        padding: 2px 6px;
+        border-radius: 4px;
+        text-transform: uppercase;
+    }
+    .prio-high   { background: rgba(248,113,113,0.2); color: #f87171; }
+    .prio-medium { background: rgba(251,191,36,0.2);  color: #fbbf24; }
+    .prio-low    { background: rgba(100,116,139,0.2); color: #94a3b8; }
+
+    .kanban-card-delete {
+        position: absolute;
+        top: 6px; right: 8px;
+        background: none;
+        border: none;
+        color: rgba(255,255,255,0.2);
+        cursor: pointer;
+        font-size: 0.8rem;
+        padding: 2px;
+        transition: color 0.2s;
+        line-height: 1;
+    }
+    .kanban-card-delete:hover { color: #f87171; }
+
+    .kanban-move-btns {
+        display: flex;
+        gap: 4px;
+    }
+    .kanban-move-btn {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 5px;
+        color: var(--admin-text-secondary);
+        cursor: pointer;
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        transition: all 0.15s;
+    }
+    .kanban-move-btn:hover { background: rgba(0,176,255,0.15); color: #fff; border-color: rgba(0,176,255,0.4); }
+
+    /* Add card form inline */
+    .kanban-add-form {
+        display: none;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 4px;
+    }
+    .kanban-add-form.open { display: flex; }
+    .kanban-add-form input, .kanban-add-form textarea, .kanban-add-form select {
+        background: rgba(0,0,0,0.4);
+        border: 1px solid rgba(0,176,255,0.2);
+        border-radius: 8px;
+        color: #fff;
+        font-size: 0.82rem;
+        font-family: inherit;
+        padding: 6px 10px;
+        outline: none;
+        resize: none;
+    }
+    .kanban-add-form input::placeholder,
+    .kanban-add-form textarea::placeholder { color: rgba(255,255,255,0.25); }
+    .kanban-add-form-actions { display: flex; gap: 6px; }
+    .kanban-add-form-actions button {
+        flex: 1;
+        padding: 6px;
+        border-radius: 7px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        border: 1px solid;
+        cursor: pointer;
+        font-family: inherit;
+    }
+    .btn-kanban-save { background: rgba(0,176,255,0.15); border-color: rgba(0,176,255,0.4); color: #00b0ff; }
+    .btn-kanban-cancel { background: transparent; border-color: rgba(255,255,255,0.1); color: var(--admin-text-secondary); }
+    .btn-add-kanban {
+        background: transparent;
+        border: 1px dashed rgba(255,255,255,0.1);
+        border-radius: 9px;
+        color: var(--admin-text-muted);
+        font-size: 0.8rem;
+        padding: 8px;
+        cursor: pointer;
+        text-align: center;
+        width: 100%;
+        transition: all 0.2s;
+        font-family: inherit;
+        margin-top: auto;
+    }
+    .btn-add-kanban:hover { border-color: rgba(0,176,255,0.35); color: #60a5fa; background: rgba(0,176,255,0.05); }
+
+    /* ── Banco de Ideas ── */
+    .ideas-toolbar {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+        align-items: center;
+    }
+    .ideas-toolbar input {
+        flex: 1;
+        min-width: 160px;
+        background: rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 10px;
+        color: #fff;
+        padding: 8px 12px;
+        font-size: 0.88rem;
+        font-family: inherit;
+        outline: none;
+    }
+    .ideas-toolbar select {
+        background: rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 10px;
+        color: #fff;
+        padding: 8px 12px;
+        font-size: 0.88rem;
+        font-family: inherit;
+        outline: none;
+        cursor: pointer;
+    }
+    .idea-quick-form {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 8px;
+        margin-bottom: 1.25rem;
+        align-items: end;
+    }
+    @media (max-width: 600px) { .idea-quick-form { grid-template-columns: 1fr; } }
+    .idea-input-area { display: flex; flex-direction: column; gap: 6px; }
+    .idea-input-area input, .idea-input-area textarea, .idea-input-area select {
+        background: rgba(0,0,0,0.35);
+        border: 1px solid rgba(0,176,255,0.2);
+        border-radius: 10px;
+        color: #fff;
+        padding: 10px 14px;
+        font-size: 0.88rem;
+        font-family: inherit;
+        outline: none;
+        resize: none;
+    }
+    .ideas-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .idea-item {
+        background: rgba(255,255,255,0.025);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 12px;
+        padding: 14px 16px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        transition: all 0.2s;
+        animation: fadeIn 0.25s ease-out;
+    }
+    .idea-item:hover { background: rgba(255,255,255,0.04); border-color: rgba(0,176,255,0.2); }
+    .idea-item.discarded { opacity: 0.4; }
+    .idea-content { flex: 1; min-width: 0; }
+    .idea-title { font-weight: 700; font-size: 0.9rem; color: #fff; margin-bottom: 3px; }
+    .idea-body { font-size: 0.8rem; color: var(--admin-text-secondary); line-height: 1.4; }
+    .idea-meta { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+    .idea-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .idea-act-btn {
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 7px;
+        color: var(--admin-text-muted);
+        cursor: pointer;
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        transition: all 0.15s;
+        font-family: inherit;
+    }
+    .idea-act-btn:hover { background: rgba(0,176,255,0.1); color: #60a5fa; border-color: rgba(0,176,255,0.3); }
+    .idea-act-btn.del:hover { background: rgba(248,113,113,0.1); color: #f87171; border-color: rgba(248,113,113,0.3); }
+
+    /* ── Changelog ── */
+    .changelog-timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        margin-top: 1rem;
+        position: relative;
+    }
+    .changelog-timeline::before {
+        content: '';
+        position: absolute;
+        left: 18px;
+        top: 0; bottom: 0;
+        width: 2px;
+        background: rgba(0,176,255,0.15);
+    }
+    .changelog-entry {
+        display: flex;
+        gap: 16px;
+        padding-bottom: 1.5rem;
+        position: relative;
+    }
+    .changelog-dot {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border: 2px solid rgba(0,176,255,0.4);
+        background: rgba(0,176,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+        z-index: 1;
+    }
+    .changelog-dot.feat  { border-color: rgba(52,211,153,0.5); background: rgba(52,211,153,0.1); }
+    .changelog-dot.fix   { border-color: rgba(248,113,113,0.5); background: rgba(248,113,113,0.1); }
+    .changelog-dot.balance { border-color: rgba(251,191,36,0.5); background: rgba(251,191,36,0.1); }
+    .changelog-dot.content { border-color: rgba(167,139,250,0.5); background: rgba(167,139,250,0.1); }
+    .changelog-body { flex: 1; }
+    .changelog-version-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+        flex-wrap: wrap;
+    }
+    .changelog-version {
+        font-size: 0.78rem;
+        font-weight: 800;
+        padding: 2px 8px;
+        border-radius: 6px;
+        background: rgba(0,176,255,0.1);
+        border: 1px solid rgba(0,176,255,0.25);
+        color: #40c4ff;
+        font-family: monospace;
+    }
+    .changelog-date {
+        font-size: 0.72rem;
+        color: var(--admin-text-muted);
+    }
+    .changelog-type-badge {
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        padding: 2px 7px;
+        border-radius: 5px;
+    }
+    .type-feat    { background: rgba(52,211,153,0.15); color: #34d399; }
+    .type-fix     { background: rgba(248,113,113,0.15); color: #f87171; }
+    .type-balance { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .type-content { background: rgba(167,139,250,0.15); color: #a78bfa; }
+    .changelog-desc {
+        font-size: 0.88rem;
+        color: var(--admin-text-primary);
+        line-height: 1.5;
+    }
+    .changelog-entry-actions { display: flex; gap: 4px; margin-top: 6px; }
+
+    /* ── Bug Tracker ── */
+    .bug-filters {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+    .bug-filter-btn {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 8px;
+        color: var(--admin-text-secondary);
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 5px 12px;
+        cursor: pointer;
+        transition: all 0.15s;
+        font-family: inherit;
+    }
+    .bug-filter-btn.active { background: rgba(0,176,255,0.12); border-color: rgba(0,176,255,0.4); color: #40c4ff; }
+    .bugs-list { display: flex; flex-direction: column; gap: 8px; }
+    .bug-item {
+        background: rgba(255,255,255,0.025);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 12px;
+        padding: 14px 16px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        transition: all 0.2s;
+    }
+    .bug-item:hover { background: rgba(255,255,255,0.04); }
+    .bug-status-dot {
+        width: 10px; height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        margin-top: 4px;
+    }
+    .bug-status-dot.new      { background: #f87171; box-shadow: 0 0 8px rgba(248,113,113,0.6); }
+    .bug-status-dot.review   { background: #fbbf24; box-shadow: 0 0 8px rgba(251,191,36,0.6); }
+    .bug-status-dot.resolved { background: #34d399; box-shadow: 0 0 8px rgba(52,211,153,0.6); }
+    .bug-content { flex: 1; min-width: 0; }
+    .bug-title { font-weight: 700; font-size: 0.9rem; color: #fff; margin-bottom: 3px; }
+    .bug-desc { font-size: 0.8rem; color: var(--admin-text-secondary); line-height: 1.4; }
+    .bug-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; align-items: center; }
+    .bug-prio-badge { font-size: 0.65rem; font-weight: 800; padding: 2px 7px; border-radius: 5px; }
+    .prio-critico { background: rgba(248,113,113,0.2); color: #f87171; }
+    .prio-alto    { background: rgba(251,191,36,0.2);  color: #fbbf24; }
+    .prio-medio   { background: rgba(96,165,250,0.2);  color: #60a5fa; }
+    .prio-bajo    { background: rgba(100,116,139,0.2); color: #94a3b8; }
+    .bug-plat-badge { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 5px; background: rgba(255,255,255,0.06); color: var(--admin-text-secondary); border: 1px solid rgba(255,255,255,0.06); }
+    .bug-status-sel {
+        background: rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 7px;
+        color: #fff;
+        font-size: 0.75rem;
+        padding: 3px 8px;
+        cursor: pointer;
+        font-family: inherit;
+    }
+    .bug-actions { display: flex; gap: 4px; flex-direction: column; flex-shrink: 0; }
+
+    /* ── Assets ── */
+    .assets-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 10px;
+        margin-top: 1rem;
+    }
+    .asset-item {
+        background: rgba(255,255,255,0.025);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 12px;
+        padding: 14px;
+        transition: all 0.2s;
+    }
+    .asset-item:hover { border-color: rgba(0,176,255,0.25); background: rgba(0,176,255,0.03); }
+    .asset-icon { font-size: 1.6rem; margin-bottom: 6px; }
+    .asset-name { font-weight: 700; font-size: 0.9rem; color: #fff; margin-bottom: 3px; word-break: break-word; }
+    .asset-type-badge { font-size: 0.65rem; font-weight: 800; padding: 2px 7px; border-radius: 5px; display: inline-block; margin-bottom: 6px; }
+    .atype-sprite { background: rgba(96,165,250,0.15); color: #60a5fa; }
+    .atype-audio  { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .atype-ui     { background: rgba(167,139,250,0.15); color: #a78bfa; }
+    .atype-mapa   { background: rgba(52,211,153,0.15); color: #34d399; }
+    .atype-otro   { background: rgba(100,116,139,0.15); color: #94a3b8; }
+    .asset-status-badge { font-size: 0.65rem; font-weight: 800; padding: 2px 7px; border-radius: 5px; display: inline-block; }
+    .astatus-listo    { background: rgba(52,211,153,0.15); color: #34d399; }
+    .astatus-progreso { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .astatus-pendiente{ background: rgba(248,113,113,0.15); color: #f87171; }
+    .asset-note { font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 6px; line-height: 1.4; }
+    .asset-link { font-size: 0.72rem; color: #40c4ff; text-decoration: none; display: block; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .asset-actions { display: flex; justify-content: flex-end; margin-top: 8px; gap: 4px; }
+
+    /* ── Pizarrón ── */
+    .notepad-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .notepad-toolbar {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        background: rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 10px;
+        padding: 8px;
+    }
+    .notepad-tool-btn {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 6px;
+        color: var(--admin-text-primary);
+        cursor: pointer;
+        font-size: 0.82rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        transition: all 0.15s;
+        font-family: inherit;
+    }
+    .notepad-tool-btn:hover { background: rgba(0,176,255,0.15); color: #60a5fa; }
+    .notepad-editor {
+        min-height: 380px;
+        background: rgba(0,0,0,0.3);
+        border: 1px solid rgba(0,176,255,0.15);
+        border-radius: 14px;
+        padding: 1.5rem;
+        color: #e2e8f0;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.95rem;
+        line-height: 1.7;
+        outline: none;
+        overflow-y: auto;
+    }
+    .notepad-editor:focus { border-color: rgba(0,176,255,0.4); box-shadow: 0 0 20px rgba(0,176,255,0.08); }
+    .notepad-status {
+        font-size: 0.72rem;
+        color: var(--admin-text-muted);
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+    .notepad-status .saved-indicator {
+        color: #34d399;
+        font-weight: 700;
+    }
+    .notepad-pages {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
+    }
+    .notepad-page-btn {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 8px;
+        color: var(--admin-text-secondary);
+        cursor: pointer;
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 5px 12px;
+        transition: all 0.15s;
+        font-family: inherit;
+    }
+    .notepad-page-btn.active { background: rgba(0,176,255,0.12); border-color: rgba(0,176,255,0.4); color: #40c4ff; }
+
+    /* ── Anuncios Comunidad (Firestore) ── */
+    .announcements-list { display: flex; flex-direction: column; gap: 8px; margin-top: 1rem; }
+    .announcement-item {
+        background: rgba(255,255,255,0.025);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 12px;
+        padding: 16px;
+        position: relative;
+        transition: all 0.2s;
+    }
+    .announcement-item:hover { border-color: rgba(0,176,255,0.2); }
+    .announcement-item-type {
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        padding: 2px 8px;
+        border-radius: 5px;
+        display: inline-block;
+        margin-bottom: 6px;
+    }
+    .atype-general { background: rgba(96,165,250,0.15); color: #60a5fa; }
+    .atype-evento  { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .atype-urgente { background: rgba(248,113,113,0.15); color: #f87171; }
+    .atype-update  { background: rgba(52,211,153,0.15); color: #34d399; }
+    .announcement-title { font-weight: 800; font-size: 0.95rem; color: #fff; margin-bottom: 4px; }
+    .announcement-body { font-size: 0.85rem; color: var(--admin-text-secondary); line-height: 1.5; }
+    .announcement-meta { font-size: 0.72rem; color: var(--admin-text-muted); margin-top: 8px; }
+    .announcement-delete-btn {
+        position: absolute;
+        top: 10px; right: 12px;
+        background: transparent;
+        border: none;
+        color: rgba(255,255,255,0.2);
+        cursor: pointer;
+        font-size: 0.85rem;
+        padding: 4px;
+        transition: color 0.2s;
+    }
+    .announcement-delete-btn:hover { color: #f87171; }
+
+    /* ── Personal interno ── */
+    .staff-admin-list { display: flex; flex-direction: column; gap: 8px; }
+    .staff-admin-row {
+        background: rgba(255,255,255,0.025);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 12px;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        transition: all 0.2s;
+    }
+    .staff-admin-row:hover { border-color: rgba(0,176,255,0.2); background: rgba(0,176,255,0.02); }
+    .staff-admin-avatar {
+        width: 44px; height: 44px;
+        border-radius: 50%;
+        background: rgba(0,176,255,0.1);
+        border: 1.5px solid rgba(0,176,255,0.3);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+    .staff-admin-info { flex: 1; min-width: 0; }
+    .staff-admin-name { font-weight: 800; font-size: 0.95rem; color: #fff; }
+    .staff-admin-email { font-size: 0.75rem; color: var(--admin-text-muted); }
+    .staff-admin-role-badge {
+        font-size: 0.72rem;
+        font-weight: 800;
+        padding: 3px 10px;
+        border-radius: 100px;
+        border: 1px solid;
+    }
+
+    /* ── Modal genérico ── */
+    .admin-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(6px);
+        z-index: 9000;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    .admin-modal-overlay.open { display: flex; }
+    .admin-modal {
+        background: rgba(10,13,22,0.98);
+        border: 1px solid rgba(0,176,255,0.25);
+        border-radius: 20px;
+        padding: 2rem;
+        width: 100%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+        animation: fadeIn 0.2s ease-out;
+    }
+    .admin-modal h3 { font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0 0 1.25rem; }
+    .modal-form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 1rem; }
+    .modal-form-group label { font-size: 0.75rem; font-weight: 700; color: var(--admin-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+    .modal-form-group input,
+    .modal-form-group textarea,
+    .modal-form-group select {
+        background: rgba(0,0,0,0.4);
+        border: 1px solid rgba(0,176,255,0.2);
+        border-radius: 10px;
+        color: #fff;
+        padding: 10px 14px;
+        font-size: 0.88rem;
+        font-family: inherit;
+        outline: none;
+        resize: none;
+        transition: border-color 0.2s;
+    }
+    .modal-form-group input:focus,
+    .modal-form-group textarea:focus,
+    .modal-form-group select:focus { border-color: rgba(0,176,255,0.5); }
+    .modal-form-group input::placeholder,
+    .modal-form-group textarea::placeholder { color: rgba(255,255,255,0.2); }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1.25rem; }
+    .modal-btn-cancel { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 9px; color: var(--admin-text-secondary); cursor: pointer; font-size: 0.85rem; font-weight: 700; padding: 8px 18px; font-family: inherit; transition: all 0.2s; }
+    .modal-btn-save { background: rgba(0,176,255,0.15); border: 1px solid rgba(0,176,255,0.5); border-radius: 9px; color: #40c4ff; cursor: pointer; font-size: 0.85rem; font-weight: 800; padding: 8px 18px; font-family: inherit; transition: all 0.2s; }
+    .modal-btn-save:hover { background: rgba(0,176,255,0.3); box-shadow: 0 0 18px rgba(0,176,255,0.25); }
+
+    /* ── Estados vacíos ── */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--admin-text-muted);
+    }
+    .empty-state-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .empty-state-text { font-size: 0.9rem; }
+    </style>
 </head>
 <body class="admin-page" data-site-root="../..">
+
+    <!-- Mobile Hamburger Toggle -->
+    <button class="admin-mobile-toggle" id="adminMobileToggle" aria-label="Abrir menú">
+        <span></span><span></span><span></span>
+    </button>
+    <!-- Sidebar Overlay -->
+    <div class="admin-sidebar-overlay" id="adminSidebarOverlay"></div>
     <div class="admin-bg-glow"></div>
-    
+
     <!-- Welcome Overlay -->
     <div class="admin-welcome" id="adminWelcome" hidden>
         <div class="admin-welcome-card" role="status" aria-live="polite">
@@ -37,7 +710,7 @@
         <!-- Main Dashboard Panel -->
         <section class="admin-panel" id="adminPanel" hidden>
             <div class="dashboard-layout">
-                
+
                 <!-- Left Sidebar -->
                 <aside class="admin-sidebar">
                     <div class="sidebar-brand">
@@ -45,10 +718,27 @@
                         <span>Panter Panel</span>
                     </div>
                     <div class="sidebar-nav">
+                        <!-- Gestión -->
+                        <div class="sidebar-section-label">Gestión</div>
                         <button class="sidebar-tab active" data-tab="dashboard">📊 Resumen</button>
                         <button class="sidebar-tab" data-tab="betatesters">⚙️ Beta Testers</button>
                         <button class="sidebar-tab" data-tab="accounts" id="sidebarAccountsTab" hidden>👥 Cuentas (CEO)</button>
                         <button class="sidebar-tab" data-tab="support">💬 Soporte</button>
+                        <button class="sidebar-tab" data-tab="announcements">📢 Anuncios</button>
+                        <button class="sidebar-tab" data-tab="staff">🛡️ Personal</button>
+                        <button class="sidebar-tab" data-tab="siteconfig">⚙️ Configuración</button>
+                        <button class="sidebar-tab" data-tab="visibility">🌐 Visibilidad</button>
+                        
+                        <div class="sidebar-divider"></div>
+
+                        <!-- Desarrollo -->
+                        <div class="sidebar-section-label">Desarrollo</div>
+                        <button class="sidebar-tab" data-tab="roadmap">🗺️ Roadmap</button>
+                        <button class="sidebar-tab" data-tab="ideas">💡 Ideas</button>
+                        <button class="sidebar-tab" data-tab="changelog">📋 Changelog</button>
+                        <button class="sidebar-tab" data-tab="bugs">🐛 Bugs</button>
+                        <button class="sidebar-tab" data-tab="assets">📦 Assets</button>
+                        <button class="sidebar-tab" data-tab="notepad">📝 Pizarrón</button>
                     </div>
                     <div class="sidebar-footer">
                         <button id="adminGoHomeBtn" class="btn btn-block">Ir al Inicio</button>
@@ -69,7 +759,7 @@
                         </div>
                     </header>
 
-                    <!-- TAB Pane: Dashboard -->
+                    <!-- ══ TAB: Dashboard ══ -->
                     <div class="tab-pane active" id="tab-dashboard">
                         <div class="stats-grid">
                             <div class="stat-card">
@@ -89,7 +779,6 @@
                                 <strong id="statApprovedBetas">0</strong>
                             </div>
                         </div>
-
                         <div class="admin-card">
                             <h3>Tu Perfil de Administrador</h3>
                             <p>Detalles basicos sobre la cuenta de staff conectada actualmente.</p>
@@ -102,7 +791,7 @@
                         </div>
                     </div>
 
-                    <!-- TAB Pane: Beta Testers -->
+                    <!-- ══ TAB: Beta Testers ══ -->
                     <div class="tab-pane" id="tab-betatesters">
                         <div class="admin-card">
                             <div class="card-header-actions">
@@ -110,89 +799,789 @@
                                 <button id="adminRefreshBetasBtn" class="btn">Actualizar Lista</button>
                             </div>
                             <p>Lista de usuarios postulados para las pruebas alpha/beta del juego en Android.</p>
-                            
                             <div id="adminBetasList" class="betas-grid">
                                 <div style="color: var(--admin-text-secondary);">Cargando postulantes...</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- TAB Pane: Accounts (CEO Only) -->
+                    <!-- ══ TAB: Accounts (CEO Only) ══ -->
                     <div class="tab-pane" id="tab-accounts">
                         <div class="admin-card">
                             <div class="card-header-actions">
-                                <h3>Gestion de Cuentas (CEO)</h3>
-                                <button id="adminCeoRefreshUsersBtn" class="btn">Actualizar Lista</button>
+                                <div>
+                                    <h3>👥 Gestión de Cuentas</h3>
+                                    <p style="margin:0;">Asigna roles del equipo de Panter Studio a los usuarios.</p>
+                                </div>
+                                <button id="adminCeoRefreshUsersBtn" class="btn">🔄 Actualizar</button>
                             </div>
-                            <p>Asigna roles del equipo de Panter Studio a los usuarios de la base de datos.</p>
+
+                            <!-- Search + stats bar -->
+                            <div class="accounts-toolbar">
+                                <div class="accounts-search-wrap">
+                                    <span class="accounts-search-icon">🔍</span>
+                                    <input type="search" id="adminCeoEmailSearch"
+                                        placeholder="Buscar por nombre o correo..."
+                                        class="accounts-search-input">
+                                </div>
+                                <div id="accountsCountBadge" class="accounts-count-badge">
+                                    0 usuarios
+                                </div>
+                            </div>
+
+                            <p id="adminCeoUsersMessage" class="admin-message" style="margin-bottom:12px;"></p>
+
+                            <!-- Cards grid -->
+                            <div id="adminCeoUsersTableBody" class="accounts-cards-grid"></div>
+                        </div>
+                    </div>
+
+                    <!-- ══ TAB: Soporte ══ -->
+                    <div class="tab-pane" id="tab-support">
+                        <div class="admin-card">
+                            <h3>Soporte al Jugador</h3>
+                            <p>Busca un jugador por su correo electrónico, ID o nombre de usuario para visualizar y editar CUALQUIER aspecto de su cuenta (perfil, saldos, mascota, permisos, etc.).</p>
+                            <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                                <input type="text" id="supportSearchEmail" placeholder="Introduce correo, ID de conductor o nombre de usuario" class="form-input" style="flex:1; min-width: 250px;">
+                                <button id="supportSearchBtn" class="btn">🔍 Buscar Jugador</button>
+                            </div>
+                            <p id="supportSearchMessage" class="admin-message" style="margin-top: 10px;"></p>
                             
-                            <div class="admin-filter-row" style="margin-top:15px; margin-bottom:15px;">
-                                <input type="search" id="adminCeoEmailSearch" placeholder="Buscar por correo o nombre" class="form-input" style="max-width: 480px;">
+                            <!-- Advanced Editor Card -->
+                            <div id="supportUserCard" class="support-user-card" hidden style="margin-top: 20px; padding: 25px; background: rgba(255,255,255,0.01); border: 1px solid rgba(0, 176, 255, 0.15); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+                                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.06); padding-bottom:15px; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+                                    <div>
+                                        <h4 id="supportUserTitle" style="margin: 0 0 4px 0; color: #fff; font-size:1.3rem;">Usuario Encontrado</h4>
+                                        <p id="supportUserEmailLabel" style="font-size: 0.85rem; color: var(--admin-text-secondary); margin:0;">correo@ejemplo.com</p>
+                                    </div>
+                                    <button id="supportSaveChangesBtn" class="btn" style="background:rgba(0,176,255,0.15); border-color:rgba(0,176,255,0.4); color:#40c4ff; height: 42px;">💾 Guardar Todos los Cambios</button>
+                                </div>
+
+                                <form id="supportUserEditForm" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;" onsubmit="return false;">
+                                    <!-- 1. Perfil / Datos Básicos -->
+                                    <div class="admin-card" style="margin-bottom:0; padding:18px; background:rgba(0,0,0,0.25); border-color:rgba(255,255,255,0.04);">
+                                        <h4 style="font-size:0.9rem; color:#40c4ff; margin-top:0; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">👤 Perfil</h4>
+                                        <div class="form-group" style="margin-bottom:10px;">
+                                            <label class="form-label" style="font-size:0.75rem;">Nombre Público</label>
+                                            <input type="text" id="editSupportDisplayName" class="form-input" style="padding: 6px 10px; font-size:0.82rem;">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:10px;">
+                                            <label class="form-label" style="font-size:0.75rem;">Nombre de Jugador / Username</label>
+                                            <input type="text" id="editSupportUsername" class="form-input" style="padding: 6px 10px; font-size:0.82rem;">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:10px;">
+                                            <label class="form-label" style="font-size:0.75rem;">Avatar (Emoji)</label>
+                                            <input type="text" id="editSupportAvatar" class="form-input" style="padding: 6px 10px; font-size:0.82rem;">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:10px;">
+                                            <label class="form-label" style="font-size:0.75rem;">Foto Perfil (URL)</label>
+                                            <input type="text" id="editSupportAvatarImg" class="form-input" style="padding: 6px 10px; font-size:0.82rem;">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:10px;">
+                                            <label class="form-label" style="font-size:0.75rem;">País</label>
+                                            <input type="text" id="editSupportCountry" class="form-input" style="padding: 6px 10px; font-size:0.82rem;">
+                                        </div>
+                                    </div>
+
+                                    <!-- 2. Economía y Saldos -->
+                                    <div class="admin-card" style="margin-bottom:0; padding:18px; background:rgba(0,0,0,0.25); border-color:rgba(255,255,255,0.04);">
+                                        <h4 style="font-size:0.9rem; color:#40c4ff; margin-top:0; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">🪙 Economía</h4>
+                                        <div class="form-group" style="margin-bottom:10px;">
+                                            <label class="form-label" style="font-size:0.75rem;">Monedas Web (saldo)</label>
+                                            <input type="number" id="editSupportCoins" class="form-input" style="padding: 6px 10px; font-size:0.82rem;">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:10px;">
+                                            <label class="form-label" style="font-size:0.75rem;">Esmeraldas (Juego)</label>
+                                            <input type="number" id="editSupportEsmeraldas" class="form-input" style="padding: 6px 10px; font-size:0.82rem;">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:10px;">
+                                            <label class="form-label" style="font-size:0.75rem;">Dinero (Juego)</label>
+                                            <input type="number" id="editSupportDinero" class="form-input" style="padding: 6px 10px; font-size:0.82rem;">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:10px;">
+                                            <label class="form-label" style="font-size:0.75rem;">Seguros de Misión</label>
+                                            <input type="number" id="editSupportInsurances" class="form-input" style="padding: 6px 10px; font-size:0.82rem;">
+                                        </div>
+                                    </div>
+
+                                    <!-- 3. Roles y Permisos -->
+                                    <div class="admin-card" style="margin-bottom:0; padding:18px; background:rgba(0,0,0,0.25); border-color:rgba(255,255,255,0.04);">
+                                        <h4 style="font-size:0.9rem; color:#40c4ff; margin-top:0; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">🛡️ Permisos y Rango</h4>
+                                        <div class="form-group" style="margin-bottom:10px;">
+                                            <label class="form-label" style="font-size:0.75rem;">Rol en la Web</label>
+                                            <select id="editSupportRole" class="form-select" style="padding: 6px 10px; font-size:0.82rem; height:auto;">
+                                                <option value="viewer">Solo lectura</option>
+                                                <option value="usuario">Usuario / Miembro</option>
+                                                <option value="vip">VIP</option>
+                                                <option value="programador">Dev / Programador</option>
+                                                <option value="modelador">Modelador 3D</option>
+                                                <option value="support_ops">Soporte Ops</option>
+                                                <option value="community_manager">CM / Community Manager</option>
+                                                <option value="youtuber">Youtuber</option>
+                                                <option value="streamer">Streamer</option>
+                                                <option value="administrador">Administrador</option>
+                                                <option value="director">Director</option>
+                                                <option value="founder_ceo">Fundador / CEO</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:10px;">
+                                            <label class="form-label" style="font-size:0.75rem;">Nivel de Acceso</label>
+                                            <select id="editSupportLevel" class="form-select" style="padding: 6px 10px; font-size:0.82rem; height:auto;">
+                                                <option value="visitor">Visitante</option>
+                                                <option value="member">Miembro</option>
+                                                <option value="vip">VIP</option>
+                                                <option value="developer">Desarrollador</option>
+                                                <option value="core_member">Miembro Core</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:10px;">
+                                            <label class="form-label" style="font-size:0.75rem;">Estado Beta Tester</label>
+                                            <select id="editSupportBetaTesterStatus" class="form-select" style="padding: 6px 10px; font-size:0.82rem; height:auto;">
+                                                <option value="">No Postulado</option>
+                                                <option value="pending">Pendiente 🟡</option>
+                                                <option value="approved">Aprobado 🟢</option>
+                                                <option value="rejected">Rechazado 🔴</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:10px;">
+                                            <label class="form-label" style="font-size:0.75rem;">Racha Activa (Días)</label>
+                                            <input type="number" id="editSupportStreak" class="form-input" style="padding: 6px 10px; font-size:0.82rem;">
+                                        </div>
+                                        <div class="form-group" style="display:flex; flex-direction:row; align-items:center; gap:8px; margin-top:10px;">
+                                            <input type="checkbox" id="editSupportInterested" style="width:16px; height:16px; margin:0; cursor:pointer;">
+                                            <label for="editSupportInterested" class="form-label" style="font-size:0.75rem; margin:0; cursor:pointer;">Tiene Interés (Me Interesa)</label>
+                                        </div>
+                                    </div>
+
+                                    <!-- 4. Mascota y Cooldowns -->
+                                    <div class="admin-card" style="margin-bottom:0; padding:18px; background:rgba(0,0,0,0.25); border-color:rgba(255,255,255,0.04);">
+                                        <h4 style="font-size:0.9rem; color:#40c4ff; margin-top:0; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">🐾 Mascota y Cooldowns</h4>
+                                        <div class="form-group" style="margin-bottom:10px;">
+                                            <label class="form-label" style="font-size:0.75rem;">Nombre Mascota</label>
+                                            <input type="text" id="editSupportPetName" class="form-input" style="padding: 6px 10px; font-size:0.82rem;">
+                                        </div>
+                                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                                            <div class="form-group" style="margin-bottom:10px;">
+                                                <label class="form-label" style="font-size:0.72rem;">Nivel</label>
+                                                <input type="number" id="editSupportPetLevel" class="form-input" style="padding: 6px 10px; font-size:0.82rem;">
+                                            </div>
+                                            <div class="form-group" style="margin-bottom:10px;">
+                                                <label class="form-label" style="font-size:0.72rem;">XP</label>
+                                                <input type="number" id="editSupportPetXP" class="form-input" style="padding: 6px 10px; font-size:0.82rem;">
+                                            </div>
+                                        </div>
+                                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:4px;">
+                                            <div class="form-group" style="margin-bottom:10px;">
+                                                <label class="form-label" style="font-size:0.68rem;">Hambre</label>
+                                                <input type="number" id="editSupportPetHunger" class="form-input" style="padding: 6px 4px; font-size:0.82rem;">
+                                            </div>
+                                            <div class="form-group" style="margin-bottom:10px;">
+                                                <label class="form-label" style="font-size:0.68rem;">Energía</label>
+                                                <input type="number" id="editSupportPetEnergy" class="form-input" style="padding: 6px 4px; font-size:0.82rem;">
+                                            </div>
+                                            <div class="form-group" style="margin-bottom:10px;">
+                                                <label class="form-label" style="font-size:0.68rem;">Limp.</label>
+                                                <input type="number" id="editSupportPetCleanliness" class="form-input" style="padding: 6px 4px; font-size:0.82rem;">
+                                            </div>
+                                        </div>
+                                        <div style="margin-top:12px; display:flex; flex-direction:column; gap:6px;">
+                                            <button type="button" id="btnResetWorkCooldown" class="btn btn-sm" style="width:100%; font-size:0.72rem; padding:4px;">Reset Cooldown Trabajo 💼</button>
+                                            <button type="button" id="btnResetRiskCooldown" class="btn btn-sm" style="width:100%; font-size:0.72rem; padding:4px;">Reset Cooldown Riesgo ⚠️</button>
+                                        </div>
+                                    </div>
+                                </form>
+                                <p id="supportActionMessage" class="admin-message" style="margin-top: 15px;"></p>
                             </div>
+                        </div>
 
-                            <p id="adminCeoUsersMessage" class="admin-message" style="margin-bottom:15px;"></p>
-
+                        <!-- 🛠️ Global System Tools / Redeem History -->
+                        <div class="admin-card" style="margin-top: 20px;">
+                            <div class="card-header-actions">
+                                <h3>📋 Últimos Canjes de Monedas (Comunidad)</h3>
+                                <button id="btnRefreshRedeemLogs" class="btn btn-sm">🔄 Recargar Canjes</button>
+                            </div>
+                            <p>Registro histórico de los canjes de monedas web realizados por los jugadores de la comunidad.</p>
                             <div class="admin-table-scroll">
                                 <table class="admin-table">
                                     <thead>
                                         <tr>
-                                            <th>#</th>
-                                            <th>Correo</th>
-                                            <th>Nombre</th>
-                                            <th>Rol actual</th>
-                                            <th>Fuente</th>
-                                            <th>Nuevo rol</th>
-                                            <th>Accion</th>
+                                            <th>Fecha</th>
+                                            <th>Email / Jugador</th>
+                                            <th>Monedas Web Debitadas</th>
+                                            <th>Esmeraldas Entregadas</th>
+                                            <th>Estado</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="adminCeoUsersTableBody">
-                                        <tr><td colspan="7">Cargando usuarios...</td></tr>
+                                    <tbody id="redeemLogsTableBody">
+                                        <tr>
+                                            <td colspan="5" style="text-align:center; color:var(--admin-text-secondary);">Cargando registros...</td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
 
-                    <!-- TAB Pane: Support / Editor -->
-                    <div class="tab-pane" id="tab-support">
+                    <!-- ══ TAB: Anuncios (Firestore) ══ -->
+                    <div class="tab-pane" id="tab-announcements">
                         <div class="admin-card">
-                            <h3>Soporte al Jugador</h3>
-                            <p>Busca un jugador por su correo electronico para visualizar sus datos y modificar su saldo de monedas.</p>
-                            
-                            <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
-                                <input type="text" id="supportSearchEmail" placeholder="Introduce el correo del jugador" class="form-input" style="flex:1; min-width: 250px;">
-                                <button id="supportSearchBtn" class="btn">🔍 Buscar Jugador</button>
+                            <div class="card-header-actions">
+                                <h3>📢 Tablón de Anuncios</h3>
+                                <button class="btn" onclick="openAnnouncementModal()">+ Nuevo Anuncio</button>
                             </div>
-                            <p id="supportSearchMessage" class="admin-message" style="margin-top: 10px;"></p>
-
-                            <div id="supportUserCard" class="support-user-card" hidden style="margin-top: 20px; padding: 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px;">
-                                <h4 id="supportUserTitle" style="margin: 0 0 4px 0; color: #fff;">Usuario Encontrado</h4>
-                                <p id="supportUserEmailLabel" style="font-size: 0.85rem; color: var(--admin-text-secondary); margin: 0 0 15px 0;">correo@ejemplo.com</p>
-                                
-                                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-                                    <div class="profile-field" style="min-width: 160px;">
-                                        <span>Saldo Actual</span>
-                                        <strong id="supportUserCurrentCoins" style="font-size: 1.4rem; color: var(--color-primary-light);">0 🪙</strong>
-                                    </div>
-                                </div>
-
-                                <div style="display: flex; gap: 10px; max-width: 480px; align-items: flex-end; flex-wrap: wrap;">
-                                    <div class="form-group" style="flex: 1; min-width: 180px; margin-bottom: 0;">
-                                        <label class="form-label" for="supportCoinsAmount">Cantidad a Modificar</label>
-                                        <input type="number" id="supportCoinsAmount" class="form-input" placeholder="Ej: 50 o -20">
-                                    </div>
-                                    <button id="supportSaveCoinsBtn" class="btn" style="height: 44px; display: inline-flex; align-items: center;">💾 Guardar Cambios</button>
-                                </div>
-                                <p id="supportActionMessage" class="admin-message" style="margin-top: 15px;"></p>
+                            <p>Publica anuncios visibles para toda la comunidad de Panter Studio. Se guardan en la nube.</p>
+                            <div id="announcementsList" class="announcements-list">
+                                <div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">Cargando anuncios...</div></div>
                             </div>
                         </div>
                     </div>
 
-                </div>
-            </div>
+                    <!-- ══ TAB: Personal (Firestore) ══ -->
+                    <div class="tab-pane" id="tab-staff">
+                        <div class="admin-card">
+                            <div class="card-header-actions">
+                                <h3>🛡️ Personal del Estudio</h3>
+                                <button class="btn" id="staffRefreshBtn">Actualizar</button>
+                            </div>
+                            <p>Vista rápida de todos los miembros con rol de staff activos en la base de datos.</p>
+                            <div id="staffAdminList" class="staff-admin-list" style="margin-top:1rem;">
+                                <div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-text">Cargando personal...</div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ══ TAB: Configuración del Sitio (settings) ══ -->
+                    <div class="tab-pane" id="tab-siteconfig">
+                        <div class="admin-card">
+                            <h3>⚙️ Configuración Global del Sitio</h3>
+                            <p>Modifica los parámetros de recompensa, bonos diarios y enlaces externos almacenados en Firestore.</p>
+                            <form id="siteConfigForm" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:20px;" onsubmit="return false;">
+                                <!-- Bonos y Recompensas -->
+                                <div class="admin-card" style="margin-bottom:0; padding:20px; background:rgba(0,0,0,0.15); border-color:rgba(255,255,255,0.04);">
+                                    <h4 style="font-size:0.95rem; color:#40c4ff; margin-top:0; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">🪙 Economía Web</h4>
+                                    <div class="form-group">
+                                        <label class="form-label">Monedas por Referido</label>
+                                        <input type="number" id="cfgReferralCoins" class="form-input" placeholder="ej. 50">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Monedas de Bono Diario Base</label>
+                                        <input type="number" id="cfgDailyCoins" class="form-input" placeholder="ej. 10">
+                                    </div>
+                                    <div class="form-group" style="display:flex; flex-direction:row; align-items:center; gap:8px;">
+                                        <input type="checkbox" id="cfgEnableNewsPage" style="width:18px; height:18px; margin:0; cursor:pointer;">
+                                        <label for="cfgEnableNewsPage" class="form-label" style="margin:0; cursor:pointer;">Habilitar Página de Noticias / Devlogs</label>
+                                    </div>
+                                </div>
+
+                                <!-- Donaciones y Metas -->
+                                <div class="admin-card" style="margin-bottom:0; padding:20px; background:rgba(0,0,0,0.15); border-color:rgba(255,255,255,0.04);">
+                                    <h4 style="font-size:0.95rem; color:#40c4ff; margin-top:0; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">🎁 Donaciones y Metas</h4>
+                                    <div class="form-group">
+                                        <label class="form-label">Meta de Donaciones ($ USD)</label>
+                                        <input type="number" id="cfgDonationGoal" class="form-input" placeholder="ej. 500">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Enlace de PayPal</label>
+                                        <input type="text" id="cfgPaypalLink" class="form-input" placeholder="https://paypal.me/...">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Enlace de Patreon</label>
+                                        <input type="text" id="cfgPatreonLink" class="form-input" placeholder="https://patreon.com/...">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Enlace de Nequi (Breve/QR)</label>
+                                        <input type="text" id="cfgNequiLink" class="form-input" placeholder="Enlace de pago...">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Enlace de Breve</label>
+                                        <input type="text" id="cfgBreveLink" class="form-input" placeholder="Enlace breve...">
+                                    </div>
+                                </div>
+
+                                <!-- Anuncio del Tablón Superior -->
+                                <div class="admin-card" style="grid-column: 1 / -1; margin-bottom:0; padding:20px; background:rgba(0,0,0,0.15); border-color:rgba(255,255,255,0.04);">
+                                    <h4 style="font-size:0.95rem; color:#40c4ff; margin-top:0; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">📢 Anuncio General Superior (Tablón)</h4>
+                                    <div class="form-group" style="margin-bottom:0;">
+                                        <label class="form-label">Texto del Banner (Vacío para ocultar en la página de actualizaciones)</label>
+                                        <textarea id="cfgAnnouncementText" class="form-textarea" rows="2" placeholder="ej. ¡Nuestra Tierra Alpha 0.5 disponible próximamente!"></textarea>
+                                    </div>
+                                </div>
+                            </form>
+                            <div style="display:flex; justify-content:flex-end; margin-top:20px;">
+                                <button id="btnSaveSiteConfig" class="btn" style="background:rgba(16, 185, 129, 0.15); border-color:rgba(16, 185, 129, 0.4); color:#a7f3d0;">💾 Guardar Configuración</button>
+                            </div>
+                            <p id="siteConfigActionMessage" class="admin-message" style="margin-top:15px;"></p>
+                        </div>
+                    </div>
+
+                    <!-- ══ TAB: Visibilidad y Acceso (site-visibility) ══ -->
+                    <div class="tab-pane" id="tab-visibility">
+                        <div class="admin-card">
+                            <h3>🌐 Control de Visibilidad y Accesos</h3>
+                            <p>Administra el acceso público de las páginas individuales y controla si el sitio completo se encuentra bajo mantenimiento global.</p>
+                            
+                            <!-- Global Maintenance -->
+                            <div class="admin-card" style="padding:20px; background:rgba(239, 68, 68, 0.05); border-color:rgba(239, 68, 68, 0.2); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:20px;">
+                                <div>
+                                    <h4 style="margin:0 0 4px 0; color:#f87171;">⚠️ Mantenimiento Global del Sitio</h4>
+                                    <p style="margin:0; font-size:0.82rem; color:var(--admin-text-secondary);">Si se activa, todos los usuarios (excepto el CEO) verán una pantalla de mantenimiento y no podrán interactuar.</p>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <input type="checkbox" id="cfgGlobalMaintenance" style="width:22px; height:22px; margin:0; cursor:pointer;">
+                                    <label for="cfgGlobalMaintenance" class="form-label" style="margin:0; font-weight:800; color:#f87171; cursor:pointer;">Activar Bloqueo Global</label>
+                                </div>
+                            </div>
+
+                            <h4 style="margin-top:20px; margin-bottom:12px; font-size:1.1rem; color:#40c4ff;">Configuración por Página</h4>
+                            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+                                
+                                <!-- Perfil -->
+                                <div class="admin-card" style="margin-bottom:0; padding:15px; background:rgba(0,0,0,0.15); border-color:rgba(255,255,255,0.04);">
+                                    <h4 style="margin-top:0; margin-bottom:10px; color:#fff; font-size:0.9rem;">👤 Mi Perfil (perfil.html)</h4>
+                                    <div class="form-group" style="display:flex; flex-direction:row; align-items:center; gap:8px; margin-bottom:10px;">
+                                        <input type="checkbox" id="cfgMaint_perfil" style="width:16px; height:16px; margin:0; cursor:pointer;">
+                                        <label for="cfgMaint_perfil" class="form-label" style="margin:0; cursor:pointer;">Bajo Mantenimiento</label>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:0;">
+                                        <label class="form-label" style="font-size:0.75rem;">Emails Permitidos (Público si está vacío, separar por coma)</label>
+                                        <textarea id="cfgEmails_perfil" class="form-textarea" rows="2" style="font-size:0.78rem;" placeholder="email1@test.com, email2@test.com"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Donaciones -->
+                                <div class="admin-card" style="margin-bottom:0; padding:15px; background:rgba(0,0,0,0.15); border-color:rgba(255,255,255,0.04);">
+                                    <h4 style="margin-top:0; margin-bottom:10px; color:#fff; font-size:0.9rem;">🎁 Apoyanos (donaciones.html)</h4>
+                                    <div class="form-group" style="display:flex; flex-direction:row; align-items:center; gap:8px; margin-bottom:10px;">
+                                        <input type="checkbox" id="cfgMaint_donaciones" style="width:16px; height:16px; margin:0; cursor:pointer;">
+                                        <label for="cfgMaint_donaciones" class="form-label" style="margin:0; cursor:pointer;">Bajo Mantenimiento</label>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:0;">
+                                        <label class="form-label" style="font-size:0.75rem;">Emails Permitidos (Público si está vacío, separar por coma)</label>
+                                        <textarea id="cfgEmails_donaciones" class="form-textarea" rows="2" style="font-size:0.78rem;" placeholder="email1@test.com, email2@test.com"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Personal -->
+                                <div class="admin-card" style="margin-bottom:0; padding:15px; background:rgba(0,0,0,0.15); border-color:rgba(255,255,255,0.04);">
+                                    <h4 style="margin-top:0; margin-bottom:10px; color:#fff; font-size:0.9rem;">👥 Personal (personal.html)</h4>
+                                    <div class="form-group" style="display:flex; flex-direction:row; align-items:center; gap:8px; margin-bottom:10px;">
+                                        <input type="checkbox" id="cfgMaint_personal" style="width:16px; height:16px; margin:0; cursor:pointer;">
+                                        <label for="cfgMaint_personal" class="form-label" style="margin:0; cursor:pointer;">Bajo Mantenimiento</label>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:0;">
+                                        <label class="form-label" style="font-size:0.75rem;">Emails Permitidos (Público si está vacío, separar por coma)</label>
+                                        <textarea id="cfgEmails_personal" class="form-textarea" rows="2" style="font-size:0.78rem;" placeholder="email1@test.com, email2@test.com"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Actualizaciones -->
+                                <div class="admin-card" style="margin-bottom:0; padding:15px; background:rgba(0,0,0,0.15); border-color:rgba(255,255,255,0.04);">
+                                    <h4 style="margin-top:0; margin-bottom:10px; color:#fff; font-size:0.9rem;">📢 Actualizaciones (actualizaciones.html)</h4>
+                                    <div class="form-group" style="display:flex; flex-direction:row; align-items:center; gap:8px; margin-bottom:10px;">
+                                        <input type="checkbox" id="cfgMaint_actualizaciones" style="width:16px; height:16px; margin:0; cursor:pointer;">
+                                        <label for="cfgMaint_actualizaciones" class="form-label" style="margin:0; cursor:pointer;">Bajo Mantenimiento</label>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:0;">
+                                        <label class="form-label" style="font-size:0.75rem;">Emails Permitidos (Público si está vacío, separar por coma)</label>
+                                        <textarea id="cfgEmails_actualizaciones" class="form-textarea" rows="2" style="font-size:0.78rem;" placeholder="email1@test.com, email2@test.com"></textarea>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div style="display:flex; justify-content:flex-end; margin-top:20px;">
+                                <button id="btnSaveVisibility" class="btn" style="background:rgba(0, 176, 255, 0.15); border-color:rgba(0, 176, 255, 0.4); color:#40c4ff;">💾 Guardar Cambios de Visibilidad</button>
+                            </div>
+                            <p id="visibilityActionMessage" class="admin-message" style="margin-top:15px;"></p>
+                        </div>
+                    </div>
+
+                    <!-- ══ TAB: Roadmap Kanban ══ -->
+                    <div class="tab-pane" id="tab-roadmap">
+                        <div class="admin-card">
+                            <div class="card-header-actions">
+                                <h3>🗺️ Roadmap del Juego</h3>
+                                <button class="btn" onclick="exportKanban()">📋 Exportar</button>
+                            </div>
+                            <p>Organiza las tareas del videojuego con tarjetas. Guardado local en tu navegador.</p>
+                            <div class="kanban-board" id="kanbanBoard">
+                                <div class="kanban-col" data-col="ideas">
+                                    <div class="kanban-col-header">💡 Ideas <span class="kanban-col-count" id="count-ideas">0</span></div>
+                                    <div class="kanban-cards" id="cards-ideas"></div>
+                                    <div class="kanban-add-form" id="form-ideas">
+                                        <input type="text" placeholder="Título de la tarea..." id="kanban-title-ideas">
+                                        <textarea rows="2" placeholder="Descripción breve..." id="kanban-desc-ideas"></textarea>
+                                        <select id="kanban-tag-ideas">
+                                            <option value="gameplay">🎮 Gameplay</option>
+                                            <option value="ui">🖥️ UI</option>
+                                            <option value="economia">💰 Economía</option>
+                                            <option value="arte">🎨 Arte</option>
+                                            <option value="audio">🎵 Audio</option>
+                                            <option value="tecnico">⚙️ Técnico</option>
+                                        </select>
+                                        <select id="kanban-prio-ideas">
+                                            <option value="high">🔴 Alta</option>
+                                            <option value="medium">🟡 Media</option>
+                                            <option value="low">⚪ Baja</option>
+                                        </select>
+                                        <div class="kanban-add-form-actions">
+                                            <button class="btn-kanban-save" onclick="saveKanbanCard('ideas')">✓ Guardar</button>
+                                            <button class="btn-kanban-cancel" onclick="closeKanbanForm('ideas')">✗ Cancelar</button>
+                                        </div>
+                                    </div>
+                                    <button class="btn-add-kanban" onclick="openKanbanForm('ideas')">+ Agregar tarea</button>
+                                </div>
+                                <div class="kanban-col" data-col="progress">
+                                    <div class="kanban-col-header">🔧 En Progreso <span class="kanban-col-count" id="count-progress">0</span></div>
+                                    <div class="kanban-cards" id="cards-progress"></div>
+                                    <div class="kanban-add-form" id="form-progress">
+                                        <input type="text" placeholder="Título..." id="kanban-title-progress">
+                                        <textarea rows="2" placeholder="Descripción..." id="kanban-desc-progress"></textarea>
+                                        <select id="kanban-tag-progress"><option value="gameplay">🎮 Gameplay</option><option value="ui">🖥️ UI</option><option value="economia">💰 Economía</option><option value="arte">🎨 Arte</option><option value="audio">🎵 Audio</option><option value="tecnico">⚙️ Técnico</option></select>
+                                        <select id="kanban-prio-progress"><option value="high">🔴 Alta</option><option value="medium">🟡 Media</option><option value="low">⚪ Baja</option></select>
+                                        <div class="kanban-add-form-actions">
+                                            <button class="btn-kanban-save" onclick="saveKanbanCard('progress')">✓ Guardar</button>
+                                            <button class="btn-kanban-cancel" onclick="closeKanbanForm('progress')">✗ Cancelar</button>
+                                        </div>
+                                    </div>
+                                    <button class="btn-add-kanban" onclick="openKanbanForm('progress')">+ Agregar tarea</button>
+                                </div>
+                                <div class="kanban-col" data-col="done">
+                                    <div class="kanban-col-header">✅ Completado <span class="kanban-col-count" id="count-done">0</span></div>
+                                    <div class="kanban-cards" id="cards-done"></div>
+                                    <div class="kanban-add-form" id="form-done">
+                                        <input type="text" placeholder="Título..." id="kanban-title-done">
+                                        <textarea rows="2" placeholder="Descripción..." id="kanban-desc-done"></textarea>
+                                        <select id="kanban-tag-done"><option value="gameplay">🎮 Gameplay</option><option value="ui">🖥️ UI</option><option value="economia">💰 Economía</option><option value="arte">🎨 Arte</option><option value="audio">🎵 Audio</option><option value="tecnico">⚙️ Técnico</option></select>
+                                        <select id="kanban-prio-done"><option value="high">🔴 Alta</option><option value="medium">🟡 Media</option><option value="low">⚪ Baja</option></select>
+                                        <div class="kanban-add-form-actions">
+                                            <button class="btn-kanban-save" onclick="saveKanbanCard('done')">✓ Guardar</button>
+                                            <button class="btn-kanban-cancel" onclick="closeKanbanForm('done')">✗ Cancelar</button>
+                                        </div>
+                                    </div>
+                                    <button class="btn-add-kanban" onclick="openKanbanForm('done')">+ Agregar tarea</button>
+                                </div>
+                                <div class="kanban-col" data-col="discarded">
+                                    <div class="kanban-col-header">🗑️ Descartado <span class="kanban-col-count" id="count-discarded">0</span></div>
+                                    <div class="kanban-cards" id="cards-discarded"></div>
+                                    <button class="btn-add-kanban" onclick="openKanbanForm('discarded')" style="display:none;"></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ══ TAB: Banco de Ideas ══ -->
+                    <div class="tab-pane" id="tab-ideas">
+                        <div class="admin-card">
+                            <h3>💡 Banco de Ideas</h3>
+                            <p>Captura ideas rápidas, clasifícalas y decídete qué implementar. Guardado local.</p>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:1rem;">
+                                <input type="text" id="ideaTitle" class="form-input" placeholder="Título de la idea...">
+                                <select id="ideaCategory" class="form-select">
+                                    <option value="mecanica">🎮 Mecánica</option>
+                                    <option value="historia">📖 Historia</option>
+                                    <option value="arte">🎨 Arte</option>
+                                    <option value="musica">🎵 Música</option>
+                                    <option value="monetizacion">💰 Monetización</option>
+                                    <option value="comunidad">🌐 Comunidad</option>
+                                    <option value="otro">📌 Otro</option>
+                                </select>
+                            </div>
+                            <textarea id="ideaBody" class="form-textarea" rows="3" placeholder="Describe la idea con detalle..." style="margin-bottom:8px; resize:none;"></textarea>
+                            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:1.5rem;">
+                                <button class="btn" onclick="saveIdea()">💾 Guardar Idea</button>
+                                <div class="ideas-toolbar" style="margin:0; flex:1;">
+                                    <input type="text" id="ideasSearch" placeholder="Buscar ideas..." oninput="renderIdeas()">
+                                    <select id="ideasFilter" onchange="renderIdeas()">
+                                        <option value="">Todas</option>
+                                        <option value="mecanica">🎮 Mecánica</option>
+                                        <option value="historia">📖 Historia</option>
+                                        <option value="arte">🎨 Arte</option>
+                                        <option value="musica">🎵 Música</option>
+                                        <option value="monetizacion">💰 Monetización</option>
+                                        <option value="comunidad">🌐 Comunidad</option>
+                                        <option value="otro">📌 Otro</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="ideasList" class="ideas-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- ══ TAB: Changelog ══ -->
+                    <div class="tab-pane" id="tab-changelog">
+                        <div class="admin-card">
+                            <div class="card-header-actions">
+                                <h3>📋 Changelog Interno</h3>
+                                <button class="btn" onclick="openChangelogModal()">+ Nueva Entrada</button>
+                            </div>
+                            <p>Registro privado de versiones del juego. Guardado local.</p>
+                            <div id="changelogList" class="changelog-timeline"></div>
+                        </div>
+                    </div>
+
+                    <!-- ══ TAB: Bugs ══ -->
+                    <div class="tab-pane" id="tab-bugs">
+                        <div class="admin-card">
+                            <div class="card-header-actions">
+                                <h3>🐛 Tracker de Bugs</h3>
+                                <button class="btn" onclick="openBugModal()">+ Reportar Bug</button>
+                            </div>
+                            <p>Registra y gestiona los bugs del videojuego. Guardado local.</p>
+                            <div class="bug-filters">
+                                <button class="bug-filter-btn active" data-filter="all" onclick="filterBugs('all', this)">Todos</button>
+                                <button class="bug-filter-btn" data-filter="new" onclick="filterBugs('new', this)">🔴 Nuevo</button>
+                                <button class="bug-filter-btn" data-filter="review" onclick="filterBugs('review', this)">🟡 En revisión</button>
+                                <button class="bug-filter-btn" data-filter="resolved" onclick="filterBugs('resolved', this)">🟢 Resuelto</button>
+                            </div>
+                            <div id="bugsList" class="bugs-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- ══ TAB: Assets ══ -->
+                    <div class="tab-pane" id="tab-assets">
+                        <div class="admin-card">
+                            <div class="card-header-actions">
+                                <h3>📦 Inventario de Assets</h3>
+                                <button class="btn" onclick="openAssetModal()">+ Agregar Asset</button>
+                            </div>
+                            <p>Registra sprites, audios, mapas y más recursos del videojuego. Guardado local.</p>
+                            <div style="display:flex; gap:8px; margin-bottom:1rem; flex-wrap:wrap;">
+                                <input type="text" id="assetsSearch" class="form-input" placeholder="Buscar asset..." oninput="renderAssets()" style="flex:1; min-width:160px;">
+                                <select id="assetsFilter" class="form-select" onchange="renderAssets()" style="min-width:130px;">
+                                    <option value="">Todos los tipos</option>
+                                    <option value="sprite">🖼️ Sprite</option>
+                                    <option value="audio">🎵 Audio</option>
+                                    <option value="ui">🖥️ UI</option>
+                                    <option value="mapa">🗺️ Mapa</option>
+                                    <option value="otro">📌 Otro</option>
+                                </select>
+                            </div>
+                            <div id="assetsList" class="assets-grid"></div>
+                        </div>
+                    </div>
+
+                    <!-- ══ TAB: Pizarrón ══ -->
+                    <div class="tab-pane" id="tab-notepad">
+                        <div class="admin-card">
+                            <div class="card-header-actions">
+                                <h3>📝 Pizarrón del Estudio</h3>
+                                <div style="display:flex; gap:6px;">
+                                    <button class="btn" onclick="addNotepadPage()">+ Página</button>
+                                    <button class="btn" onclick="exportNotepad()">📤 Exportar</button>
+                                </div>
+                            </div>
+                            <p>Editor libre para notas, decisiones de diseño y reuniones. Auto-guardado. Guardado local.</p>
+                            <div class="notepad-wrap">
+                                <div class="notepad-pages" id="notepadPages"></div>
+                                <div class="notepad-toolbar">
+                                    <button class="notepad-tool-btn" onclick="execNoteCmd('bold')"><b>B</b></button>
+                                    <button class="notepad-tool-btn" onclick="execNoteCmd('italic')"><i>I</i></button>
+                                    <button class="notepad-tool-btn" onclick="execNoteCmd('underline')"><u>U</u></button>
+                                    <button class="notepad-tool-btn" onclick="execNoteCmd('insertUnorderedList')">• Lista</button>
+                                    <button class="notepad-tool-btn" onclick="execNoteCmd('insertOrderedList')">1. Lista</button>
+                                    <button class="notepad-tool-btn" onclick="insertNoteHeading()">H2</button>
+                                    <button class="notepad-tool-btn" onclick="execNoteCmd('removeFormat')" style="color:#f87171;">Limpiar</button>
+                                    <span style="flex:1;"></span>
+                                    <button class="notepad-tool-btn" onclick="clearNotepad()" style="color:#f87171; margin-left:auto;">🗑️ Borrar</button>
+                                </div>
+                                <div class="notepad-editor" id="notepadEditor" contenteditable="true" spellcheck="true"></div>
+                                <div class="notepad-status">
+                                    <span id="notepadSavedIndicator" class="saved-indicator">✓ Guardado</span>
+                                    <span id="notepadWordCount">0 palabras</span>
+                                    <span id="notepadPageName" style="margin-left:auto; font-weight:700; color:var(--admin-text-secondary);"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- /dashboard-content -->
+            </div><!-- /dashboard-layout -->
         </section>
     </main>
 
+    <!-- ══ MODALES ══ -->
+
+    <!-- Modal: Anuncio -->
+    <div class="admin-modal-overlay" id="announcementModal">
+        <div class="admin-modal">
+            <h3>📢 Nuevo Anuncio</h3>
+            <div class="modal-form-group">
+                <label>Tipo</label>
+                <select id="annType" class="form-select">
+                    <option value="general">📋 General</option>
+                    <option value="evento">🎉 Evento</option>
+                    <option value="update">🚀 Actualización</option>
+                    <option value="urgente">🚨 Urgente</option>
+                </select>
+            </div>
+            <div class="modal-form-group">
+                <label>Título</label>
+                <input type="text" id="annTitle" placeholder="Título del anuncio...">
+            </div>
+            <div class="modal-form-group">
+                <label>Mensaje</label>
+                <textarea id="annBody" rows="5" placeholder="Escribe el mensaje para la comunidad..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn-cancel" onclick="closeModal('announcementModal')">Cancelar</button>
+                <button class="modal-btn-save" onclick="saveAnnouncement()">📢 Publicar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Changelog -->
+    <div class="admin-modal-overlay" id="changelogModal">
+        <div class="admin-modal">
+            <h3>📋 Nueva Entrada de Changelog</h3>
+            <div class="modal-form-group">
+                <label>Versión (ej. v0.4.2)</label>
+                <input type="text" id="clVersion" placeholder="v0.0.0">
+            </div>
+            <div class="modal-form-group">
+                <label>Tipo</label>
+                <select id="clType" class="form-select">
+                    <option value="feat">✨ Nuevo Feature</option>
+                    <option value="fix">🐛 Fix de Bug</option>
+                    <option value="balance">⚖️ Balance</option>
+                    <option value="content">📦 Contenido</option>
+                </select>
+            </div>
+            <div class="modal-form-group">
+                <label>Descripción</label>
+                <textarea id="clDesc" rows="4" placeholder="Describe qué cambió en esta versión..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn-cancel" onclick="closeModal('changelogModal')">Cancelar</button>
+                <button class="modal-btn-save" onclick="saveChangelog()">💾 Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Bug -->
+    <div class="admin-modal-overlay" id="bugModal">
+        <div class="admin-modal">
+            <h3>🐛 Reportar Bug</h3>
+            <div class="modal-form-group">
+                <label>Título del Bug</label>
+                <input type="text" id="bugTitle" placeholder="Descripción corta del bug...">
+            </div>
+            <div class="modal-form-group">
+                <label>Descripción detallada</label>
+                <textarea id="bugDesc" rows="4" placeholder="¿Cómo reproducirlo? ¿Qué esperabas que pasara?"></textarea>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                <div class="modal-form-group">
+                    <label>Prioridad</label>
+                    <select id="bugPriority" class="form-select">
+                        <option value="critico">🔴 Crítico</option>
+                        <option value="alto">🟠 Alto</option>
+                        <option value="medio">🟡 Medio</option>
+                        <option value="bajo">⚪ Bajo</option>
+                    </select>
+                </div>
+                <div class="modal-form-group">
+                    <label>Plataforma</label>
+                    <select id="bugPlatform" class="form-select">
+                        <option value="android">📱 Android</option>
+                        <option value="web">🌐 Web</option>
+                        <option value="ambas">📱🌐 Ambas</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-form-group">
+                <label>Asignado a</label>
+                <input type="text" id="bugAssigned" placeholder="Nombre del responsable...">
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn-cancel" onclick="closeModal('bugModal')">Cancelar</button>
+                <button class="modal-btn-save" onclick="saveBug()">🐛 Guardar Bug</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Asset -->
+    <div class="admin-modal-overlay" id="assetModal">
+        <div class="admin-modal">
+            <h3>📦 Nuevo Asset</h3>
+            <div class="modal-form-group">
+                <label>Nombre del Asset</label>
+                <input type="text" id="assetName" placeholder="ej. sprite_truck_red.png">
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                <div class="modal-form-group">
+                    <label>Tipo</label>
+                    <select id="assetType" class="form-select">
+                        <option value="sprite">🖼️ Sprite</option>
+                        <option value="audio">🎵 Audio</option>
+                        <option value="ui">🖥️ UI</option>
+                        <option value="mapa">🗺️ Mapa</option>
+                        <option value="otro">📌 Otro</option>
+                    </select>
+                </div>
+                <div class="modal-form-group">
+                    <label>Estado</label>
+                    <select id="assetStatus" class="form-select">
+                        <option value="listo">✅ Listo</option>
+                        <option value="progreso">🔧 En progreso</option>
+                        <option value="pendiente">⏳ Pendiente</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-form-group">
+                <label>Link / Referencia (opcional)</label>
+                <input type="text" id="assetLink" placeholder="https://...">
+            </div>
+            <div class="modal-form-group">
+                <label>Notas</label>
+                <textarea id="assetNote" rows="3" placeholder="Notas sobre este asset..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn-cancel" onclick="closeModal('assetModal')">Cancelar</button>
+                <button class="modal-btn-save" onclick="saveAsset()">📦 Guardar</button>
+            </div>
+        </div>
+    </div>
+
     <script src="../../assets/js/admin/admin.js"></script>
+    <script src="../../assets/js/admin/dev-tools.js"></script>
+    <script>
+    // ── Mobile sidebar toggle ──
+    (function() {
+        const toggle = document.getElementById('adminMobileToggle');
+        const sidebar = document.querySelector('.admin-sidebar');
+        const overlay = document.getElementById('adminSidebarOverlay');
+        if (!toggle || !sidebar || !overlay) return;
+
+        function openSidebar() {
+            sidebar.classList.add('mobile-open');
+            overlay.classList.add('open');
+            toggle.classList.add('open');
+            toggle.setAttribute('aria-label', 'Cerrar menú');
+        }
+        function closeSidebar() {
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('open');
+            toggle.classList.remove('open');
+            toggle.setAttribute('aria-label', 'Abrir menú');
+        }
+
+        toggle.addEventListener('click', () => {
+            sidebar.classList.contains('mobile-open') ? closeSidebar() : openSidebar();
+        });
+        overlay.addEventListener('click', closeSidebar);
+
+        // Close sidebar when a tab is clicked on mobile
+        document.querySelectorAll('.sidebar-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (window.innerWidth <= 992) closeSidebar();
+            });
+        });
+
+        // Close on escape key
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeSidebar();
+        });
+    })();
+    </script>
 </body>
 </html>

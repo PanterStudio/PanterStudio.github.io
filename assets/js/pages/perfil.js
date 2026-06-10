@@ -123,7 +123,7 @@
     return isNaN(d) ? '-' : d.toLocaleDateString('es-ES', { year:'numeric', month:'short', day:'2-digit' });
   }
   function coinsToEmeralds(c) { return Math.floor((Number(c || 0) / COINS_PER_EXCHANGE) * EMERALDS_PER_EXCHANGE); }
-  function formatEmeralds(v)  { return `${Number(v || 0)} 💎`; }
+  function formatEmeralds(v)  { return `${Number(v || 0)} Esmeraldas`; }
   function roleLabel(r)       { return ROLE_LABELS[String(r || 'viewer').toLowerCase()] || 'Miembro'; }
   function providerLabel(u)   { const id = u?.providerData?.[0]?.providerId || 'password'; return id.includes('google') ? 'Google' : id.includes('password') ? 'Email' : id; }
   function generateReferralCode(uid) { return String(uid || '').slice(0, 6).toUpperCase(); }
@@ -329,12 +329,12 @@
     try {
       await window.addDoc(window.collection(window.db, REDEEM_COLLECTION), { uid, email: currentUser?.email || '', username: currentUserData?.username || currentUserData?.displayName || '', coins, emeralds, status: 'completed', createdAt: new Date().toISOString() });
       const newCoins    = Number(currentUserData.coins || 0) - coins;
-      const newEmeralds = Number(currentUserData.emeralds || 0) + emeralds;
-      await updateUserData(uid, { coins: newCoins, emeralds: newEmeralds });
-      await addActivity(uid, 'exchange', `Canje: ${coins} 🪙 → ${emeralds} 💎`, -coins);
-      currentUserData.coins    = newCoins;
-      currentUserData.emeralds = newEmeralds;
-      return { ok: true, msg: `Canje exitoso: +${emeralds} 💎` };
+      const newEmeralds = Number(currentUserData.esmeraldas || 0) + emeralds;
+      await updateUserData(uid, { coins: newCoins, esmeraldas: newEmeralds });
+      await addActivity(uid, 'exchange', `Canje: ${coins} 🪙 → ${emeralds} Esmeraldas (Juego)`, -coins);
+      currentUserData.coins      = newCoins;
+      currentUserData.esmeraldas = newEmeralds;
+      return { ok: true, msg: `Canje exitoso: +${emeralds} Esmeraldas` };
     } catch (e) { console.error('Redeem:', e); return { ok: false, msg: 'No se pudo completar el canje.' }; }
   }
 
@@ -415,7 +415,6 @@
     set(profileEmail, currentUser.email || '');
     set(profileUid, 'ID Juego: ' + String(d.id_usuario || d.uid || currentUser.uid || '').slice(0, 12).toUpperCase());
     set(profileCoins, String(Number(d.coins || 0)));
-    if (profileCoinsDollars) profileCoinsDollars.textContent = formatEmeralds(d.emeralds || 0);
     set(profileLevel, levelStr);
     set(profileLevelText, levelStr);
     set(profileRole, roleLabel(role));
@@ -469,12 +468,109 @@
       set(gameLastSync, '—');
     }
 
+    // Render de Mascota Panter
+    const petWidget = $('profilePetWidget');
+    if (petWidget) {
+      if (false && d.pet) { // OCULTADO TEMPORALMENTE
+        petWidget.style.display = 'block';
+        const pet = d.pet;
+        const petName = pet.name || 'Pantercito';
+        const petLevel = pet.level || 1;
+        const avatarId = pet.avatarId || 'classic';
+        const PET_AVATARS = {
+          classic: '🐈‍⬛',
+          cyber: '🤖🐈‍⬛',
+          astronaut: '👨‍🚀🐈‍⬛',
+          detective: '🕵️🐈‍⬛',
+          golden: '👑🐈‍⬛'
+        };
+
+        const hunger = Math.round(pet.hunger !== undefined ? pet.hunger : 100);
+        const happiness = Math.round(pet.happiness !== undefined ? pet.happiness : 100);
+        const energy = Math.round(pet.energy !== undefined ? pet.energy : 100);
+
+        const petAvatar = $('profilePetAvatar');
+        if (petAvatar) petAvatar.textContent = PET_AVATARS[avatarId] || '🐈‍⬛';
+
+        const petNameEl = $('profilePetName');
+        if (petNameEl) petNameEl.textContent = petName;
+
+        const petLevelEl = $('profilePetLevel');
+        if (petLevelEl) petLevelEl.textContent = petLevel;
+
+        const petHungerEl = $('profilePetHunger');
+        if (petHungerEl) petHungerEl.textContent = `🥩 ${hunger}%`;
+
+        const petHappinessEl = $('profilePetHappiness');
+        if (petHappinessEl) petHappinessEl.textContent = `🧶 ${happiness}%`;
+
+        const petEnergyEl = $('profilePetEnergy');
+        if (petEnergyEl) petEnergyEl.textContent = `⚡ ${energy}%`;
+
+        // Mostrar campo para editar nombre de mascota
+        const editPetNameGroup = $('editPetNameGroup');
+        if (editPetNameGroup) {
+          editPetNameGroup.style.display = 'block';
+          const editPetNameInput = $('editPetName');
+          if (editPetNameInput && !editPetNameInput.value) {
+            editPetNameInput.value = petName;
+          }
+        }
+
+        // Mostrar avatares exclusivos desbloqueados
+        const petAvatarsSelectionGroup = $('petAvatarsSelectionGroup');
+        const unlockedPetAvatarsGrid = $('unlockedPetAvatarsGrid');
+        if (petAvatarsSelectionGroup && unlockedPetAvatarsGrid) {
+          petAvatarsSelectionGroup.style.display = 'block';
+          const unlocked = Array.isArray(pet.unlockedAvatars) ? pet.unlockedAvatars : ['classic'];
+          
+          let gridHtml = '';
+          unlocked.forEach(avId => {
+            const emoji = PET_AVATARS[avId];
+            if (emoji) {
+              const isSelected = d.avatar === emoji;
+              gridHtml += `<button type="button" class="av-opt${isSelected ? ' selected' : ''}" data-avatar="${emoji}" role="radio" aria-checked="${isSelected ? 'true' : 'false'}" aria-label="Avatar de Mascota ${avId}">${emoji}</button>`;
+            }
+          });
+          unlockedPetAvatarsGrid.innerHTML = gridHtml;
+
+          // Asignar eventos a los nuevos botones
+          unlockedPetAvatarsGrid.querySelectorAll('.av-opt').forEach(b => {
+            b.addEventListener('click', () => {
+              $$('.av-opt').forEach(x => x.classList.remove('selected'));
+              b.classList.add('selected');
+              $('editAvatarValue').value = b.dataset.avatar;
+              if (editProfileImagePreview) editProfileImagePreview.innerHTML = b.dataset.avatar;
+              if (editProfileImageInput) editProfileImageInput.value = '';
+              if (removeProfileImageBtn) removeProfileImageBtn.style.display = 'none';
+            });
+          });
+        }
+      } else {
+        petWidget.style.display = 'none';
+        const editPetNameGroup = $('editPetNameGroup');
+        if (editPetNameGroup) editPetNameGroup.style.display = 'none';
+        const petAvatarsSelectionGroup = $('petAvatarsSelectionGroup');
+        if (petAvatarsSelectionGroup) petAvatarsSelectionGroup.style.display = 'none';
+      }
+    }
+
     renderSponsorLevel(d.level);
     renderStreakDays(d.streak || 0);
     checkDailyCooldown(d.lastDaily);
-    renderBadges(d, currentUser);
+     renderBadges(d, currentUser);
     if (profileAdminTools) profileAdminTools.hidden = !(SPECIAL_ACCESS_ROLES.has(role) || isFounder);
     if (profileBetaTesterCard) profileBetaTesterCard.hidden = (d.betaTesterStatus !== 'approved');
+
+    // Control de visibilidad de la sección de reclamo de código de referido manual
+    const manualRefBox = $('manualReferralBox');
+    if (manualRefBox) {
+      if (!d.referredBy) {
+        manualRefBox.style.display = 'block';
+      } else {
+        manualRefBox.style.display = 'none';
+      }
+    }
   }
 
   function renderActivity(items) {
@@ -523,7 +619,7 @@
         </div>
         <span class="rdm-status ${item.status || 'completed'}">${esc(item.status || 'completado')}</span>
       </div>`).join('');
-    const totalEm = history.reduce((s, i) => s + Number(i.emeralds || coinsToEmeralds(i.coins || 0)), 0);
+    const totalEm = history.reduce((s, i) => s + Number(i.esmeraldas || i.emeralds || coinsToEmeralds(i.coins || 0)), 0);
     if (redeemTotalPaid)  redeemTotalPaid.textContent  = formatEmeralds(totalEm);
     if (redeemTotalCount) redeemTotalCount.textContent = String(history.length);
   }
@@ -670,10 +766,74 @@
     }
   });
 
-  /* Copiar código de referido */
+  /* Copiar código de referido (Enlace Completo) */
   copyReferralBtn?.addEventListener('click', async () => {
     const code = String(referralCode?.textContent || '').trim(); if (!code) return;
-    try { await navigator.clipboard.writeText(code); copyReferralBtn.textContent = 'Copiado!'; setTimeout(() => copyReferralBtn.textContent = 'Copiar', 1800); } catch {}
+    const siteRoot = document.body?.dataset.siteRoot || '..';
+    const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+    let fullLink = baseUrl + '/' + siteRoot + '/index.html?ref=' + code;
+    try {
+      fullLink = new URL(fullLink).href;
+    } catch(e) {}
+    try {
+      await navigator.clipboard.writeText(fullLink);
+      copyReferralBtn.textContent = '¡Enlace Copiado!';
+      setTimeout(() => copyReferralBtn.textContent = 'Copiar', 1800);
+    } catch {}
+  });
+
+  /* Reclamar código de referido manual */
+  $('manualReferralBtn')?.addEventListener('click', async () => {
+    if (!currentUser || !currentUserData) return;
+    const input = $('manualReferralInput');
+    const msg = $('manualReferralMessage');
+    const btn = $('manualReferralBtn');
+    if (!input || !msg || !btn) return;
+
+    const code = normalizeCode(input.value);
+    if (!code) {
+      msg.textContent = 'Ingresa un código de referido.';
+      msg.className = 'error';
+      return;
+    }
+
+    btn.disabled = true;
+    msg.textContent = 'Procesando código...';
+    msg.className = '';
+
+    try {
+      if (typeof window.applyReferralCode !== 'function') {
+        throw new Error('Función global applyReferralCode no encontrada.');
+      }
+      const res = await window.applyReferralCode(code, currentUser.uid, currentUserData);
+      if (res.applied) {
+        msg.textContent = `¡Código canjeado con éxito! Recibes +${res.reward} monedas 🪙.`;
+        msg.className = 'success';
+        input.value = '';
+        // Actualizar el perfil local
+        currentUserData.referredBy = code;
+        currentUserData.coins = Number(currentUserData.coins || 0) + res.reward;
+        // Re-render
+        renderProfile();
+        await loadDashboardData();
+        await addActivity(currentUser.uid, 'referral', 'Código de referido manual reclamado', res.reward);
+      } else {
+        const errors = {
+          'self': 'No puedes usar tu propio código.',
+          'already-linked': 'Ya has sido referido anteriormente.',
+          'invalid': 'Código inválido o conductor no encontrado.',
+          'not-provided': 'Ingresa un código de referido.'
+        };
+        msg.textContent = errors[res.reason] || 'Error al procesar el código.';
+        msg.className = 'error';
+      }
+    } catch (err) {
+      console.error(err);
+      msg.textContent = 'Error interno al procesar el código.';
+      msg.className = 'error';
+    } finally {
+      btn.disabled = false;
+    }
   });
 
   /* Canjear monedas */
@@ -881,6 +1041,15 @@
       avatar:          avatarImgUrl ? '' : String($('editAvatarValue')?.value || '😊'),
       avatarImg:       avatarImgUrl || ''
     };
+
+    const petNameInput = $('editPetName');
+    if (petNameInput && currentUserData && currentUserData.pet) {
+      p.pet = {
+        ...currentUserData.pet,
+        name: petNameInput.value.trim() || currentUserData.pet.name || 'Pantercito'
+      };
+    }
+
     await updateUserData(currentUser.uid, p);
     await window.updateProfile(currentUser, { displayName: nameVal });
     await addActivity(currentUser.uid, 'profile', 'Perfil actualizado', 0);
@@ -897,6 +1066,74 @@
       if (m && typeof m.close === 'function') m.close();
     });
   });
+
+  // Aspecto de Mascota Modal Selector
+  window.openPetAvatarSelectorModal = function() {
+    const modal = $('petAvatarModal');
+    const grid = $('petAvatarsSelectorGrid');
+    if (!modal || !grid || !currentUserData || !currentUserData.pet) return;
+
+    const pet = currentUserData.pet;
+    const unlocked = Array.isArray(pet.unlockedAvatars) ? pet.unlockedAvatars : ['classic'];
+    const active = pet.avatarId || 'classic';
+
+    const PET_AVATARS = {
+      classic: '🐈‍⬛',
+      cyber: '🤖🐈‍⬛',
+      astronaut: '👨‍🚀🐈‍⬛',
+      detective: '🕵️🐈‍⬛',
+      golden: '👑🐈‍⬛'
+    };
+
+    const PET_AVATAR_NAMES = {
+      classic: 'Clásico',
+      cyber: 'Cyber (Nvl 3)',
+      astronaut: 'Astronauta',
+      detective: 'Detective',
+      golden: 'Dorado (Nvl 5)'
+    };
+
+    let html = '';
+    Object.keys(PET_AVATARS).forEach(id => {
+      const emoji = PET_AVATARS[id];
+      const name = PET_AVATAR_NAMES[id];
+      const isUnlocked = unlocked.includes(id);
+      const isActive = active === id;
+
+      html += `
+        <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid ${isActive ? '#00e676' : (isUnlocked ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)')}; border-radius: 8px; width: 110px; opacity: ${isUnlocked ? 1 : 0.4};">
+          <div style="font-size: 2.5rem; margin-bottom: 5px;">${emoji}</div>
+          <div style="font-size: 0.75rem; color: #fff; margin-bottom: 8px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${name}</div>
+          ${isUnlocked ? 
+            `<button class="pb sm ${isActive ? 'prim' : ''}" style="width: 100%; font-size: 0.7rem;" onclick="selectPetSkin('${id}')">${isActive ? 'Activo' : 'Usar'}</button>` : 
+            `<button class="pb sm" style="width: 100%; font-size: 0.7rem; cursor: not-allowed;" disabled>Bloqueado</button>`
+          }
+        </div>
+      `;
+    });
+
+    grid.innerHTML = html;
+    modal.showModal();
+  };
+
+  window.selectPetSkin = async function(skinId) {
+    if (!currentUser || !currentUserData || !currentUserData.pet) return;
+    const pet = currentUserData.pet;
+    const unlocked = Array.isArray(pet.unlockedAvatars) ? pet.unlockedAvatars : ['classic'];
+    if (!unlocked.includes(skinId)) return;
+
+    try {
+      const updatedPet = { ...pet, avatarId: skinId };
+      await updateUserData(currentUser.uid, { pet: updatedPet });
+      currentUserData.pet = updatedPet;
+      renderProfile();
+      const modal = $('petAvatarModal');
+      if (modal) modal.close();
+    } catch(err) {
+      console.error('Error changing pet skin:', err);
+      alert('No se pudo cambiar el aspecto de la mascota.');
+    }
+  };
 
   /* ── Init ── */
   async function init() {

@@ -2577,4 +2577,273 @@ nav.nav-open .nav-mobile-menu { display: flex; }
     padding: 0 0.5rem;
   }
 }
+
+/* ═══════════════════════════════════════════════════
+   COMUNIDAD ANNOUNCEMENTS BANNER & MOBILE REORDERING
+   ═══════════════════════════════════════════════════ */
+
+.comunidad-announcements-banner {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--border-radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.ann-banner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-primary);
+}
+
+.ann-banner-view-all {
+  color: var(--color-primary-light);
+  text-decoration: none;
+  font-size: 0.8rem;
+  transition: color var(--transition-fast);
+}
+
+.ann-banner-view-all:hover {
+  color: var(--color-accent);
+}
+
+.ann-banner-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .ann-banner-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.ann-banner-item {
+  position: relative;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--border-radius-md);
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.ann-banner-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.ann-banner-item.type-general { border-left-color: #00b0ff; }
+.ann-banner-item.type-update { border-left-color: #80f0ff; }
+.ann-banner-item.type-event { border-left-color: #fbbf24; }
+.ann-banner-item.type-alert { border-left-color: #ef4444; }
+.ann-banner-item.type-maintenance { border-left-color: #f97316; }
+
+.ann-banner-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 100px;
+  margin-bottom: 0.5rem;
+}
+
+.ann-banner-item.type-general .ann-banner-badge { color: #00b0ff; background: rgba(0, 176, 255, 0.1); }
+.ann-banner-item.type-update .ann-banner-badge { color: #80f0ff; background: rgba(128, 240, 255, 0.1); }
+.ann-banner-item.type-event .ann-banner-badge { color: #fbbf24; background: rgba(251, 191, 36, 0.1); }
+.ann-banner-item.type-alert .ann-banner-badge { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+.ann-banner-item.type-maintenance .ann-banner-badge { color: #f97316; background: rgba(249, 115, 22, 0.1); }
+
+.ann-banner-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+  color: #fff;
+}
+
+.ann-banner-body {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.75rem 0;
+  line-height: 1.4;
+}
+
+.ann-banner-meta {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* Mobile Reordering via display: contents and Grid */
+@media (max-width: 991px) {
+  .hub-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.5rem !important;
+  }
+  
+  .hub-left-col, .hub-right-col {
+    display: contents !important;
+  }
+  
+  /* Full-width elements */
+  .comunidad-announcements-banner,
+  .hub-hero-premium,
+  .minijuego-quick,
+  .prereg-widget,
+  .home-steps-section,
+  .home-about-card {
+    grid-column: span 2 !important;
+  }
+  
+  /* Explicit Grid positions for side-by-side structure with vertical gap fill */
+  .hub-account-widget {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    margin-bottom: 0 !important;
+  }
+  
+  .studio-info-strip {
+    grid-column: 1 !important;
+    grid-row: 3 !important;
+    margin-top: 0 !important;
+  }
+
+  .leaderboard-card {
+    grid-column: 2 !important;
+    grid-row: 2 / 4 !important;
+  }
+
+  /* Make sure studio-info-strip stacks vertically on mobile to fit nicely under the profile card */
+  .studio-info-strip {
+    grid-template-columns: 1fr !important;
+    gap: 0.5rem !important;
+    padding: 0.65rem !important;
+  }
+  .info-strip-item {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    text-align: left !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    padding-bottom: 3px;
+  }
+  .info-strip-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .info-strip-item strong {
+    font-size: 1.05rem !important;
+    order: 2;
+  }
+  .info-strip-item span {
+    font-size: 0.6rem !important;
+    white-space: nowrap;
+    order: 1;
+    color: var(--text-secondary);
+  }
+
+  /* Adjustments for leaderboard and profile when side-by-side on small screens */
+  .hub-account-widget, .leaderboard-card {
+    padding: 0.65rem !important;
+    font-size: 0.78rem !important;
+  }
+  .account-profile-header {
+    gap: 5px !important;
+  }
+  .account-avatar {
+    width: 25px !important;
+    height: 25px !important;
+    font-size: 0.9rem !important;
+  }
+  .account-info h4 {
+    font-size: 0.8rem !important;
+  }
+  .account-info p {
+    font-size: 0.65rem !important;
+  }
+  .account-stats-row {
+    gap: 3px !important;
+    padding: 3px !important;
+  }
+  .account-stat-box span {
+    font-size: 0.5rem !important;
+  }
+  .account-stat-box strong {
+    font-size: 0.7rem !important;
+  }
+  .hub-account-widget .btn {
+    padding: 0.4rem 0.65rem !important;
+    font-size: 0.75rem !important;
+  }
+  
+  .leaderboard-header h3 {
+    font-size: 0.78rem !important;
+  }
+  .leaderboard-header span {
+    font-size: 0.45rem !important;
+  }
+  .leaderboard-row {
+    padding: 3px 2px !important;
+    gap: 2px !important;
+  }
+  .leaderboard-name {
+    font-size: 0.68rem !important;
+    max-width: 44px !important;
+  }
+  .leaderboard-value {
+    font-size: 0.65rem !important;
+  }
+  .leaderboard-user-self {
+    font-size: 0.7rem !important;
+    padding: 4px !important;
+  }
+}
+
+/* Botón de Likes en anuncios */
+.ann-like-btn {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 20px !important;
+  padding: 4px 10px !important;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.ann-like-btn:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.ann-like-btn:hover .like-heart {
+  transform: scale(1.2);
+}
+
+.ann-like-btn.liked {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+}
+
+.ann-like-btn.liked .like-count {
+  color: #fca5a5 !important;
+}
+
+.ann-like-btn.liked .like-heart {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.5));
+}
+
+
 

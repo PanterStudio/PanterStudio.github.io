@@ -70,10 +70,12 @@ const sectionTitle = document.getElementById('sectionTitle');
 const sectionSub = document.getElementById('sectionSub');
 
 const tabInfo = {
-    dashboard: { title: 'Resumen General', sub: 'Estadisticas y resumen del Hub de Panter Studio.' },
+    dashboard: { title: 'Resumen General', sub: 'Estadísticas y resumen del Hub de Panter Studio.' },
     betatesters: { title: 'Beta Testers', sub: 'Inscripciones para el equipo de pruebas en Android.' },
-    accounts: { title: 'Gestion de Cuentas (CEO)', sub: 'Miembros del equipo y niveles de rol autorizados.' },
-    support: { title: 'Soporte al Jugador', sub: 'Busqueda de usuarios y modificacion de saldo de monedas.' }
+    accounts: { title: 'Gestión de Cuentas (CEO)', sub: 'Miembros del equipo y niveles de rol autorizados.' },
+    support: { title: 'Soporte al Jugador', sub: 'Búsqueda de usuarios, edición de perfiles, saldos, mascotas y logs de canjes.' },
+    siteconfig: { title: 'Configuración Global', sub: 'Modificación de parámetros de la web, donaciones y bonos en Firestore.' },
+    visibility: { title: 'Visibilidad del Sitio', sub: 'Gestión del modo de mantenimiento global y accesos por página.' }
 };
 
 tabButtons.forEach(btn => {
@@ -96,6 +98,12 @@ tabButtons.forEach(btn => {
             loadBetaTesters();
         } else if (tabName === 'accounts') {
             loadCeoUsers();
+        } else if (tabName === 'support') {
+            loadGlobalRedeemLogs();
+        } else if (tabName === 'siteconfig') {
+            loadSiteConfig();
+        } else if (tabName === 'visibility') {
+            loadSiteVisibilitySettings();
         }
     });
 });
@@ -168,8 +176,29 @@ function createRoleOptions(selectedRole) {
         .join('');
 }
 
+// Role visual config for account cards
+const ROLE_CARD_STYLES = {
+    founder_ceo:   { color: '#fbbf24', border: 'rgba(251,191,36,0.4)',   bg: 'rgba(251,191,36,0.08)',  icon: '👑' },
+    director:      { color: '#f87171', border: 'rgba(248,113,113,0.4)', bg: 'rgba(248,113,113,0.08)', icon: '🔴' },
+    administrador: { color: '#22d3ee', border: 'rgba(34,211,238,0.4)',  bg: 'rgba(34,211,238,0.08)',  icon: '🛡️' },
+    programador:   { color: '#60a5fa', border: 'rgba(96,165,250,0.4)',  bg: 'rgba(96,165,250,0.08)',  icon: '💻' },
+    modelador:     { color: '#a78bfa', border: 'rgba(167,139,250,0.4)', bg: 'rgba(167,139,250,0.08)', icon: '🎨' },
+    vip:           { color: '#34d399', border: 'rgba(52,211,153,0.4)',  bg: 'rgba(52,211,153,0.08)',  icon: '⭐' },
+    usuario:       { color: '#94a3b8', border: 'rgba(148,163,184,0.2)', bg: 'rgba(148,163,184,0.05)', icon: '👤' },
+    viewer:        { color: '#64748b', border: 'rgba(100,116,139,0.2)', bg: 'rgba(100,116,139,0.05)', icon: '👁️' },
+};
+
+function getInitials(name, email) {
+    if (name && name.trim()) {
+        return name.trim().split(/\s+/).map(w => w[0]?.toUpperCase()).slice(0,2).join('');
+    }
+    return (email || '?')[0].toUpperCase();
+}
+
 function renderCeoUsersTable(filterText = '') {
-    if (!ceoUsersTableBody) return;
+    const container = document.getElementById('adminCeoUsersTableBody');
+    const countBadge = document.getElementById('accountsCountBadge');
+    if (!container) return;
 
     const searchText = String(filterText || '').trim().toLowerCase();
     const rows = ceoUsersList.filter((item) => {
@@ -180,40 +209,72 @@ function renderCeoUsersTable(filterText = '') {
         return email.includes(searchText) || name.includes(searchText) || sources.includes(searchText);
     });
 
+    if (countBadge) countBadge.textContent = `${rows.length} usuario${rows.length !== 1 ? 's' : ''}`;
+
     if (rows.length === 0) {
-        ceoUsersTableBody.innerHTML = '<tr><td colspan="7">No se encontraron correos.</td></tr>';
+        container.innerHTML = `
+            <div class="accounts-empty">
+                <div style="font-size:2.5rem; margin-bottom:0.75rem;">🔍</div>
+                <div style="font-size:0.9rem; color:var(--admin-text-muted);">No se encontraron usuarios.</div>
+            </div>`;
         return;
     }
 
-    ceoUsersTableBody.innerHTML = rows.map((user, index) => {
+    container.innerHTML = rows.map((user, index) => {
         const isFounder = isFounderEmail(user.email);
         const canAssignRole = Boolean(user.uid);
-        const currentRoleLabel = isFounder
-            ? 'Fundador / CEO'
-            : (canAssignRole ? (CEO_ASSIGNABLE_ROLES[normalizeRole(user.role)] || 'Usuario') : 'Sin cuenta');
         const rowRole = isFounder ? 'founder_ceo' : normalizeRole(user.role);
+        const style = ROLE_CARD_STYLES[rowRole] || ROLE_CARD_STYLES.usuario;
+        const roleLabel = isFounder ? 'Fundador / CEO'
+                        : (canAssignRole ? (getRoleLabel(rowRole)) : 'Sin cuenta');
         const sources = Array.from(user.sources || []);
-        const sourceHtml = sources.length
-            ? sources.map((source) => `<span class="admin-role-pill">${source}</span>`).join(' ')
-            : '<span class="admin-role-pill">desconocido</span>';
+        const initials = getInitials(user.name, user.email);
+        const displayName = user.name || 'Sin nombre';
 
         return `
-            <tr data-user-id="${user.uid}">
-                <td data-label="#">${index + 1}</td>
-                <td data-label="Correo">${user.email || 'sin correo'}</td>
-                <td data-label="Nombre">${user.name || 'Sin nombre'}</td>
-                <td data-label="Rol actual"><span class="admin-role-pill">${currentRoleLabel}</span></td>
-                <td data-label="Fuente">${sourceHtml}</td>
-                <td data-label="Nuevo rol">
-                    <select class="admin-role-select" data-role-select="${user.uid}" ${isFounder || !canAssignRole ? 'disabled' : ''}>
-                        ${createRoleOptions(rowRole)}
-                    </select>
-                </td>
-                <td data-label="Accion">
-                    <button class="btn btn-sm admin-role-save-btn" data-role-save="${user.uid}" ${isFounder || !canAssignRole ? 'disabled' : ''}>${canAssignRole ? 'Guardar' : 'N/A'}</button>
-                </td>
-            </tr>
-        `;
+        <div class="account-card" data-user-id="${user.uid}">
+            <!-- Avatar + identity -->
+            <div class="account-card-top">
+                <div class="account-avatar" style="border-color:${style.border}; background:${style.bg}; color:${style.color};">
+                    ${initials}
+                </div>
+                <div class="account-identity">
+                    <div class="account-name">${displayName}</div>
+                    <div class="account-email" title="${user.email}">${user.email || 'Sin correo'}</div>
+                    <div class="account-sources">
+                        ${sources.map(s => `<span class="account-source-pill">${s}</span>`).join('')}
+                    </div>
+                </div>
+                <span class="account-role-badge" style="color:${style.color}; border-color:${style.border}; background:${style.bg};">
+                    ${style.icon} ${roleLabel}
+                </span>
+            </div>
+
+            <!-- Role editor (disabled for founder / no account) -->
+            <div class="account-card-bottom ${isFounder || !canAssignRole ? 'account-card-locked' : ''}">
+                ${isFounder ? `
+                    <div class="account-locked-msg">
+                        👑 Cuenta fundadora — no modificable
+                    </div>
+                ` : !canAssignRole ? `
+                    <div class="account-locked-msg">
+                        ⚠️ Sin cuenta registrada — no se puede asignar rol
+                    </div>
+                ` : `
+                    <div class="account-role-editor">
+                        <label class="account-role-label">Asignar nuevo rol</label>
+                        <div class="account-role-row">
+                            <select class="account-role-select" data-role-select="${user.uid}">
+                                ${createRoleOptions(rowRole)}
+                            </select>
+                            <button class="account-save-btn" data-role-save="${user.uid}">
+                                💾 Guardar
+                            </button>
+                        </div>
+                    </div>
+                `}
+            </div>
+        </div>`;
     }).join('');
 }
 
@@ -320,16 +381,17 @@ async function saveCeoUserRole(uid, role) {
 }
 
 function bindCeoRoleActions() {
-    if (!ceoUsersTableBody) return;
+    const container = document.getElementById('adminCeoUsersTableBody');
+    if (!container) return;
 
-    ceoUsersTableBody.addEventListener('click', (event) => {
-        const target = event.target;
-        if (!(target instanceof HTMLElement)) return;
+    container.addEventListener('click', (event) => {
+        const target = event.target.closest('[data-role-save]');
+        if (!target) return;
 
         const saveUid = target.getAttribute('data-role-save');
         if (!saveUid) return;
 
-        const selectEl = ceoUsersTableBody.querySelector(`[data-role-select="${saveUid}"]`);
+        const selectEl = container.querySelector(`[data-role-select="${saveUid}"]`);
         if (!(selectEl instanceof HTMLSelectElement)) return;
         saveCeoUserRole(saveUid, selectEl.value);
     });
@@ -487,7 +549,7 @@ async function searchSupportUser() {
 
     const query = searchInput.value.trim().toLowerCase();
     if (!query) {
-        msg.textContent = '⚠️ Introduce un nombre, apodo o correo valido.';
+        msg.textContent = '⚠️ Introduce un nombre, apodo o correo válido.';
         card.hidden = true;
         return;
     }
@@ -506,8 +568,10 @@ async function searchSupportUser() {
                 const email = String(data.email || '').toLowerCase();
                 const username = String(data.username || '').toLowerCase();
                 const displayName = String(data.displayName || '').toLowerCase();
+                const conductorId = String(data.id_usuario || '').toLowerCase();
+                const uid = String(docSnap.id).toLowerCase();
                 
-                if (email === query || username.includes(query) || displayName.includes(query)) {
+                if (email === query || username.includes(query) || displayName.includes(query) || conductorId === query || uid === query) {
                     foundUsers.push({
                         uid: docSnap.id,
                         ...data
@@ -531,7 +595,7 @@ async function searchSupportUser() {
                 const btn = document.createElement('button');
                 btn.className = 'btn btn-sm';
                 btn.style.cssText = 'text-align: left; display: block; width: 100%; margin-bottom: 4px;';
-                btn.textContent = `${u.username || u.displayName || 'Sin Nombre'} (${u.email})`;
+                btn.textContent = `${u.username || u.displayName || 'Sin Nombre'} (${u.email || 'Sin Correo'})`;
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
                     displaySelectedSupportUser(u);
@@ -547,53 +611,189 @@ async function searchSupportUser() {
         msg.textContent = '';
     } catch (err) {
         console.error('Error buscando jugador de soporte:', err);
-        msg.textContent = 'Error al realizar la busqueda.';
+        msg.textContent = 'Error al realizar la búsqueda.';
     }
 }
 
 function displaySelectedSupportUser(user) {
     activeSupportUserUid = user.uid;
-    document.getElementById('supportUserTitle').textContent = user.username || user.displayName || 'Sin Nombre';
+    document.getElementById('supportUserTitle').textContent = user.displayName || user.username || 'Sin Nombre';
     document.getElementById('supportUserEmailLabel').textContent = user.email || 'Sin correo';
-    document.getElementById('supportUserCurrentCoins').textContent = `${(user.saldo || 0).toLocaleString('es-ES')} 🪙`;
+
+    // Set fields
+    document.getElementById('editSupportDisplayName').value = user.displayName || '';
+    document.getElementById('editSupportUsername').value = user.username || '';
+    document.getElementById('editSupportAvatar').value = user.avatar || '😊';
+    document.getElementById('editSupportAvatarImg').value = user.avatarImg || '';
+    document.getElementById('editSupportCountry').value = user.country || '';
+
+    // Economics
+    document.getElementById('editSupportCoins').value = user.saldo !== undefined ? user.saldo : (user.coins !== undefined ? user.coins : 0);
+    document.getElementById('editSupportEsmeraldas').value = user.esmeraldas || 0;
+    document.getElementById('editSupportDinero').value = user.dinero || 0;
+    document.getElementById('editSupportInsurances').value = user.riskInsurance || 0;
+
+    // Permissions/Status
+    document.getElementById('editSupportRole').value = user.role || 'usuario';
+    document.getElementById('editSupportLevel').value = user.level || 'visitor';
+    document.getElementById('editSupportBetaTesterStatus').value = user.betaTesterStatus || '';
+    document.getElementById('editSupportStreak').value = user.streak || 0;
+    document.getElementById('editSupportInterested').checked = !!user.interested;
+
+    // Pet
+    const pet = user.pet || {};
+    document.getElementById('editSupportPetName').value = pet.name || '';
+    document.getElementById('editSupportPetLevel').value = pet.level || 0;
+    document.getElementById('editSupportPetXP').value = pet.xp || 0;
+    document.getElementById('editSupportPetHunger').value = pet.hunger !== undefined ? pet.hunger : 100;
+    document.getElementById('editSupportPetEnergy').value = pet.energy !== undefined ? pet.energy : 100;
+    document.getElementById('editSupportPetCleanliness').value = pet.cleanliness !== undefined ? pet.cleanliness : 100;
+
     document.getElementById('supportUserCard').hidden = false;
+    document.getElementById('supportActionMessage').textContent = '';
 }
 
-async function saveSupportCoins() {
-    const amountInput = document.getElementById('supportCoinsAmount');
+async function saveSupportUserChanges() {
     const actionMsg = document.getElementById('supportActionMessage');
-    if (!activeSupportUserUid || !amountInput || !actionMsg) return;
+    if (!activeSupportUserUid || !actionMsg) return;
 
-    const diff = parseFloat(amountInput.value);
-    if (Number.isNaN(diff) || diff === 0) {
-        actionMsg.textContent = '⚠️ Especifica una cantidad distinta de 0.';
-        return;
-    }
-
-    actionMsg.textContent = 'Guardando saldo...';
+    actionMsg.textContent = 'Guardando todos los cambios...';
+    actionMsg.className = 'admin-message';
 
     try {
         const userDocRef = window.fsDoc(window.db, 'conductores', activeSupportUserUid);
-        const snap = await window.getDoc(userDocRef);
+        const coinsVal = parseFloat(document.getElementById('editSupportCoins').value) || 0;
+        
+        const updateData = {
+            displayName: document.getElementById('editSupportDisplayName').value.trim(),
+            username: document.getElementById('editSupportUsername').value.trim(),
+            avatar: document.getElementById('editSupportAvatar').value.trim(),
+            avatarImg: document.getElementById('editSupportAvatarImg').value.trim(),
+            country: document.getElementById('editSupportCountry').value.trim(),
+            
+            // Sync coins and saldo
+            saldo: coinsVal,
+            coins: coinsVal,
+            
+            esmeraldas: parseInt(document.getElementById('editSupportEsmeraldas').value, 10) || 0,
+            dinero: parseFloat(document.getElementById('editSupportDinero').value) || 0,
+            riskInsurance: parseInt(document.getElementById('editSupportInsurances').value, 10) || 0,
+            
+            role: document.getElementById('editSupportRole').value,
+            level: document.getElementById('editSupportLevel').value,
+            betaTesterStatus: document.getElementById('editSupportBetaTesterStatus').value,
+            streak: parseInt(document.getElementById('editSupportStreak').value, 10) || 0,
+            interested: document.getElementById('editSupportInterested').checked,
+            
+            updatedAt: new Date().toISOString()
+        };
 
-        if (snap.exists()) {
-            const currentVal = parseFloat(snap.data().saldo || 0) || 0;
-            const newVal = Math.max(0, currentVal + diff);
-
-            await window.setDoc(userDocRef, {
-                saldo: newVal,
-                updatedAt: new Date().toISOString()
-            }, { merge: true });
-
-            document.getElementById('supportUserCurrentCoins').textContent = `${newVal.toLocaleString('es-ES')} 🪙`;
-            actionMsg.textContent = `✅ Saldo actualizado exitosamente a ${newVal} 🪙.`;
-            amountInput.value = '';
-
-            calculateStats();
+        if (updateData.betaTesterStatus) {
+            updateData.betaTesterStatusUpdatedAt = new Date().toISOString();
         }
+
+        // Pet structure
+        const petName = document.getElementById('editSupportPetName').value.trim();
+        if (petName || document.getElementById('editSupportPetLevel').value) {
+            updateData.pet = {
+                name: petName,
+                level: parseInt(document.getElementById('editSupportPetLevel').value, 10) || 0,
+                xp: parseInt(document.getElementById('editSupportPetXP').value, 10) || 0,
+                hunger: parseInt(document.getElementById('editSupportPetHunger').value, 10) || 0,
+                energy: parseInt(document.getElementById('editSupportPetEnergy').value, 10) || 0,
+                cleanliness: parseInt(document.getElementById('editSupportPetCleanliness').value, 10) || 0
+            };
+        }
+
+        await window.setDoc(userDocRef, updateData, { merge: true });
+
+        actionMsg.textContent = '✅ Todos los cambios se guardaron exitosamente en la base de datos.';
+        actionMsg.className = 'admin-message success';
+
+        calculateStats();
     } catch (err) {
-        console.error('Error guardando saldo en soporte:', err);
-        actionMsg.textContent = 'No se pudo guardar el saldo.';
+        console.error('Error guardando soporte:', err);
+        actionMsg.textContent = '❌ No se pudieron guardar los cambios.';
+        actionMsg.className = 'admin-message error';
+    }
+}
+
+async function resetCooldown(type) {
+    const actionMsg = document.getElementById('supportActionMessage');
+    if (!activeSupportUserUid || !actionMsg) return;
+
+    actionMsg.textContent = `Reiniciando cooldown de ${type === 'work' ? 'trabajo' : 'riesgo'}...`;
+    actionMsg.className = 'admin-message';
+
+    try {
+        const userDocRef = window.fsDoc(window.db, 'conductores', activeSupportUserUid);
+        const updateField = {};
+        if (type === 'work') {
+            updateField.cooldownWork = 0;
+        } else if (type === 'risk') {
+            updateField.cooldownRisk = 0;
+        }
+        await window.setDoc(userDocRef, updateField, { merge: true });
+        
+        actionMsg.textContent = `✅ Cooldown de ${type === 'work' ? 'Trabajo 💼' : 'Riesgo ⚠️'} reiniciado con éxito.`;
+        actionMsg.className = 'admin-message success';
+    } catch (err) {
+        console.error(err);
+        actionMsg.textContent = '❌ Error al reiniciar cooldown.';
+        actionMsg.className = 'admin-message error';
+    }
+}
+
+async function loadGlobalRedeemLogs() {
+    const tbody = document.getElementById('redeemLogsTableBody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--admin-text-secondary);">Cargando logs de canjes...</td></tr>';
+
+    try {
+        if (!window.db || !window.collection || !window.getDocs || !window.query || !window.orderBy || !window.limit) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--admin-danger);">Firebase no inicializado aún.</td></tr>';
+            return;
+        }
+
+        const q = window.query(
+            window.collection(window.db, 'redenciones'),
+            window.orderBy('createdAt', 'desc'),
+            window.limit(20)
+        );
+
+        const snap = await window.getDocs(q);
+        if (snap.empty) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--admin-text-secondary);">No se registraron canjes aún.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = '';
+        snap.forEach(docSnap => {
+            const data = docSnap.data();
+            const date = data.createdAt ? new Date(data.createdAt).toLocaleString('es-CO') : '—';
+            const player = data.username || data.email || 'Anónimo';
+            const coins = data.coins ? data.coins.toLocaleString() : '0';
+            const emeralds = data.esmeraldas || data.emeralds || 0;
+            const status = data.status || 'completed';
+            
+            let statusBadge = '<span class="status-badge status-approved">Completado 🟢</span>';
+            if (status === 'pending') statusBadge = '<span class="status-badge status-pending">Pendiente 🟡</span>';
+            if (status === 'failed' || status === 'rejected') statusBadge = '<span class="status-badge status-rejected">Error 🔴</span>';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${date}</td>
+                    <td><strong>${player}</strong><br><small style="color:var(--admin-text-muted);">${data.email || ''}</small></td>
+                    <td style="color:#fbbf24; font-weight:700;">🪙 ${coins}</td>
+                    <td style="color:#00b0ff; font-weight:700;">💎 ${emeralds}</td>
+                    <td>${statusBadge}</td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error('Error cargando canjes:', err);
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--admin-danger);">Error al leer registros de redenciones.</td></tr>';
     }
 }
 
@@ -813,15 +1013,219 @@ function bindEvents() {
             searchSupportUser();
         });
     }
-    const saveSupportCoinsBtn = document.getElementById('supportSaveCoinsBtn');
-    if (saveSupportCoinsBtn) {
-        saveSupportCoinsBtn.addEventListener('click', (e) => {
+    const saveChangesBtn = document.getElementById('supportSaveChangesBtn');
+    if (saveChangesBtn) {
+        saveChangesBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            saveSupportCoins();
+            saveSupportUserChanges();
+        });
+    }
+    const resetWorkBtn = document.getElementById('btnResetWorkCooldown');
+    if (resetWorkBtn) {
+        resetWorkBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            resetCooldown('work');
+        });
+    }
+    const resetRiskBtn = document.getElementById('btnResetRiskCooldown');
+    if (resetRiskBtn) {
+        resetRiskBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            resetCooldown('risk');
+        });
+    }
+    const refreshRedeemsBtn = document.getElementById('btnRefreshRedeemLogs');
+    if (refreshRedeemsBtn) {
+        refreshRedeemsBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            loadGlobalRedeemLogs();
+        });
+    }
+
+    const btnSaveSiteConfig = document.getElementById('btnSaveSiteConfig');
+    if (btnSaveSiteConfig) {
+        btnSaveSiteConfig.addEventListener('click', (e) => {
+            e.preventDefault();
+            saveSiteConfig();
+        });
+    }
+
+    const btnSaveVisibility = document.getElementById('btnSaveVisibility');
+    if (btnSaveVisibility) {
+        btnSaveVisibility.addEventListener('click', (e) => {
+            e.preventDefault();
+            saveSiteVisibilitySettings();
         });
     }
 
     bindCeoRoleActions();
+}
+
+// ---------- Configuración del Sitio (siteconfig) & Visibilidad (visibility) ----------
+
+async function loadSiteConfig() {
+    const actionMsg = document.getElementById('siteConfigActionMessage');
+    if (actionMsg) {
+        actionMsg.textContent = 'Cargando configuración...';
+        actionMsg.className = 'admin-message';
+    }
+
+    try {
+        if (!window.db || !window.fsDoc || !window.getDoc) return;
+
+        const [siteSnap, donationSnap] = await Promise.all([
+            window.getDoc(window.fsDoc(window.db, 'settings', 'site')).catch(() => null),
+            window.getDoc(window.fsDoc(window.db, 'settings', 'donations')).catch(() => null)
+        ]);
+
+        if (siteSnap && siteSnap.exists()) {
+            const siteData = siteSnap.data();
+            document.getElementById('cfgReferralCoins').value = siteData.referralCoins || '';
+            document.getElementById('cfgDailyCoins').value = siteData.dailyBonusCoins || '';
+            document.getElementById('cfgEnableNewsPage').checked = siteData.enableNewsPage !== false;
+            document.getElementById('cfgAnnouncementText').value = siteData.announcement || '';
+        }
+
+        if (donationSnap && donationSnap.exists()) {
+            const donData = donationSnap.data();
+            document.getElementById('cfgDonationGoal').value = donData.donationGoal || '';
+            document.getElementById('cfgPaypalLink').value = donData.paypalLink || '';
+            document.getElementById('cfgPatreonLink').value = donData.patreonLink || '';
+            document.getElementById('cfgNequiLink').value = donData.nequiLink || '';
+            document.getElementById('cfgBreveLink').value = donData.breveLink || '';
+        }
+
+        if (actionMsg) actionMsg.textContent = '';
+    } catch (err) {
+        console.error('Error cargando configuración:', err);
+        if (actionMsg) {
+            actionMsg.textContent = '❌ Error al cargar configuración de la base de datos.';
+            actionMsg.className = 'admin-message error';
+        }
+    }
+}
+
+async function saveSiteConfig() {
+    const actionMsg = document.getElementById('siteConfigActionMessage');
+    if (!actionMsg) return;
+
+    actionMsg.textContent = 'Guardando configuración...';
+    actionMsg.className = 'admin-message';
+
+    try {
+        if (!window.db || !window.fsDoc || !window.setDoc) return;
+
+        const referralCoins = parseInt(document.getElementById('cfgReferralCoins').value, 10) || 0;
+        const dailyBonusCoins = parseInt(document.getElementById('cfgDailyCoins').value, 10) || 0;
+        const enableNewsPage = document.getElementById('cfgEnableNewsPage').checked;
+        const announcement = document.getElementById('cfgAnnouncementText').value.trim();
+
+        const donationGoal = parseFloat(document.getElementById('cfgDonationGoal').value) || 0;
+        const paypalLink = document.getElementById('cfgPaypalLink').value.trim();
+        const patreonLink = document.getElementById('cfgPatreonLink').value.trim();
+        const nequiLink = document.getElementById('cfgNequiLink').value.trim();
+        const breveLink = document.getElementById('cfgBreveLink').value.trim();
+
+        await Promise.all([
+            window.setDoc(window.fsDoc(window.db, 'settings', 'site'), {
+                referralCoins,
+                dailyBonusCoins,
+                enableNewsPage,
+                announcement,
+                updatedAt: new Date().toISOString()
+            }, { merge: true }),
+            window.setDoc(window.fsDoc(window.db, 'settings', 'donations'), {
+                donationGoal,
+                paypalLink,
+                patreonLink,
+                nequiLink,
+                breveLink,
+                updatedAt: new Date().toISOString()
+            }, { merge: true })
+        ]);
+
+        actionMsg.textContent = '✅ Configuración guardada correctamente en Firestore.';
+        actionMsg.className = 'admin-message success';
+    } catch (err) {
+        console.error('Error guardando configuración:', err);
+        actionMsg.textContent = '❌ No se pudo guardar la configuración.';
+        actionMsg.className = 'admin-message error';
+    }
+}
+
+async function loadSiteVisibilitySettings() {
+    const actionMsg = document.getElementById('visibilityActionMessage');
+    if (actionMsg) {
+        actionMsg.textContent = 'Cargando accesos de visibilidad...';
+        actionMsg.className = 'admin-message';
+    }
+
+    try {
+        if (!window.db || !window.fsDoc || !window.getDoc) return;
+
+        const snap = await window.getDoc(window.fsDoc(window.db, 'admin', 'siteVisibility'));
+        if (snap && snap.exists()) {
+            const data = snap.data() || {};
+            document.getElementById('cfgGlobalMaintenance').checked = !!data.globalMaintenance;
+
+            const pages = ['perfil', 'donaciones', 'personal', 'actualizaciones'];
+            pages.forEach(p => {
+                const cfg = data.pages && data.pages[p] ? data.pages[p] : {};
+                document.getElementById(`cfgMaint_${p}`).checked = !!cfg.maintenance;
+                document.getElementById(`cfgEmails_${p}`).value = Array.isArray(cfg.allowedEmails) ? cfg.allowedEmails.join(', ') : '';
+            });
+        }
+
+        if (actionMsg) actionMsg.textContent = '';
+    } catch (err) {
+        console.error('Error cargando visibilidad:', err);
+        if (actionMsg) {
+            actionMsg.textContent = '❌ Error al cargar configuración de visibilidad.';
+            actionMsg.className = 'admin-message error';
+        }
+    }
+}
+
+async function saveSiteVisibilitySettings() {
+    const actionMsg = document.getElementById('visibilityActionMessage');
+    if (!actionMsg) return;
+
+    actionMsg.textContent = 'Guardando configuración de visibilidad...';
+    actionMsg.className = 'admin-message';
+
+    try {
+        if (!window.db || !window.fsDoc || !window.setDoc) return;
+
+        const globalMaintenance = document.getElementById('cfgGlobalMaintenance').checked;
+        const pagesObj = {};
+
+        const pagesList = ['perfil', 'donaciones', 'personal', 'actualizaciones'];
+        pagesList.forEach(p => {
+            const maintenance = document.getElementById(`cfgMaint_${p}`).checked;
+            const emailsText = document.getElementById(`cfgEmails_${p}`).value;
+            const allowedEmails = emailsText.split(',')
+                .map(email => email.trim().toLowerCase())
+                .filter(email => email.length > 0 && email.includes('@'));
+
+            pagesObj[p] = {
+                maintenance,
+                allowedEmails
+            };
+        });
+
+        await window.setDoc(window.fsDoc(window.db, 'admin', 'siteVisibility'), {
+            globalMaintenance,
+            pages: pagesObj,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+
+        actionMsg.textContent = '✅ Visibilidad del sitio guardada exitosamente en Firestore.';
+        actionMsg.className = 'admin-message success';
+    } catch (err) {
+        console.error('Error guardando visibilidad:', err);
+        actionMsg.textContent = '❌ Error al guardar visibilidad del sitio.';
+        actionMsg.className = 'admin-message error';
+    }
 }
 
 function bootAuthListener() {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minijuegos — Panter Studio</title>
+    <title>Panter Core — Panter Studio</title>
     <link rel="icon" href="../recursos/PSGD.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
@@ -313,7 +313,27 @@
             gap: 10px;
         }
         @media (max-width: 500px) {
-            .board-buttons-grid { grid-template-columns: 1fr; }
+            .board-buttons-grid { 
+                grid-template-columns: repeat(2, 1fr) !important; 
+                gap: 8px !important;
+            }
+            .cyber-chip {
+                padding: 0.6rem 0.5rem !important;
+                font-size: 0.75rem !important;
+                gap: 6px !important;
+                flex-direction: column !important;
+                text-align: center !important;
+                border-radius: 10px !important;
+            }
+            .chip-icon {
+                width: 24px !important;
+                height: 24px !important;
+            }
+            .chip-text small {
+                font-size: 0.55rem !important;
+                display: block !important;
+                margin-top: 1px !important;
+            }
         }
 
         /* ─── ACTION CHIPS (card style) ─── */
@@ -1044,6 +1064,209 @@
             box-shadow: 0 6px 20px rgba(0,0,0,0.5);
             max-width: 100%;
         }
+        /* ─── CORE DASHBOARD ─── */
+        .core-dashboard {
+            max-width: 900px;
+            margin: 0 auto 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        @media(min-width: 768px) {
+            .core-dashboard {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+        }
+        .core-dash-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            border: 1px solid rgba(0, 176, 255, 0.15);
+            border-radius: 20px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        .core-dash-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 176, 255, 0.1), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .core-dash-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 176, 255, 0.4);
+            box-shadow: 0 10px 30px rgba(0, 176, 255, 0.15);
+        }
+        .core-dash-card:hover::before {
+            opacity: 1;
+        }
+        .core-dash-card.active {
+            border-color: #00b0ff;
+            background: linear-gradient(135deg, rgba(0, 176, 255, 0.08), rgba(0, 176, 255, 0.02));
+            box-shadow: 0 0 25px rgba(0, 176, 255, 0.2);
+        }
+        .core-dash-card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            filter: drop-shadow(0 0 10px rgba(0, 176, 255, 0.4));
+        }
+        .core-dash-card h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            margin: 0;
+            color: #fff;
+        }
+        .core-dash-card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin: 0;
+            line-height: 1.4;
+        }
+        .core-dash-btn {
+            margin-top: auto;
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* ─── TIENDA CONTAINER ─── */
+        .store-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+            max-width: 900px;
+            margin: 0 auto 2rem;
+        }
+        @media(min-width: 768px) {
+            .store-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        .store-card {
+            background: rgba(10, 13, 24, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(15px);
+        }
+        .store-card:hover {
+            border-color: rgba(0, 176, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+        .store-card-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0, 176, 255, 0.1);
+            color: #00b0ff;
+            border: 1px solid rgba(0, 176, 255, 0.25);
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 100px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .store-card.tag-vip { border-left: 4px solid #fbbf24; }
+        .store-card.tag-vip .store-card-badge { background: rgba(251, 191, 36, 0.1); color: #fbbf24; border-color: rgba(251, 191, 36, 0.25); }
+        .store-card.tag-item { border-left: 4px solid #00c853; }
+        .store-card.tag-item .store-card-badge { background: rgba(0, 200, 83, 0.1); color: #00c853; border-color: rgba(0, 200, 83, 0.25); }
+        
+        .store-card-info {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .store-card-icon {
+            font-size: 2.2rem;
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255,255,255,0.04);
+            flex-shrink: 0;
+        }
+        .store-card-details h4 {
+            margin: 0 0 2px 0;
+            font-size: 1.05rem;
+            color: #fff;
+            font-weight: 700;
+        }
+        .store-card-details p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+        .store-card-price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 0.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .store-card-price {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 800;
+            font-size: 1.05rem;
+            color: #fbbf24;
+        }
+
+        /* ─── VIRTUAL PET STYLE ─── */
+        .pet-visualizer {
+            display: inline-block;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .pet-visualizer:active {
+            transform: scale(0.9) rotate(-5deg);
+        }
+        @keyframes petBreath {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-4px) scale(1.02); }
+        }
+        @keyframes petJump {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-25px) scaleY(1.1) scaleX(0.9); }
+        }
+        @keyframes petGlitch {
+            0%, 100% { transform: skew(0deg); filter: hue-rotate(0deg); }
+            20% { transform: skew(-5deg); filter: hue-rotate(90deg); }
+            40% { transform: skew(5deg); filter: hue-rotate(180deg); }
+            60% { transform: skew(-3deg); filter: hue-rotate(270deg); }
+            80% { transform: skew(3deg); filter: hue-rotate(360deg); }
+        }
+        .pet-jump-animation {
+            animation: petJump 0.5s ease !important;
+        }
+        .pet-glitch-animation {
+            animation: petGlitch 0.8s ease !important;
+        }
+        @media(min-width: 768px) {
+            .pet-main-grid {
+                grid-template-columns: 1fr 1fr !important;
+            }
+        }
     </style>
 </head>
 <body data-site-root=".." data-theme="dark" class="dark-mode">
@@ -1065,7 +1288,7 @@
                     <a href="videos.html">Videos</a>
                 </div>
             </div>
-            <a href="minijuegos.html" class="active">Minijuegos</a>
+            <a href="minijuegos.html" class="active">Panter Core</a>
             <a href="donaciones.html">Apoyanos</a>
             <a href="personal.html">Personal</a>
             <a href="perfil.html">Mi Perfil</a>
@@ -1085,7 +1308,7 @@
                 <a href="videos.html">Videos</a>
             </div>
             <hr>
-            <a href="minijuegos.html" class="active">Minijuegos</a>
+            <a href="minijuegos.html" class="active">Panter Core</a>
             <a href="donaciones.html">Apoyanos</a>
             <a href="personal.html">Personal</a>
             <a href="perfil.html">Mi Perfil</a>
@@ -1115,11 +1338,264 @@
             <a href="perfil.html" class="btn" style="padding:0.85rem 2.2rem;font-weight:700;border-radius:100px;">⚡ Conectar Cuenta</a>
         </div>
 
+        <!-- ══ CORE HUB DASHBOARD (Solo si está logueado) ══ -->
+        <div id="coreDashboard" class="core-dashboard" style="display:none;">
+            <div class="core-dash-card" id="btnDashTerminal" onclick="switchCoreMode('terminal')">
+                <div class="core-dash-card-icon">💼</div>
+                <h3>Terminal de Trabajo</h3>
+                <p>Realiza misiones de transporte seguro, resuelve anomalías de riesgo o prueba suerte en el casino para ganar monedas.</p>
+                <button class="btn btn-sm core-dash-btn">Abrir Terminal</button>
+            </div>
+            <div class="core-dash-card" id="btnDashPet" onclick="switchCoreMode('pet')" style="display:none;">
+                <div class="core-dash-card-icon">🐾</div>
+                <h3>Mascota Panter</h3>
+                <p>Cuida de tu cachorro de pantera negra. Aliméntalo, juega con él, entrénalo y sube su nivel para presumirlo.</p>
+                <button class="btn btn-sm btn-ghost core-dash-btn">Jugar con Mascota</button>
+            </div>
+            <div class="core-dash-card" id="btnDashStore" onclick="switchCoreMode('store')">
+                <div class="core-dash-card-icon">🏪</div>
+                <h3>Tienda Oficial</h3>
+                <p>Gasta tus monedas acumuladas en roles de la comunidad, títulos de perfil exclusivos y gemas para el juego.</p>
+                <button class="btn btn-sm btn-ghost core-dash-btn">Visitar Tienda</button>
+            </div>
+        </div>
+
+        <!-- ══ STORE CONTAINER (Solo si está logueado) ══ -->
+        <div id="storeContainer" style="display:none; max-width:900px; margin:0 auto 2rem;">
+            <!-- Cabecera de Tienda con Botón Volver -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">
+                <button class="btn btn-ghost btn-sm" onclick="goBackToDashboard()" style="border-color: rgba(255,255,255,0.08); font-size: 0.8rem; font-weight:700; border-radius: 100px;">◀ Volver al Menú</button>
+                <div class="store-tabs" style="margin-bottom: 0;">
+                    <button class="store-tab active" onclick="filterStore('all')">🛍️ Todos</button>
+                    <button class="store-tab" onclick="filterStore('roles')">👑 Roles</button>
+                    <button class="store-tab" onclick="filterStore('titles')">🏷️ Títulos</button>
+                    <button class="store-tab" onclick="filterStore('perks')">🧪 Ventajas</button>
+                    <button class="store-tab" onclick="filterStore('pet')">🐾 Mascota</button>
+                </div>
+            </div>
+
+            <div class="store-container">
+                <!-- ROLES -->
+                <div class="store-card tag-vip" data-category="roles">
+                    <span class="store-card-badge">Rol Premium</span>
+                    <div class="store-card-info">
+                        <div class="store-card-icon">👑</div>
+                        <div class="store-card-details">
+                            <h4>Rango VIP Especial</h4>
+                            <p>Obtén el prefijo [VIP] dorado en la web, un multiplicador x1.5 en el pago diario y acceso a sorteos exclusivos.</p>
+                        </div>
+                    </div>
+                    <div class="store-card-price-row">
+                        <div class="store-card-price">🪙 15,000</div>
+                        <button class="btn btn-sm" onclick="buyStoreItem('role_vip', 15000, 'VIP')">Adquirir</button>
+                    </div>
+                </div>
+
+                <div class="store-card" data-category="roles">
+                    <span class="store-card-badge">Rol Técnico</span>
+                    <div class="store-card-info">
+                        <div class="store-card-icon">🐛</div>
+                        <div class="store-card-details">
+                            <h4>Rol Cazador de Bugs</h4>
+                            <p>Consigue el rol oficial [Cazador de Bugs] verde en tu perfil público para demostrar tu ayuda al estudio.</p>
+                        </div>
+                    </div>
+                    <div class="store-card-price-row">
+                        <div class="store-card-price">🪙 25,000</div>
+                        <button class="btn btn-sm" onclick="buyStoreItem('role_bug_hunter', 25000, 'Cazador de Bugs')">Adquirir</button>
+                    </div>
+                </div>
+
+                <div class="store-card" data-category="roles">
+                    <span class="store-card-badge">Rol Staff</span>
+                    <div class="store-card-info">
+                        <div class="store-card-icon">🛡️</div>
+                        <div class="store-card-details">
+                            <h4>Moderador Honorífico</h4>
+                            <p>Desbloquea el título [Moderador] en tu perfil web. Requiere validación por parte del equipo directivo.</p>
+                        </div>
+                    </div>
+                    <div class="store-card-price-row">
+                        <div class="store-card-price">🪙 75,000</div>
+                        <button class="btn btn-sm" onclick="buyStoreItem('role_moderator', 75000, 'Moderador Honorífico')">Adquirir</button>
+                    </div>
+                </div>
+
+                <div class="store-card" data-category="roles">
+                    <span class="store-card-badge">Rol Directivo</span>
+                    <div class="store-card-info">
+                        <div class="store-card-icon">🎨</div>
+                        <div class="store-card-details">
+                            <h4>Director Jr. Honorífico</h4>
+                            <p>El título más prestigioso de la comunidad. Desbloquea acceso a un canal privado directo con los fundadores.</p>
+                        </div>
+                    </div>
+                    <div class="store-card-price-row">
+                        <div class="store-card-price">🪙 120,000</div>
+                        <button class="btn btn-sm" onclick="buyStoreItem('role_director_jr', 120000, 'Director Jr. Honorífico')">Adquirir</button>
+                    </div>
+                </div>
+
+                <!-- TÍTULOS -->
+                <div class="store-card" data-category="titles">
+                    <span class="store-card-badge">Título Cosmético</span>
+                    <div class="store-card-info">
+                        <div class="store-card-icon">🪙</div>
+                        <div class="store-card-details">
+                            <h4>Título "Rey de las Monedas"</h4>
+                            <p>Luce este ostentoso título en tu tarjeta de perfil público para destacar tu inmensa fortuna.</p>
+                        </div>
+                    </div>
+                    <div class="store-card-price-row">
+                        <div class="store-card-price">🪙 5,000</div>
+                        <button class="btn btn-sm" onclick="buyStoreItem('title_coin_king', 5000, 'Rey de las Monedas')">Adquirir</button>
+                    </div>
+                </div>
+
+                <div class="store-card" data-category="titles">
+                    <span class="store-card-badge">Título Técnico</span>
+                    <div class="store-card-info">
+                        <div class="store-card-icon">💻</div>
+                        <div class="store-card-details">
+                            <h4>Título "Programador Maestro"</h4>
+                            <p>Título especial para los entusiastas de la tecnología e informática en el portal de Panter Studio.</p>
+                        </div>
+                    </div>
+                    <div class="store-card-price-row">
+                        <div class="store-card-price">🪙 9,000</div>
+                        <button class="btn btn-sm" onclick="buyStoreItem('title_master_coder', 9000, 'Programador Maestro')">Adquirir</button>
+                    </div>
+                </div>
+
+                <div class="store-card" data-category="titles">
+                    <span class="store-card-badge">Título de Honor</span>
+                    <div class="store-card-info">
+                        <div class="store-card-icon">💼</div>
+                        <div class="store-card-details">
+                            <h4>Título "Magnate Panter"</h4>
+                            <p>Destaca en los rankings de esmeraldas y monedas con este título para grandes empresarios virtuales.</p>
+                        </div>
+                    </div>
+                    <div class="store-card-price-row">
+                        <div class="store-card-price">🪙 12,000</div>
+                        <button class="btn btn-sm" onclick="buyStoreItem('title_magnate', 12000, 'Magnate Panter')">Adquirir</button>
+                    </div>
+                </div>
+
+                <div class="store-card" data-category="titles">
+                    <span class="store-card-badge">Título de Colección</span>
+                    <div class="store-card-info">
+                        <div class="store-card-icon">🌟</div>
+                        <div class="store-card-details">
+                            <h4>Título "Leyenda del Alfa"</h4>
+                            <p>Título conmemorativo exclusivo para los usuarios que apoyaron el desarrollo del alfa de Nuestra Tierra.</p>
+                        </div>
+                    </div>
+                    <div class="store-card-price-row">
+                        <div class="store-card-price">🪙 18,000</div>
+                        <button class="btn btn-sm" onclick="buyStoreItem('title_alfa_legend', 18000, 'Leyenda del Alfa')">Adquirir</button>
+                    </div>
+                </div>
+
+                <div class="store-card tag-item" data-category="perks">
+                    <span class="store-card-badge">Consumible</span>
+                    <div class="store-card-info">
+                        <div class="store-card-icon">🧪</div>
+                        <div class="store-card-details">
+                            <h4>Poción de Cooldown</h4>
+                            <p>Resetea contadores de enfriamiento de Trabajar y Misión de Riesgo en la web instantáneamente.</p>
+                        </div>
+                    </div>
+                    <div class="store-card-price-row">
+                        <div class="store-card-price">🪙 25</div>
+                        <button class="btn btn-sm" onclick="buyStoreItem('item_cooldown_reset', 25, 'Reseteador')">Adquirir</button>
+                    </div>
+                </div>
+
+                <div class="store-card tag-item" data-category="perks">
+                    <span class="store-card-badge">Juego Móvil</span>
+                    <div class="store-card-info">
+                        <div class="store-card-icon">💎</div>
+                        <div class="store-card-details">
+                            <h4>Esmeralda Express</h4>
+                            <p>Recibe 10 Esmeraldas directo a tu billetera vinculada para usar en Nuestra Tierra.</p>
+                        </div>
+                    </div>
+                    <div class="store-card-price-row">
+                        <div class="store-card-price">🪙 10,000</div>
+                        <button class="btn btn-sm" onclick="buyStoreItem('item_emeralds', 10000, 'Gemas de Juego')">Adquirir</button>
+                    </div>
+                </div>
+
+                <div class="store-card tag-item" data-category="perks">
+                    <span class="store-card-badge">Juego Móvil</span>
+                    <div class="store-card-info">
+                        <div class="store-card-icon">💎💎</div>
+                        <div class="store-card-details">
+                            <h4>Bolsa de Esmeraldas Premium</h4>
+                            <p>Obtén un pack grande de 30 Esmeraldas directo a tu cuenta de Nuestra Tierra. Ahorro de 3,000 monedas.</p>
+                        </div>
+                    </div>
+                    <div class="store-card-price-row">
+                        <div class="store-card-price">🪙 27,000</div>
+                        <button class="btn btn-sm" onclick="buyStoreItem('item_emeralds_pack', 27000, 'Bolsa de Esmeraldas')">Adquirir</button>
+                    </div>
+                </div>
+
+                <div class="store-card tag-item" data-category="perks">
+                    <span class="store-card-badge">Protección</span>
+                    <div class="store-card-info">
+                        <div class="store-card-icon">🛡️</div>
+                        <div class="store-card-details">
+                            <h4>Seguro de Misión</h4>
+                            <p>Protege tu próxima Misión de Riesgo. Si falla, el seguro absorberá la pérdida y no perderás monedas.</p>
+                        </div>
+                    </div>
+                    <div class="store-card-price-row">
+                        <div class="store-card-price">🪙 15</div>
+                        <button class="btn btn-sm" onclick="buyStoreItem('item_risk_insurance', 15, 'Seguro de Misión')">Adquirir</button>
+                    </div>
+                </div>
+
+                <!-- MASCOTA SKINS -->
+                <div class="store-card tag-item" data-category="pet">
+                    <span class="store-card-badge">Mascota Skin</span>
+                    <div class="store-card-info">
+                        <div class="store-card-icon">👨‍🚀</div>
+                        <div class="store-card-details">
+                            <h4>Skin Astronauta</h4>
+                            <p>Desbloquea el aspecto espacial de astronauta para usar en tu mascota virtual y tu perfil público.</p>
+                        </div>
+                    </div>
+                    <div class="store-card-price-row">
+                        <div class="store-card-price">🪙 1,500</div>
+                        <button class="btn btn-sm" onclick="buyStoreItem('pet_skin_astronaut', 1500, 'Mascota: Astronauta')">Adquirir</button>
+                    </div>
+                </div>
+
+                <div class="store-card tag-item" data-category="pet">
+                    <span class="store-card-badge">Mascota Skin</span>
+                    <div class="store-card-info">
+                        <div class="store-card-icon">🕵️</div>
+                        <div class="store-card-details">
+                            <h4>Skin Detective</h4>
+                            <p>Desbloquea el aspecto misterioso de detective privado para usar en tu mascota virtual y perfil público.</p>
+                        </div>
+                    </div>
+                    <div class="store-card-price-row">
+                        <div class="store-card-price">🪙 800</div>
+                        <button class="btn btn-sm" onclick="buyStoreItem('pet_skin_detective', 800, 'Mascota: Detective')">Adquirir</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- ══ GAME CONTAINER ══ -->
         <div id="gameContainer" class="ai-terminal-container" style="display:none;">
 
             <!-- HEADER HOLOGRÁFICO -->
-            <div class="ai-header-panel">
+            <div class="ai-header-panel" style="position: relative;">
+                <button class="btn btn-ghost btn-sm" onclick="goBackToDashboard()" style="position: absolute; left: 15px; top: 15px; border-color: rgba(0, 176, 255, 0.15); color: #00b0ff; font-size: 0.8rem; font-weight:700; border-radius: 100px; z-index: 10; padding: 4px 12px; background: rgba(0,176,255,0.03);">◀ Volver al Menú</button>
                 <div class="ai-orb-wrapper">
                     <div class="ai-orb-ring"></div>
                     <div class="ai-orb-ring"></div>
@@ -1174,6 +1650,139 @@
                 </div>
             </div>
         </div>
+
+        <!-- ══ PET CONTAINER (Mascota Panter) ══ -->
+        <div id="petContainer" class="ai-terminal-container" style="display:none; flex-direction:column; gap: 1.5rem; max-width: 900px; margin: 0 auto 2rem;">
+            
+            <!-- HEADER HOLOGRÁFICO -->
+            <div class="ai-header-panel" style="position: relative;">
+                <button class="btn btn-ghost btn-sm" onclick="goBackToDashboard()" style="position: absolute; left: 15px; top: 15px; border-color: rgba(0, 176, 255, 0.15); color: #00b0ff; font-size: 0.8rem; font-weight:700; border-radius: 100px; z-index: 10; padding: 4px 12px; background: rgba(0,176,255,0.03);">◀ Volver al Menú</button>
+                <div class="ai-orb-wrapper">
+                    <div class="ai-orb-ring"></div>
+                    <div class="ai-orb-ring"></div>
+                    <div class="ai-orb-ring"></div>
+                    <div class="ai-core-orb" id="petOrb">🐾</div>
+                </div>
+                <div class="ai-status-text" id="petStatusLabel" style="color: #00e676; text-transform: uppercase;">PANTERA CACHORRO EN LÍNEA</div>
+                <div class="ai-coin-bar">Nivel Mascota: <span id="petLevelDisplay" style="color: #ffd700; font-weight: bold;">1</span></div>
+            </div>
+
+            <!-- ADOPTION PANEL -->
+            <div id="petAdoptionPanel" style="display: none; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; padding: 3rem 1.5rem; text-align: center; background: rgba(0,0,0,0.2); border-radius: 20px; border: 1px solid rgba(0,176,255,0.15); margin: 1rem;">
+                <div style="font-size: 5rem; animation: petBreath 3s ease-in-out infinite;">🐈‍⬛</div>
+                <h3 style="margin: 0; color: #fff; font-size: 1.5rem; font-weight: bold;">¡Adopta a tu Mascota Virtual!</h3>
+                <p style="margin: 0; color: var(--text-muted); max-width: 450px; font-size: 0.9rem; line-height: 1.4;">Tienes la oportunidad de cuidar a un adorable cachorro de pantera negra. Nómbralo y cuídalo para que crezca y te acompañe en tu perfil público.</p>
+                <div style="width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                    <input type="text" id="adoptPetNameInput" placeholder="Nombre de tu pantera" maxlength="15" style="width:100%; padding:12px; border-radius:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(0,176,255,0.2); color:#fff; text-align: center; font-weight: bold; outline: none;">
+                    <button class="btn pb-full" onclick="adoptNewPet()" style="background: linear-gradient(135deg, #00b0ff, #00e676); border: none; font-weight: bold; padding: 12px; border-radius: 10px; color: #000; cursor: pointer; transition: opacity 0.2s;">Adoptar 🐾</button>
+                </div>
+            </div>
+
+            <!-- VIRTUAL PET MAIN INTERFACE -->
+            <div id="petActivePanel" style="display: none; grid-template-columns: 1fr; gap: 1.5rem; width: 100%; padding: 1rem;" class="pet-main-grid">
+                
+                <!-- VISUALIZER AND FEEDBACK -->
+                <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(0, 176, 255, 0.15); border-radius: 20px; padding: 2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; position: relative; min-height: 250px; overflow: hidden;">
+                    <!-- Glow decoration -->
+                    <div style="position: absolute; width: 120px; height: 120px; background: radial-gradient(circle, rgba(0,176,255,0.15) 0%, transparent 70%); border-radius: 50%; pointer-events: none; z-index: 1;"></div>
+                    
+                    <!-- Panther Mascot Visual Representation -->
+                    <div id="petVisual" class="pet-visualizer" style="font-size: 5rem; z-index: 2; cursor: pointer; transition: transform 0.2s; user-select: none; animation: petBreath 3s ease-in-out infinite;">
+                        🐈‍⬛
+                    </div>
+
+                    <!-- Pet Status Bubble (Reactions) -->
+                    <div id="petReactionBubble" style="background: rgba(0, 0, 0, 0.6); border: 1.5px solid rgba(0,176,255,0.3); border-radius: 12px; padding: 6px 16px; font-size: 0.85rem; font-weight: bold; color: #fff; text-align: center; max-width: 80%; display: none; z-index: 3; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+                        ¡Hola! Tengo hambre...
+                    </div>
+
+                    <div style="text-align: center; z-index: 2;">
+                        <h4 id="petNameDisplay" style="margin: 0; color: #fff; font-size: 1.3rem; font-weight: bold;">Pantercito</h4>
+                        <p id="petStateText" style="margin: 4px 0 0 0; color: var(--text-muted); font-size: 0.85rem;">Jugando felizmente</p>
+                    </div>
+
+                    <!-- Experience level bar -->
+                    <div style="width: 100%; max-width: 320px; margin-top: 10px; z-index: 2;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">
+                            <span>EXP</span>
+                            <span id="petExpText">0 / 500</span>
+                        </div>
+                        <div style="height: 6px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden;">
+                            <div id="petExpFill" style="height: 100%; background: linear-gradient(90deg, #00b0ff, #00e676); width: 0%; border-radius: 10px; box-shadow: 0 0 8px #00b0ff; transition: width 0.3s ease;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- METRICS AND CONTROLS -->
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <!-- Metrics Card -->
+                    <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="font-weight: bold; font-size: 0.9rem; color: #00b0ff; text-transform: uppercase; letter-spacing: 0.5px;">Estatus Vital</div>
+                        
+                        <!-- Hunger / Nutrición -->
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px;">
+                                <span style="display: flex; align-items: center; gap: 4px;">🥩 Nutrición</span>
+                                <span id="petHungerText" style="font-weight: bold;">100%</span>
+                            </div>
+                            <div style="height: 8px; background: rgba(0,0,0,0.4); border-radius: 4px; overflow: hidden;">
+                                <div id="petHungerBar" style="height: 100%; background: linear-gradient(90deg, #ff9100, #ffc400); width: 100%; transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Happiness / Felicidad -->
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px;">
+                                <span style="display: flex; align-items: center; gap: 4px;">🧶 Felicidad</span>
+                                <span id="petHappinessText" style="font-weight: bold;">100%</span>
+                            </div>
+                            <div style="height: 8px; background: rgba(0,0,0,0.4); border-radius: 4px; overflow: hidden;">
+                                <div id="petHappinessBar" style="height: 100%; background: linear-gradient(90deg, #00e676, #b2ff59); width: 100%; transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Energy / Energía -->
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px;">
+                                <span style="display: flex; align-items: center; gap: 4px;">⚡ Energía</span>
+                                <span id="petEnergyText" style="font-weight: bold;">100%</span>
+                            </div>
+                            <div style="height: 8px; background: rgba(0,0,0,0.4); border-radius: 4px; overflow: hidden;">
+                                <div id="petEnergyBar" style="height: 100%; background: linear-gradient(90deg, #00b0ff, #00e5ff); width: 100%; transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions Panel -->
+                    <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(0, 176, 255, 0.15); border-radius: 20px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="font-weight: bold; font-size: 0.9rem; color: #ffd700; text-transform: uppercase; letter-spacing: 0.5px;">Acciones de Cuidado</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;" class="pet-buttons-grid">
+                            
+                            <button class="cyber-chip" onclick="interactPet('feed')">
+                                <span style="font-size: 1.5rem; display: block; margin-bottom: 4px;">🥩</span>
+                                <div><strong>Alimentar</strong><small style="color: #ffc400;">Costo: 20 🪙</small></div>
+                            </button>
+
+                            <button class="cyber-chip" onclick="interactPet('play')">
+                                <span style="font-size: 1.5rem; display: block; margin-bottom: 4px;">🧶</span>
+                                <div><strong>Jugar</strong><small style="color: #b2ff59;">Gasta 20 Energía</small></div>
+                            </button>
+
+                            <button class="cyber-chip" onclick="interactPet('train')">
+                                <span style="font-size: 1.5rem; display: block; margin-bottom: 4px;">🎯</span>
+                                <div><strong>Entrenar</strong><small style="color: #00b0ff;">Gasta 30 E · Gana 50 🪙</small></div>
+                            </button>
+
+                            <button class="cyber-chip" onclick="interactPet('sleep')" id="petSleepBtn">
+                                <span style="font-size: 1.5rem; display: block; margin-bottom: 4px;">💤</span>
+                                <div id="petSleepBtnText"><strong>Dormir</strong><small>Recupera Energía</small></div>
+                            </button>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <footer>
@@ -1206,6 +1815,206 @@
             });
         }
 
+        // ─── CONTROL DE INTERFAZ DASHBOARD Y TIENDA ───
+        // ─── CONTROL DE INTERFAZ DASHBOARD Y TIENDA ───
+        function switchCoreMode(mode) {
+            const termContainer = document.getElementById('gameContainer');
+            const storeContainer = document.getElementById('storeContainer');
+            const petContainer = document.getElementById('petContainer');
+            const btnDashTerminal = document.getElementById('btnDashTerminal');
+            const btnDashStore = document.getElementById('btnDashStore');
+            const btnDashPet = document.getElementById('btnDashPet');
+
+            // Hide the dashboard card choices when opening either panel
+            document.getElementById('coreDashboard').style.display = 'none';
+
+            if (mode === 'terminal') {
+                termContainer.style.display = 'flex';
+                storeContainer.style.display = 'none';
+                petContainer.style.display = 'none';
+                btnDashTerminal.classList.add('active');
+                btnDashStore.classList.remove('active');
+                btnDashPet.classList.remove('active');
+                btnDashTerminal.querySelector('.btn').classList.remove('btn-ghost');
+                btnDashStore.querySelector('.btn').classList.add('btn-ghost');
+                btnDashPet.querySelector('.btn').classList.add('btn-ghost');
+            } else if (mode === 'store') {
+                termContainer.style.display = 'none';
+                storeContainer.style.display = 'block'; // block container wraps grid/tabs
+                petContainer.style.display = 'none';
+                btnDashTerminal.classList.remove('active');
+                btnDashStore.classList.add('active');
+                btnDashPet.classList.remove('active');
+                btnDashTerminal.querySelector('.btn').classList.add('btn-ghost');
+                btnDashStore.querySelector('.btn').classList.remove('btn-ghost');
+                btnDashPet.querySelector('.btn').classList.add('btn-ghost');
+                
+                // Reset store filters to show all by default when entering store
+                filterStore('all');
+            } else if (mode === 'pet') {
+                termContainer.style.display = 'none';
+                storeContainer.style.display = 'none';
+                petContainer.style.display = 'flex';
+                btnDashTerminal.classList.remove('active');
+                btnDashStore.classList.remove('active');
+                btnDashPet.classList.add('active');
+                btnDashTerminal.querySelector('.btn').classList.add('btn-ghost');
+                btnDashStore.querySelector('.btn').classList.add('btn-ghost');
+                btnDashPet.querySelector('.btn').classList.remove('btn-ghost');
+                
+                // Load or sync pet data
+                syncPetData();
+            }
+        }
+
+        function goBackToDashboard() {
+            document.getElementById('gameContainer').style.display = 'none';
+            document.getElementById('storeContainer').style.display = 'none';
+            document.getElementById('petContainer').style.display = 'none';
+            document.getElementById('coreDashboard').style.display = 'grid';
+            
+            // Reset active states on dashboard cards
+            document.getElementById('btnDashTerminal').classList.remove('active');
+            document.getElementById('btnDashStore').classList.remove('active');
+            document.getElementById('btnDashPet').classList.remove('active');
+            document.getElementById('btnDashTerminal').querySelector('.btn').classList.add('btn-ghost');
+            document.getElementById('btnDashStore').querySelector('.btn').classList.add('btn-ghost');
+            document.getElementById('btnDashPet').querySelector('.btn').classList.add('btn-ghost');
+            
+            // Re-enable/reset console state and floor view
+            resetControls();
+        }
+
+        function filterStore(category) {
+            const tabs = document.querySelectorAll('.store-tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            
+            // Highlight clicked tab based on onclick event target context
+            const activeTab = Array.from(tabs).find(t => t.outerHTML.includes(`filterStore('${category}')`));
+            if (activeTab) activeTab.classList.add('active');
+
+            const cards = document.querySelectorAll('.store-card');
+            cards.forEach(c => {
+                if (category === 'all' || c.dataset.category === category) {
+                    c.style.display = 'flex';
+                } else {
+                    c.style.display = 'none';
+                }
+            });
+        }
+
+        async function buyStoreItem(itemId, price, itemName) {
+            if (!currentUser) return;
+            if (userCoins < price) {
+                alert(`No tienes suficientes monedas. Necesitas 🪙 ${price.toLocaleString()} y tienes 🪙 ${userCoins.toLocaleString()}.`);
+                return;
+            }
+
+            if (!confirm(`¿Deseas comprar "${itemName}" por 🪙 ${price.toLocaleString()}?`)) return;
+
+            const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+            try {
+                // Read fresh balance
+                const docSnap = await window.getDoc(userDocRef);
+                if (!docSnap.exists()) return;
+                const data = docSnap.data();
+                const freshCoins = data.coins || 0;
+
+                if (freshCoins < price) {
+                    alert('Saldo desactualizado. No tienes suficientes monedas.');
+                    return;
+                }
+
+                const newBalance = freshCoins - price;
+                const updateFields = { coins: newBalance, updatedAt: new Date().toISOString() };
+
+                // Apply benefits in DB
+                if (itemId === 'role_vip') {
+                    updateFields.role = 'vip';
+                } else if (itemId === 'role_bug_hunter') {
+                    updateFields.role = 'bug_hunter';
+                } else if (itemId === 'role_moderator') {
+                    updateFields.role = 'moderator';
+                } else if (itemId === 'role_director_jr') {
+                    updateFields.role = 'director_jr';
+                } else if (itemId === 'title_coin_king') {
+                    updateFields.activeTitle = 'Rey de las Monedas';
+                    const currentTitles = Array.isArray(data.titles) ? data.titles : [];
+                    if (!currentTitles.includes('Rey de las Monedas')) currentTitles.push('Rey de las Monedas');
+                    updateFields.titles = currentTitles;
+                } else if (itemId === 'title_master_coder') {
+                    updateFields.activeTitle = 'Programador Maestro';
+                    const currentTitles = Array.isArray(data.titles) ? data.titles : [];
+                    if (!currentTitles.includes('Programador Maestro')) currentTitles.push('Programador Maestro');
+                    updateFields.titles = currentTitles;
+                } else if (itemId === 'title_magnate') {
+                    updateFields.activeTitle = 'Magnate Panter';
+                    const currentTitles = Array.isArray(data.titles) ? data.titles : [];
+                    if (!currentTitles.includes('Magnate Panter')) currentTitles.push('Magnate Panter');
+                    updateFields.titles = currentTitles;
+                } else if (itemId === 'title_alfa_legend') {
+                    updateFields.activeTitle = 'Leyenda del Alfa';
+                    const currentTitles = Array.isArray(data.titles) ? data.titles : [];
+                    if (!currentTitles.includes('Leyenda del Alfa')) currentTitles.push('Leyenda del Alfa');
+                    updateFields.titles = currentTitles;
+                } else if (itemId === 'item_emeralds') {
+                    updateFields.esmeraldas = (data.esmeraldas || 0) + 10;
+                } else if (itemId === 'item_emeralds_pack') {
+                    updateFields.esmeraldas = (data.esmeraldas || 0) + 30;
+                } else if (itemId === 'item_risk_insurance') {
+                    updateFields.riskInsurance = (data.riskInsurance || 0) + 1;
+                } else if (itemId === 'item_cooldown_reset') {
+                    updateFields.cooldownWork = 0;
+                    updateFields.cooldownRisk = 0;
+                    cooldowns.work = 0;
+                    cooldowns.risk = 0;
+                    localStorage.removeItem('panterAI_cooldown_work');
+                    localStorage.removeItem('panterAI_cooldown_risk');
+                } else if (itemId === 'pet_skin_astronaut') {
+                    const pet = data.pet || null;
+                    if (!pet) {
+                        alert('¡Necesitas adoptar una mascota primero en la sección de Mascota!');
+                        return;
+                    }
+                    const unlocked = Array.isArray(pet.unlockedAvatars) ? pet.unlockedAvatars : ['classic'];
+                    if (!unlocked.includes('astronaut')) unlocked.push('astronaut');
+                    updateFields.pet = { ...pet, unlockedAvatars: unlocked };
+                } else if (itemId === 'pet_skin_detective') {
+                    const pet = data.pet || null;
+                    if (!pet) {
+                        alert('¡Necesitas adoptar una mascota primero en la sección de Mascota!');
+                        return;
+                    }
+                    const unlocked = Array.isArray(pet.unlockedAvatars) ? pet.unlockedAvatars : ['classic'];
+                    if (!unlocked.includes('detective')) unlocked.push('detective');
+                    updateFields.pet = { ...pet, unlockedAvatars: unlocked };
+                }
+
+                await window.updateDoc(userDocRef, updateFields);
+
+                // Add to console log
+                const feed = document.getElementById('consoleFeed');
+                if (feed) {
+                    const entry = document.createElement('div');
+                    entry.className = 'console-entry';
+                    entry.innerHTML = `
+                        <span class="entry-label success">▶ TIENDA CORE</span>
+                        <div class="entry-body">
+                            ¡Compra exitosa! Adquiriste <strong>"${itemName}"</strong>. Se han debitado 🪙 ${price.toLocaleString()} de tu cuenta. Saldo actual: 🪙 ${newBalance.toLocaleString()}.
+                        </div>
+                    `;
+                    feed.appendChild(entry);
+                    scrollFeed();
+                    saveChatHistory();
+                }
+
+                alert(`¡Compra exitosa! Has adquirido "${itemName}".`);
+            } catch(e) {
+                console.error('Error al realizar compra:', e);
+                alert('No se pudo procesar la transacción. Intenta nuevamente.');
+            }
+        }
+
         async function initAIGame() {
             await waitForFirebase();
             
@@ -1220,7 +2029,13 @@
                 if (user) {
                     currentUser = user;
                     document.getElementById('authNotice').style.display = 'none';
-                    document.getElementById('gameContainer').style.display = 'flex';
+                    document.getElementById('coreDashboard').style.display = 'grid';
+                    
+                    // Do NOT show terminal/store automatically on login, wait for card click
+                    document.getElementById('gameContainer').style.display = 'none';
+                    document.getElementById('storeContainer').style.display = 'none';
+                    document.getElementById('btnDashTerminal').classList.remove('active');
+                    document.getElementById('btnDashStore').classList.remove('active');
                     
                     const userDocRef = window.fsDoc(window.db, 'conductores', user.uid);
                     window.onSnapshot(userDocRef, (snap) => {
@@ -1236,11 +2051,23 @@
                             if (data.cooldownRisk) {
                                 cooldowns.risk = Math.max(cooldowns.risk, Number(data.cooldownRisk) || 0);
                             }
+                            
+                            // Mascot snapshot sync
+                            if (data.pet) {
+                                currentPetData = data.pet;
+                                if (document.getElementById('petContainer').style.display !== 'none') {
+                                    updatePetUI();
+                                }
+                            } else {
+                                currentPetData = null;
+                            }
                         }
                     });
                 } else {
                     document.getElementById('authNotice').style.display = 'flex';
+                    document.getElementById('coreDashboard').style.display = 'none';
                     document.getElementById('gameContainer').style.display = 'none';
+                    document.getElementById('storeContainer').style.display = 'none';
                 }
             });
         }
@@ -2037,32 +2864,61 @@
             let amount = success ? 70 : 30; // Max 70 monedas exito, 30 multa
             let finalCoins = (Number(userCoins) || 0);
 
+            let insuranceUsed = false;
+            let currentInsurance = 0;
+
             if (success) {
                 finalCoins += amount;
             } else {
-                finalCoins = Math.max(0, finalCoins - amount);
+                // Check if user has insurance
+                try {
+                    const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                    const docSnap = await window.getDoc(userDocRef);
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        currentInsurance = Number(data.riskInsurance || 0);
+                        if (currentInsurance > 0) {
+                            insuranceUsed = true;
+                        }
+                    }
+                } catch(e) {
+                    console.warn('Fallo al comprobar seguro:', e);
+                }
+
+                if (insuranceUsed) {
+                    // Protected by insurance!
+                    reason = `🛡️ [SEGURO DE MISIÓN ACTIVADO] ${reason} Tu seguro ha absorbido la multa.`;
+                } else {
+                    finalCoins = Math.max(0, finalCoins - amount);
+                }
             }
 
             try {
                 const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
-                await window.setDoc(userDocRef, { 
+                const updateData = { 
                     coins: finalCoins, 
                     updatedAt: new Date().toISOString() 
-                }, { merge: true });
+                };
+
+                if (insuranceUsed) {
+                    updateData.riskInsurance = currentInsurance - 1;
+                }
+
+                await window.setDoc(userDocRef, updateData, { merge: true });
                 
                 try {
                     await window.addDoc(window.collection(window.db, 'conductores', currentUser.uid, 'activity'), {
                         type: 'crime',
-                        description: success ? `Exito en Mision de Riesgo (+${amount} 🪙)` : `Fallo en Mision de Riesgo (-${amount} 🪙)`,
-                        coins: success ? amount : -amount,
+                        description: success ? `Exito en Mision de Riesgo (+${amount} 🪙)` : (insuranceUsed ? `Fallo Protegido en Mision de Riesgo (0 🪙)` : `Fallo en Mision de Riesgo (-${amount} 🪙)`),
+                        coins: success ? amount : (insuranceUsed ? 0 : -amount),
                         createdAt: new Date().toISOString()
                     });
                 } catch (e) {
                     console.warn("Actividad no registrada:", e);
                 }
 
-                setCoreState(success ? 'success' : 'error');
-                logAIResponse(success ? 'Mision Completada' : 'Mision Fallida', `${reason} ${success ? `Ganancia: +$${amount} monedas.` : `Te aplican una multa de -$${amount} monedas.`} Saldo total: $${finalCoins} 🪙.`);
+                setCoreState(success ? 'success' : (insuranceUsed ? 'success' : 'error'));
+                logAIResponse(success ? 'Mision Completada' : (insuranceUsed ? '🛡️ Multa Cancelada' : 'Mision Fallida'), `${reason} ${success ? `Ganancia: +$${amount} monedas.` : (insuranceUsed ? `¡Sin cobro de multa!` : `Te aplican una multa de -$${amount} monedas.`)} Saldo total: $${finalCoins} 🪙.`);
             } catch (err) {
                 console.error(err);
                 setCoreState('error');
@@ -2206,7 +3062,7 @@
                             </div>
                             <div class="table-info">
                                 <h4>🃏 Estrategia 21</h4>
-                                <span>Limite 21 | Apuesta: $500 🪙</span>
+                                <span>Mesa 21 | Apuesta: $10 🪙</span>
                             </div>
                         </div>
 
@@ -3561,6 +4417,330 @@
             `;
             
             activeBlackjack = null;
+        }
+
+        // ══════════════════════════════════════
+        // MASCOTA PANTER (VIRTUAL PET SYSTEM)
+        // ══════════════════════════════════════
+        let currentPetData = null;
+        let petDecayTimer = null;
+
+        async function adoptNewPet() {
+            if (!currentUser) return;
+            const nameInput = document.getElementById('adoptPetNameInput');
+            const name = nameInput.value.trim();
+            if (!name) {
+                alert('Por favor ingresa un nombre para tu pantera.');
+                return;
+            }
+            if (name.length > 15) {
+                alert('El nombre es demasiado largo (máximo 15 caracteres).');
+                return;
+            }
+
+            const initialPet = {
+                name: name,
+                level: 1,
+                exp: 0,
+                hunger: 100,
+                happiness: 100,
+                energy: 100,
+                avatarId: 'classic',
+                unlockedAvatars: ['classic'],
+                lastUpdate: new Date().toISOString()
+            };
+
+            try {
+                const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                await window.setDoc(userDocRef, { pet: initialPet }, { merge: true });
+                
+                // Add activity log
+                try {
+                    await window.addDoc(window.collection(window.db, 'conductores', currentUser.uid, 'activity'), {
+                        type: 'profile',
+                        description: `Adoptaste a tu mascota virtual: ${name} 🐾`,
+                        coins: 0,
+                        createdAt: new Date().toISOString()
+                    });
+                } catch(e){}
+                
+                syncPetData();
+            } catch(err) {
+                console.error(err);
+                alert('Error al adoptar la mascota.');
+            }
+        }
+
+        function syncPetData() {
+            if (!currentUser) return;
+            if (!currentPetData) {
+                document.getElementById('petAdoptionPanel').style.display = 'flex';
+                document.getElementById('petActivePanel').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('petAdoptionPanel').style.display = 'none';
+            document.getElementById('petActivePanel').style.display = 'grid';
+
+            // Calculate decay based on time elapsed since lastUpdate
+            const last = new Date(currentPetData.lastUpdate);
+            const now = new Date();
+            const elapsedSeconds = Math.max(0, Math.floor((now - last) / 1000));
+
+            if (elapsedSeconds > 10) {
+                // Hunger decay: 1% every 5 minutes (300 seconds)
+                // Happiness decay: 1% every 7 minutes (420 seconds)
+                // Energy decay: 1% every 6 minutes (360 seconds)
+                // Sleeping recovery: 1% every 2 minutes (120 seconds)
+                const hungerDecay = Math.floor(elapsedSeconds / 300);
+                const happinessDecay = Math.floor(elapsedSeconds / 420);
+                
+                let energyDelta = 0;
+                if (currentPetData.isSleeping) {
+                    energyDelta = Math.floor(elapsedSeconds / 120);
+                } else {
+                    energyDelta = -Math.floor(elapsedSeconds / 360);
+                }
+
+                currentPetData.hunger = Math.max(0, currentPetData.hunger - hungerDecay);
+                currentPetData.happiness = Math.max(0, currentPetData.happiness - happinessDecay);
+                currentPetData.energy = Math.max(0, Math.min(100, currentPetData.energy + energyDelta));
+                currentPetData.lastUpdate = now.toISOString();
+
+                // Save updated values to Firestore
+                const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                window.setDoc(userDocRef, { pet: currentPetData }, { merge: true }).catch(err => console.error(err));
+            }
+
+            updatePetUI();
+
+            // Set a timer for live updates
+            if (petDecayTimer) clearInterval(petDecayTimer);
+            petDecayTimer = setInterval(() => {
+                if (currentPetData) {
+                    if (currentPetData.isSleeping) {
+                        currentPetData.energy = Math.min(100, currentPetData.energy + 1);
+                    } else {
+                        // Regular live decay every minute
+                        currentPetData.hunger = Math.max(0, currentPetData.hunger - 0.2);
+                        currentPetData.happiness = Math.max(0, currentPetData.happiness - 0.15);
+                        currentPetData.energy = Math.max(0, currentPetData.energy - 0.1);
+                    }
+                    updatePetUI();
+                }
+            }, 30000); // every 30 seconds
+        }
+
+        const PET_AVATARS = {
+            classic: '🐈‍⬛',
+            cyber: '🤖🐈‍⬛',
+            astronaut: '👨‍🚀🐈‍⬛',
+            detective: '🕵️🐈‍⬛',
+            golden: '👑🐈‍⬛'
+        };
+
+        function updatePetUI() {
+            if (!currentPetData) return;
+
+            const hunger = Math.round(currentPetData.hunger || 0);
+            const happiness = Math.round(currentPetData.happiness || 0);
+            const energy = Math.round(currentPetData.energy || 0);
+            const level = currentPetData.level || 1;
+            const exp = currentPetData.exp || 0;
+            const name = currentPetData.name || 'Pantercito';
+            const avatarId = currentPetData.avatarId || 'classic';
+            
+            // Set basic values
+            document.getElementById('petLevelDisplay').textContent = level;
+            document.getElementById('petNameDisplay').textContent = name;
+            
+            // Set avatar visual representation
+            const visual = PET_AVATARS[avatarId] || '🐈‍⬛';
+            document.getElementById('petVisual').textContent = visual;
+
+            // Set progress bars
+            document.getElementById('petHungerText').textContent = `${hunger}%`;
+            document.getElementById('petHungerBar').style.width = `${hunger}%`;
+            
+            document.getElementById('petHappinessText').textContent = `${happiness}%`;
+            document.getElementById('petHappinessBar').style.width = `${happiness}%`;
+            
+            document.getElementById('petEnergyText').textContent = `${energy}%`;
+            document.getElementById('petEnergyBar').style.width = `${energy}%`;
+
+            const nextLevelExp = level * 500;
+            document.getElementById('petExpText').textContent = `${exp} / ${nextLevelExp}`;
+            document.getElementById('petExpFill').style.width = `${Math.min(100, (exp / nextLevelExp) * 100)}%`;
+
+            // State and reactions
+            let stateText = 'Cachorro Feliz';
+            let reaction = '';
+
+            if (currentPetData.isSleeping) {
+                stateText = 'Durmiendo... 💤';
+                document.getElementById('petVisual').style.animation = 'petBreath 1s ease-in-out infinite';
+                document.getElementById('petSleepBtnText').innerHTML = '<strong>Despertar</strong><small>Activar mascota</small>';
+                document.getElementById('petStatusLabel').textContent = 'MASCOTA DURMIENDO';
+                document.getElementById('petStatusLabel').style.color = '#ffd700';
+            } else {
+                document.getElementById('petVisual').style.animation = 'petBreath 3s ease-in-out infinite';
+                document.getElementById('petSleepBtnText').innerHTML = '<strong>Dormir</strong><small>Recupera Energía</small>';
+                document.getElementById('petStatusLabel').textContent = 'PANTERA CACHORRO EN LÍNEA';
+                document.getElementById('petStatusLabel').style.color = '#00e676';
+
+                if (hunger < 30) {
+                    stateText = 'Muy hambriento 🥩';
+                    reaction = '¡Tengo mucha hambre! ¿Me das de comer? 🥺';
+                } else if (happiness < 30) {
+                    stateText = 'Aburrido 🧶';
+                    reaction = 'Estoy un poco aburrido... ¿Jugamos? 🥺';
+                } else if (energy < 20) {
+                    stateText = 'Cansado 💤';
+                    reaction = 'Estoy muy cansado. Debería ir a dormir... 😴';
+                } else {
+                    stateText = 'Jugando felizmente ✨';
+                }
+            }
+
+            document.getElementById('petStateText').textContent = stateText;
+            
+            const bubble = document.getElementById('petReactionBubble');
+            if (reaction) {
+                bubble.textContent = reaction;
+                bubble.style.display = 'block';
+            } else {
+                bubble.style.display = 'none';
+            }
+        }
+
+        async function interactPet(action) {
+            if (!currentUser || !currentPetData) return;
+            const now = new Date();
+
+            if (currentPetData.isSleeping && action !== 'sleep') {
+                alert('¡Shhh! Tu mascota está durmiendo. Despiértala primero.');
+                return;
+            }
+
+            const visual = document.getElementById('petVisual');
+
+            if (action === 'feed') {
+                if (userCoins < 20) {
+                    alert('No tienes suficientes monedas web (necesitas 20 🪙).');
+                    return;
+                }
+                if (currentPetData.hunger >= 100) {
+                    alert('Tu mascota ya está llena.');
+                    return;
+                }
+
+                currentPetData.hunger = Math.min(100, currentPetData.hunger + 30);
+                addPetExp(50);
+                currentPetData.lastUpdate = now.toISOString();
+                
+                // Rest coins
+                try {
+                    const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                    await window.updateDoc(userDocRef, {
+                        coins: userCoins - 20,
+                        pet: currentPetData
+                    });
+                    
+                    // Trigger jump animation
+                    visual.classList.add('pet-jump-animation');
+                    setTimeout(() => visual.classList.remove('pet-jump-animation'), 500);
+                } catch(e) {
+                    console.error(e);
+                }
+            } else if (action === 'play') {
+                if (currentPetData.energy < 20) {
+                    alert('Tu mascota no tiene suficiente energía (necesita al menos 20 ⚡).');
+                    return;
+                }
+                if (currentPetData.happiness >= 100) {
+                    alert('Tu mascota ya está súper feliz.');
+                    return;
+                }
+
+                currentPetData.energy = Math.max(0, currentPetData.energy - 20);
+                currentPetData.happiness = Math.min(100, currentPetData.happiness + 40);
+                addPetExp(75);
+                currentPetData.lastUpdate = now.toISOString();
+
+                try {
+                    const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                    await window.updateDoc(userDocRef, { pet: currentPetData });
+                    
+                    visual.classList.add('pet-jump-animation');
+                    setTimeout(() => visual.classList.remove('pet-jump-animation'), 500);
+                } catch(e) {
+                    console.error(e);
+                }
+            } else if (action === 'train') {
+                if (currentPetData.energy < 30) {
+                    alert('Tu mascota no tiene suficiente energía para entrenar (necesita al menos 30 ⚡).');
+                    return;
+                }
+
+                currentPetData.energy = Math.max(0, currentPetData.energy - 30);
+                addPetExp(100);
+                currentPetData.lastUpdate = now.toISOString();
+
+                try {
+                    const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                    await window.updateDoc(userDocRef, {
+                        coins: userCoins + 50,
+                        pet: currentPetData
+                    });
+
+                    // Activity log for pet training earnings
+                    await window.addDoc(window.collection(window.db, 'conductores', currentUser.uid, 'activity'), {
+                        type: 'daily',
+                        description: `Entrenamiento de Mascota (+50 🪙)`,
+                        coins: 50,
+                        createdAt: new Date().toISOString()
+                    });
+                    
+                    visual.classList.add('pet-jump-animation');
+                    setTimeout(() => visual.classList.remove('pet-jump-animation'), 500);
+                } catch(e) {
+                    console.error(e);
+                }
+            } else if (action === 'sleep') {
+                currentPetData.isSleeping = !currentPetData.isSleeping;
+                currentPetData.lastUpdate = now.toISOString();
+
+                try {
+                    const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                    await window.updateDoc(userDocRef, { pet: currentPetData });
+                } catch(e) {
+                    console.error(e);
+                }
+            }
+        }
+
+        function addPetExp(amount) {
+            currentPetData.exp += amount;
+            const nextLevelExp = currentPetData.level * 500;
+            if (currentPetData.exp >= nextLevelExp) {
+                currentPetData.exp -= nextLevelExp;
+                currentPetData.level += 1;
+                
+                // Show glitch/level up animation
+                const visual = document.getElementById('petVisual');
+                visual.classList.add('pet-glitch-animation');
+                setTimeout(() => visual.classList.remove('pet-glitch-animation'), 800);
+
+                // Add unlocked avatars as they level up
+                if (currentPetData.level >= 3 && !currentPetData.unlockedAvatars.includes('cyber')) {
+                    currentPetData.unlockedAvatars.push('cyber');
+                }
+                if (currentPetData.level >= 5 && !currentPetData.unlockedAvatars.includes('golden')) {
+                    currentPetData.unlockedAvatars.push('golden');
+                }
+
+                alert(`¡Felicidades! Tu mascota ha subido al Nivel ${currentPetData.level}! 🎉`);
+            }
         }
 
         document.addEventListener('DOMContentLoaded', initAIGame);

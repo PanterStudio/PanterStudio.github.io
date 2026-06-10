@@ -1341,17 +1341,30 @@
     .auth-logo { width: 56px; height: 56px; }
     
     .ph {
-      grid-template-columns: 48px 1fr;
-      padding: var(--space-sm);
-      gap: var(--space-sm);
+      flex-direction: column;
+      align-items: flex-start;
+      min-height: unset;
+      padding: 1.2rem;
+      gap: 1rem;
     }
-    
+
+    .ph-main-row {
+      gap: 1rem;
+    }
+
     .ph-right {
-      display: none; /* Ocultar botones en hero móvil */
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 8px;
+      width: 100%;
+      justify-content: flex-start;
+      align-items: center;
     }
     
-    .ph-info h2 { font-size: 1rem; }
-    .ph-info p { font-size: .7rem; }
+    .ph-info h2 { font-size: 1.1rem; }
+    .ph-info p { font-size: .75rem; }
+    .ph-level-bar-wrap { width: 100% !important; max-width: 280px; }
     
     .kpis {
       grid-template-columns: repeat(3, 1fr);
@@ -1623,17 +1636,29 @@
         </div>
       </div>
       <div class="ph-right">
-        <div class="coins-chip" aria-label="Saldo de monedas">
+        <!-- Coins chip -->
+        <div class="coins-chip" aria-label="Saldo de monedas" style="flex-shrink:0;">
           <b id="profileCoins">0</b>
-          <small>🪙 monedas</small>
-          <small id="profileCoinsDollars" style="color:#a5f3fc;display:block"></small>
+          <small>🪙 monedas web</small>
         </div>
-        <div style="display:flex;gap:var(--space-xs);flex-direction:row;flex-wrap:wrap;justify-content:flex-end;align-items:center;">
-          <div id="profileAdminTools" hidden style="margin:0;">
-            <a href="admin/admin.html" class="pb gold sm" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px; font-weight:700;">🛡️ Panel Admin</a>
+        <!-- Action buttons -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <!-- Admin button — visible solo si el usuario tiene rol -->
+          <div id="profileAdminTools" hidden>
+            <a href="admin/admin.html"
+               style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;
+                      padding:8px 14px; border-radius:10px; font-weight:800; font-size:0.82rem;
+                      background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.08));
+                      border:1.5px solid rgba(212,175,55,0.6); color:#ffd966;
+                      box-shadow:0 0 16px rgba(212,175,55,0.25); white-space:nowrap;
+                      min-height:40px; transition:all 0.2s;"
+               onmouseover="this.style.boxShadow='0 0 28px rgba(212,175,55,0.5)';this.style.background='linear-gradient(135deg,rgba(212,175,55,0.35),rgba(212,175,55,0.15))';"
+               onmouseout="this.style.boxShadow='0 0 16px rgba(212,175,55,0.25)';this.style.background='linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.08))';">
+              🛡️ Panel Admin
+            </a>
           </div>
-          <button class="pb prim sm" id="editProfileBtn">✏️ Editar</button>
-          <button class="pb dng sm" id="logoutBtn">🚪 Salir</button>
+          <button class="pb prim sm" id="editProfileBtn" style="min-height:40px;">✏️ Editar</button>
+          <button class="pb dng sm" id="logoutBtn" style="min-height:40px;">🚪 Salir</button>
         </div>
       </div>
     </div>
@@ -1717,6 +1742,30 @@
           <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 12px; margin-bottom: 0; line-height:1.3">
             * Sincronizado automáticamente con tu cuenta en el juego.
           </p>
+        </article>
+
+        <!-- 🐾 MASCOTA PANTER WIDGET -->
+        <article class="pc" id="profilePetWidget" style="border-color:#00e676; box-shadow:0 0 15px rgba(0, 230, 118, 0.1); display: none;">
+          <div class="pc-h">
+            <h3 id="petWidgetTitle" style="color:#00e676;">🐾 Mascota Virtual</h3>
+            <span style="color:#00e676;font-weight:800">PANTER PET</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 15px; padding: 10px 0;">
+            <div id="profilePetAvatar" style="font-size: 3rem; background: rgba(0, 230, 118, 0.08); width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 1.5px solid rgba(0, 230, 118, 0.3); animation: petBreath 3s ease-in-out infinite;">🐈‍⬛</div>
+            <div style="flex: 1;">
+              <h4 id="profilePetName" style="margin: 0; color: #fff; font-size: 1.1rem; font-weight: bold;">Cargando...</h4>
+              <p style="margin: 2px 0 0 0; color: var(--text-muted); font-size: 0.8rem;">Nivel Mascota: <span id="profilePetLevel">—</span></p>
+              <div style="display: flex; gap: 10px; margin-top: 6px; font-size: 0.72rem; color: var(--text-secondary);">
+                <span id="profilePetHunger">🥩 —</span>
+                <span id="profilePetHappiness">🧶 —</span>
+                <span id="profilePetEnergy">⚡ —</span>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 10px;">
+            <a href="minijuegos.html" class="pb prim sm" style="text-align: center; text-decoration: none; border-color: rgba(0, 230, 118, 0.3); color: #00e676; flex: 1; min-height: 36px; line-height: 1.8;">Jugar con Mascota</a>
+            <button class="pb sm" id="changePetAvatarBtn" style="border-color: rgba(255,255,255,0.08); flex: 1;" onclick="openPetAvatarSelectorModal()">Cambiar Aspecto</button>
+          </div>
         </article>
 
         <!-- 💸 TRANSFERENCIA DE FONDOS (PanterPay) -->
@@ -1822,12 +1871,12 @@
         <article class="pc" aria-labelledby="redeemTitle">
           <div class="pc-h">
             <h3 id="redeemTitle">💎 Canjear monedas</h3>
-            <span>50000🪙 = 50💎</span>
+            <span>50,000 🪙 = 50 Esmeraldas (Juego)</span>
           </div>
           <div class="rdm-stats" aria-label="Estadísticas de canje">
             <span class="rdm-stat">Disponibles: <b id="redeemCoinsAvailable">0</b> 🪙</span>
-            <span class="rdm-stat">Equiv.: <b id="redeemDollars">0 💎</b></span>
-            <span class="rdm-stat">Canjeado: <b id="redeemTotalPaid">0 💎</b></span>
+            <span class="rdm-stat">Equiv.: <b id="redeemDollars">0 Esmeraldas</b></span>
+            <span class="rdm-stat">Canjeado: <b id="redeemTotalPaid">0 Esmeraldas</b></span>
             <span class="rdm-stat">Canjes: <b id="redeemTotalCount">0</b></span>
           </div>
           <div class="rdm-row">
@@ -1853,6 +1902,18 @@
           <div class="ref-stats">
             <span class="ref-stat">Total: <strong id="referralCount">0</strong></span>
             <span class="ref-stat">Ganados: <strong id="referralCoins">0</strong> 🪙</span>
+          </div>
+
+          <!-- Manual Referral Code entry box for users who registered without one -->
+          <div id="manualReferralBox" style="margin-top: var(--space-md); border-top: 1px solid rgba(255,255,255,0.08); padding-top: var(--space-md); display: none;">
+            <p style="font-size: .8rem; color: var(--text-muted); margin-bottom: var(--space-xs)">
+              ¿Tienes un código de referido? Ingrésalo aquí:
+            </p>
+            <div style="display: flex; gap: var(--space-xs);">
+              <input type="text" id="manualReferralInput" class="p-inp" placeholder="Código (ej. AB12CD)" style="text-transform: uppercase; font-size: 0.85rem;" autocomplete="off">
+              <button class="pb prim sm" id="manualReferralBtn">Reclamar</button>
+            </div>
+            <div id="manualReferralMessage" style="font-size: 0.75rem; margin-top: 4px;" role="status" aria-live="polite"></div>
           </div>
         </article>
         
@@ -1887,6 +1948,12 @@
         <div class="pm-grp">
           <label for="editDisplayName">Nombre de usuario</label>
           <input type="text" id="editDisplayName" class="pm-inp" placeholder="Tu nombre visible" maxlength="40">
+        </div>
+
+        <!-- Nombre Mascota -->
+        <div class="pm-grp" id="editPetNameGroup" style="display:none;">
+          <label for="editPetName">Nombre de tu Mascota</label>
+          <input type="text" id="editPetName" class="pm-inp" placeholder="Nombre de tu pantera" maxlength="15">
         </div>
         
         <!-- País y Proyecto -->
@@ -1946,6 +2013,14 @@
             
           </div>
         </div>
+
+        <!-- Avatares de Mascota Unlocked -->
+        <div class="pm-grp" id="petAvatarsSelectionGroup" style="display:none; margin-top: 15px;">
+          <label>Avatares Exclusivos de Mascota (Desbloqueados)</label>
+          <div class="av-grid" id="unlockedPetAvatarsGrid" role="radiogroup" aria-label="Seleccionar avatar de mascota">
+            <!-- Populated dynamically by JS -->
+          </div>
+        </div>
         
       </div>
       
@@ -1954,6 +2029,23 @@
         <button type="submit" class="pb prim">Guardar cambios</button>
       </div>
     </form>
+  </dialog>
+
+  <!-- 🐾 MODAL: Aspecto Mascota -->
+  <dialog class="pm" id="petAvatarModal" role="dialog" aria-modal="true" aria-labelledby="petModalTitle">
+    <div class="pm-h">
+      <h3 id="petModalTitle">Aspecto de Mascota</h3>
+      <button class="pb sm dng" data-close-modal="petAvatarModal" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="pm-b">
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 15px;">Elige el aspecto que lucirá tu cachorro de pantera en tu terminal y perfil:</p>
+      <div class="av-grid" id="petAvatarsSelectorGrid" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+    <div class="pm-f">
+      <button type="button" class="pb" data-close-modal="petAvatarModal">Cerrar</button>
+    </div>
   </dialog>
   
   <!-- 🦶 Footer -->

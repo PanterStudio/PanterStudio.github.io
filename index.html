@@ -236,7 +236,7 @@
                     <a href="pages/videos.html">Videos</a>
                 </div>
             </div>
-            <a href="pages/minijuegos.html">Minijuegos</a>
+            <a href="pages/minijuegos.html">Panter Core</a>
             <a href="pages/donaciones.html">Apoyanos</a>
             <a href="pages/personal.html">Personal</a>
             <a href="pages/perfil.html">Mi Perfil</a>
@@ -258,7 +258,7 @@
                 <a href="pages/videos.html">Videos</a>
             </div>
             <hr>
-            <a href="pages/minijuegos.html">Minijuegos</a>
+            <a href="pages/minijuegos.html">Panter Core</a>
             <a href="pages/donaciones.html">Apoyanos</a>
             <a href="pages/personal.html">Personal</a>
             <a href="pages/perfil.html">Mi Perfil</a>
@@ -269,32 +269,15 @@
     <!-- MAIN CONTAINER -->
     <div class="container" style="padding-top: 0.5rem;">
 
-        <!-- STATUS BAR -->
-        <div class="hub-status-bar">
-            <div class="hub-status-servers">
-                <div class="server-status-item">
-                    <span class="pulsing-dot online"></span>
-                    Servidor Alfa: <strong>Desarrollo Activo</strong>
-                </div>
-                <div class="server-status-item">
-                    <span class="pulsing-dot online"></span>
-                    Minijuegos Web: <strong>Online</strong>
-                </div>
-                <div class="server-status-item">
-                    <span class="pulsing-dot online"></span>
-                    Firebase: <strong>Conectada</strong>
-                </div>
-            </div>
-            <div style="font-size:0.8rem; font-weight:700; color:var(--color-accent); letter-spacing:0.5px;">
-                VERS. DE DESARROLLO: v0.4.2-ALPHA
-            </div>
-        </div>
+
+        <!-- TABLÓN DE ANUNCIOS COMUNIDAD -->
+        <div id="comunidadAnnouncements" class="comunidad-announcements-banner" style="display: none;"></div>
 
         <!-- HUB GRID: LEFT (main) / RIGHT (sidebar) -->
         <div class="hub-grid">
 
             <!-- ===== COLUMNA IZQUIERDA ===== -->
-            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+            <div class="hub-left-col" style="display:flex; flex-direction:column; gap:1.5rem;">
 
                 <!-- FLAGSHIP HERO -->
                 <div class="hub-hero-premium">
@@ -330,29 +313,9 @@
                     </div>
                 </div>
 
-                <!-- DEVLOGS SECTION -->
-                <div class="home-devlogs-section">
-                    <div class="hub-section-title">
-                        <span style="color:var(--color-primary-light);">📋</span> Últimas Novedades
-                    </div>
-                    <div id="homeDevlogsGrid" class="devlogs-grid">
-                        <!-- Injected by JS -->
-                        <div class="mini-devlog-card" style="opacity:0.5;">
-                            <div style="width:110px;height:70px;border-radius:6px;background:var(--bg-glass-card-hover);flex-shrink:0;"></div>
-                            <div class="mini-devlog-body">
-                                <div class="loading-pulse" style="width:70%; margin-bottom:8px;"></div>
-                                <div class="loading-pulse" style="width:90%; height:0.7em; margin-bottom:4px;"></div>
-                                <div class="loading-pulse" style="width:60%; height:0.7em;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <a href="pages/actualizaciones.html" class="btn btn-ghost btn-sm" style="margin-top:1rem; width:100%; justify-content:center;">
-                        Ver todas las actualizaciones →
-                    </a>
-                </div>
 
                 <!-- HOW IT WORKS -->
-                <div>
+                <div class="home-steps-section">
                     <div class="hub-section-title">
                         <span style="color:var(--color-primary-light);">🚀</span> Cómo Empezar
                     </div>
@@ -479,7 +442,7 @@
                 </div>
 
                 <!-- SOBRE EL ESTUDIO -->
-                <div class="hub-card" style="gap:1rem;">
+                <div class="hub-card home-about-card" style="gap:1rem;">
                     <div>
                         <div class="hub-section-title" style="font-size:1rem; margin-bottom:0.5rem;">
                             <span>🎮</span> Panter Studio
@@ -529,6 +492,8 @@
     <script>
     // ===== HOME HUB DYNAMIC CONTENT =====
     (function() {
+        let currentUser = null;
+
         function waitForFirebase(timeout = 8000) {
             return new Promise((resolve) => {
                 if (window.auth && window.db && window.collection) return resolve(true);
@@ -771,6 +736,7 @@
             const ok = await waitForFirebase();
             if (!ok) return;
             window.auth.onAuthStateChanged(async (user) => {
+                currentUser = user;
                 const nameEl = document.getElementById('hubAccountName');
                 const statusEl = document.getElementById('hubAccountStatus');
                 const avatarEl = document.getElementById('hubAccountAvatar');
@@ -792,7 +758,7 @@
                         if (docSnap.exists()) {
                             const d = docSnap.data();
                             if (coinsEl) coinsEl.textContent = (d.coins || 0).toLocaleString();
-                            if (emeraldsEl) emeraldsEl.textContent = (d.emeralds || 0).toLocaleString();
+                            if (emeraldsEl) emeraldsEl.textContent = (d.esmeraldas !== undefined ? d.esmeraldas : 0).toLocaleString();
                             if (gamesEl) {
                                 // load streak/game count
                                 gamesEl.textContent = (d.streak || 0) + ' días';
@@ -804,6 +770,7 @@
                         }
                     } catch(e) { console.warn('Load user widget details error:', e); }
                 } else {
+                    currentUser = null;
                     if (nameEl) nameEl.textContent = 'Invitado';
                     if (statusEl) statusEl.textContent = 'No has iniciado sesión';
                     if (coinsEl) coinsEl.textContent = '—';
@@ -829,13 +796,205 @@
             } catch(e) { /* silent */ }
         }
 
+        // -- Load Community Announcements --
+        // -- Toggle Announcement Like --
+        async function toggleAnnouncementLike(annId) {
+            if (!currentUser) {
+                const modal = document.getElementById('authModal');
+                if (modal) {
+                    modal.hidden = false;
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    alert('Debes iniciar sesión para reaccionar a los anuncios.');
+                }
+                return;
+            }
+
+            const cacheKey = 'ps_announcements_cache';
+            let liveUpdated = false;
+            const uid = currentUser.uid;
+
+            // Online update via Firestore
+            const ok = await waitForFirebase();
+            if (ok && window.db && window.fsDoc && window.getDoc && window.updateDoc) {
+                try {
+                    const docRef = window.fsDoc(window.db, 'announcements', annId);
+                    const snap = await window.getDoc(docRef);
+                    if (snap.exists()) {
+                        const data = snap.data();
+                        let likes = Array.isArray(data.likes) ? data.likes : [];
+                        if (likes.includes(uid)) {
+                            likes = likes.filter(id => id !== uid);
+                        } else {
+                            likes.push(uid);
+                        }
+                        await window.updateDoc(docRef, { likes: likes });
+                        liveUpdated = true;
+                        
+                        // Update cache
+                        const cached = localStorage.getItem(cacheKey);
+                        if (cached) {
+                            try {
+                                const parsed = JSON.parse(cached);
+                                const idx = parsed.findIndex(a => a.id === annId);
+                                if (idx !== -1) {
+                                    parsed[idx].likes = likes;
+                                    localStorage.setItem(cacheKey, JSON.stringify(parsed));
+                                }
+                            } catch(e) {}
+                        }
+                    }
+                } catch(e) {
+                    console.warn('Firestore like toggle error:', e);
+                }
+            }
+
+            // Fallback / Offline local update
+            if (!liveUpdated) {
+                try {
+                    const cached = localStorage.getItem(cacheKey);
+                    if (cached) {
+                        const parsed = JSON.parse(cached);
+                        const idx = parsed.findIndex(a => a.id === annId);
+                        if (idx !== -1) {
+                            let likes = Array.isArray(parsed[idx].likes) ? parsed[idx].likes : [];
+                            if (likes.includes(uid)) {
+                                likes = likes.filter(id => id !== uid);
+                            } else {
+                                likes.push(uid);
+                            }
+                            parsed[idx].likes = likes;
+                            localStorage.setItem(cacheKey, JSON.stringify(parsed));
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            // Re-render
+            loadComunidadAnnouncements();
+        }
+
+        // -- Load Community Announcements --
+        async function loadComunidadAnnouncements() {
+            const ok = await waitForFirebase();
+            const banner = document.getElementById('comunidadAnnouncements');
+            if (!banner) return;
+
+            // Load local cache first to render immediately
+            const cacheKey = 'ps_announcements_cache';
+            const local = [];
+            try {
+                const cached = localStorage.getItem(cacheKey);
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (Array.isArray(parsed)) local.push(...parsed);
+                }
+            } catch(e) {}
+
+            function renderAnnouncements(items) {
+                if (!items || items.length === 0) {
+                    banner.style.display = 'none';
+                    return;
+                }
+                banner.style.display = 'block';
+
+                const icons = {
+                    general: '📢',
+                    update: '⚡',
+                    event: '🏆',
+                    alert: '⚠️',
+                    maintenance: '⚙️'
+                };
+                
+                // Sort by date descending, take top 2
+                const sorted = items.sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 2);
+
+                const uid = currentUser ? currentUser.uid : '';
+
+                banner.innerHTML = `
+                    <div class="ann-banner-header">
+                        <span>📢 Anuncios de la Comunidad</span>
+                        <a href="pages/actualizaciones.html" class="ann-banner-view-all">Ver todos →</a>
+                    </div>
+                    <div class="ann-banner-grid">
+                        ${sorted.map(d => {
+                            const icon = icons[d.type] || '📢';
+                            const date = d.createdAt ? new Date(d.createdAt).toLocaleDateString('es-CO', {day:'numeric', month:'short'}) : '';
+                            const likes = Array.isArray(d.likes) ? d.likes : [];
+                            const hasLiked = uid && likes.includes(uid);
+                            const likesCount = likes.length;
+
+                            return `
+                                <div class="ann-banner-item type-${d.type || 'general'}">
+                                    <div class="ann-banner-badge-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                                        <div class="ann-banner-badge">
+                                            <span>${icon}</span> ${String(d.type || 'general').toUpperCase()}
+                                        </div>
+                                        <button class="ann-like-btn ${hasLiked ? 'liked' : ''}" data-id="${d.id}" title="${hasLiked ? 'Quitar Me gusta' : 'Dar Me gusta'}" style="background:none; border:none; color:inherit; cursor:pointer; display:flex; align-items:center; gap:4px; font-size:0.8rem; outline:none; transition:transform 0.15s ease;">
+                                            <span class="like-heart" style="transition: transform 0.2s ease; display:inline-block; font-size:0.9rem;">${hasLiked ? '❤️' : '🤍'}</span>
+                                            <span class="like-count" style="font-weight:700; color:var(--text-secondary);">${likesCount}</span>
+                                        </button>
+                                    </div>
+                                    <h4 class="ann-banner-title">${d.title}</h4>
+                                    <p class="ann-banner-body">${d.body}</p>
+                                    <div class="ann-banner-meta">Por ${d.createdBy || 'Admin'} · ${date}</div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+
+                // Bind click delegation for likes only once
+                if (!banner.dataset.listenerBound) {
+                    banner.addEventListener('click', async (e) => {
+                        const likeBtn = e.target.closest('.ann-like-btn');
+                        if (!likeBtn) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const annId = likeBtn.dataset.id;
+                        if (annId) {
+                            likeBtn.style.transform = 'scale(1.25)';
+                            setTimeout(() => { likeBtn.style.transform = 'scale(1)'; }, 150);
+                            await toggleAnnouncementLike(annId);
+                        }
+                    });
+                    banner.dataset.listenerBound = 'true';
+                }
+            }
+
+            // Render cached first
+            if (local.length > 0) {
+                renderAnnouncements(local);
+            }
+
+            if (!ok) return;
+
+            // Then fetch live from Firestore
+            try {
+                const snap = await window.getDocs(window.collection(window.db, 'announcements'));
+                const docs = [];
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    let created = data.createdAt;
+                    if (created && created.toDate) created = created.toDate().toISOString();
+                    docs.push({ id: doc.id, ...data, createdAt: created });
+                });
+
+                // Update cache
+                localStorage.setItem(cacheKey, JSON.stringify(docs));
+                renderAnnouncements(docs);
+            } catch(e) {
+                console.warn('Error loading live announcements:', e);
+            }
+        }
+
         // Run all
         document.addEventListener('DOMContentLoaded', () => {
             loadLeaderboard();
-            loadDevlogs();
             loadPreregStats();
             loadAccountWidget();
             loadPlayerStats();
+            loadComunidadAnnouncements();
         });
     })();
     </script>

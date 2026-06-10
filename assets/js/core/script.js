@@ -205,17 +205,34 @@ async function applyReferralCode(refCode, newUserUid, currentProfile = null) {
     if (!referrer) return { applied: false, reason: 'invalid', reward: 0 };
     if (referrer.id === newUserUid) return { applied: false, reason: 'self', reward: 0 };
 
-    const reward = DEFAULT_REFERRAL_REWARD;
+    let reward = DEFAULT_REFERRAL_REWARD;
+    try {
+        if (window.db && window.fsDoc && window.getDoc) {
+            const settingsSnap = await window.getDoc(window.fsDoc(window.db, 'settings', 'site'));
+            if (settingsSnap.exists()) {
+                const val = parseInt(settingsSnap.data().referralCoins, 10);
+                if (!isNaN(val) && val > 0) reward = val;
+            }
+        }
+    } catch(e) {
+        console.warn('Could not load referralCoins setting:', e);
+    }
+
     const referrerData = referrer.data() || {};
     await window.setDoc(window.fsDoc(window.db, 'conductores', referrer.id), {
         referralCount: Number(referrerData.referralCount || 0) + 1,
         referralCoins: Number(referrerData.referralCoins || 0) + reward,
         coins: Number(referrerData.coins || 0) + reward,
+        saldo: Number(referrerData.saldo || referrerData.coins || 0) + reward,
         updatedAt: new Date().toISOString()
     }, { merge: true });
 
+    // Try reading current profile coin balance to award the new user correctly
+    const currentCoins = currentProfile ? (currentProfile.coins !== undefined ? currentProfile.coins : (currentProfile.saldo !== undefined ? currentProfile.saldo : 0)) : 0;
     await window.setDoc(window.fsDoc(window.db, 'conductores', newUserUid), {
         referredBy: normalized,
+        coins: Number(currentCoins) + reward,
+        saldo: Number(currentCoins) + reward,
         updatedAt: new Date().toISOString()
     }, { merge: true });
 
@@ -339,6 +356,7 @@ function saveRegistroLS(email) {
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Panter Studio System: Online");
+    try { getPendingReferralCode(); } catch(e) {}
     let userAuthInitialized = false;
 
     function getConfiguredAdminEmails() {

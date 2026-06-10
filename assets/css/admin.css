@@ -202,7 +202,6 @@ body.admin-page {
   padding: 2rem 2.5rem;
   min-width: 0;
 }
-}
 
 .content-header {
   display: flex;
@@ -594,35 +593,183 @@ body.admin-page {
   to { transform: scale(1.02); }
 }
 
-/* Responsive Layout */
+
+/* ═══════════════════════════════════════════════════
+   MOBILE — HAMBURGER SIDEBAR + RESPONSIVE LAYOUT
+═══════════════════════════════════════════════════ */
+
+/* ── Hamburger toggle button (hidden on desktop) ── */
+.admin-mobile-toggle {
+  display: none;
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 1200;
+  background: rgba(11,14,20,0.92);
+  border: 1px solid rgba(0,176,255,0.25);
+  border-radius: 10px;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  transition: all 0.2s;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0;
+}
+.admin-mobile-toggle span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: #fff;
+  border-radius: 2px;
+  transition: all 0.25s ease;
+}
+.admin-mobile-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.admin-mobile-toggle.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.admin-mobile-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ── Overlay behind sidebar on mobile ── */
+.admin-sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  left: 270px; /* solo cubre el área de contenido, NO el sidebar */
+  background: rgba(0,0,0,0.55);
+  z-index: 999;
+}
+.admin-sidebar-overlay.open { display: block; }
+
+/* ─── TABLET (≤992px) ─── */
 @media (max-width: 992px) {
-  .dashboard-layout {
-    flex-direction: column;
-  }
+  .admin-mobile-toggle { display: flex; }
+
+  /* Sidebar becomes a slide-in drawer */
   .admin-sidebar {
-    position: relative;
-    width: auto;
-    height: auto;
-    border-right: none;
-    border-bottom: 1px solid var(--admin-border);
-    padding: 1.5rem;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: 270px;
+    z-index: 1100;
+    transform: translateX(-110%);
+    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+    border-radius: 0 20px 20px 0;
+    padding: 1.5rem 1.2rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
-  .sidebar-brand {
-    margin-bottom: 1.5rem;
+  .admin-sidebar.mobile-open {
+    transform: translateX(0);
+    box-shadow: 8px 0 40px rgba(0,0,0,0.6);
   }
+
+  .sidebar-brand { margin-bottom: 1.5rem; }
+
   .sidebar-nav {
-    flex-direction: row;
-    overflow-x: auto;
-    padding-bottom: 8px;
+    flex-direction: column;
+    gap: 4px;
+    overflow-x: unset;
+    padding-bottom: 0;
   }
+
   .sidebar-tab {
-    white-space: nowrap;
+    white-space: normal;
+    font-size: 0.88rem;
+    padding: 0.75rem 1rem;
   }
+
+  /* Content takes full width */
   .dashboard-content {
     margin-left: 0;
-    padding: 1.5rem;
+    padding: 1rem;
+    padding-top: 70px; /* space for hamburger */
   }
+
+  /* Content header stacks */
+  .content-header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    gap: 0.75rem;
+  }
+  .content-header h2 { font-size: 1.4rem; }
+  .admin-user-pill { font-size: 0.78rem; padding: 6px 12px; }
+
+  /* Stats grid 2 columns */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .stat-card { padding: 1.1rem; }
+  .stat-card strong { font-size: 1.3rem; }
+
+  /* Admin card */
+  .admin-card { padding: 1.25rem; border-radius: 16px; margin-bottom: 1.25rem; }
+  .admin-card h3 { font-size: 1.05rem; }
+
+  /* Table becomes card list */
+  .admin-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .admin-table { font-size: 0.8rem; min-width: 550px; }
+  .admin-table th, .admin-table td { padding: 0.75rem; white-space: nowrap; }
+
+  /* Beta cards 1 col */
+  .betas-grid { grid-template-columns: 1fr; gap: 0.875rem; }
+
+  /* Card header actions stack */
+  .card-header-actions { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .card-header-actions .btn { width: 100%; text-align: center; }
 }
+
+/* ─── MOBILE (≤600px) ─── */
+@media (max-width: 600px) {
+  .dashboard-content { padding: 0.75rem; padding-top: 64px; }
+
+  .content-header h2 { font-size: 1.2rem; }
+
+  /* Stats: 2 compact cols */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  .stat-card { padding: 0.9rem 0.75rem; }
+  .stat-label { font-size: 0.68rem; }
+  .stat-card strong { font-size: 1.1rem; }
+
+  /* Admin card full padding */
+  .admin-card { padding: 1rem; border-radius: 14px; }
+
+  /* Buttons full width on mobile */
+  .admin-shell button.btn,
+  .admin-shell a.btn {
+    font-size: 0.82rem;
+    padding: 0.6rem 1rem;
+    min-height: 40px;
+  }
+
+  /* Support search full width */
+  #supportSearchEmail { width: 100%; }
+  #supportSearchBtn { width: 100%; margin-top: 6px; }
+
+  /* CEO search */
+  #adminCeoEmailSearch { width: 100%; }
+
+  /* Profile field */
+  .profile-field { padding: 10px 12px; }
+  .profile-field strong { font-size: 0.9rem; }
+
+  /* Sidebar footer buttons */
+  .sidebar-footer .btn { font-size: 0.82rem; padding: 0.6rem; }
+}
+
+/* ─── VERY SMALL (≤380px) ─── */
+@media (max-width: 380px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .content-header h2 { font-size: 1.1rem; }
+}
+
 
 /* Beta Tester Cards Grid */
 .betas-grid {
@@ -705,4 +852,339 @@ body.admin-page {
   display: flex;
   gap: 8px;
   margin-top: auto;
+}
+
+/* ═══════════════════════════════════════════════════
+   MOBILE — DEV-TOOLS SECTIONS
+═══════════════════════════════════════════════════ */
+
+/* ── Kanban ── */
+@media (max-width: 992px) {
+  .kanban-board { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+  .kanban-board { grid-template-columns: 1fr; }
+  .kanban-col { min-height: 180px; }
+}
+
+/* ── Assets grid ── */
+@media (max-width: 600px) {
+  .assets-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+}
+@media (max-width: 380px) {
+  .assets-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Ideas & Bugs: full-width actions on mobile ── */
+@media (max-width: 500px) {
+  .idea-item { flex-direction: column; gap: 8px; }
+  .idea-actions { flex-direction: row; align-self: flex-end; }
+
+  .bug-item { flex-direction: column; gap: 8px; }
+  .bug-actions { flex-direction: row; align-self: flex-end; }
+  .bug-status-sel { flex: 1; }
+}
+
+/* ── Changelog timeline ── */
+@media (max-width: 500px) {
+  .changelog-timeline::before { left: 14px; }
+  .changelog-dot { width: 30px; height: 30px; font-size: 0.75rem; }
+  .changelog-desc { font-size: 0.82rem; }
+}
+
+/* ── Staff rows ── */
+@media (max-width: 500px) {
+  .staff-admin-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .staff-admin-avatar { width: 36px; height: 36px; font-size: 1rem; }
+}
+
+/* ── Notepad ── */
+@media (max-width: 600px) {
+  .notepad-editor { min-height: 260px; padding: 1rem; font-size: 0.88rem; }
+  .notepad-toolbar { gap: 4px; flex-wrap: wrap; }
+  .notepad-tool-btn { font-size: 0.75rem; padding: 4px 8px; }
+}
+
+/* ── Modals full-screen on mobile ── */
+@media (max-width: 600px) {
+  .admin-modal-overlay { align-items: flex-end; padding: 0; }
+  .admin-modal {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 90vh;
+    padding: 1.5rem 1.25rem;
+  }
+  .admin-modal h3 { font-size: 1rem; margin-bottom: 1rem; }
+  .modal-form-group input,
+  .modal-form-group textarea,
+  .modal-form-group select { font-size: 16px; /* prevents iOS zoom */ }
+}
+
+/* ── Bug filters wrap ── */
+@media (max-width: 500px) {
+  .bug-filters { gap: 6px; }
+  .bug-filter-btn { font-size: 0.72rem; padding: 4px 10px; }
+}
+
+/* ── Sidebar section labels on mobile ── */
+@media (max-width: 992px) {
+  .sidebar-section-label { padding: 0.5rem 1rem 0.1rem; }
+}
+
+/* ── Admin gate center on small screens ── */
+@media (max-width: 480px) {
+  .admin-gate { margin: 60px auto; padding: 2rem 1.25rem; }
+  .admin-gate h1 { font-size: 1.4rem; }
+}
+
+/* ── Announcement delete btn touch target ── */
+@media (max-width: 600px) {
+  .announcement-delete-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; top: 8px; right: 8px; }
+  .announcement-item { padding: 12px; }
+}
+
+/* ── Form inputs prevent iOS zoom (16px minimum) ── */
+@media (max-width: 992px) {
+  .form-input, .form-textarea, .form-select,
+  .admin-modal input, .admin-modal textarea, .admin-modal select,
+  .kanban-add-form input, .kanban-add-form textarea, .kanban-add-form select,
+  #ideaTitle, #ideaBody, #ideaCategory,
+  #assetsSearch, #assetsFilter,
+  #ideasSearch, #ideasFilter {
+    font-size: 16px !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   ACCOUNTS CARDS — Gestión de Cuentas
+═══════════════════════════════════════════════════ */
+
+/* Toolbar: search + count */
+.accounts-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 1.25rem 0 1rem;
+  flex-wrap: wrap;
+}
+.accounts-search-wrap {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.accounts-search-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+.accounts-search-input {
+  width: 100%;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(0,176,255,0.18);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 0.88rem;
+  font-family: inherit;
+  padding: 10px 14px 10px 36px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+.accounts-search-input:focus {
+  border-color: rgba(0,176,255,0.45);
+  box-shadow: 0 0 14px rgba(0,176,255,0.12);
+}
+.accounts-search-input::placeholder { color: rgba(255,255,255,0.25); }
+.accounts-count-badge {
+  background: rgba(0,176,255,0.08);
+  border: 1px solid rgba(0,176,255,0.2);
+  border-radius: 100px;
+  color: var(--color-primary-light);
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 5px 14px;
+  white-space: nowrap;
+}
+
+/* Cards grid */
+.accounts-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 12px;
+}
+.accounts-empty {
+  text-align: center;
+  padding: 3rem;
+  color: var(--admin-text-muted);
+  grid-column: 1 / -1;
+}
+
+/* Individual account card */
+.account-card {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.account-card:hover {
+  border-color: rgba(0,176,255,0.25);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+  transform: translateY(-2px);
+}
+
+/* Top section: avatar + name + role */
+.account-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 16px 12px;
+}
+.account-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  font-weight: 900;
+  flex-shrink: 0;
+  letter-spacing: -0.5px;
+}
+.account-identity {
+  flex: 1;
+  min-width: 0;
+}
+.account-name {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.account-email {
+  font-size: 0.72rem;
+  color: var(--admin-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 5px;
+}
+.account-sources {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.account-source-pill {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--admin-text-secondary);
+  text-transform: lowercase;
+}
+.account-role-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 100px;
+  border: 1px solid;
+  white-space: nowrap;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+/* Bottom section: role editor */
+.account-card-bottom {
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding: 12px 16px;
+  background: rgba(0,0,0,0.15);
+}
+.account-card-locked {
+  background: rgba(0,0,0,0.1);
+}
+.account-locked-msg {
+  font-size: 0.75rem;
+  color: var(--admin-text-muted);
+  text-align: center;
+  padding: 4px 0;
+}
+.account-role-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.account-role-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--admin-text-muted);
+}
+.account-role-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.account-role-select {
+  flex: 1;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(0,176,255,0.2);
+  border-radius: 9px;
+  color: #fff;
+  font-size: 0.82rem;
+  font-family: inherit;
+  padding: 8px 10px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  appearance: auto;
+}
+.account-role-select:focus { border-color: rgba(0,176,255,0.5); }
+.account-save-btn {
+  background: rgba(0,176,255,0.12);
+  border: 1px solid rgba(0,176,255,0.35);
+  border-radius: 9px;
+  color: var(--color-primary-light);
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 8px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.account-save-btn:hover {
+  background: rgba(0,176,255,0.25);
+  box-shadow: 0 0 14px rgba(0,176,255,0.2);
+  transform: translateY(-1px);
+}
+
+/* ── Mobile responsive ── */
+@media (max-width: 992px) {
+  .accounts-cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .accounts-cards-grid { grid-template-columns: 1fr; }
+  .account-card-top { flex-wrap: wrap; }
+  .account-role-badge {
+    order: -1;
+    align-self: auto;
+    margin-bottom: 4px;
+  }
+  .account-role-row { flex-direction: column; }
+  .account-save-btn { width: 100%; text-align: center; }
+  .accounts-search-input { font-size: 16px; }
 }
