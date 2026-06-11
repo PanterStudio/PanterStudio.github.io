@@ -2405,6 +2405,106 @@ nav.nav-open .nav-mobile-menu { display: flex; }
 
 /* DevLog / Bitácoras del Home */
 .home-devlogs {
+    margin-top: 2rem;
+}
+
+/* ══════════════════════════════════════════
+   NUEVOS ESTILOS COMUNIDAD: COMEDORES, TIENDA Y REACCIONES
+   ══════════════════════════════════════════ */
+.store-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin-top: 1rem;
+}
+.store-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    backdrop-filter: blur(10px);
+}
+.store-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(0, 176, 255, 0.3);
+    box-shadow: 0 8px 25px rgba(0, 176, 255, 0.08);
+}
+.store-card-badge {
+    align-self: flex-start;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.2rem 0.6rem;
+    border-radius: 100px;
+    background: rgba(255,255,255,0.08);
+    color: var(--text-secondary);
+    margin-bottom: 0.8rem;
+}
+.store-card-info {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+.store-card-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+.store-card-details h4 {
+    margin: 0 0 4px 0;
+    font-size: 0.95rem;
+    color: #fff;
+    font-weight: 700;
+}
+.store-card-details p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+.store-card-price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    padding-top: 10px;
+    margin-top: auto;
+}
+.store-card-price {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #ffd700;
+}
+.store-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+    scrollbar-width: none;
+}
+.store-tab {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.store-tab.active, .store-tab:hover {
+    background: rgba(0, 176, 255, 0.12);
+    border-color: #00b0ff;
+    color: #fff;
+}
+
   margin-top: 2.5rem;
 }
 

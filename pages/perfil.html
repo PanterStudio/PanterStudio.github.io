@@ -1745,7 +1745,7 @@
         </article>
 
         <!-- 🐾 MASCOTA PANTER WIDGET -->
-        <article class="pc" id="profilePetWidget" style="border-color:#00e676; box-shadow:0 0 15px rgba(0, 230, 118, 0.1); display: none;">
+        <article class="pc" id="profilePetWidget" style="display: none;" hidden>
           <div class="pc-h">
             <h3 id="petWidgetTitle" style="color:#00e676;">🐾 Mascota Virtual</h3>
             <span style="color:#00e676;font-weight:800">PANTER PET</span>
@@ -1762,6 +1762,17 @@
               </div>
             </div>
           </div>
+          
+          <!-- Inventario de Mascota Consumibles -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-sm); padding: 8px 12px; margin-top: 5px; font-size: 0.8rem;">
+            <div style="font-weight: bold; margin-bottom: 6px; color: var(--text-secondary);">Inventario de Mascota:</div>
+            <div style="display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+              <button class="pb sm" id="feedSteakBtn" onclick="usePetItem('steak')" style="flex: 1; border-color: rgba(255,255,255,0.08); font-size: 0.75rem; padding: 4px 8px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 32px; background: rgba(0, 230, 118, 0.05); color: #00e676;">🥩 Filetes: <strong id="invSteakCount">0</strong></button>
+              <button class="pb sm" id="playYarnBtn" onclick="usePetItem('yarn')" style="flex: 1; border-color: rgba(255,255,255,0.08); font-size: 0.75rem; padding: 4px 8px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 32px; background: rgba(224, 64, 251, 0.05); color: #e040fb;">🧶 Lanas: <strong id="invYarnCount">0</strong></button>
+            </div>
+            <div id="petItemMessage" style="font-size: 0.72rem; text-align: center; margin-top: 6px; min-height: 15px;" role="status"></div>
+          </div>
+
           <div style="display: flex; gap: 8px; margin-top: 10px;">
             <a href="minijuegos.html" class="pb prim sm" style="text-align: center; text-decoration: none; border-color: rgba(0, 230, 118, 0.3); color: #00e676; flex: 1; min-height: 36px; line-height: 1.8;">Jugar con Mascota</a>
             <button class="pb sm" id="changePetAvatarBtn" style="border-color: rgba(255,255,255,0.08); flex: 1;" onclick="openPetAvatarSelectorModal()">Cambiar Aspecto</button>

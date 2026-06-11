@@ -1346,17 +1346,87 @@
                 <p>Realiza misiones de transporte seguro, resuelve anomalías de riesgo o prueba suerte en el casino para ganar monedas.</p>
                 <button class="btn btn-sm core-dash-btn">Abrir Terminal</button>
             </div>
-            <div class="core-dash-card" id="btnDashPet" onclick="switchCoreMode('pet')" style="display:none;">
-                <div class="core-dash-card-icon">🐾</div>
-                <h3>Mascota Panter</h3>
-                <p>Cuida de tu cachorro de pantera negra. Aliméntalo, juega con él, entrénalo y sube su nivel para presumirlo.</p>
-                <button class="btn btn-sm btn-ghost core-dash-btn">Jugar con Mascota</button>
-            </div>
+
             <div class="core-dash-card" id="btnDashStore" onclick="switchCoreMode('store')">
                 <div class="core-dash-card-icon">🏪</div>
                 <h3>Tienda Oficial</h3>
                 <p>Gasta tus monedas acumuladas en roles de la comunidad, títulos de perfil exclusivos y gemas para el juego.</p>
                 <button class="btn btn-sm btn-ghost core-dash-btn">Visitar Tienda</button>
+            </div>
+
+            <div class="core-dash-card" id="btnDashInventory" onclick="switchCoreMode('inventory')">
+                <div class="core-dash-card-icon">🎒</div>
+                <h3>Mi Inventario</h3>
+                <p>Ver y activar tus consumibles acumulados como Pociones de Cooldown o gestionar tus recursos adquiridos.</p>
+                <button class="btn btn-sm btn-ghost core-dash-btn">Ver Inventario</button>
+            </div>
+        </div>
+
+        <!-- ══ INVENTORY CONTAINER (Solo si está logueado) ══ -->
+        <div id="inventoryContainer" style="display:none; max-width:900px; margin:0 auto 2rem;">
+            <!-- Cabecera de Inventario con Botón Volver -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">
+                <button class="btn btn-ghost btn-sm" onclick="goBackToDashboard()" style="border-color: rgba(255,255,255,0.08); font-size: 0.8rem; font-weight:700; border-radius: 100px;">◀ Volver al Menú</button>
+                <h3 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: #fff;">🎒 Mi Inventario</h3>
+            </div>
+
+            <!-- Grid de items del inventario -->
+            <div class="inventory-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+                
+                <!-- Pocion de Cooldown -->
+                <div class="store-card tag-item" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(139, 92, 246, 0.25); text-align: left; padding: 20px; border-radius: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <span class="store-card-badge" style="background: rgba(139, 92, 246, 0.2); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.3); float: right;">Consumible</span>
+                        <div class="store-card-info" style="display: flex; gap: 1rem; align-items: center; margin-bottom: 15px; margin-top: 10px;">
+                            <div style="font-size: 2.2rem; min-width: 45px; display: flex; align-items: center; justify-content: center;">🧪</div>
+                            <div>
+                                <h4 style="margin: 0 0 4px; color: #fff; font-family: 'Outfit', sans-serif; font-weight:700;">Poción de Cooldown</h4>
+                                <p style="margin: 0; font-size: 0.8rem; color: #9ca3af; line-height: 1.3;">Resetea contadores de enfriamiento de Trabajar y Misión de Riesgo.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; margin-top: 10px; width: 100%;">
+                        <span style="font-size: 0.9rem; font-weight: 700; color: #c084fc;">Cantidad: <strong id="invCountCooldown">0</strong></span>
+                        <button class="btn btn-sm" id="btnUseCooldown" onclick="useInventoryItem('cooldown_reset')" style="border-radius: 8px; font-weight: 700; font-size: 0.75rem;">Consumir</button>
+                    </div>
+                </div>
+
+                <!-- Seguro de Mision -->
+                <div class="store-card tag-item" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(16, 185, 129, 0.25); text-align: left; padding: 20px; border-radius: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <span class="store-card-badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); float: right;">Protección</span>
+                        <div class="store-card-info" style="display: flex; gap: 1rem; align-items: center; margin-bottom: 15px; margin-top: 10px;">
+                            <div style="font-size: 2.2rem; min-width: 45px; display: flex; align-items: center; justify-content: center;">🛡️</div>
+                            <div>
+                                <h4 style="margin: 0 0 4px; color: #fff; font-family: 'Outfit', sans-serif; font-weight:700;">Seguro de Misión</h4>
+                                <p style="margin: 0; font-size: 0.8rem; color: #9ca3af; line-height: 1.3;">Protege automáticamente tu próxima Misión de Riesgo fallida.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; margin-top: 10px; width: 100%;">
+                        <span style="font-size: 0.9rem; font-weight: 700; color: #34d399;">Cantidad: <strong id="invCountInsurance">0</strong></span>
+                        <span style="font-size: 0.72rem; color: #9ca3af; font-style: italic;">Auto-consumible</span>
+                    </div>
+                </div>
+
+                <!-- Gemas de Juego / Esmeraldas -->
+                <div class="store-card tag-item" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(59, 130, 246, 0.25); text-align: left; padding: 20px; border-radius: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <span class="store-card-badge" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); float: right;">Juego Móvil</span>
+                        <div class="store-card-info" style="display: flex; gap: 1rem; align-items: center; margin-bottom: 15px; margin-top: 10px;">
+                            <div style="font-size: 2.2rem; min-width: 45px; display: flex; align-items: center; justify-content: center;">💎</div>
+                            <div>
+                                <h4 style="margin: 0 0 4px; color: #fff; font-family: 'Outfit', sans-serif; font-weight:700;">Esmeraldas Vinc.</h4>
+                                <p style="margin: 0; font-size: 0.8rem; color: #9ca3af; line-height: 1.3;">Gemas listas para usar en Nuestra Tierra en tu móvil.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; margin-top: 10px; width: 100%;">
+                        <span style="font-size: 0.9rem; font-weight: 700; color: #60a5fa;">Total: <strong id="invCountEmeralds">0</strong></span>
+                        <span style="font-size: 0.72rem; color: #9ca3af; font-style: italic;">En juego móvil</span>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -1370,7 +1440,7 @@
                     <button class="store-tab" onclick="filterStore('roles')">👑 Roles</button>
                     <button class="store-tab" onclick="filterStore('titles')">🏷️ Títulos</button>
                     <button class="store-tab" onclick="filterStore('perks')">🧪 Ventajas</button>
-                    <button class="store-tab" onclick="filterStore('pet')">🐾 Mascota</button>
+                    <button class="store-tab" onclick="filterStore('pet')" style="display: none;">🐾 Mascota</button>
                 </div>
             </div>
 
@@ -1557,8 +1627,38 @@
                     </div>
                 </div>
 
-                <!-- MASCOTA SKINS -->
-                <div class="store-card tag-item" data-category="pet">
+                <!-- MASCOTA SKINS & CONSUMABLES -->
+                <div class="store-card tag-item" data-category="pet" style="display: none;">
+                    <span class="store-card-badge" style="background:#00e676; color:#121212;">Comida Mascota</span>
+                    <div class="store-card-info">
+                        <div class="store-card-icon">🥩</div>
+                        <div class="store-card-details">
+                            <h4>Filete de Primera</h4>
+                            <p>Sacia el hambre de tu Panter Pet. Aumenta el nivel de saciedad (+40% Hambre) y felicidad (+15%).</p>
+                        </div>
+                    </div>
+                    <div class="store-card-price-row">
+                        <div class="store-card-price">🪙 120</div>
+                        <button class="btn btn-sm" onclick="buyStoreItem('pet_food_steak', 120, 'Filete de Primera')">Adquirir</button>
+                    </div>
+                </div>
+
+                <div class="store-card tag-item" data-category="pet" style="display: none;">
+                    <span class="store-card-badge" style="background:#00e676; color:#121212;">Juguete Mascota</span>
+                    <div class="store-card-info">
+                        <div class="store-card-icon">🧶</div>
+                        <div class="store-card-details">
+                            <h4>Ovillo de Lana Mágica</h4>
+                            <p>Mantén entretenido a tu Panter Pet. Aumenta drásticamente la felicidad (+50%) y otorga +20 EXP.</p>
+                        </div>
+                    </div>
+                    <div class="store-card-price-row">
+                        <div class="store-card-price">🪙 90</div>
+                        <button class="btn btn-sm" onclick="buyStoreItem('pet_toy_yarn', 90, 'Ovillo de Lana Mágica')">Adquirir</button>
+                    </div>
+                </div>
+
+                <div class="store-card tag-item" data-category="pet" style="display: none;">
                     <span class="store-card-badge">Mascota Skin</span>
                     <div class="store-card-info">
                         <div class="store-card-icon">👨‍🚀</div>
@@ -1573,7 +1673,7 @@
                     </div>
                 </div>
 
-                <div class="store-card tag-item" data-category="pet">
+                <div class="store-card tag-item" data-category="pet" style="display: none;">
                     <span class="store-card-badge">Mascota Skin</span>
                     <div class="store-card-info">
                         <div class="store-card-icon">🕵️</div>
@@ -1585,6 +1685,52 @@
                     <div class="store-card-price-row">
                         <div class="store-card-price">🪙 800</div>
                         <button class="btn btn-sm" onclick="buyStoreItem('pet_skin_detective', 800, 'Mascota: Detective')">Adquirir</button>
+                    </div>
+                </div>
+
+                <div class="store-card tag-item" data-category="pet" style="display: none;">
+                    <span class="store-card-badge" style="background:#ffd700; color:#121212;">Skin Legendaria</span>
+                    <div class="store-card-info">
+                        <div class="store-card-icon">👑</div>
+                        <div class="store-card-details">
+                            <h4>Skin Dorado Imperial</h4>
+                            <p>Viste a tu mascota con un aura y corona de oro puro. Desbloqueable de forma permanente en la web.</p>
+                        </div>
+                    </div>
+                    <div class="store-card-price-row">
+                        <div class="store-card-price">🪙 5,000</div>
+                        <button class="btn btn-sm" onclick="buyStoreItem('pet_skin_golden', 5000, 'Mascota: Dorado Imperial')">Adquirir</button>
+                    </div>
+                </div>
+
+                <!-- PERKS & MULTIPLIERS -->
+                <div class="store-card tag-item" data-category="perks">
+                    <span class="store-card-badge" style="background:#00b0ff; color:#fff;">Cosmético Perfil</span>
+                    <div class="store-card-info">
+                        <div class="store-card-icon" style="text-shadow: 0 0 10px #ff0055;">🔥</div>
+                        <div class="store-card-details">
+                            <h4>Efecto: Aura de Fuego</h4>
+                            <p>Añade una animación de aura de fuego palpitante a tu avatar de perfil en los rankings públicos.</p>
+                        </div>
+                    </div>
+                    <div class="store-card-price-row">
+                        <div class="store-card-price">🪙 3,500</div>
+                        <button class="btn btn-sm" onclick="buyStoreItem('cosmetic_aura_fire', 3500, 'Efecto: Aura de Fuego')">Adquirir</button>
+                    </div>
+                </div>
+
+                <div class="store-card tag-item" data-category="perks">
+                    <span class="store-card-badge" style="background:#e040fb; color:#fff;">Multiplicador</span>
+                    <div class="store-card-info">
+                        <div class="store-card-icon">⚡</div>
+                        <div class="store-card-details">
+                            <h4>Multiplicador de Daily (+50%)</h4>
+                            <p>Aumenta permanentemente y de manera acumulativa las monedas obtenidas en el reclamo de Bonus Diario.</p>
+                        </div>
+                    </div>
+                    <div class="store-card-price-row">
+                        <div class="store-card-price">🪙 8,000</div>
+                        <button class="btn btn-sm" onclick="buyStoreItem('perk_daily_multiplier', 8000, 'Multiplicador de Daily')">Adquirir</button>
                     </div>
                 </div>
             </div>
@@ -1821,9 +1967,11 @@
             const termContainer = document.getElementById('gameContainer');
             const storeContainer = document.getElementById('storeContainer');
             const petContainer = document.getElementById('petContainer');
+            const inventoryContainer = document.getElementById('inventoryContainer');
             const btnDashTerminal = document.getElementById('btnDashTerminal');
             const btnDashStore = document.getElementById('btnDashStore');
             const btnDashPet = document.getElementById('btnDashPet');
+            const btnDashInventory = document.getElementById('btnDashInventory');
 
             // Hide the dashboard card choices when opening either panel
             document.getElementById('coreDashboard').style.display = 'none';
@@ -1831,55 +1979,132 @@
             if (mode === 'terminal') {
                 termContainer.style.display = 'flex';
                 storeContainer.style.display = 'none';
-                petContainer.style.display = 'none';
-                btnDashTerminal.classList.add('active');
-                btnDashStore.classList.remove('active');
-                btnDashPet.classList.remove('active');
-                btnDashTerminal.querySelector('.btn').classList.remove('btn-ghost');
-                btnDashStore.querySelector('.btn').classList.add('btn-ghost');
-                btnDashPet.querySelector('.btn').classList.add('btn-ghost');
+                if (petContainer) petContainer.style.display = 'none';
+                if (inventoryContainer) inventoryContainer.style.display = 'none';
+                
+                if (btnDashTerminal) {
+                    btnDashTerminal.classList.add('active');
+                    btnDashTerminal.querySelector('.btn').classList.remove('btn-ghost');
+                }
+                if (btnDashStore) {
+                    btnDashStore.classList.remove('active');
+                    btnDashStore.querySelector('.btn').classList.add('btn-ghost');
+                }
+                if (btnDashPet) {
+                    btnDashPet.classList.remove('active');
+                    btnDashPet.querySelector('.btn').classList.add('btn-ghost');
+                }
+                if (btnDashInventory) {
+                    btnDashInventory.classList.remove('active');
+                    btnDashInventory.querySelector('.btn').classList.add('btn-ghost');
+                }
             } else if (mode === 'store') {
                 termContainer.style.display = 'none';
                 storeContainer.style.display = 'block'; // block container wraps grid/tabs
-                petContainer.style.display = 'none';
-                btnDashTerminal.classList.remove('active');
-                btnDashStore.classList.add('active');
-                btnDashPet.classList.remove('active');
-                btnDashTerminal.querySelector('.btn').classList.add('btn-ghost');
-                btnDashStore.querySelector('.btn').classList.remove('btn-ghost');
-                btnDashPet.querySelector('.btn').classList.add('btn-ghost');
+                if (petContainer) petContainer.style.display = 'none';
+                if (inventoryContainer) inventoryContainer.style.display = 'none';
+                
+                if (btnDashTerminal) {
+                    btnDashTerminal.classList.remove('active');
+                    btnDashTerminal.querySelector('.btn').classList.add('btn-ghost');
+                }
+                if (btnDashStore) {
+                    btnDashStore.classList.add('active');
+                    btnDashStore.querySelector('.btn').classList.remove('btn-ghost');
+                }
+                if (btnDashPet) {
+                    btnDashPet.classList.remove('active');
+                    btnDashPet.querySelector('.btn').classList.add('btn-ghost');
+                }
+                if (btnDashInventory) {
+                    btnDashInventory.classList.remove('active');
+                    btnDashInventory.querySelector('.btn').classList.add('btn-ghost');
+                }
                 
                 // Reset store filters to show all by default when entering store
                 filterStore('all');
             } else if (mode === 'pet') {
                 termContainer.style.display = 'none';
                 storeContainer.style.display = 'none';
-                petContainer.style.display = 'flex';
-                btnDashTerminal.classList.remove('active');
-                btnDashStore.classList.remove('active');
-                btnDashPet.classList.add('active');
-                btnDashTerminal.querySelector('.btn').classList.add('btn-ghost');
-                btnDashStore.querySelector('.btn').classList.add('btn-ghost');
-                btnDashPet.querySelector('.btn').classList.remove('btn-ghost');
+                if (petContainer) petContainer.style.display = 'flex';
+                if (inventoryContainer) inventoryContainer.style.display = 'none';
+                
+                if (btnDashTerminal) {
+                    btnDashTerminal.classList.remove('active');
+                    btnDashTerminal.querySelector('.btn').classList.add('btn-ghost');
+                }
+                if (btnDashStore) {
+                    btnDashStore.classList.remove('active');
+                    btnDashStore.querySelector('.btn').classList.add('btn-ghost');
+                }
+                if (btnDashPet) {
+                    btnDashPet.classList.add('active');
+                    btnDashPet.querySelector('.btn').classList.remove('btn-ghost');
+                }
+                if (btnDashInventory) {
+                    btnDashInventory.classList.remove('active');
+                    btnDashInventory.querySelector('.btn').classList.add('btn-ghost');
+                }
                 
                 // Load or sync pet data
                 syncPetData();
+            } else if (mode === 'inventory') {
+                termContainer.style.display = 'none';
+                storeContainer.style.display = 'none';
+                if (petContainer) petContainer.style.display = 'none';
+                if (inventoryContainer) inventoryContainer.style.display = 'block';
+                
+                if (btnDashTerminal) {
+                    btnDashTerminal.classList.remove('active');
+                    btnDashTerminal.querySelector('.btn').classList.add('btn-ghost');
+                }
+                if (btnDashStore) {
+                    btnDashStore.classList.remove('active');
+                    btnDashStore.querySelector('.btn').classList.add('btn-ghost');
+                }
+                if (btnDashPet) {
+                    btnDashPet.classList.remove('active');
+                    btnDashPet.querySelector('.btn').classList.add('btn-ghost');
+                }
+                if (btnDashInventory) {
+                    btnDashInventory.classList.add('active');
+                    btnDashInventory.querySelector('.btn').classList.remove('btn-ghost');
+                }
             }
         }
 
         function goBackToDashboard() {
             document.getElementById('gameContainer').style.display = 'none';
             document.getElementById('storeContainer').style.display = 'none';
-            document.getElementById('petContainer').style.display = 'none';
+            const petContainer = document.getElementById('petContainer');
+            if (petContainer) petContainer.style.display = 'none';
+            const inventoryContainer = document.getElementById('inventoryContainer');
+            if (inventoryContainer) inventoryContainer.style.display = 'none';
+            
             document.getElementById('coreDashboard').style.display = 'grid';
             
             // Reset active states on dashboard cards
-            document.getElementById('btnDashTerminal').classList.remove('active');
-            document.getElementById('btnDashStore').classList.remove('active');
-            document.getElementById('btnDashPet').classList.remove('active');
-            document.getElementById('btnDashTerminal').querySelector('.btn').classList.add('btn-ghost');
-            document.getElementById('btnDashStore').querySelector('.btn').classList.add('btn-ghost');
-            document.getElementById('btnDashPet').querySelector('.btn').classList.add('btn-ghost');
+            const btnDashTerminal = document.getElementById('btnDashTerminal');
+            const btnDashStore = document.getElementById('btnDashStore');
+            const btnDashPet = document.getElementById('btnDashPet');
+            const btnDashInventory = document.getElementById('btnDashInventory');
+
+            if (btnDashTerminal) {
+                btnDashTerminal.classList.remove('active');
+                btnDashTerminal.querySelector('.btn').classList.add('btn-ghost');
+            }
+            if (btnDashStore) {
+                btnDashStore.classList.remove('active');
+                btnDashStore.querySelector('.btn').classList.add('btn-ghost');
+            }
+            if (btnDashPet) {
+                btnDashPet.classList.remove('active');
+                btnDashPet.querySelector('.btn').classList.add('btn-ghost');
+            }
+            if (btnDashInventory) {
+                btnDashInventory.classList.remove('active');
+                btnDashInventory.querySelector('.btn').classList.add('btn-ghost');
+            }
             
             // Re-enable/reset console state and floor view
             resetControls();
@@ -1895,6 +2120,10 @@
 
             const cards = document.querySelectorAll('.store-card');
             cards.forEach(c => {
+                if (c.dataset.category === 'pet') {
+                    c.style.display = 'none';
+                    return;
+                }
                 if (category === 'all' || c.dataset.category === category) {
                     c.style.display = 'flex';
                 } else {
@@ -1963,13 +2192,14 @@
                     updateFields.esmeraldas = (data.esmeraldas || 0) + 30;
                 } else if (itemId === 'item_risk_insurance') {
                     updateFields.riskInsurance = (data.riskInsurance || 0) + 1;
+                    const inventory = data.inventory || {};
+                    inventory.risk_insurance = (inventory.risk_insurance || 0) + 1;
+                    updateFields.inventory = inventory;
                 } else if (itemId === 'item_cooldown_reset') {
-                    updateFields.cooldownWork = 0;
-                    updateFields.cooldownRisk = 0;
-                    cooldowns.work = 0;
-                    cooldowns.risk = 0;
-                    localStorage.removeItem('panterAI_cooldown_work');
-                    localStorage.removeItem('panterAI_cooldown_risk');
+                    // Added to inventory instead of instantly resetting
+                    const inventory = data.inventory || {};
+                    inventory.cooldown_reset = (inventory.cooldown_reset || 0) + 1;
+                    updateFields.inventory = inventory;
                 } else if (itemId === 'pet_skin_astronaut') {
                     const pet = data.pet || null;
                     if (!pet) {
@@ -1988,6 +2218,30 @@
                     const unlocked = Array.isArray(pet.unlockedAvatars) ? pet.unlockedAvatars : ['classic'];
                     if (!unlocked.includes('detective')) unlocked.push('detective');
                     updateFields.pet = { ...pet, unlockedAvatars: unlocked };
+                } else if (itemId === 'pet_skin_golden') {
+                    const pet = data.pet || null;
+                    if (!pet) {
+                        alert('¡Necesitas adoptar una mascota primero en la sección de Mascota!');
+                        return;
+                    }
+                    const unlocked = Array.isArray(pet.unlockedAvatars) ? pet.unlockedAvatars : ['classic'];
+                    if (!unlocked.includes('golden')) unlocked.push('golden');
+                    updateFields.pet = { ...pet, unlockedAvatars: unlocked };
+                } else if (itemId === 'pet_food_steak') {
+                    const inventory = data.inventory || {};
+                    inventory.steak = (inventory.steak || 0) + 1;
+                    updateFields.inventory = inventory;
+                } else if (itemId === 'pet_toy_yarn') {
+                    const inventory = data.inventory || {};
+                    inventory.yarn = (inventory.yarn || 0) + 1;
+                    updateFields.inventory = inventory;
+                } else if (itemId === 'cosmetic_aura_fire') {
+                    updateFields.activeCosmetic = 'aura_fire';
+                    const list = Array.isArray(data.purchasedCosmetics) ? data.purchasedCosmetics : [];
+                    if (!list.includes('aura_fire')) list.push('aura_fire');
+                    updateFields.purchasedCosmetics = list;
+                } else if (itemId === 'perk_daily_multiplier') {
+                    updateFields.dailyMultiplier = (data.dailyMultiplier || 1.0) + 0.5;
                 }
 
                 await window.updateDoc(userDocRef, updateFields);
@@ -2015,6 +2269,62 @@
             }
         }
 
+        async function useInventoryItem(itemType) {
+            if (!currentUser) return;
+            const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+            try {
+                const docSnap = await window.getDoc(userDocRef);
+                if (!docSnap.exists()) return;
+                const data = docSnap.data();
+                const inventory = data.inventory || {};
+
+                if (itemType === 'cooldown_reset') {
+                    const count = inventory.cooldown_reset || 0;
+                    if (count <= 0) {
+                        alert('No tienes Pociones de Cooldown en tu inventario.');
+                        return;
+                    }
+                    if (!confirm('¿Seguro que deseas consumir 1 Poción de Cooldown para resetear tus enfriamientos?')) return;
+
+                    inventory.cooldown_reset = count - 1;
+                    const updateFields = {
+                        inventory: inventory,
+                        cooldownWork: 0,
+                        cooldownRisk: 0,
+                        updatedAt: new Date().toISOString()
+                    };
+
+                    await window.updateDoc(userDocRef, updateFields);
+
+                    // Sync local countdowns
+                    cooldowns.work = 0;
+                    cooldowns.risk = 0;
+                    localStorage.removeItem('panterAI_cooldown_work');
+                    localStorage.removeItem('panterAI_cooldown_risk');
+
+                    const feed = document.getElementById('consoleFeed');
+                    if (feed) {
+                        const entry = document.createElement('div');
+                        entry.className = 'console-entry';
+                        entry.innerHTML = `
+                            <span class="entry-label warning">▶ INVENTARIO</span>
+                            <div class="entry-body">
+                                Consumiste 1 <strong>Pocion de Cooldown</strong>. Enfriamientos reseteados exitosamente.
+                            </div>
+                        `;
+                        feed.appendChild(entry);
+                        scrollFeed();
+                        saveChatHistory();
+                    }
+
+                    alert('¡Pocion de Cooldown consumida exitosamente!');
+                }
+            } catch(e) {
+                console.error('Error al usar objeto:', e);
+                alert('No se pudo consumir el objeto. Intenta nuevamente.');
+            }
+        }
+
         async function initAIGame() {
             await waitForFirebase();
             
@@ -2034,8 +2344,12 @@
                     // Do NOT show terminal/store automatically on login, wait for card click
                     document.getElementById('gameContainer').style.display = 'none';
                     document.getElementById('storeContainer').style.display = 'none';
-                    document.getElementById('btnDashTerminal').classList.remove('active');
-                    document.getElementById('btnDashStore').classList.remove('active');
+                    if (document.getElementById('inventoryContainer')) {
+                        document.getElementById('inventoryContainer').style.display = 'none';
+                    }
+                    if (document.getElementById('btnDashTerminal')) document.getElementById('btnDashTerminal').classList.remove('active');
+                    if (document.getElementById('btnDashStore')) document.getElementById('btnDashStore').classList.remove('active');
+                    if (document.getElementById('btnDashInventory')) document.getElementById('btnDashInventory').classList.remove('active');
                     
                     const userDocRef = window.fsDoc(window.db, 'conductores', user.uid);
                     window.onSnapshot(userDocRef, (snap) => {
@@ -2051,11 +2365,40 @@
                             if (data.cooldownRisk) {
                                 cooldowns.risk = Math.max(cooldowns.risk, Number(data.cooldownRisk) || 0);
                             }
+
+                            // Sincronizar inventario en la UI
+                            const inventory = data.inventory || {};
+                            const countCooldown = inventory.cooldown_reset || 0;
+                            const countInsurance = data.riskInsurance || inventory.risk_insurance || 0;
+                            const countEmeralds = data.esmeraldas || 0;
+
+                            const elCooldown = document.getElementById('invCountCooldown');
+                            if (elCooldown) elCooldown.textContent = countCooldown;
+
+                            const elInsurance = document.getElementById('invCountInsurance');
+                            if (elInsurance) elInsurance.textContent = countInsurance;
+
+                            const elEmeralds = document.getElementById('invCountEmeralds');
+                            if (elEmeralds) elEmeralds.textContent = countEmeralds;
+
+                            const btnUseCooldown = document.getElementById('btnUseCooldown');
+                            if (btnUseCooldown) {
+                                if (countCooldown <= 0) {
+                                    btnUseCooldown.disabled = true;
+                                    btnUseCooldown.style.opacity = '0.5';
+                                    btnUseCooldown.style.cursor = 'not-allowed';
+                                } else {
+                                    btnUseCooldown.disabled = false;
+                                    btnUseCooldown.style.opacity = '1';
+                                    btnUseCooldown.style.cursor = 'pointer';
+                                }
+                            }
                             
                             // Mascot snapshot sync
                             if (data.pet) {
                                 currentPetData = data.pet;
-                                if (document.getElementById('petContainer').style.display !== 'none') {
+                                const petBox = document.getElementById('petContainer');
+                                if (petBox && petBox.style.display !== 'none') {
                                     updatePetUI();
                                 }
                             } else {
@@ -2068,6 +2411,9 @@
                     document.getElementById('coreDashboard').style.display = 'none';
                     document.getElementById('gameContainer').style.display = 'none';
                     document.getElementById('storeContainer').style.display = 'none';
+                    if (document.getElementById('inventoryContainer')) {
+                        document.getElementById('inventoryContainer').style.display = 'none';
+                    }
                 }
             });
         }

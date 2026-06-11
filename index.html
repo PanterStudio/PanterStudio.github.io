@@ -343,6 +343,19 @@
                     </div>
                 </div>
 
+                <!-- DEVLOGS GRID IN HOME -->
+                <div class="home-devlogs-section">
+                    <div class="hub-section-title">
+                        <span>⚡</span> Últimas Novedades de Desarrollo
+                    </div>
+                    <div class="mini-devlogs-grid" id="homeDevlogsGrid">
+                        <!-- Injected by JS -->
+                        <div style="text-align:center; padding:2rem; width:100%;">
+                            <div class="loading-pulse" style="width:200px; height:20px;"></div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <!-- ===== COLUMNA DERECHA ===== -->
@@ -527,11 +540,16 @@
                         username: data.username,
                         displayName: data.displayName,
                         coins: Math.max(Number(data.coins || 0), Number(data.saldo || 0)),
-                        avatar: data.avatar || '',
+                        avatar: data.avatar || '😊',
                         avatarImg: data.avatarImg || '',
                         role: isFounder ? 'founder_ceo' : (data.role || 'viewer'),
                         betaTesterStatus: data.betaTesterStatus || '',
-                        email: email
+                        email: email,
+                        streak: Number(data.streak || 0),
+                        country: data.country || 'Colombia',
+                        favoriteProject: data.favoriteProject || 'Nuestra Tierra Job Simulator',
+                        bio: data.bio || '¡Hola! Soy un conductor orgulloso de Panter Studio.',
+                        createdAt: data.createdAt || ''
                     });
                 });
                 
@@ -546,6 +564,9 @@
                     top5.push(founderItem);
                 }
                 
+                // Hacer la lista accesible para el click handler
+                window.leaderboardCachedList = top5;
+
                 lb.innerHTML = '';
                 const medals = [
                     '<img src="recursos/iconos/1er-premio.png" alt="🥇" style="width:20px;height:20px;vertical-align:middle;">',
@@ -582,8 +603,10 @@
                     support_ops: 'color: #86efac; border: 1px solid rgba(74,222,128,.2); background: rgba(74,222,128,.08);'
                 };
 
+                let idx = -1;
                 let rank = 0;
                 top5.forEach(d => {
+                    idx++;
                     rank++;
                     const username = d.nombre_usuario || d.username || d.displayName || 'Anónimo';
                     const coins = d.coins;
@@ -609,45 +632,37 @@
                     const isBeta = d.betaTesterStatus === 'approved';
 
                     if (role === 'founder_ceo') {
-                        // Founder/CEO golden effect
+                        // Golden effect
                         rowStyle += ' background: linear-gradient(95deg, rgba(251,191,36,0.12), rgba(20,24,35,0.7)); border-color: rgba(251,191,36,0.45); box-shadow: 0 0 12px rgba(251,191,36,0.25);';
                         nameStyle += ' color: #fbbf24; font-weight: 800; text-shadow: 0 0 8px rgba(251,191,36,0.4);';
                     } else if (role === 'director') {
-                        // Director glowing red effect
                         rowStyle += ' background: linear-gradient(95deg, rgba(239,68,68,0.1), rgba(20,24,35,0.7)); border-color: rgba(239,68,68,0.4); box-shadow: 0 0 10px rgba(239,68,68,0.22);';
                         nameStyle += ' color: #fca5a5; font-weight: 700; text-shadow: 0 0 8px rgba(239,68,68,0.3);';
                     } else if (role === 'administrador') {
-                        // Administrator glowing aquamarine effect
                         rowStyle += ' background: linear-gradient(95deg, rgba(0,240,255,0.1), rgba(20,24,35,0.7)); border-color: rgba(0,240,255,0.45); box-shadow: 0 0 10px rgba(0,240,255,0.22);';
                         nameStyle += ' color: #80f0ff; font-weight: 700; text-shadow: 0 0 8px rgba(0,240,255,0.3);';
                     } else if (role === 'programador' || role === 'modelador') {
-                        // Dev/Creator sky blue glow
                         rowStyle += ' background: linear-gradient(95deg, rgba(0,176,255,0.08), rgba(20,24,35,0.7)); border-color: rgba(0,176,255,0.4); box-shadow: 0 0 10px rgba(0,176,255,0.2);';
                         nameStyle += ' color: #e0f7ff;';
                     } else if (role === 'community_manager') {
-                        // CM Purple/Pink glow
                         rowStyle += ' background: linear-gradient(95deg, rgba(168,85,247,0.1), rgba(20,24,35,0.7)); border-color: rgba(168,85,247,0.4); box-shadow: 0 0 10px rgba(168,85,247,0.2);';
                         nameStyle += ' color: #f5d0fe;';
                     } else if (role === 'support_ops') {
-                        // Support Green glow
                         rowStyle += ' background: linear-gradient(95deg, rgba(16,185,129,0.08), rgba(20,24,35,0.7)); border-color: rgba(16,185,129,0.4); box-shadow: 0 0 10px rgba(16,185,129,0.2);';
                         nameStyle += ' color: #a7f3d0;';
                     } else if (role === 'youtuber' || role === 'streamer') {
-                        // Media Creators Bright Red/Purple
                         rowStyle += ' background: linear-gradient(95deg, rgba(239,68,68,0.08), rgba(20,24,35,0.7)); border-color: rgba(239,68,68,0.35); box-shadow: 0 0 10px rgba(239,68,68,0.18);';
                         nameStyle += ' color: #fda4af;';
                     } else if (role === 'vip') {
-                        // VIP Purple glow
                         rowStyle += ' background: linear-gradient(95deg, rgba(168,85,247,0.08), rgba(20,24,35,0.7)); border-color: rgba(168,85,247,0.35); box-shadow: 0 0 8px rgba(168,85,247,0.18);';
                         nameStyle += ' color: #f3e8ff;';
                     } else if (isBeta) {
-                        // Beta tester green glow
                         rowStyle += ' background: linear-gradient(95deg, rgba(16,185,129,0.08), rgba(20,24,35,0.7)); border-color: rgba(16,185,129,0.4); box-shadow: 0 0 10px rgba(16,185,129,0.2);';
                         nameStyle += ' color: #a7f3d0;';
                     }
 
                     lb.innerHTML += `
-                        <div class="leaderboard-row ${cls}" style="${rowStyle}">
+                        <div class="leaderboard-row ${cls}" style="${rowStyle}" onclick="openQuickProfile(${idx})">
                             <div class="leaderboard-user-info" style="gap: 8px;">
                                 <div class="leaderboard-rank" style="font-size:0.75rem; width:22px; height:22px; flex-shrink:0;">${medal}</div>
                                 ${avatarHtml}
@@ -667,6 +682,158 @@
                 }
             } catch(e) { console.warn('Leaderboard error:', e); }
         }
+
+        window.openQuickProfile = function(index) {
+            const list = window.leaderboardCachedList;
+            if (!list || !list[index]) return;
+            const u = list[index];
+
+            const modal = document.getElementById('quickProfileModal');
+            const qpCard = document.getElementById('qpCard');
+            const avatarContainer = document.getElementById('qpAvatarContainer');
+            const usernameEl = document.getElementById('qpUsername');
+            const roleBadgeEl = document.getElementById('qpRoleBadge');
+            const betaBadgeEl = document.getElementById('qpBetaBadge');
+            const coinsEl = document.getElementById('qpCoins');
+            const streakEl = document.getElementById('qpStreak');
+            const countryEl = document.getElementById('qpCountry');
+            const favoriteEl = document.getElementById('qpFavorite');
+            const bioEl = document.getElementById('qpBio');
+            const joinedEl = document.getElementById('qpJoined');
+
+            if (!modal || !qpCard) return;
+
+            // Rango / Rol y Posición en Leaderboard para Estilos Épicos
+            const role = String(u.role || 'viewer').toLowerCase();
+            const isRank1 = (index === 0);
+
+            // Temas de colores y brillos
+            let cardBackground = 'rgba(18,22,33,0.92)';
+            let cardBorder = '1px solid rgba(255,255,255,0.1)';
+            let cardShadow = '0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)';
+            let nameGradient = 'linear-gradient(120deg, #fff, #b2c5d9)';
+
+            if (role === 'founder_ceo' || isRank1) {
+                // Tema Oro Legendario (CEO o Top #1 del servidor)
+                cardBackground = 'linear-gradient(135deg, rgba(20,24,35,0.96), rgba(28,24,15,0.96))';
+                cardBorder = '1px solid rgba(251,191,36,0.4)';
+                cardShadow = '0 20px 40px rgba(0,0,0,0.8), 0 0 25px rgba(251,191,36,0.25), inset 0 1px 0 rgba(251,191,36,0.1)';
+                nameGradient = 'linear-gradient(120deg, #ffd700, #fbbf24)';
+                avatarContainer.style.borderColor = 'rgba(251,191,36,0.6)';
+                avatarContainer.style.boxShadow = '0 8px 20px rgba(251,191,36,0.3)';
+            } else if (role === 'director') {
+                // Tema Rubí Místico (Director)
+                cardBackground = 'linear-gradient(135deg, rgba(20,24,35,0.96), rgba(35,18,18,0.96))';
+                cardBorder = '1px solid rgba(239,68,68,0.35)';
+                cardShadow = '0 20px 40px rgba(0,0,0,0.8), 0 0 20px rgba(239,68,68,0.2), inset 0 1px 0 rgba(239,68,68,0.1)';
+                nameGradient = 'linear-gradient(120deg, #fca5a5, #ef4444)';
+                avatarContainer.style.borderColor = 'rgba(239,68,68,0.5)';
+                avatarContainer.style.boxShadow = '0 8px 20px rgba(239,68,68,0.25)';
+            } else if (role === 'administrador') {
+                // Tema Diamante Cían (Admin)
+                cardBackground = 'linear-gradient(135deg, rgba(20,24,35,0.96), rgba(15,30,35,0.96))';
+                cardBorder = '1px solid rgba(0,240,255,0.35)';
+                cardShadow = '0 20px 40px rgba(0,0,0,0.8), 0 0 20px rgba(0,240,255,0.2), inset 0 1px 0 rgba(0,240,255,0.1)';
+                nameGradient = 'linear-gradient(120deg, #80f0ff, #00b0ff)';
+                avatarContainer.style.borderColor = 'rgba(0,240,255,0.5)';
+                avatarContainer.style.boxShadow = '0 8px 20px rgba(0,240,255,0.25)';
+            } else if (role === 'vip') {
+                // Tema Amatista (VIP)
+                cardBackground = 'linear-gradient(135deg, rgba(20,24,35,0.96), rgba(28,18,35,0.96))';
+                cardBorder = '1px solid rgba(168,85,247,0.3)';
+                cardShadow = '0 20px 40px rgba(0,0,0,0.7), 0 0 15px rgba(168,85,247,0.15), inset 0 1px 0 rgba(168,85,247,0.08)';
+                nameGradient = 'linear-gradient(120deg, #e9d5ff, #a855f7)';
+                avatarContainer.style.borderColor = 'rgba(168,85,247,0.4)';
+                avatarContainer.style.boxShadow = '0 8px 20px rgba(168,85,247,0.2)';
+            } else {
+                // Reset a estilo estándar
+                avatarContainer.style.borderColor = 'rgba(255,255,255,0.15)';
+                avatarContainer.style.boxShadow = '0 8px 16px rgba(0,0,0,0.3)';
+            }
+
+            // Aplicar estilos calculados a la tarjeta y al título
+            qpCard.style.background = cardBackground;
+            qpCard.style.border = cardBorder;
+            qpCard.style.boxShadow = cardShadow;
+            usernameEl.style.background = nameGradient;
+            usernameEl.style.webkitBackgroundClip = 'text';
+            usernameEl.style.webkitTextFillColor = 'transparent';
+
+            // Rellenar avatar
+            if (u.avatarImg) {
+                avatarContainer.innerHTML = `<img src="${u.avatarImg}" style="width:100%; height:100%; object-fit:cover;">`;
+            } else {
+                avatarContainer.textContent = u.avatar || '😊';
+            }
+
+            // Nombre
+            usernameEl.textContent = u.nombre_usuario || u.username || u.displayName || 'Conductor';
+
+            // Rango / Rol
+            const ROLE_LABELS_FULL = {
+                founder_ceo: 'Fundador / CEO 👑',
+                director: 'Director 🎭',
+                administrador: 'Administrador 🛡️',
+                programador: 'Programador 💻',
+                modelador: 'Modelador 3D 🎨',
+                community_manager: 'Community Manager 📢',
+                support_ops: 'Soporte Técnico 🔧',
+                vip: 'Miembro VIP ⭐',
+                youtuber: 'Creador Youtuber 🎥',
+                streamer: 'Creador Streamer 🎮',
+                viewer: 'Miembro Activo 👤',
+                usuario: 'Miembro Activo 👤'
+            };
+
+            roleBadgeEl.textContent = ROLE_LABELS_FULL[role] || 'Miembro Activo 👤';
+            roleBadgeEl.className = 'qp-role-badge';
+            
+            // Custom role styles
+            const badgeTones = {
+                founder_ceo: 'background: linear-gradient(135deg, rgba(251,191,36,.2), rgba(251,191,36,.05)); color:#fde68a; border:1px solid rgba(251,191,36,.45);',
+                director: 'background: rgba(239,68,68,.1); color:#fca5a5; border:1px solid rgba(239,68,68,.35);',
+                administrador: 'background: rgba(0,240,255,.1); color:#80f0ff; border:1px solid rgba(0,240,255,.45);',
+                programador: 'background: rgba(96,165,250,.1); color:#93c5fd; border:1px solid rgba(96,165,250,.35);',
+                modelador: 'background: rgba(96,165,250,.1); color:#93c5fd; border:1px solid rgba(96,165,250,.35);',
+                community_manager: 'background: rgba(168,85,247,.1); color:#d8b4fe; border:1px solid rgba(168,85,247,.35);',
+                vip: 'background: rgba(251,191,36,.1); color:#fde68a; border:1px solid rgba(251,191,36,.25);'
+            };
+            roleBadgeEl.setAttribute('style', `font-size:0.75rem; padding:3px 10px; border-radius:12px; font-weight:700; ${badgeTones[role] || 'background:rgba(255,255,255,0.05); color:#c4cfda; border:1px solid rgba(255,255,255,0.1);'}`);
+
+            // Beta tester status
+            if (u.betaTesterStatus === 'approved') {
+                betaBadgeEl.textContent = 'Beta Tester Oficial ✔';
+                betaBadgeEl.setAttribute('style', 'font-size:0.68rem; padding:2px 8px; border-radius:10px; background:rgba(16,185,129,0.1); color:#86efac; border:1px solid rgba(16,185,129,0.3); font-weight:bold; margin-top:4px; display:inline-block;');
+            } else {
+                betaBadgeEl.textContent = '';
+                betaBadgeEl.setAttribute('style', 'display:none;');
+            }
+
+            // Datos
+            coinsEl.textContent = Number(u.coins || 0).toLocaleString();
+            streakEl.innerHTML = `🔥 <span>${u.streak} ${u.streak === 1 ? 'día' : 'días'}</span>`;
+            
+            // Si el streak es alto presumir con color naranja encendido
+            if (u.streak >= 7) {
+                streakEl.setAttribute('style', 'font-size: 1.15rem; font-weight: bold; color: #ff9100; text-shadow: 0 0 8px rgba(255,145,0,0.5);');
+            } else {
+                streakEl.setAttribute('style', 'font-size: 1.15rem; font-weight: bold; color: #ff5252;');
+            }
+
+            countryEl.textContent = u.country || 'No definido';
+            favoriteEl.textContent = u.favoriteProject || 'No definido';
+            bioEl.textContent = `"${u.bio || '¡Hola! Soy un conductor orgulloso de Panter Studio.'}"`;
+
+            // Fecha
+            if (u.createdAt) {
+                const date = new Date(u.createdAt);
+                joinedEl.textContent = isNaN(date) ? '—' : date.toLocaleDateString('es-ES', { year:'numeric', month:'long', day:'numeric' });
+            } else {
+                joinedEl.textContent = '—';
+            }
+
+            modal.showModal();
+        };
 
         // -- Devlogs --
         async function loadDevlogs() {
@@ -989,15 +1156,119 @@
         }
 
         // Run all
-        document.addEventListener('DOMContentLoaded', () => {
+        let started = false;
+        function startAll() {
+            if (started) return;
+            started = true;
+            console.log('[PanterHub] Inicializando todos los modulos dinámicos con Firebase...');
             loadLeaderboard();
             loadPreregStats();
             loadAccountWidget();
             loadPlayerStats();
             loadComunidadAnnouncements();
+            loadDevlogs();
+        }
+
+        // Registrar listeners de inicio
+        document.addEventListener('firebaseReady', startAll);
+        document.addEventListener('DOMContentLoaded', () => {
+            // Si Firebase ya cargó antes del DOMContentLoaded
+            if (window.auth && window.db && window.collection) {
+                startAll();
+            }
         });
+
+        // Fallback de seguridad por si no se disparan eventos
+        setTimeout(() => {
+            if (window.auth && window.db && window.collection) {
+                startAll();
+            }
+        }, 1500);
     })();
     </script>
+
+    <!-- Modal Premium para ver Perfil Rápido -->
+    <dialog id="quickProfileModal" style="border:none; padding:0; background:none; outline:none; max-width:420px; width:90%; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); margin:0;">
+        <div id="qpCard" style="background: rgba(18,22,33,0.92); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05); color: #fff; font-family: 'Inter', sans-serif; position: relative; transition: all 0.3s ease;">
+            
+            <button onclick="document.getElementById('quickProfileModal').close()" style="position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.05); border: none; color: #fff; font-size: 0.9rem; cursor: pointer; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">✕</button>
+
+            <!-- Encabezado de Perfil (Avatar + Rango) -->
+            <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 20px; margin-top: 10px;">
+                <div id="qpAvatarContainer" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)); border: 2px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); overflow: hidden;">👤</div>
+                <h3 id="qpUsername" style="font-size: 1.35rem; margin: 0 0 4px 0; font-weight: 700; background: linear-gradient(120deg, #fff, #b2c5d9); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">—</h3>
+                <div id="qpRoleBadge" style="margin-bottom: 6px;"></div>
+                <div id="qpBetaBadge"></div>
+            </div>
+
+            <!-- Datos Económicos / Estadísticas para presumir -->
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 0.72rem; color: #8f9ca6; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Monedas Web</div>
+                    <div style="font-size: 1.15rem; font-weight: bold; color: #ffd54f; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                        <img src="recursos/iconos/moneda.png" alt="🪙" style="width:16px; height:16px;">
+                        <span id="qpCoins">—</span>
+                    </div>
+                </div>
+                <div style="text-align: center; border-left: 1px solid rgba(255,255,255,0.08);">
+                    <div style="font-size: 0.72rem; color: #8f9ca6; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Racha Diaria</div>
+                    <div id="qpStreak" style="font-size: 1.15rem; font-weight: bold; color: #ff5252; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                        🔥 <span>0 días</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalles extra (País, Biografía, etc.) -->
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.82rem; background: rgba(0,0,0,0.15); padding: 12px 16px; border-radius: 10px; margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #8f9ca6;">Origen:</span>
+                    <strong id="qpCountry">—</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #8f9ca6;">Proyecto favorito:</span>
+                    <strong id="qpFavorite">—</strong>
+                </div>
+                <div style="display: flex; flex-direction: column; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; margin-top: 4px;">
+                    <span style="color: #8f9ca6; margin-bottom: 4px;">Biografía:</span>
+                    <p id="qpBio" style="margin: 0; color: #d0d8e0; font-style: italic; line-height: 1.3; font-size: 0.8rem; word-break: break-word;">"—"</p>
+                </div>
+            </div>
+
+            <!-- Fecha de Ingreso -->
+            <div style="text-align: center; font-size: 0.72rem; color: #627280; margin-top: 12px;">
+                Conductor desde: <span id="qpJoined">—</span>
+            </div>
+        </div>
+    </dialog>
+
+    <style>
+        .leaderboard-row {
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s, background-color 0.2s;
+        }
+        .leaderboard-row:hover {
+            transform: translateY(-2px) scale(1.01);
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4), 0 0 10px rgba(255,255,255,0.02) !important;
+        }
+        dialog::backdrop {
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(5px);
+        }
+        /* Garantizar centrado y transicion limpia */
+        #quickProfileModal[open] {
+            animation: qpScaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        @keyframes qpScaleIn {
+            from {
+                transform: translate(-50%, -46%) scale(0.95);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
 </body>
 </html>
-

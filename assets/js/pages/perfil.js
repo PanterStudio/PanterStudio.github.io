@@ -358,6 +358,27 @@
     if (preregSnapshot.registered)                 b.push(badge('Pre-reg', 'b'));
     if (Number(data.referralCount || 0) > 0)       b.push(badge(data.referralCount + ' refs', 'pu'));
     if (supportSnapshot.total > 0)                 b.push(badge('Patroc.', 'go'));
+    
+    // Custom achievements logic
+    const coins = Number(data.coins || 0);
+    if (coins >= 100000) {
+      b.push(badge('👑 Millonario', 'go'));
+    } else if (coins >= 50000) {
+      b.push(badge('💎 Adinerado', 'aqua'));
+    }
+
+    const streak = Number(data.streak || 0);
+    if (streak >= 30) {
+      b.push(badge('🔥 Fuego Puro', 'r'));
+    } else if (streak >= 7) {
+      b.push(badge('📅 Constante', 'g'));
+    }
+
+    const pet = data.pet || null;
+    if (pet && Number(pet.level || 0) >= 5) {
+      b.push(badge('🐾 Entrenador', 'pu'));
+    }
+
     const r = String(data.role || '').toLowerCase();
     if (SPECIAL_ACCESS_ROLES.has(r)) {
       let tone = 'r'; // default red (Director/Founder)
@@ -471,7 +492,7 @@
     // Render de Mascota Panter
     const petWidget = $('profilePetWidget');
     if (petWidget) {
-      if (false && d.pet) { // OCULTADO TEMPORALMENTE
+      if (false && d.pet) { // OCULTADO
         petWidget.style.display = 'block';
         const pet = d.pet;
         const petName = pet.name || 'Pantercito';
@@ -506,6 +527,13 @@
 
         const petEnergyEl = $('profilePetEnergy');
         if (petEnergyEl) petEnergyEl.textContent = `⚡ ${energy}%`;
+
+        // Render food/toy inventory
+        const inv = d.inventory || {};
+        const steakEl = $('invSteakCount');
+        if (steakEl) steakEl.textContent = String(inv.steak || 0);
+        const yarnEl = $('invYarnCount');
+        if (yarnEl) yarnEl.textContent = String(inv.yarn || 0);
 
         // Mostrar campo para editar nombre de mascota
         const editPetNameGroup = $('editPetNameGroup');
@@ -741,7 +769,9 @@
   claimDailyBtn?.addEventListener('click', async () => {
     if (!currentUser || !currentUserData || claimDailyBtn.disabled) return;
     claimDailyBtn.disabled = true;
-    const base  = Number(settings.dailyBonusCoins || 10);
+    const baseRaw = Number(settings.dailyBonusCoins || 10);
+    const mult = Number(currentUserData.dailyMultiplier || 1.0);
+    const base = Math.round(baseRaw * mult);
     const now   = new Date();
     const last  = currentUserData.lastDaily ? new Date(currentUserData.lastDaily) : null;
     let streak  = 1;
@@ -754,7 +784,7 @@
     const newCoins = Number(currentUserData.coins || 0) + bonus;
     const nowIso   = now.toISOString();
     await updateUserData(currentUser.uid, { coins: newCoins, streak, lastDaily: nowIso });
-    await addActivity(currentUser.uid, 'daily', 'Bonus diario reclamado', bonus);
+    await addActivity(currentUser.uid, 'daily', `Bonus diario reclamado (Mult x${mult.toFixed(1)})`, bonus);
     currentUserData.coins    = newCoins;
     currentUserData.streak   = streak;
     currentUserData.lastDaily= nowIso;
@@ -1132,6 +1162,70 @@
     } catch(err) {
       console.error('Error changing pet skin:', err);
       alert('No se pudo cambiar el aspecto de la mascota.');
+    }
+  };
+
+  window.usePetItem = async function(itemKey) {
+    if (!currentUser || !currentUserData || !currentUserData.pet) return;
+    const inv = currentUserData.inventory || {};
+    const count = inv[itemKey] || 0;
+    const msgEl = $('petItemMessage');
+
+    if (count <= 0) {
+      if (msgEl) {
+        msgEl.textContent = '¡No tienes este artículo! Cómpralo en la Tienda.';
+        msgEl.style.color = 'var(--color-red)';
+        setTimeout(() => msgEl.textContent = '', 2500);
+      }
+      return;
+    }
+
+    const pet = currentUserData.pet;
+    let hunger = pet.hunger !== undefined ? pet.hunger : 100;
+    let happiness = pet.happiness !== undefined ? pet.happiness : 100;
+    let exp = pet.exp !== undefined ? pet.exp : 0;
+    let level = pet.level !== undefined ? pet.level : 1;
+
+    if (itemKey === 'steak') {
+      hunger = Math.min(100, hunger + 40);
+      happiness = Math.min(100, happiness + 15);
+      if (msgEl) msgEl.textContent = '¡Panter Pet comió un delicioso Filete! 🥩';
+    } else if (itemKey === 'yarn') {
+      happiness = Math.min(100, happiness + 50);
+      exp += 20;
+      if (msgEl) msgEl.textContent = '¡Panter Pet jugó felizmente con la Lana! 🧶';
+    }
+
+    // Level up check
+    const reqExp = level * 100;
+    if (exp >= reqExp) {
+      exp -= reqExp;
+      level += 1;
+      if (msgEl) msgEl.textContent += ' ¡SUBIÓ DE NIVEL! 🎉';
+    }
+
+    try {
+      inv[itemKey] = count - 1;
+      const updatedPet = { ...pet, hunger, happiness, exp, level };
+      await updateUserData(currentUser.uid, {
+        inventory: inv,
+        pet: updatedPet
+      });
+
+      currentUserData.inventory = inv;
+      currentUserData.pet = updatedPet;
+      renderProfile();
+
+      if (msgEl) {
+        msgEl.style.color = '#00e676';
+        setTimeout(() => msgEl.textContent = '', 3000);
+      }
+    } catch(err) {
+      console.error('Error feeding/playing with pet:', err);
+      if (msgEl) {
+        msgEl.textContent = 'Error al usar artículo.';
+        msgEl.style.color = 'var(--color-red)';
+      }
     }
   };
 
