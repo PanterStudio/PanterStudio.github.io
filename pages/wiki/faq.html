@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preguntas Frecuentes - Wiki - Panter Studio</title>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
+    <meta name="google-adsense-account" content="ca-pub-8870488962578785">
+    <link rel="icon" href="../../recursos/PSGD.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    <style>
+        .wiki-section {
+            padding: 2rem 1rem 4rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .wiki-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        .wiki-header-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 16px;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #fbbf24;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1.25rem;
+        }
+        .wiki-header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 900;
+            margin-bottom: 0.85rem;
+            background: linear-gradient(135deg, #fff 30%, #fbbf24 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+        .wiki-header p {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+        .wiki-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        @media(min-width: 992px) {
+            .wiki-grid {
+                grid-template-columns: 280px 1fr;
+            }
+        }
+        .wiki-sidebar {
+            background: rgba(10, 13, 24, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 1.5rem;
+            height: fit-content;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            position: sticky;
+            top: 90px;
+            z-index: 10;
+        }
+        .wiki-search-box {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+        .wiki-search-box input {
+            width: 100%;
+            padding: 10px 14px 10px 36px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .wiki-search-box input:focus {
+            border-color: rgba(245, 158, 11, 0.5);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
+        }
+        .wiki-search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.85rem;
+            opacity: 0.6;
+        }
+        .wiki-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+        .wiki-menu-group {
+            margin-bottom: 0.5rem;
+        }
+        .wiki-menu-header {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 1.5px;
+            margin-bottom: 0.5rem;
+            padding-left: 8px;
+        }
+        .wiki-nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 10px 14px;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: left;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .wiki-nav-btn:hover {
+            background: rgba(255, 255, 255, 0.03);
+            color: #fff;
+        }
+        .wiki-nav-btn.active {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
+            border-left: 3px solid #f59e0b;
+            color: #fbbf24;
+            font-weight: 700;
+            padding-left: 11px;
+        }
+        .wiki-nested-menu {
+            margin-left: 1rem;
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            padding-left: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-top: 0.4rem;
+        }
+        .wiki-nested-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: #64748b;
+            font-size: 0.8rem;
+            text-align: left;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .wiki-nested-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .wiki-nested-btn.active {
+            color: #fbbf24;
+            font-weight: 700;
+            background: rgba(245, 158, 11, 0.05);
+        }
+        .wiki-content-card {
+            background: rgba(10, 13, 24, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 2rem;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            min-height: 480px;
+        }
+        .wiki-tab-panel {
+            animation: wikiFadeIn 0.4s ease forwards;
+        }
+        @keyframes wikiFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .wiki-tab-panel h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .wiki-tab-panel h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #fbbf24;
+            margin: 1.5rem 0 0.75rem;
+        }
+        .wiki-tab-panel p {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        .faq-item {
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            margin-bottom: 0.85rem;
+            background: rgba(255, 255, 255, 0.01);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .faq-trigger {
+            width: 100%;
+            padding: 14px 18px;
+            background: transparent;
+            border: none;
+            color: #e2e8f0;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .faq-trigger:hover {
+            background: rgba(255, 255, 255, 0.02);
+            color: #fbbf24;
+        }
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            background: rgba(0, 0, 0, 0.1);
+            color: #94a3b8;
+            font-size: 0.88rem;
+            line-height: 1.5;
+            border-top: 1px solid transparent;
+        }
+        .faq-item.active {
+            border-color: rgba(245, 158, 11, 0.2);
+            background: rgba(245, 158, 11, 0.02);
+        }
+        .faq-item.active .faq-trigger {
+            color: #fbbf24;
+        }
+        .faq-item.active .faq-answer {
+            max-height: 250px;
+            padding: 14px 18px;
+            border-top-color: rgba(255, 255, 255, 0.04);
+        }
+    </style>
+</head>
+<body data-site-root="../.." data-theme="dark" class="dark-mode">
+    <div id="tsparticles"></div>
+    
+    <!-- NAV -->
+    <nav>
+        <div class="nav-left">
+            <a href="../../index.html" class="nav-logo">
+                <img src="../../recursos/PSGD.png" alt="Panter Studio">
+                <span>Panter Studio</span>
+            </a>
+        </div>
+        <div class="nav-middle">
+            <a href="../../index.html">Inicio</a>
+            <div class="nav-dropdown">
+                <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">Novedades</button>
+                <div class="nav-dropdown-menu">
+                    <a href="../actualizaciones.html">Actualizaciones</a>
+                    <a href="../imagenes.html">Galeria</a>
+                    <a href="../videos.html">Videos</a>
+                </div>
+            </div>
+            <a href="../minijuegos.html">Panter Core</a>
+            <a href="../donaciones.html">Apoyanos</a>
+            <a href="../personal.html">Personal</a>
+            <a href="../perfil.html">Mi Perfil</a>
+            <a href="../meinteresa.html">Me Interesa</a>
+            <a href="como-comenzar.html" class="active">Wiki</a>
+        </div>
+        <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+        </button>
+        <!-- Mobile menu -->
+        <nav class="nav-mobile-menu">
+            <a href="../../index.html">Inicio</a>
+            <hr>
+            <span style="font-size:0.75rem;color:var(--text-muted);padding:0.5rem 1rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Novedades</span>
+            <div class="nav-mobile-sub">
+                <a href="../actualizaciones.html">Actualizaciones</a>
+                <a href="../imagenes.html">Galeria</a>
+                <a href="../videos.html">Videos</a>
+            </div>
+            <hr>
+            <a href="../minijuegos.html">Panter Core</a>
+            <a href="../donaciones.html">Apoyanos</a>
+            <a href="../personal.html">Personal</a>
+            <a href="../perfil.html">Mi Perfil</a>
+            <a href="../meinteresa.html">Me Interesa</a>
+            <a href="como-comenzar.html" class="active">Wiki</a>
+        </nav>
+    </nav>
+
+    <div class="container">
+        
+        <section class="wiki-section">
+            
+            <div class="wiki-header">
+                <div class="wiki-header-tag">📖 Centro de Soporte</div>
+                <h1>Wiki del Juego</h1>
+                <p>Resuelve todas tus dudas sobre el simulador <strong>Nuestra Tierra Job Simulator</strong>. Aprende mecanicas, domina trabajos y maximiza tus ganancias.</p>
+            </div>
+
+            <div class="wiki-grid">
+                
+                <!-- LATERAL SIDEBAR -->
+                <aside class="wiki-sidebar">
+                    <div class="wiki-search-box">
+                        <input type="text" id="wikiSearch" placeholder="Buscar en la Wiki...">
+                    </div>
+
+                    <div class="wiki-menu">
+                        <div class="wiki-menu-group">
+                            <div class="wiki-menu-header">Introduccion</div>
+                            <a href="como-comenzar.html" class="wiki-nav-btn">🚀 Como Comenzar</a>
+                            <a href="mecanicas.html" class="wiki-nav-btn">🎮 Mecanicas de Juego</a>
+                            <a href="dispositivo-movil.html" class="wiki-nav-btn">📱 Dispositivo Movil</a>
+                            <a href="vehiculos.html" class="wiki-nav-btn">🚗 Vehiculos</a>
+                            <a href="mapas.html" class="wiki-nav-btn">🗺️ Mapas</a>
+                        </div>
+
+                        <div class="wiki-menu-group">
+                            <div class="wiki-menu-header">Profesiones</div>
+                            <a href="trabajos.html" class="wiki-nav-btn">💼 Lista de Trabajos</a>
+                            <div class="wiki-nested-menu">
+                                <a href="mensajero.html" class="wiki-nested-btn">🚴 Mensajero</a>
+                            </div>
+                        </div>
+
+                        <div class="wiki-menu-group">
+                            <div class="wiki-menu-header">Soporte</div>
+                            <a href="faq.html" class="wiki-nav-btn active">❓ Preguntas Frecuentes</a>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- MAIN WIKI CONTENT -->
+                <div class="wiki-content-card">
+                    <div class="wiki-tab-panel" id="faq">
+                        <h2>❓ Preguntas Frecuentes</h2>
+                        <p>Encuentra respuestas rapidas a las dudas mas recurrentes planteadas por la comunidad de Nuestra Tierra:</p>
+
+                        <div class="faq-container">
+                            <div class="faq-item">
+                                <button class="faq-trigger">¿Como sincronizo mis monedas entre la web y el juego? <span>+</span></button>
+                                <div class="faq-answer">
+                                    Al iniciar sesion en el portal web de Panter Studio utilizando el mismo correo de Google con el que vinculaste tu juego movil en la configuracion del simulador, el saldo de monedas se sincronizara de inmediato y en tiempo real.
+                                </div>
+                            </div>
+
+                            <div class="faq-item">
+                                <button class="faq-trigger">¿Para que sirven las esmeraldas? <span>+</span></button>
+                                <div class="faq-answer">
+                                    Las esmeraldas son la divisa premium del juego. Se utilizan para desbloquear aspectos cosmeticos raros, vehiculos modificados deportivos y comprar propiedades o departamentos de lujo dentro del simulador.
+                                </div>
+                            </div>
+
+                            <div class="faq-item">
+                                <button class="faq-trigger">¿Puedo perder mis monedas acumuladas? <span>+</span></button>
+                                <div class="faq-answer">
+                                    Si fallas una mision de riesgo en el modulo web, o si recibes multiples multas policiales en el simulador movil por chocar civiles o evadir controles de transito, tu saldo de monedas puede verse reducido. Adquiere Seguros de Mision en la tienda web para protegerte.
+                                </div>
+                            </div>
+
+                            <div class="faq-item">
+                                <button class="faq-trigger">¿Como reportar un bug en el juego? <span>+</span></button>
+                                <div class="faq-answer">
+                                    Puedes tomar una captura del problema y enviarla a traves de los canales oficiales de soporte de Panter Studio o en nuestro Discord. Los reportes validados reciben recompensas en monedas como premio al cazador de bugs.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ★ Anuncio inferior -->
+        <div class="ad-slot-wrapper ad-horizontal" id="ad-bottom" style="margin-top:2rem;">
+            <span class="ad-slot-label">Publicidad</span>
+            <div class="ad-slot-inner">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-8870488962578785"
+                     data-ad-slot="AUTO"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
+    </footer>
+    
+    <script src="../../assets/js/site-visibility.js"></script>
+    <script src="../../assets/js/core/script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('wikiSearch');
+            const menuLinks = document.querySelectorAll('.wiki-nav-btn, .wiki-nested-btn');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase().trim();
+                    menuLinks.forEach(link => {
+                        const text = link.innerText.toLowerCase();
+                        if (text.includes(term)) {
+                            link.style.display = '';
+                        } else {
+                            link.style.display = 'none';
+                        }
+                    });
+                });
+            }
+
+            // FAQ Accordion Toggle
+            const faqItems = document.querySelectorAll('.faq-item');
+            faqItems.forEach(item => {
+                const trigger = item.querySelector('.faq-trigger');
+                trigger.addEventListener('click', () => {
+                    const isActive = item.classList.contains('active');
+                    faqItems.forEach(i => i.classList.remove('active'));
+                    if (!isActive) {
+                        item.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

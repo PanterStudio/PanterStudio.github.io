@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#00b0ff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="description" content="<%= typeof description !== 'undefined' ? description : 'Panter Studio Game Dev — Hub oficial del estudio indie. Sigue el desarrollo de Nuestra Tierra Job Simulator, gana monedas en minijuegos y únete a la comunidad fundadora.' %>">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
+    <meta name="google-adsense-account" content="ca-pub-8870488962578785">
+    <title><%= typeof title !== 'undefined' ? title : 'Panter Studio' %></title>
+    <link rel="icon" href="/recursos/PSGD.png" type="image/png">
+    <link rel="apple-touch-icon" href="/recursos/PSGD.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    <%- typeof extraHead !== 'undefined' ? extraHead : '' %>
+</head>
+<body data-site-root="/" data-theme="dark" class="dark-mode">
+    <div id="tsparticles"></div>
+    
+    <!-- NAV -->
+    <nav>
+        <div class="nav-left">
+            <a href="/" class="nav-logo">
+                <img src="/recursos/PSGD.png" alt="Panter Studio">
+                <span>Panter Studio</span>
+            </a>
+        </div>
+        <div class="nav-middle">
+            <a href="/" class="<%= currentPage === 'inicio' ? 'active' : '' %>">Inicio</a>
+            <div class="nav-dropdown">
+                <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">Novedades</button>
+                <div class="nav-dropdown-menu">
+                    <a href="/actualizaciones" class="<%= currentPage === 'actualizaciones' ? 'active' : '' %>">Actualizaciones</a>
+                    <a href="/imagenes" class="<%= currentPage === 'imagenes' ? 'active' : '' %>">Galeria</a>
+                    <a href="/videos" class="<%= currentPage === 'videos' ? 'active' : '' %>">Videos</a>
+                </div>
+            </div>
+            <a href="/minijuegos" class="<%= currentPage === 'minijuegos' ? 'active' : '' %>">Panter Core</a>
+            <a href="/donaciones" class="<%= currentPage === 'donaciones' ? 'active' : '' %>">Apoyanos</a>
+            <a href="/personal" class="<%= currentPage === 'personal' ? 'active' : '' %>">Personal</a>
+            <a href="/perfil" class="<%= currentPage === 'perfil' ? 'active' : '' %>">Mi Perfil</a>
+            <a href="/meinteresa" class="<%= currentPage === 'meinteresa' ? 'active' : '' %>">Me Interesa</a>
+            <a href="/wiki/como-comenzar" class="<%= currentPage === 'wiki' ? 'active' : '' %>">Wiki</a>
+        </div>
+        <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+        </button>
+        <!-- Mobile menu -->
+        <nav class="nav-mobile-menu">
+            <a href="/" class="<%= currentPage === 'inicio' ? 'active' : '' %>">Inicio</a>
+            <hr>
+            <span style="font-size:0.75rem;color:var(--text-muted);padding:0.5rem 1rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Novedades</span>
+            <div class="nav-mobile-sub">
+                <a href="/actualizaciones" class="<%= currentPage === 'actualizaciones' ? 'active' : '' %>">Actualizaciones</a>
+                <a href="/imagenes" class="<%= currentPage === 'imagenes' ? 'active' : '' %>">Galeria</a>
+                <a href="/videos" class="<%= currentPage === 'videos' ? 'active' : '' %>">Videos</a>
+            </div>
+            <hr>
+            <a href="/minijuegos" class="<%= currentPage === 'minijuegos' ? 'active' : '' %>">Panter Core</a>
+            <a href="/donaciones" class="<%= currentPage === 'donaciones' ? 'active' : '' %>">Apoyanos</a>
+            <a href="/personal" class="<%= currentPage === 'personal' ? 'active' : '' %>">Personal</a>
+            <a href="/perfil" class="<%= currentPage === 'perfil' ? 'active' : '' %>">Mi Perfil</a>
+            <a href="/meinteresa" class="<%= currentPage === 'meinteresa' ? 'active' : '' %>">Me Interesa</a>
+            <a href="/wiki/como-comenzar" class="<%= currentPage === 'wiki' ? 'active' : '' %>">Wiki</a>
+        </nav>
+    </nav>

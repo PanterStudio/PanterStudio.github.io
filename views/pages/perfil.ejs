@@ -1,0 +1,2123 @@
+<%- include('partials/header', { 
+    title: 'Mi Perfil — Panter Studio', 
+    currentPage: 'perfil',
+    description: 'Gestiona tu cuenta, monedas, recompensas y actividad en Panter Studio.',
+    extraHead: `<style>
+  /* ========================================
+     BASE & RESET (Mobile-First)
+     ======================================== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  :root {
+    /* ── TEMA POR DEFECTO: CHARCOAL GLASS (OSCURO BALANCEADO) ── */
+    --bg-body: #13161d;
+    --bg-card: rgba(28, 33, 46, 0.80);
+    --bg-card-alt: rgba(22, 27, 40, 0.90);
+    --bg-input: rgba(255, 255, 255, 0.06);
+    --bg-modal: rgba(18, 22, 33, 0.97);
+    
+    --border-color: rgba(255, 255, 255, 0.10);
+    --border-color-strong: rgba(0, 176, 255, 0.35);
+    
+    --text-primary: #f0f4ff;
+    --text-secondary: #b0bcce;
+    --text-muted: #6b7a90;
+    --text-accent: #00b0ff;
+    
+    --color-gold: #d4af37;
+    --color-green: #10b981;
+    --color-red: #ef4444;
+    --color-blue: #00b0ff;
+    
+    /* Espaciado base */
+    --space-xs: 6px;
+    --space-sm: 10px;
+    --space-md: 16px;
+    --space-lg: 20px;
+    --space-xl: 30px;
+    
+    /* Radios & Sombras */
+    --radius-sm: 12px;
+    --radius-md: 16px;
+    --radius-lg: 22px;
+    --radius-full: 999px;
+    
+    --shadow-card: 0 8px 32px rgba(0,0,0,.32), inset 0 1px 1px rgba(255,255,255,0.07);
+    --shadow-glow: 0 0 28px rgba(0, 176, 255, 0.18);
+    
+    /* Transiciones */
+    --transition-fast: 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-normal: 350ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  
+  html { scroll-behavior: smooth; font-size: 14px; -webkit-text-size-adjust: 100%; }
+  
+  body {
+    background-color: #13161d !important;
+    background-image: radial-gradient(ellipse at 30% 20%, rgba(0, 176, 255, 0.07) 0%, transparent 60%),
+                      radial-gradient(ellipse at 75% 80%, rgba(0, 176, 255, 0.06) 0%, transparent 55%) !important;
+    background-attachment: fixed !important;
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Particles Background */
+  #tsparticles {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  
+  /* Contenedor Principal */
+  .ps {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: var(--space-md);
+    padding-bottom: var(--space-xl);
+  }
+  
+  /* ========================================
+     AUTH GATE (Login/Register)
+     ======================================== */
+  .auth-gate {
+    min-height: calc(100vh - 120px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-lg);
+  }
+  
+  .auth-card {
+    background: var(--bg-card-alt);
+    border: 1px solid var(--border-color-strong);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    width: 100%;
+    max-width: 400px;
+    box-shadow: var(--shadow-card), var(--shadow-glow);
+    text-align: center;
+    animation: fadeUp .4s ease-out both;
+  }
+  
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .auth-logo {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color-strong);
+    margin: 0 auto var(--space-md);
+    display: block;
+    box-shadow: 0 0 20px rgba(30,112,200,.28);
+  }
+  
+  .auth-card h1 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0 0 var(--space-xs);
+  }
+  
+  .auth-card > p {
+    color: var(--text-secondary);
+    font-size: .9rem;
+    margin: 0 0 var(--space-lg);
+  }
+  
+  .auth-tabs {
+    display: flex;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-md);
+    background: rgba(255,255,255,.03);
+    padding: 4px;
+    border-radius: var(--radius-md);
+  }
+  
+  .auth-tab {
+    flex: 1;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: .9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: inherit;
+  }
+  
+  .auth-tab.active {
+    background: var(--text-accent);
+    border-color: var(--text-accent);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(30,112,200,.3);
+  }
+  
+  .auth-form {
+    display: none;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+  
+  .auth-form.active { display: flex; }
+  
+  .p-inp {
+    width: 100%;
+    padding: var(--space-md);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(135,206,235,.22);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    min-height: 44px; /* Touch target mínimo */
+  }
+  
+  .p-inp:focus {
+    border-color: var(--text-accent);
+    box-shadow: 0 0 0 3px rgba(30,112,200,.15);
+  }
+  
+  .p-inp::placeholder { color: rgba(200,230,255,.3); }
+  
+  .auth-forgot {
+    font-size: .85rem;
+    color: var(--text-accent);
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    display: block;
+    margin-top: var(--space-xs);
+    padding: var(--space-xs);
+  }
+  
+  .auth-forgot:hover { text-decoration: underline; }
+  
+  .auth-msg {
+    min-height: 20px;
+    font-size: .85rem;
+    text-align: center;
+    padding: var(--space-sm);
+    border-radius: var(--radius-sm);
+    margin-top: var(--space-xs);
+  }
+  
+  .auth-msg.error   { background: rgba(248,113,113,.15); color: var(--color-red); }
+  .auth-msg.success { background: rgba(74,222,128,.15); color: var(--color-green); }
+  
+  /* ========================================
+     DASHBOARD (Oculto por defecto)
+     ======================================== */
+  #profileDashboard { display: none; }
+  #profileDashboard.active { display: block; animation: fadeIn .3s ease-out; }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  /* ========================================
+     HERO CARD (Perfil Principal - Banner)
+     ======================================== */
+  .ph {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+    min-height: 250px;
+    padding: 2rem;
+    background: linear-gradient(to top, rgba(11, 15, 25, 0.98) 0%, rgba(11, 15, 25, 0.2) 100%), 
+                url('https://media.discordapp.net/attachments/1475940325280321556/1500515683736223744/Nuestra_Tierra_Job_Simulator.png?ex=6a1da1a1&is=6a1c5021&hm=4b631211f8be9a6f6d14c6af439ddab1f3745a986980ed10f4d103fe59beeeb9&=&format=webp&quality=lossless&width=1730&height=508') no-repeat center center;
+    background-size: cover;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-md);
+    box-shadow: var(--shadow-card);
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+  
+  .ph-main-row {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  
+  .ph-avatar-wrap {
+    position: relative;
+  }
+  
+  .ph-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: rgba(11, 15, 25, 0.9);
+    border: 3px solid #00b0ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 176, 255, 0.5);
+    transition: transform var(--transition-fast);
+  }
+  
+  .ph-avatar:hover {
+    transform: scale(1.05);
+  }
+  
+  .ph-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .ph-info h2 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.6rem;
+    font-weight: 800;
+    line-height: 1.2;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    word-break: break-word;
+  }
+  
+  .ph-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: var(--space-xs);
+  }
+  
+  .ph-right {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  
+  .coins-chip {
+    background: rgba(251,191,36,.12);
+    border: 1px solid rgba(251,191,36,.25);
+    border-radius: 12px;
+    padding: 8px 16px;
+    text-align: center;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  
+  .coins-chip b {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: var(--color-gold);
+    line-height: 1;
+  }
+  
+  .coins-chip small {
+    font-size: .75rem;
+    color: #fbbf24;
+    display: block;
+  }
+
+  /* Game Library Grid */
+  .game-library {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+  }
+  
+  .game-card {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    overflow: hidden;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .game-card:hover {
+    transform: translateY(-5px);
+    border-color: #00b0ff;
+    box-shadow: 0 10px 20px rgba(0, 176, 255, 0.15);
+  }
+  
+  .game-card-img {
+    width: 100%;
+    aspect-ratio: 16/10;
+    object-fit: cover;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  
+  .game-card-body {
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  
+  .game-card-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .game-card-info {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+  }
+  
+  /* ========================================
+     BADGE PILLS
+     ======================================== */
+  .bp {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.1);
+    color: var(--text-primary);
+    font-size: .7rem;
+    font-weight: 700;
+  }
+  
+  .bp.g  { border-color: rgba(74,222,128,.35);  color: #86efac; }
+  .bp.b  { border-color: rgba(96,165,250,.35);  color: #93c5fd; }
+  .bp.pu { border-color: rgba(168,85,247,.35);  color: #d8b4fe; }
+  .bp.go { border-color: rgba(251,191,36,.35);  color: #fde68a; }
+  .bp.r  { border-color: rgba(248,113,113,.35); color: #fda4af; }
+  .bp.aqua { border-color: rgba(0, 240, 255, 0.35); color: #80f0ff; }
+  .bp.beta {
+    background: linear-gradient(135deg, rgba(0, 176, 255, 0.2), rgba(30, 112, 200, 0.35));
+    border: 1px solid rgba(0, 176, 255, 0.6);
+    color: #e0f7ff;
+    text-shadow: 0 0 4px rgba(0, 176, 255, 0.6);
+    box-shadow: 0 0 8px rgba(0, 176, 255, 0.2);
+  }
+  @keyframes pulse-glow {
+    0% { transform: scale(1); box-shadow: 0 0 5px rgba(0, 176, 255, 0.15); }
+    100% { transform: scale(1.03); box-shadow: 0 0 15px rgba(0, 176, 255, 0.45); }
+  }
+  
+  /* ========================================
+     KPI STRIP (Stats)
+     ======================================== */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+  }
+  
+  .kpi {
+    padding: 1.25rem 1rem;
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(16px);
+    text-align: center;
+    box-shadow: var(--shadow-card);
+  }
+  
+  .kpi-l {
+    font-size: .65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: 2px;
+    line-height: 1.2;
+  }
+  
+  .kpi-v {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+  }
+  
+  .kpi-s {
+    font-size: .65rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  
+  /* ========================================
+     GRID 3 COLUMNAS (Responsive)
+     ======================================== */
+  .pg {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  @media (min-width: 1024px) {
+    .pg {
+      grid-template-columns: 1fr 1.3fr 1fr;
+    }
+  }
+  
+  .pg-left, .pg-mid, .pg-right {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  /* ========================================
+     CARD COMPONENT
+     ======================================== */
+  .pc {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    font-size: .9rem;
+    backdrop-filter: blur(16px);
+    box-shadow: var(--shadow-card);
+  }
+  
+  .pc-h {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+    flex-wrap: wrap;
+  }
+  
+  .pc-h h3 {
+    margin: 0;
+    color: #fff;
+    font-size: .95rem;
+    font-weight: 800;
+  }
+  
+  .pc-h span {
+    font-size: .75rem;
+    color: var(--text-muted);
+  }
+  
+  /* ========================================
+     INFO TABLE (Premium Flex Rows)
+     ======================================== */
+  .it {
+    width: 100%;
+    border-collapse: collapse;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  
+  .it tr {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 10px;
+    transition: background var(--transition-fast), border-color var(--transition-fast);
+  }
+  
+  .it tr:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  
+  .it td {
+    border: none !important;
+    padding: 0 !important;
+    vertical-align: middle;
+  }
+  
+  .it td:first-child {
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    width: auto;
+    padding-right: 0;
+  }
+  
+  .it td:last-child {
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-align: right;
+    word-break: break-word;
+  }
+  
+  /* ========================================
+     STREAK / BONUS DIARIO
+     ======================================== */
+  .streak-row {
+    display: flex;
+    gap: var(--space-xs);
+    justify-content: center;
+    margin: var(--space-md) 0;
+    flex-wrap: wrap;
+  }
+  
+  .streak-day {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.05);
+    border: 1.5px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .7rem;
+    color: var(--text-muted);
+    font-weight: 800;
+    transition: all var(--transition-fast);
+    min-width: 32px; /* Evita colapso en móvil */
+  }
+  
+  .streak-day.completed {
+    background: rgba(30,112,200,.25);
+    border-color: var(--text-accent);
+    color: #7dd3fc;
+    box-shadow: 0 0 8px rgba(30,112,200,.3);
+  }
+  
+  .streak-day.current {
+    border-color: var(--color-gold);
+    box-shadow: 0 0 8px rgba(251,191,36,.4);
+  }
+  
+  #dailyBonusMessage {
+    min-height: 18px;
+    font-size: .8rem;
+    font-weight: 700;
+    text-align: center;
+    margin-top: var(--space-sm);
+  }
+  
+  #dailyBonusMessage.success { color: var(--color-green); }
+  #dailyBonusMessage.error { color: var(--color-red); }
+  
+  /* ========================================
+     REFERRAL BOX
+     ======================================== */
+  .ref-box {
+    display: flex;
+    gap: var(--space-xs);
+    align-items: center;
+    margin: var(--space-sm) 0;
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm);
+  }
+  
+  #referralCode {
+    flex: 1;
+    font-family: monospace;
+    font-size: .9rem;
+    color: var(--color-gold);
+    font-weight: 800;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  
+  .ref-stats {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+    margin-top: var(--space-xs);
+  }
+  
+  .ref-stat {
+    font-size: .8rem;
+    color: var(--text-muted);
+  }
+  
+  .ref-stat strong { color: var(--text-primary); }
+  
+  /* ========================================
+     ACTIVITY LIST
+     ======================================== */
+  .act-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  
+  .act-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: .85rem;
+  }
+  
+  .act-item:last-child { border-bottom: none; }
+  
+  .act-ico {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: rgba(30,112,200,.15);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .9rem;
+  }
+  
+  .act-txt {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .act-title {
+    color: var(--text-primary);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .act-time {
+    font-size: .7rem;
+    color: var(--text-muted);
+  }
+  
+  .act-coins {
+    font-weight: 800;
+    color: var(--color-green);
+    white-space: nowrap;
+    font-size: .85rem;
+  }
+  
+  .act-coins.neg { color: var(--color-red); }
+  
+  /* ========================================
+     FEED / NOVEDADES
+     ======================================== */
+  .feed {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  
+  .feed-link {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-sm);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    background: rgba(255,255,255,.03);
+    border: 1px solid var(--border-color);
+    transition: background var(--transition-fast), transform var(--transition-fast);
+  }
+  
+  .feed-link:hover {
+    background: rgba(30,112,200,.1);
+    transform: translateX(3px);
+  }
+  
+  .feed-link strong { color: var(--text-primary); font-size: .85rem; }
+  .feed-link span { color: var(--text-muted); font-size: .75rem; }
+  .feed-link small { color: var(--text-muted); font-size: .7rem; opacity: .8; }
+  
+  /* ========================================
+     SPONSOR / PATROCINADOR
+     ======================================== */
+  .sp-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+  
+  .sp-ico {
+    font-size: 2rem;
+    flex-shrink: 0;
+  }
+  
+  .sp-name {
+    color: #fff;
+    font-size: .9rem;
+    font-weight: 800;
+    margin: 0 0 2px;
+  }
+  
+  .sp-desc {
+    color: var(--text-muted);
+    font-size: .8rem;
+  }
+  
+  .sp-sum {
+    font-size: .8rem;
+    color: var(--text-muted);
+    margin-top: var(--space-sm);
+  }
+  
+  /* ========================================
+     REDEEM / CANJEAR
+     ======================================== */
+  .rdm-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+    align-items: center;
+  }
+  
+  .rdm-row input {
+    width: 100%;
+    padding: var(--space-md);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(135,206,235,.2);
+    background: rgba(2,8,14,.88);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    min-height: 44px;
+  }
+  
+  .rdm-row input:focus {
+    border-color: var(--text-accent);
+    box-shadow: 0 0 0 3px rgba(30,112,200,.15);
+  }
+  
+  .rdm-stats {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-sm);
+  }
+  
+  .rdm-stat { font-size: .8rem; color: var(--text-muted); }
+  .rdm-stat b { color: var(--text-primary); }
+  
+  #redeemMessage {
+    min-height: 18px;
+    font-size: .8rem;
+    font-weight: 700;
+    margin-top: var(--space-sm);
+    text-align: center;
+  }
+  
+  #redeemMessage.success { color: var(--color-green); }
+  #redeemMessage.error { color: var(--color-red); }
+  
+  #redeemHistory { margin-top: var(--space-md); }
+  #redeemHistory[hidden] { display: none; }
+  
+  #redeemHistoryList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  
+  .rdm-hist-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-sm);
+    border-radius: var(--radius-sm);
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--border-color);
+    font-size: .8rem;
+  }
+  
+  .rdm-hist-item strong { color: var(--text-primary); display: block; }
+  .rdm-hist-item small { color: var(--text-muted); }
+  
+  .rdm-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-size: .7rem;
+    font-weight: 800;
+  }
+  
+  .rdm-status.completed { background: rgba(96,165,250,.15); color: var(--color-blue); }
+  .rdm-status.approved  { background: rgba(74,222,128,.15); color: var(--color-green); }
+  .rdm-status.pending   { background: rgba(251,191,36,.15); color: var(--color-gold); }
+  .rdm-status.rejected  { background: rgba(248,113,113,.15); color: var(--color-red); }
+  
+  /* ========================================
+     BIO BOX
+     ======================================== */
+  .bio-box {
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: var(--space-md);
+    color: var(--text-secondary);
+    font-size: .85rem;
+    line-height: 1.5;
+    margin-top: var(--space-sm);
+  }
+  
+  /* ========================================
+     BUTTONS (Touch-friendly)
+     ======================================== */
+  .pb {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border-color); /* Stronger, double border using Slate colors */
+    background: transparent;
+    color: var(--text-primary);
+    font-size: .9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: inherit;
+    white-space: nowrap;
+    min-height: 44px; /* Touch target mínimo */
+    min-width: 44px;
+  }
+  
+  .pb:hover {
+    background: var(--text-primary);
+    color: var(--bg-body);
+    border-color: var(--text-primary);
+    transform: translateY(-1px);
+  }
+  
+  .pb:active { transform: translateY(0); }
+  
+  .pb.prim {
+    background: var(--text-accent);
+    border-color: var(--text-accent);
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(0, 136, 204, 0.25);
+  }
+  
+  .pb.prim:hover {
+    background: #0077b3;
+    border-color: #0077b3;
+    color: #fff !important;
+    box-shadow: 0 6px 20px rgba(0, 136, 204, 0.35);
+  }
+  
+  .pb.sm { padding: var(--space-xs) var(--space-md); font-size: .85rem; min-height: 36px; }
+  
+  .pb.gold {
+    background: rgba(212, 175, 55, 0.1);
+    border-color: var(--color-gold);
+    color: #b45309; /* Dark brown-gold for light mode readability */
+  }
+  [data-theme="dark"] .pb.gold {
+    color: var(--color-gold);
+    background: rgba(251,191,36,.12);
+  }
+  
+  .pb.gold:hover {
+    background: var(--color-gold);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.35);
+  }
+  
+  .pb.dng {
+    background: rgba(239,68,68,.1);
+    border-color: var(--color-red);
+    color: #dc2626; /* Deep red for light mode */
+  }
+  [data-theme="dark"] .pb.dng {
+    color: var(--color-red);
+    background: rgba(239,68,68,.12);
+  }
+  
+  .pb.dng:hover {
+    background: var(--color-red);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+  }
+  
+  .pb:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+  
+  .pb-full { width: 100%; }
+  
+  /* ========================================
+     MODAL (Dialog Moderno)
+     ======================================== */
+  .pm {
+    border: 1px solid var(--border-color-strong);
+    border-radius: var(--radius-lg);
+    background: var(--bg-modal);
+    color: var(--text-primary);
+    padding: 0;
+    width: min(480px, 96vw);
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px rgba(0,0,0,.6);
+    margin: auto;
+  }
+  
+  .pm::backdrop {
+    background: rgba(0,0,0,.75);
+    backdrop-filter: blur(6px);
+  }
+  
+  .pm-h {
+    padding: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--bg-modal);
+    z-index: 1;
+  }
+  
+  .pm-h h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 800;
+  }
+  
+  .pm-b {
+    padding: var(--space-md) var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+  
+  .pm-f {
+    padding: var(--space-md) var(--space-lg);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: flex-end;
+    position: sticky;
+    bottom: 0;
+    background: var(--bg-modal);
+  }
+  
+  .pm-grp {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  
+  .pm-grp label {
+    font-size: .75rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  
+  .pm-inp {
+    width: 100%;
+    padding: var(--space-md);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(135,206,235,.2);
+    background: rgba(2,8,14,.88);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color var(--transition-fast);
+    min-height: 44px;
+  }
+  
+  .pm-inp:focus {
+    border-color: var(--text-accent);
+    box-shadow: 0 0 0 3px rgba(30,112,200,.15);
+  }
+  
+  .pm-inp::placeholder { color: rgba(200,230,255,.25); }
+  
+  textarea.pm-inp {
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+  }
+  
+  /* Avatar Grid */
+  .av-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--space-xs);
+  }
+  
+  .av-opt {
+    aspect-ratio: 1;
+    border-radius: var(--radius-sm);
+    font-size: 1.2rem;
+    background: rgba(255,255,255,.05);
+    border: 2px solid transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    min-height: 40px;
+  }
+  
+  .av-opt:hover {
+    background: rgba(30,112,200,.18);
+    border-color: var(--border-color-strong);
+    transform: scale(1.05);
+  }
+  
+  .av-opt.selected {
+    background: rgba(30,112,200,.25);
+    border-color: var(--text-accent);
+    box-shadow: 0 0 10px rgba(30,112,200,.3);
+  }
+  
+  /* Preview de imagen de perfil */
+  #editProfileImagePreview {
+    background: rgba(30,112,200,.2);
+    border: 2px solid var(--border-color-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    overflow: hidden;
+  }
+  
+  #editProfileImagePreview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  /* ========================================
+     HEADER & NAV (Consistente con sitio)
+     ======================================== */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 800;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-md);
+    background: rgba(24, 29, 43, 0.96);
+    backdrop-filter: blur(20px) saturate(150%);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+  }
+  
+  .logo-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+  
+  .dark-mode-toggle {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: rgba(255,255,255,.05);
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  nav {
+    position: sticky;
+    top: 64px;
+    z-index: 799;
+    display: flex;
+    gap: var(--space-xs);
+    padding: var(--space-sm);
+    background: rgba(22, 27, 40, 0.92);
+    backdrop-filter: blur(16px) saturate(140%);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  
+  nav::-webkit-scrollbar { display: none; }
+  
+  nav a,
+  .nav-dropdown-toggle {
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    font-size: .9rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  
+  nav a:hover,
+  nav a.active,
+  .nav-dropdown-toggle:hover {
+    color: var(--text-primary);
+    background: rgba(255,255,255,.08);
+  }
+  
+  nav a.active {
+    background: var(--text-accent);
+    color: #fff;
+  }
+  
+  /* Dropdown */
+  .nav-dropdown { position: relative; }
+  
+  .nav-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    display: none;
+    flex-direction: column;
+    min-width: 180px;
+    padding: var(--space-xs);
+    margin-top: var(--space-xs);
+    background: rgba(15,23,42,.98);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    z-index: 800;
+  }
+  
+  .nav-dropdown:hover .nav-dropdown-menu { display: flex; }
+  
+  .nav-dropdown-menu a {
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+  }
+  
+  .nav-dropdown-menu a:hover {
+    background: rgba(255,255,255,.08);
+    color: var(--text-primary);
+  }
+  
+  /* ========================================
+     FOOTER
+     ======================================== */
+  footer {
+    padding: var(--space-xl) var(--space-md);
+    text-align: center;
+    background: rgba(20, 24, 36, 0.95);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    margin-top: auto;
+  }
+  
+  footer p {
+    margin: 0;
+    font-size: .8rem;
+    color: var(--text-muted);
+  }
+  
+  /* ========================================
+     RESPONSIVE BREAKPOINTS
+     ======================================== */
+  
+  /* Tablet: 2 columnas */
+  @media (min-width: 768px) {
+    .ps { padding: var(--space-lg); }
+    
+    .pg {
+      grid-template-columns: 220px 1fr 220px;
+      gap: var(--space-md);
+    }
+    
+    .kpis {
+      grid-template-columns: repeat(5, 1fr);
+      gap: var(--space-md);
+    }
+    
+    .ph {
+      grid-template-columns: 56px 1fr auto;
+      padding: var(--space-lg);
+    }
+    
+    .ph-right { display: flex; }
+    .ph-badges { display: flex; }
+    
+    .av-grid {
+      grid-template-columns: repeat(8, 1fr);
+    }
+  }
+  
+  /* Desktop: máx width */
+  @media (min-width: 1024px) {
+    .pg {
+      grid-template-columns: 240px 1fr 240px;
+    }
+    
+    .auth-card { max-width: 420px; }
+  }
+  
+  /* Mobile: ajustes específicos */
+  @media (max-width: 480px) {
+    :root { font-size: 13px; }
+    
+    .ps { padding: var(--space-sm); padding-bottom: var(--space-lg); }
+    
+    .auth-card {
+      padding: var(--space-lg);
+      border-radius: var(--radius-md);
+    }
+    
+    .auth-logo { width: 56px; height: 56px; }
+    
+    .ph {
+      flex-direction: column;
+      align-items: flex-start;
+      min-height: unset;
+      padding: 1.2rem;
+      gap: 1rem;
+    }
+
+    .ph-main-row {
+      gap: 1rem;
+    }
+
+    .ph-right {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 8px;
+      width: 100%;
+      justify-content: flex-start;
+      align-items: center;
+    }
+    
+    .ph-info h2 { font-size: 1.1rem; }
+    .ph-info p { font-size: .75rem; }
+    .ph-level-bar-wrap { width: 100% !important; max-width: 280px; }
+    
+    .kpis {
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-xs);
+    }
+    
+    .kpi { padding: var(--space-sm); }
+    .kpi-v { font-size: 1rem; }
+    
+    .pc { padding: var(--space-md); }
+    .pc-h { flex-direction: column; align-items: flex-start; }
+    .pc-h span { margin-top: 2px; }
+    
+    .rdm-row {
+      grid-template-columns: 1fr;
+    }
+    
+    .rdm-row button { width: 100%; }
+    
+    .ref-box {
+      flex-wrap: wrap;
+    }
+    
+    #referralCode {
+      order: 2;
+      width: 100%;
+      margin-top: var(--space-xs);
+      text-align: center;
+    }
+    
+    .av-grid {
+      grid-template-columns: repeat(5, 1fr);
+    }
+    
+    .pm-b { padding: var(--space-md); }
+    .pm-f { padding: var(--space-md); }
+    
+    /* Botones flotantes para acciones principales en móvil */
+    .mobile-fab {
+      position: fixed;
+      bottom: var(--space-lg);
+      right: var(--space-lg);
+      z-index: 700;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+    
+    .mobile-fab .pb {
+      border-radius: var(--radius-full);
+      box-shadow: var(--shadow-card);
+      min-width: 56px;
+      min-height: 56px;
+      padding: 0;
+      font-size: 1.2rem;
+    }
+  }
+  
+  /* ========================================
+     UTILIDADES & ACCESIBILIDAD
+     ======================================== */
+  [hidden] { display: none !important; }
+  
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
+  
+  :focus-visible {
+    outline: 2px solid var(--text-accent);
+    outline-offset: 2px;
+  }
+  
+  /* Animaciones suaves */
+  .animate-pulse {
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .7; }
+  }
+  
+  /* Scroll suave para modales */
+  .pm {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Soporte para modo reducido de movimiento */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  
+  /* Google login button separator */
+  .auth-sep {
+    position: relative;
+    text-align: center;
+    margin: var(--space-md) 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+  .auth-sep::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 0; right: 0;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .auth-sep span {
+    position: relative;
+    padding: 0 1rem;
+    background: #0d0e12;
+  }
+  .pb.sec {
+    background: transparent;
+    border-color: rgba(255,255,255,0.08);
+    color: var(--text-primary);
+  }
+  .pb.sec:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: var(--text-primary);
+  }
+  </style>
+    <script src="../assets/js/core/firebase-config.js" defer></script>
+    <script src="../assets/js/site-visibility.js" defer></script>`
+  }) %>
+
+</nav>
+  
+  <!-- 🔐 AUTH GATE (Login/Register) -->
+  <main id="profileAuthSection" class="auth-gate" role="main">
+    <div class="auth-card" role="dialog" aria-labelledby="authTitle">
+      <img src="/recursos/PSGD.png" alt="Panter Studio" class="auth-logo" width="64" height="64">
+      <h1 id="authTitle">Mi Perfil</h1>
+      <p>Conéctate con tu cuenta de Google para ver tu progreso, monedas y recompensas.</p>
+      
+      <button type="button" id="googleAuthBtn" class="pb sec pb-full" style="display: flex; gap: 10px; align-items: center; justify-content: center; width: 100%;">
+          <img src="/recursos/google-logo.svg" alt="Google" width="18" height="18" onerror="this.style.display='none'">
+          Continuar con Google
+      </button>
+      
+      <!-- Mensajes de estado -->
+      <div id="authMessage" class="auth-msg" role="status" aria-live="polite"></div>
+
+      <!-- Hidden compatibility elements for perfil.js -->
+      <div style="display: none !important;">
+        <!-- Tabs de autenticación -->
+        <div class="auth-tabs" role="tablist">
+          <button class="auth-tab active" data-tab="login" role="tab" aria-selected="true" aria-controls="loginForm">
+            Iniciar sesión
+          </button>
+          <button class="auth-tab" data-tab="register" role="tab" aria-selected="false" aria-controls="registerForm">
+            Crear cuenta
+          </button>
+        </div>
+        
+        <!-- Form Login -->
+        <form id="loginForm" class="auth-form active" autocomplete="off" novalidate role="tabpanel" aria-labelledby="loginTab">
+          <label for="loginEmail" class="sr-only">Correo electrónico</label>
+          <input type="email" id="loginEmail" class="p-inp" placeholder="Correo electrónico" autocomplete="email" required value="a@a.com">
+          
+          <label for="loginPassword" class="sr-only">Contraseña</label>
+          <input type="password" id="loginPassword" class="p-inp" placeholder="Contraseña" autocomplete="current-password" required value="123456">
+          
+          <button type="submit" class="pb prim pb-full">Entrar</button>
+          <a class="auth-forgot" id="forgotPasswordLink" href="#">Olvidé mi contraseña</a>
+        </form>
+        
+        <!-- Form Registro -->
+        <form id="registerForm" class="auth-form" autocomplete="off" novalidate role="tabpanel" aria-labelledby="registerTab" hidden>
+          <label for="registerEmail" class="sr-only">Correo electrónico</label>
+          <input type="email" id="registerEmail" class="p-inp" placeholder="Correo electrónico" autocomplete="email" required value="a@a.com">
+          
+          <label for="registerPassword" class="sr-only">Contraseña</label>
+          <input type="password" id="registerPassword" class="p-inp" placeholder="Contraseña (mín. 6 caracteres)" minlength="6" autocomplete="new-password" required value="123456">
+          
+          <label for="registerReferral" class="sr-only">Código de referido</label>
+          <input type="text" id="registerReferral" class="p-inp" placeholder="Código de referido (opcional)" autocomplete="off">
+          
+          <button type="submit" class="pb prim pb-full">Crear cuenta</button>
+        </form>
+        
+        <div class="auth-sep"><span>o</span></div>
+      </div>
+    </div>
+  </main>
+  
+  <!-- 📊 DASHBOARD (Perfil del usuario) -->
+  <section id="profileDashboard" class="ps" role="region" aria-label="Panel de usuario">
+    
+    <!-- 🎯 HERO: Perfil Principal con Banner -->
+    <div class="ph" role="group" aria-label="Información del perfil">
+      <div class="ph-main-row">
+        <div class="ph-avatar-wrap">
+          <div class="ph-avatar" id="profileAvatarLetter" aria-hidden="true">😊</div>
+        </div>
+        <div class="ph-info">
+          <h2 id="profileDisplayName">Usuario</h2>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+            <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 700;">Rol: <span id="profileRoleText" style="color: var(--color-blue);">Miembro</span></span>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">|</span>
+            <span id="profileUid" aria-label="ID de usuario" style="font-size: 0.8rem; font-family: monospace; color: var(--text-secondary);"></span>
+          </div>
+          <div class="ph-level-bar-wrap" style="margin-top: 10px; width: 240px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 700; color: var(--text-primary); margin-bottom: 3px;">
+              <span id="profileLevelText">Nivel 1</span>
+              <span style="color: var(--text-muted);">Racha: <span id="profileStreakText" style="color: var(--color-gold);">0</span>d</span>
+            </div>
+            <div class="ph-level-bar-track" style="height: 6px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden;">
+              <div id="profileLevelBarFill" style="height: 100%; background: linear-gradient(90deg, var(--color-blue), #a5f3fc); width: 40%; border-radius: 10px; box-shadow: 0 0 8px var(--color-blue);"></div>
+            </div>
+          </div>
+          <div class="ph-badges" id="profileBadges" role="list" aria-label="Insignias" style="margin-top: 8px;"></div>
+        </div>
+      </div>
+      <div class="ph-right">
+        <!-- Coins chip -->
+        <div class="coins-chip" aria-label="Saldo de monedas" style="flex-shrink:0;">
+          <b id="profileCoins">0</b>
+          <small>🪙 monedas web</small>
+        </div>
+        <!-- Action buttons -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <!-- Admin button — visible solo si el usuario tiene rol -->
+          <div id="profileAdminTools" hidden>
+            <a href="admin/admin"
+               style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;
+                      padding:8px 14px; border-radius:10px; font-weight:800; font-size:0.82rem;
+                      background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.08));
+                      border:1.5px solid rgba(212,175,55,0.6); color:#ffd966;
+                      box-shadow:0 0 16px rgba(212,175,55,0.25); white-space:nowrap;
+                      min-height:40px; transition:all 0.2s;"
+               onmouseover="this.style.boxShadow='0 0 28px rgba(212,175,55,0.5)';this.style.background='linear-gradient(135deg,rgba(212,175,55,0.35),rgba(212,175,55,0.15))';"
+               onmouseout="this.style.boxShadow='0 0 16px rgba(212,175,55,0.25)';this.style.background='linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.08))';">
+              🛡️ Panel Admin
+            </a>
+          </div>
+          <button class="pb prim sm" id="editProfileBtn" style="min-height:40px;">✏️ Editar</button>
+          <button class="pb dng sm" id="logoutBtn" style="min-height:40px;">🚪 Salir</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 🧱 GRID 3 COLUMNAS -->
+    <div class="pg">
+      
+      <!-- ── IZQUIERDA: Logros + Bio + Información general ── -->
+      <div class="pg-left">
+        
+        <!-- Logros / Insignias -->
+        <article class="pc" aria-labelledby="achievementsTitle">
+          <div class="pc-h">
+            <h3 id="achievementsTitle">🏆 Logros & Rangos</h3>
+          </div>
+          <div class="ph-badges" id="profileBadgesSidebar" role="list" aria-label="Insignias de la comunidad" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
+          <div class="bio-box" id="profileBio" aria-label="Biografía" style="margin-top:12px;padding:12px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.03);border-radius:10px;font-size:0.85rem;color:var(--text-secondary);line-height:1.4;">Sin descripción aún.</div>
+        </article>
+
+        <!-- Información general de la Cuenta -->
+        <article class="pc" aria-labelledby="infoTitle">
+          <div class="pc-h">
+            <h3 id="infoTitle">👤 Información de Cuenta</h3>
+          </div>
+          <table class="it" role="table">
+            <tr><td scope="row">Email</td><td id="profileEmail">—</td></tr>
+            <tr><td scope="row">Verificado</td><td id="profileVerificationStatusSide">—</td></tr>
+            <tr><td scope="row">Proveedor</td><td id="profileProviderSide">—</td></tr>
+            <tr><td scope="row">Miembro Desde</td><td id="profileJoinDate">—</td></tr>
+            <tr><td scope="row">País</td><td id="profileCountry">—</td></tr>
+            <tr><td scope="row">Proyecto Fav.</td><td id="profileFavoriteProject">—</td></tr>
+          </table>
+        </article>
+        
+        <!-- Patrocinador -->
+        <article class="pc" aria-labelledby="sponsorTitle">
+          <div class="pc-h">
+            <h3 id="sponsorTitle">👑 Rango Patrocinador</h3>
+          </div>
+          <div class="sp-row" style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+            <div class="sp-ico" id="sponsorBadge" aria-hidden="true" style="font-size:2rem;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;">👤</div>
+            <div>
+              <p class="sp-name" id="sponsorLevelName" style="font-weight:800;color:var(--text-primary);margin:0;">Visitante</p>
+              <p class="sp-desc" id="sponsorLevelDesc" style="font-size:0.75rem;color:var(--text-muted);margin:0;">Haz una donación.</p>
+            </div>
+          </div>
+          <div class="sp-sum" id="profileSponsorSummary" style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:12px;"></div>
+          <a href="donaciones" class="pb gold sm pb-full" style="margin-top:var(--space-md);text-align:center;text-decoration:none;" aria-label="Apoyar el proyecto">💖 Apoyar</a>
+        </article>
+
+      </div>
+      
+      <!-- ── CENTRO: Estado de Juego + Biblioteca de Juegos ── -->
+      <div class="pg-mid">
+        
+        <!-- 🧪 BETA TESTER CARD -->
+        <article class="pc" id="profileBetaTesterCard" hidden style="background: linear-gradient(135deg, rgba(0, 176, 255, 0.1), rgba(28, 33, 46, 0.95)); border: 1.5px solid rgba(0, 176, 255, 0.4); box-shadow: 0 8px 32px rgba(0, 176, 255, 0.15); margin-bottom: 1.25rem;">
+          <div style="display:flex; align-items:center; gap:16px;">
+            <div style="font-size:2.5rem; background:rgba(0, 176, 255, 0.15); border: 1px solid rgba(0, 176, 255, 0.3); border-radius:50%; width:64px; height:64px; display:flex; align-items:center; justify-content:center; flex-shrink:0; animation: pulse-glow 2s infinite alternate;">🧪</div>
+            <div>
+              <h3 style="color:#00b0ff; margin:0 0 4px 0; font-size:1.1rem; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">Beta Tester Oficial</h3>
+              <p style="color:var(--text-primary); font-size:0.85rem; margin:0; font-weight:600;">¡Eres parte del equipo de pruebas de Panter Studio!</p>
+              <p style="color:var(--text-muted); font-size:0.75rem; margin:4px 0 0 0;">Gracias por ayudarnos a probar y mejorar el simulador.</p>
+            </div>
+          </div>
+        </article>
+
+        <!-- 🎮 ESTADO DEL JUEGO (Nuestra Tierra) -->
+        <article class="pc" aria-labelledby="gameStatsTitle" style="border-color:#00b0ff;box-shadow:0 0 15px rgba(0, 176, 255, 0.1);">
+          <div class="pc-h">
+            <h3 id="gameStatsTitle" style="color:#00b0ff;">🎮 Estado en el Juego</h3>
+            <span style="color:#00b0ff;font-weight:800">NUESTRA TIERRA</span>
+          </div>
+          <table class="it" role="table">
+            <tr><td scope="row">Nombre en el Juego</td><td id="gameUsername">—</td></tr>
+            <tr><td scope="row">ID del Conductor</td><td id="gameConductorId">—</td></tr>
+            <tr><td scope="row">Monedas del Juego</td><td id="gameCoins">—</td></tr>
+            <tr><td scope="row"><img src="/recursos/iconos/esmeralda.png" alt="Esmeralda" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;">Esmeraldas (Juego)</td><td id="gameEmeralds">—</td></tr>
+            <tr><td scope="row">Última Sincronización</td><td id="gameLastSync">—</td></tr>
+          </table>
+          <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 12px; margin-bottom: 0; line-height:1.3">
+            * Sincronizado automáticamente con tu cuenta en el juego.
+          </p>
+        </article>
+
+        <!-- 🐾 MASCOTA PANTER WIDGET -->
+        <article class="pc" id="profilePetWidget" style="display: none;" hidden>
+          <div class="pc-h">
+            <h3 id="petWidgetTitle" style="color:#00e676;">🐾 Mascota Virtual</h3>
+            <span style="color:#00e676;font-weight:800">PANTER PET</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 15px; padding: 10px 0;">
+            <div id="profilePetAvatar" style="font-size: 3rem; background: rgba(0, 230, 118, 0.08); width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 1.5px solid rgba(0, 230, 118, 0.3); animation: petBreath 3s ease-in-out infinite;">🐈‍⬛</div>
+            <div style="flex: 1;">
+              <h4 id="profilePetName" style="margin: 0; color: #fff; font-size: 1.1rem; font-weight: bold;">Cargando...</h4>
+              <p style="margin: 2px 0 0 0; color: var(--text-muted); font-size: 0.8rem;">Nivel Mascota: <span id="profilePetLevel">—</span></p>
+              <div style="display: flex; gap: 10px; margin-top: 6px; font-size: 0.72rem; color: var(--text-secondary);">
+                <span id="profilePetHunger">🥩 —</span>
+                <span id="profilePetHappiness">🧶 —</span>
+                <span id="profilePetEnergy">⚡ —</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Inventario de Mascota Consumibles -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-sm); padding: 8px 12px; margin-top: 5px; font-size: 0.8rem;">
+            <div style="font-weight: bold; margin-bottom: 6px; color: var(--text-secondary);">Inventario de Mascota:</div>
+            <div style="display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+              <button class="pb sm" id="feedSteakBtn" onclick="usePetItem('steak')" style="flex: 1; border-color: rgba(255,255,255,0.08); font-size: 0.75rem; padding: 4px 8px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 32px; background: rgba(0, 230, 118, 0.05); color: #00e676;">🥩 Filetes: <strong id="invSteakCount">0</strong></button>
+              <button class="pb sm" id="playYarnBtn" onclick="usePetItem('yarn')" style="flex: 1; border-color: rgba(255,255,255,0.08); font-size: 0.75rem; padding: 4px 8px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 32px; background: rgba(224, 64, 251, 0.05); color: #e040fb;">🧶 Lanas: <strong id="invYarnCount">0</strong></button>
+            </div>
+            <div id="petItemMessage" style="font-size: 0.72rem; text-align: center; margin-top: 6px; min-height: 15px;" role="status"></div>
+          </div>
+
+          <div style="display: flex; gap: 8px; margin-top: 10px;">
+            <a href="minijuegos" class="pb prim sm" style="text-align: center; text-decoration: none; border-color: rgba(0, 230, 118, 0.3); color: #00e676; flex: 1; min-height: 36px; line-height: 1.8;">Jugar con Mascota</a>
+            <button class="pb sm" id="changePetAvatarBtn" style="border-color: rgba(255,255,255,0.08); flex: 1;" onclick="openPetAvatarSelectorModal()">Cambiar Aspecto</button>
+          </div>
+        </article>
+
+        <!-- 💸 TRANSFERENCIA DE FONDOS (PanterPay) -->
+        <article class="pc" aria-labelledby="transferTitle" style="border-color:var(--color-gold);box-shadow:0 0 15px rgba(212, 175, 55, 0.1);">
+          <div class="pc-h">
+            <h3 id="transferTitle" style="color:var(--color-gold);">💸 Transferir Fondos</h3>
+            <span style="color:var(--color-gold);font-weight:800">PANTERPAY</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
+            Envía monedas de la web a otro conductor de forma inmediata.
+          </p>
+          <div style="display:flex; flex-direction:column; gap: 10px;">
+            <div>
+              <label for="transferDest" style="font-size:0.75rem; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:4px;">Destinatario (UID completo o Código Corto de 6 letras)</label>
+              <input type="text" id="transferDest" placeholder="Ej: F53A81 o UID completo" style="width:100%; padding:10px; border-radius:var(--radius-sm); background:var(--bg-input); border:1px solid var(--border-color); color:#fff; font-family:monospace; text-transform: uppercase;">
+            </div>
+            <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap: 10px;">
+              <div>
+                <label for="transferCurrency" style="font-size:0.75rem; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:4px;">Moneda</label>
+                <select id="transferCurrency" disabled style="width:100%; padding:10px; border-radius:var(--radius-sm); background:var(--bg-input); border:1px solid var(--border-color); color:#fff; opacity: 0.8; cursor: not-allowed;">
+                  <option value="coins" selected>🪙 Monedas Web</option>
+                </select>
+              </div>
+              <div>
+                <label for="transferAmount" style="font-size:0.75rem; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:4px;">Cantidad</label>
+                <input type="number" id="transferAmount" placeholder="Monto" min="1" style="width:100%; padding:10px; border-radius:var(--radius-sm); background:var(--bg-input); border:1px solid var(--border-color); color:#fff;">
+              </div>
+            </div>
+            <button class="pb gold pb-full" id="transferBtn" style="margin-top: 5px; text-align:center;">Realizar Transferencia</button>
+            <div id="transferMessage" role="status" aria-live="polite" style="font-size: 0.85rem; font-weight: 700; min-height: 20px; margin-top: 5px; text-align:center;"></div>
+          </div>
+        </article>
+
+        <!-- Biblioteca de Juegos (Game Library) -->
+        <article class="pc" aria-labelledby="libraryTitle">
+          <div class="pc-h">
+            <h3 id="libraryTitle">🎮 Catálogo de Juegos</h3>
+          </div>
+          <div class="game-library">
+            <a href="../index" class="game-card">
+              <img src="https://media.discordapp.net/attachments/1475940325280321556/1500515682960412772/NT.png?ex=6a1da1a1&is=6a1c5021&hm=055e22d6f75d5cb1bf4bc8041bdebfae0a3b18b40d11885ef87bb971ba5b17a0&=&format=webp&quality=lossless&width=915&height=800" alt="Nuestra Tierra" class="game-card-img">
+              <div class="game-card-body">
+                <span class="game-card-title">Nuestra Tierra</span>
+                <span class="game-card-info">Simulador 3D</span>
+              </div>
+            </a>
+            <a href="minijuegos" class="game-card">
+              <img src="https://i.imgur.com/1IRRyFY.jpeg" alt="2048 Esteroides" class="game-card-img">
+              <div class="game-card-body">
+                <span class="game-card-title">Minijuegos</span>
+                <span class="game-card-info">Jugar en Web</span>
+              </div>
+            </a>
+            <a href="#" class="game-card" style="opacity:0.6;pointer-events:none;">
+              <div style="background:#111;aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;font-size:1.5rem;border-bottom:1px solid rgba(255,255,255,0.05);">🛸</div>
+              <div class="game-card-body">
+                <span class="game-card-title">Próximamente</span>
+                <span class="game-card-info">Nuevo Proyecto</span>
+              </div>
+            </a>
+          </div>
+        </article>
+
+        <!-- 📋 Actividad Reciente -->
+        <article class="pc" aria-labelledby="activityTitle">
+          <div class="pc-h">
+            <h3 id="activityTitle">📋 Actividad reciente</h3>
+          </div>
+          <ul class="act-list" id="activityList" role="list" aria-label="Actividad reciente">
+            <li class="act-item">
+              <div class="act-txt">
+                <div class="act-title" style="color:var(--text-muted)">Cargando...</div>
+              </div>
+            </li>
+          </ul>
+        </article>
+        
+      </div>
+      
+      <!-- ── DERECHA: Bonus + Canjes + Referidos + Novedades ── -->
+      <div class="pg-right">
+        
+        <!-- 📅 Bonus Diario -->
+        <article class="pc" aria-labelledby="bonusTitle">
+          <div class="pc-h">
+            <h3 id="bonusTitle">📅 Bonus diario</h3>
+            <span>+<span id="dailyBonusAmount">10</span> 🪙 / día</span>
+          </div>
+          <div class="streak-row" role="list" aria-label="Racha semanal">
+            <button class="streak-day" data-day="1" role="listitem" aria-label="Lunes">L</button>
+            <button class="streak-day" data-day="2" role="listitem" aria-label="Martes">M</button>
+            <button class="streak-day" data-day="3" role="listitem" aria-label="Miércoles">X</button>
+            <button class="streak-day" data-day="4" role="listitem" aria-label="Jueves">J</button>
+            <button class="streak-day" data-day="5" role="listitem" aria-label="Viernes">V</button>
+            <button class="streak-day" data-day="6" role="listitem" aria-label="Sábado">S</button>
+            <button class="streak-day" data-day="7" role="listitem" aria-label="Domingo">D</button>
+          </div>
+          <button class="pb prim pb-full" id="claimDailyBtn" aria-label="Reclamar bonus diario">Reclamar bonus</button>
+          <div id="dailyBonusMessage" role="status" aria-live="polite"></div>
+        </article>
+
+        <!-- 💎 Canjear Monedas -->
+        <article class="pc" aria-labelledby="redeemTitle">
+          <div class="pc-h">
+            <h3 id="redeemTitle">💎 Canjear monedas</h3>
+            <span>50,000 🪙 = 50 Esmeraldas (Juego)</span>
+          </div>
+          <div class="rdm-stats" aria-label="Estadísticas de canje">
+            <span class="rdm-stat">Disponibles: <b id="redeemCoinsAvailable">0</b> 🪙</span>
+            <span class="rdm-stat">Equiv.: <b id="redeemDollars">0 Esmeraldas</b></span>
+            <span class="rdm-stat">Canjeado: <b id="redeemTotalPaid">0 Esmeraldas</b></span>
+            <span class="rdm-stat">Canjes: <b id="redeemTotalCount">0</b></span>
+          </div>
+          <div class="rdm-row">
+            <label for="redeemAmount" class="sr-only">Cantidad a canjear</label>
+            <input type="number" id="redeemAmount" placeholder="50000" min="50000" step="100" inputmode="numeric">
+            <button class="pb prim" id="redeemBtn">Canjear</button>
+          </div>
+          <div id="redeemMessage" role="status" aria-live="polite"></div>
+        </article>
+
+        <!-- 👥 Referidos -->
+        <article class="pc" aria-labelledby="referralTitle">
+          <div class="pc-h">
+            <h3 id="referralTitle">👥 Sistema de Referidos</h3>
+          </div>
+          <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:var(--space-sm)">
+            Comparte tu código y gana monedas gratis.
+          </p>
+          <div class="ref-box">
+            <code id="referralCode" aria-label="Tu código de referido">——</code>
+            <button class="pb sm" id="copyReferralBtn" aria-label="Copiar código">📋</button>
+          </div>
+          <div class="ref-stats">
+            <span class="ref-stat">Total: <strong id="referralCount">0</strong></span>
+            <span class="ref-stat">Ganados: <strong id="referralCoins">0</strong> 🪙</span>
+          </div>
+
+          <!-- Manual Referral Code entry box for users who registered without one -->
+          <div id="manualReferralBox" style="margin-top: var(--space-md); border-top: 1px solid rgba(255,255,255,0.08); padding-top: var(--space-md); display: none;">
+            <p style="font-size: .8rem; color: var(--text-muted); margin-bottom: var(--space-xs)">
+              ¿Tienes un código de referido? Ingrésalo aquí:
+            </p>
+            <div style="display: flex; gap: var(--space-xs);">
+              <input type="text" id="manualReferralInput" class="p-inp" placeholder="Código (ej. AB12CD)" style="text-transform: uppercase; font-size: 0.85rem;" autocomplete="off">
+              <button class="pb prim sm" id="manualReferralBtn">Reclamar</button>
+            </div>
+            <div id="manualReferralMessage" style="font-size: 0.75rem; margin-top: 4px;" role="status" aria-live="polite"></div>
+          </div>
+        </article>
+        
+        <!-- Novedades -->
+        <article class="pc" aria-labelledby="newsTitle">
+          <div class="pc-h">
+            <h3 id="newsTitle">🎮 Novedades</h3>
+            <a href="actualizaciones" class="pb sm" aria-label="Ver todas las actualizaciones" style="text-decoration:none;">Ver →</a>
+          </div>
+          <div class="feed" id="projectUpdateFeed" role="feed" aria-label="Últimas novedades">
+            <p style="color:var(--text-muted);font-size:.85rem">Cargando...</p>
+          </div>
+        </article>
+        
+      </div>
+      
+    </div> <!-- /pg -->
+    
+  </section>
+  
+  <!-- ✏️ MODAL: Editar Perfil -->
+  <dialog class="pm" id="editProfileModal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+    <div class="pm-h">
+      <h3 id="editModalTitle">Editar perfil</h3>
+      <button class="pb sm dng" data-close-modal="editProfileModal" aria-label="Cerrar">✕</button>
+    </div>
+    
+    <form id="editProfileForm" method="dialog">
+      <div class="pm-b">
+        
+        <!-- Nombre -->
+        <div class="pm-grp">
+          <label for="editDisplayName">Nombre de usuario</label>
+          <input type="text" id="editDisplayName" class="pm-inp" placeholder="Tu nombre visible" maxlength="40">
+        </div>
+
+        <!-- Nombre Mascota -->
+        <div class="pm-grp" id="editPetNameGroup" style="display:none;">
+          <label for="editPetName">Nombre de tu Mascota</label>
+          <input type="text" id="editPetName" class="pm-inp" placeholder="Nombre de tu pantera" maxlength="15">
+        </div>
+        
+        <!-- País y Proyecto -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)">
+          <div class="pm-grp">
+            <label for="editCountry">País</label>
+            <input type="text" id="editCountry" class="pm-inp" placeholder="Colombia...">
+          </div>
+          <div class="pm-grp">
+            <label for="editFavoriteProject">Proyecto favorito</label>
+            <input type="text" id="editFavoriteProject" class="pm-inp" placeholder="Nuestra Tierra...">
+          </div>
+        </div>
+        
+        <!-- Bio -->
+        <div class="pm-grp">
+          <label for="editBio">Sobre mí</label>
+          <textarea id="editBio" class="pm-inp" placeholder="Cuéntanos algo sobre ti..."></textarea>
+        </div>
+        
+        <!-- Avatar -->
+        <div class="pm-grp">
+          <label>Avatar</label>
+          <input type="hidden" id="editAvatarValue" value="😊">
+          
+          <div style="display:flex;gap:var(--space-lg);align-items:flex-start;flex-wrap:wrap">
+            
+            <!-- Preview -->
+            <div style="display:flex;flex-direction:column;align-items:center;gap:var(--space-sm)">
+              <div id="editProfileImagePreview" class="ph-avatar" style="width:56px;height:56px;" aria-hidden="true"></div>
+              <label for="editProfileImage" class="sr-only">URL de imagen</label>
+              <input type="url" id="editProfileImage" placeholder="URL (opcional)" class="pm-inp" style="max-width:160px;font-size:.9em">
+              <button type="button" id="removeProfileImageBtn" style="display:none;font-size:.75em;color:var(--color-red);background:none;border:none;cursor:pointer">
+                Quitar imagen
+              </button>
+            </div>
+            
+            <!-- Selector de emojis -->
+            <div class="av-grid" role="radiogroup" aria-label="Seleccionar avatar">
+              <button type="button" class="av-opt selected" data-avatar="😊" role="radio" aria-checked="true" aria-label="Cara sonriente">😊</button>
+              <button type="button" class="av-opt" data-avatar="😎" role="radio" aria-label="Cara con gafas">😎</button>
+              <button type="button" class="av-opt" data-avatar="🦊" role="radio" aria-label="Zorro">🦊</button>
+              <button type="button" class="av-opt" data-avatar="🐱" role="radio" aria-label="Gato">🐱</button>
+              <button type="button" class="av-opt" data-avatar="🐺" role="radio" aria-label="Lobo">🐺</button>
+              <button type="button" class="av-opt" data-avatar="🦁" role="radio" aria-label="León">🦁</button>
+              <button type="button" class="av-opt" data-avatar="🐼" role="radio" aria-label="Panda">🐼</button>
+              <button type="button" class="av-opt" data-avatar="🐸" role="radio" aria-label="Rana">🐸</button>
+              <button type="button" class="av-opt" data-avatar="👾" role="radio" aria-label="Alien">👾</button>
+              <button type="button" class="av-opt" data-avatar="🤖" role="radio" aria-label="Robot">🤖</button>
+              <button type="button" class="av-opt" data-avatar="🎮" role="radio" aria-label="Control">🎮</button>
+              <button type="button" class="av-opt" data-avatar="🏆" role="radio" aria-label="Trofeo">🏆</button>
+              <button type="button" class="av-opt" data-avatar="⚡" role="radio" aria-label="Rayo">⚡</button>
+              <button type="button" class="av-opt" data-avatar="🔥" role="radio" aria-label="Fuego">🔥</button>
+              <button type="button" class="av-opt" data-avatar="💎" role="radio" aria-label="Diamante">💎</button>
+              <button type="button" class="av-opt" data-avatar="🌙" role="radio" aria-label="Luna">🌙</button>
+            </div>
+            
+          </div>
+        </div>
+
+        <!-- Avatares de Mascota Unlocked -->
+        <div class="pm-grp" id="petAvatarsSelectionGroup" style="display:none; margin-top: 15px;">
+          <label>Avatares Exclusivos de Mascota (Desbloqueados)</label>
+          <div class="av-grid" id="unlockedPetAvatarsGrid" role="radiogroup" aria-label="Seleccionar avatar de mascota">
+            <!-- Populated dynamically by JS -->
+          </div>
+        </div>
+        
+      </div>
+      
+      <div class="pm-f">
+        <button type="button" class="pb" data-close-modal="editProfileModal">Cancelar</button>
+        <button type="submit" class="pb prim">Guardar cambios</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- 🐾 MODAL: Aspecto Mascota -->
+  <dialog class="pm" id="petAvatarModal" role="dialog" aria-modal="true" aria-labelledby="petModalTitle">
+    <div class="pm-h">
+      <h3 id="petModalTitle">Aspecto de Mascota</h3>
+      <button class="pb sm dng" data-close-modal="petAvatarModal" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="pm-b">
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 15px;">Elige el aspecto que lucirá tu cachorro de pantera en tu terminal y perfil:</p>
+      <div class="av-grid" id="petAvatarsSelectorGrid" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+    <div class="pm-f">
+      <button type="button" class="pb" data-close-modal="petAvatarModal">Cerrar</button>
+    </div>
+  </dialog>
+  
+  <!-- 🦶 Footer -->
+
+<!-- 🧠 Scripts -->
+  
+  <script src="/assets/js/pages/perfil.js" defer></script>
+  
+  <!-- 🎯 Script Inline para UX Móvil -->
+  <script>
+  // ========================================
+  // PERFIL: UX Mobile Enhancements
+  // ========================================
+  document.addEventListener('DOMContentLoaded', () => {
+    
+    // Forzar tema oscuro para coherencia con el resto del sitio
+    document.body.setAttribute('data-theme', 'dark');
+    localStorage.setItem('theme', 'dark');
+    localStorage.setItem('darkMode', 'true');
+    
+    // Tabs de autenticación
+    const authTabs = document.querySelectorAll('.auth-tab');
+    const authForms = document.querySelectorAll('.auth-form');
+    
+    authTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.tab;
+        
+        // Actualizar tabs
+        authTabs.forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+        
+        // Mostrar form correspondiente
+        authForms.forEach(form => {
+          form.classList.remove('active');
+          form.hidden = true;
+        });
+        document.getElementById(target + 'Form').classList.add('active');
+        document.getElementById(target + 'Form').hidden = false;
+      });
+    });
+    
+    // Selector de avatar
+    const avatarOpts = document.querySelectorAll('.av-opt');
+    const avatarInput = document.getElementById('editAvatarValue');
+    const avatarPreview = document.getElementById('editProfileImagePreview');
+    
+    avatarOpts.forEach(opt => {
+      opt.addEventListener('click', () => {
+        avatarOpts.forEach(o => {
+          o.classList.remove('selected');
+          o.setAttribute('aria-checked', 'false');
+        });
+        opt.classList.add('selected');
+        opt.setAttribute('aria-checked', 'true');
+        
+        const emoji = opt.dataset.avatar;
+        avatarInput.value = emoji;
+        avatarPreview.textContent = emoji;
+        avatarPreview.style.background = 'rgba(30,112,200,.2)';
+      });
+    });
+    
+    // Input de imagen de perfil
+    const imageInput = document.getElementById('editProfileImage');
+    const removeImageBtn = document.getElementById('removeProfileImageBtn');
+    
+    imageInput?.addEventListener('input', (e) => {
+      const url = e.target.value.trim();
+      if (url) {
+        avatarPreview.innerHTML = `<img src="${url}" alt="Vista previa" onerror="this.parentElement.textContent='${avatarInput.value || '😊'}'">`;
+        avatarOpts.forEach(o => o.classList.remove('selected'));
+        removeImageBtn.style.display = 'block';
+      }
+    });
+    
+    removeImageBtn?.addEventListener('click', () => {
+      imageInput.value = '';
+      avatarPreview.textContent = avatarInput.value || '😊';
+      avatarPreview.style.background = 'rgba(30,112,200,.2)';
+      removeImageBtn.style.display = 'none';
+    });
+    
+    // Cerrar modal con backdrop click
+    const modal = document.getElementById('editProfileModal');
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) modal.close();
+    });
+    
+    // Botones de cerrar modal
+    document.querySelectorAll('[data-close-modal]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const modalId = btn.dataset.closeModal;
+        document.getElementById(modalId)?.close();
+      });
+    });
+    
+    // Copiar código de referido
+    const copyRefBtn = document.getElementById('copyReferralBtn');
+    const refCode = document.getElementById('referralCode');
+    
+    copyRefBtn?.addEventListener('click', async () => {
+      const code = refCode?.textContent?.trim();
+      if (code && code !== '——') {
+        try {
+          await navigator.clipboard.writeText(code);
+          const original = copyRefBtn.textContent;
+          copyRefBtn.textContent = '✅';
+          setTimeout(() => copyRefBtn.textContent = original, 2000);
+        } catch (err) {
+          console.warn('Clipboard no disponible:', err);
+        }
+      }
+    });
+    
+    // Touch feedback para botones en móvil
+    if ('ontouchstart' in window) {
+      document.querySelectorAll('.pb, .auth-tab, .streak-day').forEach(el => {
+        el.addEventListener('touchstart', function() {
+          this.style.transform = 'scale(0.98)';
+        });
+        el.addEventListener('touchend', function() {
+          this.style.transform = '';
+        });
+      });
+    }
+    
+    // Smooth scroll para anclas internas
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', (e) => {
+        const target = document.querySelector(anchor.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+    
+  });
+  </script>
+
+<%- include('partials/footer') %>

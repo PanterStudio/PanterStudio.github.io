@@ -1,0 +1,737 @@
+<%- include('partials/header', { 
+    title: 'Videos — Panter Studio', 
+    currentPage: 'videos',
+    description: 'Videos de Nuestra Tierra Job Simulator — Descubre lo que creadores y la comunidad dicen sobre el juego.',
+    extraHead: `<style>
+        /* ===== VIDEOS PAGE ===== */
+
+        /* Hero Header */
+        .vid-header {
+            text-align: center;
+            padding: 2.5rem 1rem 2rem;
+            position: relative;
+        }
+        .vid-header-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 16px;
+            background: rgba(0,176,255,0.1);
+            border: 1px solid rgba(0,176,255,0.3);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--color-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 1rem;
+        }
+        .vid-header h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, #fff 30%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .vid-header p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        /* ===== FEATURED VIDEO PLAYER ===== */
+        .featured-player-wrap {
+            position: relative;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.7);
+            border: 1px solid rgba(255,255,255,0.05);
+            aspect-ratio: 16/9;
+            transition: box-shadow 0.4s;
+        }
+        .featured-player-wrap:hover {
+            box-shadow: 0 30px 80px rgba(0,176,255,0.12), 0 24px 60px rgba(0,0,0,0.7);
+        }
+        .featured-player-wrap iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        /* Placeholder when no video selected */
+        .player-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            background: linear-gradient(135deg, rgba(10,11,13,0.95), rgba(5,5,7,0.98));
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .player-placeholder:hover {
+            background: linear-gradient(135deg, rgba(0,176,255,0.06), rgba(5,5,7,0.98));
+        }
+        .player-placeholder-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: rgba(0,176,255,0.15);
+            border: 2px solid rgba(0,176,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            transition: transform 0.3s, background 0.3s;
+        }
+        .player-placeholder:hover .player-placeholder-icon {
+            transform: scale(1.1);
+            background: rgba(0,176,255,0.25);
+        }
+        .player-placeholder p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* Now playing info */
+        .now-playing-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 1rem;
+            padding: 0.85rem 1.25rem;
+            background: var(--bg-glass-card);
+            border: var(--border-glass);
+            border-radius: 12px;
+            min-height: 52px;
+            transition: all 0.3s;
+        }
+        .now-playing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--color-secondary);
+            box-shadow: 0 0 8px var(--color-secondary);
+            flex-shrink: 0;
+            animation: pulse-ring 1.8s infinite;
+        }
+        @keyframes pulse-ring {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.4); }
+        }
+        .now-playing-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .now-playing-label {
+            font-size: 0.68rem;
+            color: var(--color-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        .now-playing-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .now-playing-channel {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+        .now-playing-empty {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* ===== VIDEO GRID ===== */
+        .vid-section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .vid-count-badge {
+            background: rgba(0,176,255,0.15);
+            color: var(--color-secondary);
+            border: 1px solid rgba(0,176,255,0.25);
+            border-radius: 100px;
+            padding: 2px 10px;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .vid-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1rem;
+        }
+
+        .vid-card {
+            background: var(--bg-glass-card);
+            border: var(--border-glass);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+            position: relative;
+        }
+        .vid-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0,176,255,0.25);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,176,255,0.1);
+        }
+        .vid-card.active {
+            border-color: var(--color-secondary);
+            box-shadow: 0 0 0 2px rgba(0,176,255,0.2);
+        }
+
+        /* Thumbnail area */
+        .vid-thumb {
+            position: relative;
+            aspect-ratio: 16/9;
+            background: #000;
+            overflow: hidden;
+        }
+        .vid-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s var(--ease-smooth), filter 0.3s;
+            filter: brightness(0.85);
+        }
+        .vid-card:hover .vid-thumb img {
+            transform: scale(1.05);
+            filter: brightness(1);
+        }
+
+        /* Play button overlay */
+        .vid-play-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.25);
+            transition: background 0.25s;
+        }
+        .vid-card:hover .vid-play-overlay {
+            background: rgba(0,0,0,0.1);
+        }
+        .vid-play-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.7);
+            border: 2px solid rgba(255,255,255,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.25s, background 0.25s, border-color 0.25s;
+            backdrop-filter: blur(4px);
+        }
+        .vid-card:hover .vid-play-btn,
+        .vid-card.active .vid-play-btn {
+            background: var(--color-secondary);
+            border-color: var(--color-secondary);
+            transform: scale(1.1);
+        }
+        .vid-play-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: white;
+            margin-left: 3px;
+        }
+
+        /* Duration badge */
+        .vid-duration {
+            position: absolute;
+            bottom: 6px;
+            right: 8px;
+            background: rgba(0,0,0,0.85);
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Platform badge */
+        .vid-platform {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0,0,0,0.8);
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(4px);
+        }
+        .vid-platform.youtube { color: #ff4444; border: 1px solid rgba(255,68,68,0.3); }
+        .vid-platform.tiktok  { color: #69c9d0; border: 1px solid rgba(105,201,208,0.3); }
+        .vid-platform.ig      { color: #e1306c; border: 1px solid rgba(225,48,108,0.3); }
+
+        /* Card body */
+        .vid-card-body {
+            padding: 0.85rem 1rem;
+        }
+        .vid-card-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.35;
+            margin: 0 0 4px 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .vid-card-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .vid-card-channel {
+            color: var(--color-secondary);
+        }
+        .vid-card-views {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Empty state */
+        .vid-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+        .vid-empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Admin add hint */
+        .vid-admin-note {
+            padding: 1rem 1.5rem;
+            background: rgba(212,175,55,0.04);
+            border: 1px solid rgba(212,175,55,0.15);
+            border-radius: 10px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Layout: player + list */
+        .vid-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+        @media (min-width: 1024px) {
+            .vid-layout {
+                grid-template-columns: 1.6fr 1fr;
+            }
+        }
+        .vid-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Sidebar list (compact cards) */
+        .vid-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 520px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.08) transparent;
+            padding-right: 4px;
+        }
+        .vid-list::-webkit-scrollbar { width: 4px; }
+        .vid-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+        .vid-list-item {
+            display: flex;
+            gap: 10px;
+            padding: 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            background: rgba(10,11,13,0.4);
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            align-items: flex-start;
+        }
+        .vid-list-item:hover {
+            background: var(--bg-glass-card-hover);
+            border-color: rgba(255,255,255,0.05);
+        }
+        .vid-list-item.active {
+            background: rgba(0,176,255,0.06);
+            border-color: rgba(0,176,255,0.2);
+        }
+        .vid-list-thumb {
+            width: 90px;
+            height: 56px;
+            border-radius: 6px;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+        .vid-list-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .vid-list-title {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 3px;
+        }
+        .vid-list-channel {
+            font-size: 0.72rem;
+            color: var(--color-secondary);
+            font-weight: 600;
+        }
+        .vid-list-dur {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Responsive stacked view (mobile) */
+        @media (max-width: 1023px) {
+            .vid-list {
+                max-height: none;
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            }
+            .vid-list-item {
+                flex-direction: column;
+            }
+            .vid-list-thumb {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 16/9;
+            }
+        }
+    </style>`
+  }) %>
+
+</nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="container" style="padding-top: 0.5rem;">
+
+        <!-- ★ Anuncio superior -->
+        <div class="ad-slot-wrapper ad-horizontal" id="ad-top">
+            <span class="ad-slot-label">Publicidad</span>
+            <div class="ad-slot-inner">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-8870488962578785"
+                     data-ad-slot="AUTO"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>
+
+        <!-- HEADER -->
+        <div class="vid-header">
+            <div class="vid-header-tag">▶ Creadores de Contenido</div>
+            <h1>Videos del Juego</h1>
+            <p>Mira lo que creadores y la comunidad están diciendo sobre <strong style="color: var(--text-primary);">Nuestra Tierra Job Simulator</strong>.</p>
+        </div>
+
+        <!-- LAYOUT: PLAYER LEFT / LIST RIGHT -->
+        <div class="vid-layout" id="vidLayout">
+
+            <!-- PLAYER SECTION -->
+            <div>
+                <div class="featured-player-wrap" id="featuredPlayerWrap">
+                    <!-- Iframe se inyecta aquí -->
+                    <div class="player-placeholder" id="playerPlaceholder" onclick="playFirst()">
+                        <div class="player-placeholder-icon">▶</div>
+                        <p>Selecciona un video para reproducirlo</p>
+                    </div>
+                </div>
+
+                <!-- NOW PLAYING BAR -->
+                <div class="now-playing-bar" id="nowPlayingBar">
+                    <span class="now-playing-empty">Elige un video de la lista →</span>
+                </div>
+            </div>
+
+            <!-- SIDEBAR: VIDEO LIST -->
+            <div class="vid-sidebar">
+                <div class="vid-section-title">
+                    📋 Lista de Videos
+                    <span class="vid-count-badge" id="vidCountBadge">0</span>
+                </div>
+                <div class="vid-list" id="vidList">
+                    <!-- Skeleton loaders -->
+                    <div class="vid-list-item" style="opacity:0.4; pointer-events:none;">
+                        <div style="width:90px;height:56px;border-radius:6px;background:var(--bg-glass-card-hover);flex-shrink:0;"></div>
+                        <div style="flex:1;">
+                            <div style="height:0.8em;background:var(--bg-glass-card-hover);border-radius:4px;margin-bottom:6px;width:90%;"></div>
+                            <div style="height:0.7em;background:var(--bg-glass-card-hover);border-radius:4px;width:60%;"></div>
+                        </div>
+                    </div>
+                    <div class="vid-list-item" style="opacity:0.25; pointer-events:none;">
+                        <div style="width:90px;height:56px;border-radius:6px;background:var(--bg-glass-card-hover);flex-shrink:0;"></div>
+                        <div style="flex:1;">
+                            <div style="height:0.8em;background:var(--bg-glass-card-hover);border-radius:4px;margin-bottom:6px;width:80%;"></div>
+                            <div style="height:0.7em;background:var(--bg-glass-card-hover);border-radius:4px;width:50%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+
+        <!-- EMPTY STATE (se muestra si no hay videos) -->
+        <div id="vidEmptyState" style="display:none; text-align:center; padding: 4rem 2rem;">
+            <div class="vid-empty-icon">🎬</div>
+            <h3 style="color:var(--text-secondary); font-size:1.2rem; margin-bottom:0.5rem;">Próximamente</h3>
+            <p style="color:var(--text-muted); max-width:420px; margin:0 auto 2rem;">
+                Todavía no hay videos publicados. En cuanto creadores y la comunidad suban contenido del juego, aparecerán aquí.
+            </p>
+            <a href="meinteresa" class="btn">💚 Marcar Mi Interés</a>
+        </div>
+
+    </div>
+
+        <!-- ★ Anuncio inferior -->
+        <div class="ad-slot-wrapper ad-horizontal" id="ad-bottom" style="margin-top:0;">
+            <span class="ad-slot-label">Publicidad</span>
+            <div class="ad-slot-inner">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-8870488962578785"
+                     data-ad-slot="AUTO"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>
+
+<script src="/assets/js/core/firebase-config.js"></script>
+    
+    <script>
+    // ===== VIDEOS PAGE =====
+
+    // Helpers
+    function getYtId(url) {
+        const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
+        return m ? m[1] : null;
+    }
+    function getYtThumb(id) {
+        return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+    }
+    function getPlatform(url) {
+        if (/youtube|youtu\.be/i.test(url)) return 'youtube';
+        if (/tiktok/i.test(url)) return 'tiktok';
+        if (/instagram/i.test(url)) return 'ig';
+        return 'youtube';
+    }
+    function platformLabel(p) {
+        const map = { youtube: 'YouTube', tiktok: 'TikTok', ig: 'Instagram' };
+        return map[p] || p;
+    }
+
+    // Build embed URL from a video URL
+    function buildEmbedUrl(url) {
+        const ytId = getYtId(url);
+        if (ytId) return `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&color=white`;
+        return url; // fallback: use as-is
+    }
+
+    // State
+    let videos = [];
+    let activeIndex = -1;
+
+    // Play a video by index
+    function playVideo(idx) {
+        if (idx < 0 || idx >= videos.length) return;
+        activeIndex = idx;
+        const v = videos[idx];
+        const wrap = document.getElementById('featuredPlayerWrap');
+        const placeholder = document.getElementById('playerPlaceholder');
+        const bar = document.getElementById('nowPlayingBar');
+
+        // Remove existing iframe
+        const existing = wrap.querySelector('iframe');
+        if (existing) existing.remove();
+
+        // Hide placeholder
+        if (placeholder) placeholder.style.display = 'none';
+
+        // Inject iframe
+        const iframe = document.createElement('iframe');
+        iframe.src = buildEmbedUrl(v.url);
+        iframe.allowFullscreen = true;
+        iframe.allow = 'autoplay; encrypted-media; fullscreen; picture-in-picture';
+        iframe.title = v.title;
+        iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;position:absolute;inset:0;';
+        wrap.appendChild(iframe);
+
+        // Update now playing bar
+        bar.innerHTML = `
+            <span class="now-playing-dot"></span>
+            <div class="now-playing-info">
+                <div class="now-playing-label">Reproduciendo ahora</div>
+                <div class="now-playing-title">${v.title}</div>
+                <div class="now-playing-channel">${v.channel}</div>
+            </div>
+            ${v.url ? `<a href="${v.url}" target="_blank" rel="noopener" style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;flex-shrink:0;" title="Abrir en YouTube">↗ Abrir</a>` : ''}
+        `;
+
+        // Update active state in list
+        document.querySelectorAll('.vid-list-item').forEach((el, i) => {
+            el.classList.toggle('active', i === idx);
+        });
+    }
+
+    function playFirst() {
+        if (videos.length > 0) playVideo(0);
+    }
+
+    // Render the video list
+    function renderList() {
+        const list = document.getElementById('vidList');
+        const badge = document.getElementById('vidCountBadge');
+        const emptyState = document.getElementById('vidEmptyState');
+        const layout = document.getElementById('vidLayout');
+
+        if (badge) badge.textContent = videos.length;
+
+        if (videos.length === 0) {
+            if (layout) layout.style.display = 'none';
+            if (emptyState) emptyState.style.display = 'block';
+            return;
+        }
+
+        if (layout) layout.style.display = '';
+        if (emptyState) emptyState.style.display = 'none';
+
+        list.innerHTML = '';
+        videos.forEach((v, i) => {
+            const ytId = getYtId(v.url || '');
+            const thumb = v.thumbnail || (ytId ? getYtThumb(ytId) : '');
+            const platform = getPlatform(v.url || '');
+
+            const item = document.createElement('div');
+            item.className = 'vid-list-item';
+            item.setAttribute('role', 'button');
+            item.setAttribute('tabindex', '0');
+            item.setAttribute('aria-label', `Reproducir: ${v.title}`);
+            item.innerHTML = `
+                <img class="vid-list-thumb" src="${thumb}" alt="${v.title}" onerror="this.src='https://i.imgur.com/1IRRyFY.jpeg'">
+                <div class="vid-list-info">
+                    <div class="vid-list-title">${v.title}</div>
+                    <div class="vid-list-channel">${v.channel}</div>
+                    <div class="vid-list-dur">${platformLabel(platform)}${v.duration ? ' · ' + v.duration : ''}</div>
+                </div>
+            `;
+            item.addEventListener('click', () => playVideo(i));
+            item.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') playVideo(i); });
+            list.appendChild(item);
+        });
+
+        // Auto-play first video
+        playVideo(0);
+    }
+
+    // Load videos from Firebase
+    function waitForFirebase(timeout = 8000) {
+        return new Promise((resolve) => {
+            if (window.db && window.getDocs && window.collection && window.query && window.orderBy) return resolve(true);
+            const start = Date.now();
+            const t = setInterval(() => {
+                if (window.db && window.getDocs && window.collection && window.query && window.orderBy) {
+                    clearInterval(t); resolve(true);
+                } else if (Date.now() - start > timeout) {
+                    clearInterval(t); resolve(false);
+                }
+            }, 100);
+        });
+    }
+
+    async function loadVideos() {
+        const ok = await waitForFirebase();
+        if (!ok) {
+            // Show static demo videos as fallback
+            useDemoVideos();
+            return;
+        }
+        try {
+            const q = window.query(
+                window.collection(window.db, 'videos'),
+                window.orderBy('orden', 'asc')
+            );
+            const snap = await window.getDocs(q);
+            if (snap.empty) {
+                // Try without ordering (no index needed)
+                const q2 = window.collection(window.db, 'videos');
+                const snap2 = await window.getDocs(q2);
+                snap2.forEach(doc => videos.push({ id: doc.id, ...doc.data() }));
+            } else {
+                snap.forEach(doc => videos.push({ id: doc.id, ...doc.data() }));
+            }
+
+
+
+            renderList();
+        } catch(e) {
+            console.warn('Videos load error:', e);
+            useDemoVideos();
+        }
+    }
+
+    // Fallback demo content (shown when Firebase has no data or is unavailable)
+    function useDemoVideos() {
+        // Shows empty state - studio hasn't uploaded any videos yet
+        videos = [];
+        renderList();
+    }
+
+    document.addEventListener('DOMContentLoaded', loadVideos);
+    </script>
+
+<%- include('partials/footer') %>

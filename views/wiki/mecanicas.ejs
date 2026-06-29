@@ -1,0 +1,372 @@
+<%- include('../partials/header', { 
+    title: 'Mecanicas de Juego - Wiki - Panter Studio', 
+    currentPage: 'wiki',
+    description: undefined,
+    extraHead: `<style>
+        .wiki-section {
+            padding: 2rem 1rem 4rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .wiki-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        .wiki-header-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 16px;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #fbbf24;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1.25rem;
+        }
+        .wiki-header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 900;
+            margin-bottom: 0.85rem;
+            background: linear-gradient(135deg, #fff 30%, #fbbf24 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+        .wiki-header p {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+        .wiki-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        @media(min-width: 992px) {
+            .wiki-grid {
+                grid-template-columns: 280px 1fr;
+            }
+        }
+        .wiki-sidebar {
+            background: rgba(10, 13, 24, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 1.5rem;
+            height: fit-content;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            position: sticky;
+            top: 90px;
+            z-index: 10;
+        }
+        .wiki-search-box {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+        .wiki-search-box input {
+            width: 100%;
+            padding: 10px 14px 10px 36px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .wiki-search-box input:focus {
+            border-color: rgba(245, 158, 11, 0.5);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
+        }
+        .wiki-search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.85rem;
+            opacity: 0.6;
+        }
+        .wiki-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+        .wiki-menu-group {
+            margin-bottom: 0.5rem;
+        }
+        .wiki-menu-header {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 1.5px;
+            margin-bottom: 0.5rem;
+            padding-left: 8px;
+        }
+        .wiki-nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 10px 14px;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: left;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .wiki-nav-btn:hover {
+            background: rgba(255, 255, 255, 0.03);
+            color: #fff;
+        }
+        .wiki-nav-btn.active {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
+            border-left: 3px solid #f59e0b;
+            color: #fbbf24;
+            font-weight: 700;
+            padding-left: 11px;
+        }
+        .wiki-nested-menu {
+            margin-left: 1rem;
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            padding-left: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-top: 0.4rem;
+        }
+        .wiki-nested-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: #64748b;
+            font-size: 0.8rem;
+            text-align: left;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .wiki-nested-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .wiki-nested-btn.active {
+            color: #fbbf24;
+            font-weight: 700;
+            background: rgba(245, 158, 11, 0.05);
+        }
+        .wiki-content-card {
+            background: rgba(10, 13, 24, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 2rem;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            min-height: 480px;
+        }
+        .wiki-tab-panel {
+            animation: wikiFadeIn 0.4s ease forwards;
+        }
+        @keyframes wikiFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .wiki-tab-panel h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .wiki-tab-panel h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #fbbf24;
+            margin: 1.5rem 0 0.75rem;
+        }
+        .wiki-tab-panel p {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        .wiki-tab-panel ul, .wiki-tab-panel ol {
+            margin-bottom: 1.25rem;
+            padding-left: 1.5rem;
+            color: #94a3b8;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .wiki-tab-panel li {
+            margin-bottom: 0.5rem;
+        }
+        .wiki-info-box {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(245, 158, 11, 0.02));
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            color: #f3f4f6;
+            display: flex;
+            gap: 12px;
+        }
+        .wiki-info-icon {
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+        .wiki-info-content h5 {
+            margin: 0 0 4px;
+            font-weight: 700;
+            color: #fbbf24;
+            font-size: 0.9rem;
+        }
+        .wiki-info-content p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            line-height: 1.4;
+        }
+    </style>`
+  }) %>
+
+</nav>
+
+    <div class="container">
+        
+        <section class="wiki-section">
+            
+            <div class="wiki-header">
+                <div class="wiki-header-tag">📖 Centro de Soporte</div>
+                <h1>Wiki del Juego</h1>
+                <p>Resuelve todas tus dudas sobre el simulador <strong>Nuestra Tierra Job Simulator</strong>. Aprende mecanicas, domina trabajos y maximiza tus ganancias.</p>
+            </div>
+
+            <div class="wiki-grid">
+                
+                <!-- LATERAL SIDEBAR -->
+                <aside class="wiki-sidebar">
+                    <div class="wiki-search-box">
+                        <input type="text" id="wikiSearch" placeholder="Buscar en la Wiki...">
+                    </div>
+
+                    <div class="wiki-menu">
+                        <div class="wiki-menu-group">
+                            <div class="wiki-menu-header">Introduccion</div>
+                            <a href="como-comenzar" class="wiki-nav-btn">🚀 Como Comenzar</a>
+                            <a href="mecanicas" class="wiki-nav-btn active">🎮 Mecanicas de Juego</a>
+                            <a href="dispositivo-movil" class="wiki-nav-btn">📱 Dispositivo Movil</a>
+                            <a href="vehiculos" class="wiki-nav-btn">🚗 Vehiculos</a>
+                            <a href="mapas" class="wiki-nav-btn">🗺️ Mapas</a>
+                        </div>
+
+                        <div class="wiki-menu-group">
+                            <div class="wiki-menu-header">Profesiones</div>
+                            <a href="trabajos" class="wiki-nav-btn">💼 Lista de Trabajos</a>
+                            <div class="wiki-nested-menu">
+                                <a href="mensajero" class="wiki-nested-btn">🚴 Mensajero</a>
+                            </div>
+                        </div>
+
+                        <div class="wiki-menu-group">
+                            <div class="wiki-menu-header">Soporte</div>
+                            <a href="faq" class="wiki-nav-btn">❓ Preguntas Frecuentes</a>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- MAIN WIKI CONTENT -->
+                <div class="wiki-content-card">
+                    <div class="wiki-tab-panel" id="mecanicas">
+                        <h2>🎮 Mecanicas de Juego</h2>
+                        <p>Nuestra Tierra Job Simulator cuenta con un set de fisicas y mecanicas realistas para hacer la experiencia inmersiva. Conoce las reglas del mapa:</p>
+                        
+                        <h3>⛽ Sistema de Combustible y Daño</h3>
+                        <p>Cada vehiculo de motor consume gasolina a medida que aceleras. Si tu tanque se vacia, deberas empujar tu vehiculo o llamar a una grua pagando una penalizacion en monedas. Ademas, chocar de forma violenta dañara tu chasis, reduciendo la velocidad maxima de viaje.</p>
+
+                        <h3>👮 Multas de Transito y Policia</h3>
+                        <p>La ciudad cuenta con patrullas inteligentes y radares de velocidad. Infringir las leyes tiene consecuencias:</p>
+                        <ul>
+                            <li><strong>Pasar semaforos en rojo:</strong> Multa instantanea de 🪙 15.</li>
+                            <li><strong>Exceso de velocidad:</strong> Multa detectada por radar de 🪙 25.</li>
+                            <li><strong>Choque frontal contra civiles:</strong> Atencion policial de nivel 1. Si te atrapan, te confiscaran parte de las mercancias de tu trabajo activo.</li>
+                        </ul>
+
+                        <h3>⭐ Reputacion de Conductor</h3>
+                        <p>Cada vez que completas un encargo laboral exitosamente, tu reputacion como conductor profesional sube. Esto desbloquea misiones de mayor nivel que pagan mejores tarifas por hora.</p>
+
+                        <h3>🧼 Sistema de Suciedad</h3>
+                        <p>Al pasar por lugares con demasiada tierra como lo son las carreteras de trocha (terraceria), el vehiculo comenzara a ensuciarse. Para poder volver a tener limpio el auto, deberemos ir a un lavadero de vehiculos cercano.</p>
+
+                        <h3>🛠️ Sistema de Daño de Parabrisas</h3>
+                        <p>Al conducir de forma muy brusca, siempre existira la posibilidad de accidentarnos. En caso de que esto pase, y dependiendo de la gravedad del choque, el parabrisas se comenzara a dañar (romper). Para repararlo, debemos ir a un taller mecanico cercano.</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ★ Anuncio inferior -->
+        <div class="ad-slot-wrapper ad-horizontal" id="ad-bottom" style="margin-top:2rem;">
+            <span class="ad-slot-label">Publicidad</span>
+            <div class="ad-slot-inner">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-8870488962578785"
+                     data-ad-slot="AUTO"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>
+
+    </div>
+
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('wikiSearch');
+            const menuLinks = document.querySelectorAll('.wiki-nav-btn, .wiki-nested-btn');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase().trim();
+                    menuLinks.forEach(link => {
+                        const text = link.innerText.toLowerCase();
+                        if (text.includes(term)) {
+                            link.style.display = '';
+                        } else {
+                            link.style.display = 'none';
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+
+<%- include('../partials/footer') %>

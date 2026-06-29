@@ -1,0 +1,530 @@
+<%- include('partials/header', { 
+    title: 'Beta Tester — Panter Studio', 
+    currentPage: 'betatester',
+    description: 'Inscribete para ser Beta Tester de Nuestra Tierra. Participa en las primeras pruebas de juego de forma segura.',
+    extraHead: `<style>
+        .bt-hero {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+        }
+        .bt-hero-bg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.45);
+        }
+        .bt-hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(0deg, rgba(5,5,7,0.95) 0%, rgba(5,5,7,0.4) 60%, transparent 100%);
+        }
+        .bt-hero-content {
+            position: relative;
+            z-index: 2;
+            padding: 2.5rem;
+        }
+        .bt-hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            background: rgba(16,185,129,0.15);
+            border: 1px solid var(--color-primary);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--color-primary-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+        }
+        .bt-hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            line-height: 1.05;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, #fff 30%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .bt-hero-sub {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            margin: 0;
+            max-width: 560px;
+            line-height: 1.5;
+        }
+
+        /* Form Card */
+        .bt-form-card {
+            background: var(--bg-glass-card);
+            border: var(--border-glass);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            position: relative;
+            overflow: hidden;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .bt-form-card::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--color-primary-dark), var(--color-primary), var(--color-primary-light));
+            border-radius: 16px 16px 0 0;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            text-align: left;
+        }
+        .form-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-input, .form-select, .form-textarea {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.2s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--color-primary-light);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 0 10px rgba(0, 176, 255, 0.2);
+        }
+        .form-select {
+            appearance: none;
+            background: rgba(255, 255, 255, 0.03) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23ffffff' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") no-repeat right 16px center;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+        .form-select option {
+            background-color: #1a1e2a;
+            color: #ffffff;
+        }
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .form-checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
+            cursor: pointer;
+            user-select: none;
+        }
+        .form-checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--color-primary);
+            cursor: pointer;
+        }
+
+        .bt-btn-submit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 1.1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 800;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+            letter-spacing: 0.3px;
+            background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+            color: #fff;
+            box-shadow: 0 8px 30px rgba(0, 176, 255,0.25);
+        }
+        .bt-btn-submit:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 40px rgba(0, 176, 255,0.35);
+        }
+        .bt-btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #btStatus {
+            margin-top: 1rem;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: none;
+            text-align: center;
+        }
+        #btStatus.info {
+            display: block;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-secondary);
+        }
+        #btStatus.success {
+            display: block;
+            background: rgba(0, 176, 255,0.1);
+            border: 1px solid rgba(0, 176, 255,0.3);
+            color: var(--color-primary-light);
+        }
+        #btStatus.error {
+            display: block;
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #f87171;
+        }
+
+        /* Option Selector Cards */
+        .option-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-top: 6px;
+        }
+        .option-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 14px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        .option-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        .option-card.active {
+            background: rgba(0, 176, 255, 0.08);
+            border-color: var(--color-primary-light);
+            box-shadow: 0 0 12px rgba(0, 176, 255, 0.25);
+        }
+        .option-card-title {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #ffffff;
+        }
+        .option-card-sub {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+        }
+
+        /* Checkbox lists */
+        .checkbox-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .checkbox-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--color-primary);
+            cursor: pointer;
+            margin: 0;
+        }
+        .checkbox-item span {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            transition: color 0.2s;
+        }
+        .checkbox-item input[type="checkbox"]:checked + span {
+            color: #ffffff;
+            font-weight: 600;
+        }
+    </style>
+    <script src="../assets/js/core/firebase-config.js"></script>`
+  }) %>
+
+</nav>
+
+    <!-- MAIN CONTAINER -->
+    <div class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
+        
+        <div class="bt-hero">
+            <img src="https://i.imgur.com/1IRRyFY.jpeg" alt="Beta Tester" class="bt-hero-bg">
+            <div class="bt-hero-overlay"></div>
+            <div class="bt-hero-content">
+                <span class="bt-hero-tag">⚙️ Postulacion Abierta</span>
+                <h1 class="bt-hero-title">Conviertete en Beta Tester</h1>
+                <p class="bt-hero-sub">Inscribete para tener la oportunidad de probar las versiones alpha/beta de Nuestra Tierra antes que nadie.</p>
+            </div>
+        </div>
+
+        <div class="bt-form-card">
+            <form id="betatesterForm" onsubmit="submitForm(event)">
+                <div class="form-group">
+                    <label class="form-label" for="discordInput">Usuario de Discord</label>
+                    <input class="form-input" id="discordInput" type="text" placeholder="Ej: panter_player#1234 o panter_player" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="deviceInput">Dispositivo Android (Modelo y Marca)</label>
+                    <input class="form-input" id="deviceInput" type="text" placeholder="Ej: Samsung Galaxy S23, Xiaomi Redmi Note 12" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="ramSelect">Memoria RAM Fisica</label>
+                    <select class="form-select" id="ramSelect" required>
+                        <option value="" disabled selected>Selecciona tu cantidad de RAM</option>
+                        <option value="2gb">2 GB o menos</option>
+                        <option value="3gb">3 GB</option>
+                        <option value="4gb">4 GB</option>
+                        <option value="6gb">6 GB</option>
+                        <option value="8gb">8 GB</option>
+                        <option value="12gb">12 GB</option>
+                        <option value="16gb">16 GB o mas</option>
+                    </select>
+                    <span style="font-size: 0.8rem; color: #ef4444; font-weight: 700; margin-top: 4px; display: inline-block;">
+                        ⚠️ IMPORTANTE: Pon solo la RAM fisica, no la expandible ni la virtual.
+                    </span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="androidSelect">Version de Android</label>
+                    <select class="form-select" id="androidSelect" required>
+                        <option value="" disabled selected>Selecciona tu version de Android</option>
+                        <option value="android_10_less">Android 10 o anterior</option>
+                        <option value="android_11">Android 11</option>
+                        <option value="android_12">Android 12</option>
+                        <option value="android_13">Android 13</option>
+                        <option value="android_14">Android 14</option>
+                        <option value="android_15">Android 15 o superior</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Habilidades y Disponibilidad</label>
+                    <div class="checkbox-list">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="skillsBugs" value="true">
+                            <span>Tengo experiencia reportando bugs en alphas/betas</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="skillsHours" value="true">
+                            <span>Puedo jugar mas de 5 horas a la semana</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="skillsRecord" value="true">
+                            <span>Puedo grabar pantalla de errores cuando ocurran</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="skillsDiscord" value="true">
+                            <span>Estoy unido al servidor de Discord oficial</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="whyTextarea">¿Por que quieres ser parte del equipo de Beta Testers?</label>
+                    <textarea class="form-textarea" id="whyTextarea" placeholder="Cuentanos brevemente tu motivacion..." required></textarea>
+                </div>
+
+                <label class="form-checkbox-group" for="ndaCheckbox">
+                    <input class="form-checkbox" id="ndaCheckbox" type="checkbox" required>
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">Acepto no filtrar ni compartir imagenes o videos de las pruebas de juego (NDA).</span>
+                </label>
+
+                <button class="bt-btn-submit" id="submitBtn" type="submit">Enviar Postulacion</button>
+                <div id="btStatus"></div>
+            </form>
+        </div>
+
+    </div>
+
+<script>
+    let currentUser = null;
+    let alreadyApplied = false;
+
+    function waitForFirebase(timeout = 8000) {
+        return new Promise((resolve) => {
+            if (window.db && window.fsDoc && window.getDoc && window.setDoc && window.auth) return resolve(true);
+            const start = Date.now();
+            const t = setInterval(() => {
+                if (window.db && window.fsDoc && window.getDoc && window.setDoc && window.auth) {
+                    clearInterval(t); resolve(true);
+                } else if (Date.now() - start > timeout) {
+                    clearInterval(t); resolve(false);
+                }
+            }, 100);
+        });
+    }
+
+    function setStatus(msg, type = 'info') {
+        const el = document.getElementById('btStatus');
+        if (!el) return;
+        el.textContent = msg;
+        el.className = type;
+        el.style.display = 'block';
+    }
+
+    async function initForm() {
+        const ok = await waitForFirebase();
+        if (!ok) {
+            setStatus('Error de conexion con el servidor. Recarga la pagina.', 'error');
+            return;
+        }
+
+        window.auth.onAuthStateChanged(async (user) => {
+            const submitBtn = document.getElementById('submitBtn');
+            if (user) {
+                currentUser = user;
+                setStatus('Verificando postulacion existente...', 'info');
+                
+                try {
+                    const userDocRef = window.fsDoc(window.db, 'conductores', user.uid);
+                    const snap = await window.getDoc(userDocRef);
+                    
+                    if (snap.exists() && snap.data().betaTesterRequest) {
+                        alreadyApplied = true;
+                        const data = snap.data();
+                        
+                        document.getElementById('discordInput').value = data.betaTesterDiscord || '';
+                        document.getElementById('deviceInput').value = data.betaTesterDevice || '';
+                        document.getElementById('ramSelect').value = data.betaTesterRAM || '';
+                        document.getElementById('androidSelect').value = data.betaTesterAndroidVersion || '';
+                        
+                        document.getElementById('skillsBugs').checked = !!data.betaTesterSkillBugs;
+                        document.getElementById('skillsHours').checked = !!data.betaTesterSkillHours;
+                        document.getElementById('skillsRecord').checked = !!data.betaTesterSkillRecord;
+                        document.getElementById('skillsDiscord').checked = !!data.betaTesterSkillDiscord;
+                        
+                        document.getElementById('whyTextarea').value = data.betaTesterWhy || '';
+                        document.getElementById('ndaCheckbox').checked = true;
+
+                        submitBtn.textContent = 'Actualizar Postulacion';
+                        setStatus('✅ Ya has enviado tu postulacion. Puedes modificar tus datos si lo deseas.', 'success');
+                    } else {
+                        alreadyApplied = false;
+                        setStatus('Conectado. Completa el formulario para inscribirte.', 'info');
+                    }
+                } catch (e) {
+                    console.warn('Error cargando datos:', e);
+                    setStatus('Error al cargar tu perfil.', 'error');
+                }
+            } else {
+                currentUser = null;
+                alreadyApplied = false;
+                submitBtn.setAttribute('disabled', 'true');
+                setStatus('⚠️ Debes iniciar sesion en "Mi Perfil" para poder inscribirte.', 'error');
+            }
+        });
+    }
+
+    async function submitForm(e) {
+        e.preventDefault();
+        const ok = await waitForFirebase();
+        if (!ok) {
+            setStatus('Sin conexion. Intenta de nuevo.', 'error');
+            return;
+        }
+
+        if (!currentUser) {
+            setStatus('Debes iniciar sesion primero.', 'error');
+            return;
+        }
+
+        const discord = document.getElementById('discordInput').value;
+        const device = document.getElementById('deviceInput').value;
+        const ram = document.getElementById('ramSelect').value;
+        const androidVersion = document.getElementById('androidSelect').value;
+        
+        const skillBugs = document.getElementById('skillsBugs').checked;
+        const skillHours = document.getElementById('skillsHours').checked;
+        const skillRecord = document.getElementById('skillsRecord').checked;
+        const skillDiscord = document.getElementById('skillsDiscord').checked;
+        
+        const why = document.getElementById('whyTextarea').value;
+        const nda = document.getElementById('ndaCheckbox').checked;
+
+        if (!nda) {
+            setStatus('Debes aceptar el acuerdo de confidencialidad.', 'error');
+            return;
+        }
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.setAttribute('disabled', 'true');
+        setStatus('Enviando postulacion...', 'info');
+
+        try {
+            const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+            await window.setDoc(userDocRef, {
+                betaTesterRequest: true,
+                betaTesterDiscord: discord,
+                betaTesterDevice: device,
+                betaTesterRAM: ram,
+                betaTesterAndroidVersion: androidVersion,
+                betaTesterSkillBugs: skillBugs,
+                betaTesterSkillHours: skillHours,
+                betaTesterSkillRecord: skillRecord,
+                betaTesterSkillDiscord: skillDiscord,
+                betaTesterWhy: why,
+                betaTesterTimestamp: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            }, { merge: true });
+
+            alreadyApplied = true;
+            submitBtn.textContent = 'Actualizar Postulacion';
+            setStatus('🎉 ¡Postulacion guardada con exito! Nos comunicaremos contigo.', 'success');
+        } catch (err) {
+            console.error('Error guardando formulario:', err);
+            setStatus('No se pudo guardar la postulacion. Reintenta.', 'error');
+        } finally {
+            submitBtn.removeAttribute('disabled');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', initForm);
+    </script>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Proyecto — Panter Studio</title>
+  <link rel="icon" href="/recursos/PSGD.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script src="/assets/js/core/firebase-config.js"></script>
+  <style>
+    .page-wrap{max-width:980px;margin:20px auto;padding:18px}
+    .juego-featured-card{display:flex;gap:12px;background:rgba(255,255,255,0.02);padding:14px;border-radius:10px}
+    .juego-featured-media img{width:220px;height:140px;object-fit:cover;border-radius:8px}
+    .juego-tags{margin-top:8px}
+    .card{background:rgba(255,255,255,0.02);padding:12px;border-radius:10px;margin-top:12px}
+  </style>
+</head>
+<body data-site-root="/">
+  <main class="page-wrap">
+    <section class="profile-unified-section">
+      <div class="profile-hub-hero profile-unified-blocks">
+        <div class="profile-hub-copy">
+          <h2 id="projectTitle">Cargando proyecto...</h2>
+          <p id="projectSummary">—</p>
+        </div>
+      </div>
+
+      <div class="profile-unified-blocks">
+        <div class="profile-card profile-card--wide" style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+          <div style="flex:0 0 260px;">
+            <img id="projectHeroImage" src="/recursos/PSGD.png" alt="Portada" style="width:100%;height:auto;border-radius:8px;">
+          </div>
+          <div style="flex:1;min-width:220px;">
+            <h3 id="projectHeroTitle">—</h3>
+            <p id="projectHeroDesc">—</p>
+            <div id="projectMetaTags" class="juego-tags"></div>
+            <div id="projectActionArea" style="margin-top:10px"></div>
+          </div>
+        </div>
+
+        <div class="profile-card">
+          <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;">
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="btn" id="tabUpdatesBtn">Actualizaciones</button>
+              <button class="btn btn-ghost" id="tabMoreBtn">Más</button>
+            </div>
+            <div style="color:#6b7f93">Última: <span id="projectLastUpdate">—</span></div>
+          </div>
+
+          <div id="tabUpdates" style="margin-top:12px;">
+            <h4 style="margin:0 0 8px 0">Actualizaciones (<span id="projectUpdatesCount">0</span>)</h4>
+            <div id="projectUpdatesList"></div>
+          </div>
+
+          <div id="tabMore" style="margin-top:12px;display:none;">
+            <h4 style="margin:0 0 8px 0">Mas informacion</h4>
+            <p id="projectExtraInfo">Aquí puedes mostrar links, documentación, descargas o metas del proyecto.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function(){
+      const updBtn = document.getElementById('tabUpdatesBtn');
+      const moreBtn = document.getElementById('tabMoreBtn');
+      const updTab = document.getElementById('tabUpdates');
+      const moreTab = document.getElementById('tabMore');
+
+      function showUpdates(){
+        updTab.style.display = '';
+        moreTab.style.display = 'none';
+        updBtn.classList.remove('btn-ghost');
+        moreBtn.classList.add('btn-ghost');
+      }
+      function showMore(){
+        updTab.style.display = 'none';
+        moreTab.style.display = '';
+        updBtn.classList.add('btn-ghost');
+        moreBtn.classList.remove('btn-ghost');
+      }
+
+      if(updBtn && moreBtn){
+        updBtn.addEventListener('click', showUpdates);
+        moreBtn.addEventListener('click', showMore);
+      }
+    })();
+  </script>
+  <script src="/assets/js/pages/proyecto.js"></script>
+</body>
+</html>

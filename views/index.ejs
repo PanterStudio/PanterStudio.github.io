@@ -1,0 +1,1163 @@
+<%- include('partials/header', { 
+    title: 'Inicio — Panter Studio', 
+    currentPage: 'inicio',
+    description: 'Panter Studio Game Dev — Hub oficial del estudio indie. Sigue el desarrollo de Nuestra Tierra Job Simulator, gana monedas en minijuegos y únete a la comunidad fundadora.',
+    extraHead: `<style>
+        /* ===== INDEX-SPECIFIC STYLES ===== */
+        /* Premium Leaderboard Overrides */
+        .leaderboard-row {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.01);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .leaderboard-row:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .leaderboard-row::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -150%;
+            width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            transform: skewX(-20deg);
+        }
+        .leaderboard-row:hover::after {
+            left: 150%;
+            transition: all 0.8s ease-in-out;
+        }
+
+        .hub-hero-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .btn-sm {
+            padding: 0.55rem 1.25rem;
+            font-size: 0.9rem;
+        }
+        /* Right column layout */
+        .hub-right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        /* Devlog section */
+        .home-devlogs-section {
+            margin-top: 1.5rem;
+        }
+        /* Studio info strip */
+        .studio-info-strip {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            padding: 1.25rem;
+            background: var(--bg-glass-card);
+            border: var(--border-glass);
+            border-radius: var(--border-radius-lg);
+        }
+        .info-strip-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 4px;
+        }
+        .info-strip-item strong {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--color-primary-light);
+            font-family: var(--font-display);
+            line-height: 1;
+        }
+        .info-strip-item span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        /* Minijuegos quick card */
+        .minijuego-quick {
+            background: linear-gradient(135deg, rgba(0, 176, 255,0.06), rgba(0, 176, 255,0.02));
+            border: 1px solid rgba(0, 176, 255,0.12);
+            border-radius: var(--border-radius-lg);
+            padding: 1.25rem;
+        }
+        .minijuego-quick-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 0.75rem;
+        }
+        .minijuego-quick-header h3 {
+            font-size: 1rem;
+            margin: 0;
+            font-weight: 700;
+        }
+        .minijuego-quick p {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin: 0 0 1rem 0;
+            line-height: 1.4;
+        }
+        /* Preregistro widget */
+        .prereg-widget {
+            background: linear-gradient(135deg, rgba(212,175,55,0.07), rgba(212,175,55,0.02));
+            border: 1px solid rgba(212,175,55,0.2);
+            border-radius: var(--border-radius-lg);
+            padding: 1.25rem;
+        }
+        .prereg-widget-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+        .prereg-widget-header h3 {
+            font-size: 1rem;
+            margin: 0;
+            color: var(--color-accent);
+        }
+        .prereg-widget p {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin: 0 0 1rem 0;
+            line-height: 1.4;
+        }
+        .prereg-bar-wrap {
+            background: rgba(0,0,0,0.3);
+            border-radius: 100px;
+            height: 6px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        .prereg-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #b8860b, var(--color-accent));
+            border-radius: 100px;
+            transition: width 1.5s var(--ease-smooth);
+            box-shadow: 0 0 8px rgba(212,175,55,0.4);
+        }
+        .prereg-bar-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        /* No skeleton flash */
+        .loading-pulse {
+            background: linear-gradient(90deg, var(--bg-glass-card) 25%, var(--bg-glass-card-hover) 50%, var(--bg-glass-card) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+            height: 1em;
+            display: inline-block;
+            width: 60px;
+        }
+    </style>`
+  }) %>
+
+</nav>
+
+    <!-- MAIN CONTAINER -->
+    <div class="container" style="padding-top: 0.5rem;">
+
+
+        <!-- TABLÓN DE ANUNCIOS COMUNIDAD -->
+        <div id="comunidadAnnouncements" class="comunidad-announcements-banner" style="display: none;"></div>
+
+        <!-- HUB GRID: LEFT (main) / RIGHT (sidebar) -->
+        <div class="hub-grid">
+
+            <!-- ===== COLUMNA IZQUIERDA ===== -->
+            <div class="hub-left-col" style="display:flex; flex-direction:column; gap:1.5rem;">
+
+                <!-- FLAGSHIP HERO -->
+                <div class="hub-hero-premium">
+                    <img src="https://i.imgur.com/1IRRyFY.jpeg" alt="Nuestra Tierra Job Simulator" class="hub-hero-bg">
+                    <div class="hub-hero-overlay"></div>
+                    <div class="hub-hero-content">
+                        <span class="hub-hero-badge">★ NUESTRO JUEGO ESTRELLA</span>
+                        <h1 class="hub-hero-title" style="font-size:clamp(1.8rem,4vw,2.8rem);">Nuestra Tierra</h1>
+                        <p class="hub-hero-desc">
+                            El primer simulador móvil de trabajos tradicionales y modernos con toda la identidad de nuestra cultura. Recorre el campo, atiende tu tienda y sé parte del día uno.
+                        </p>
+                        <div class="hub-hero-actions">
+                            <a href="pages/meinteresa" class="btn btn-sm">💚 Me Interesa</a>
+                            <a href="pages/betatester" class="btn btn-ghost btn-sm" style="border-color:var(--color-primary); color:var(--color-primary-light);">⚙️ Conviertete en Beta Tester</a>
+                            <a href="pages/actualizaciones" class="btn btn-ghost btn-sm">Ver Novedades</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STUDIO STATS STRIP -->
+                <div class="studio-info-strip">
+                    <div class="info-strip-item">
+                        <strong id="statRegistrados">—</strong>
+                        <span>Interesados</span>
+                    </div>
+                    <div class="info-strip-item">
+                        <strong id="statJugadores">—</strong>
+                        <span>Jugadores Activos</span>
+                    </div>
+                    <div class="info-strip-item">
+                        <strong>2025</strong>
+                        <span>Año de Fundación</span>
+                    </div>
+                </div>
+
+
+                <!-- HOW IT WORKS -->
+                <div class="home-steps-section">
+                    <div class="hub-section-title">
+                        <span style="color:var(--color-primary-light);">🚀</span> Cómo Empezar
+                    </div>
+                    <div class="hub-steps-grid">
+                        <div class="step-card">
+                            <span class="step-number">01</span>
+                            <h4>Crea tu Cuenta</h4>
+                            <p>Regístrate con Google en segundos y asegura tu identidad en la comunidad.</p>
+                        </div>
+                        <div class="step-card">
+                        <span class="step-number">02</span>
+                        <h4>Di «Me Interesa»</h4>
+                        <p>Marca tu interés en el juego con un solo clic. Sin datos personales, sin spam.</p>
+                    </div>
+                        <div class="step-card">
+                            <span class="step-number">03</span>
+                            <h4>Juega y Gana</h4>
+                            <p>Participa en minijuegos diarios para ganar monedas y subir en el ranking.</p>
+                        </div>
+                        <div class="step-card">
+                            <span class="step-number">04</span>
+                            <h4>Sigue el Dev</h4>
+                            <p>Recibe devlogs exclusivos y novedades antes de que salgan a redes sociales.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DEVLOGS GRID IN HOME -->
+                <div class="home-devlogs-section">
+                    <div class="hub-section-title">
+                        <span>⚡</span> Últimas Novedades de Desarrollo
+                    </div>
+                    <div class="mini-devlogs-grid" id="homeDevlogsGrid">
+                        <!-- Injected by JS -->
+                        <div style="text-align:center; padding:2rem; width:100%;">
+                            <div class="loading-pulse" style="width:200px; height:20px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ===== COLUMNA DERECHA ===== -->
+            <div class="hub-right-col">
+
+                <!-- CUENTA / WIDGET USUARIO -->
+                <div class="hub-account-widget">
+                    <div class="account-profile-header">
+                        <div class="account-avatar" id="hubAccountAvatar">👤</div>
+                        <div class="account-info">
+                            <h4 id="hubAccountName">Invitado</h4>
+                            <p id="hubAccountStatus">No has iniciado sesión</p>
+                        </div>
+                    </div>
+                    <div class="account-stats-row" id="hubAccountStats">
+                        <div class="account-stat-box">
+                            <span>Monedas</span>
+                            <strong class="coins-highlight" id="hubCoins">—</strong>
+                        </div>
+                        <div class="account-stat-box">
+                            <span><img src="/recursos/iconos/esmeralda.png" alt="Esmeralda" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;">Esmeraldas</span>
+                            <strong class="emeralds-highlight" id="hubEmeralds">—</strong>
+                        </div>
+                        <div class="account-stat-box">
+                            <span>Partidas</span>
+                            <strong id="hubGamesPlayed">—</strong>
+                        </div>
+                        <div class="account-stat-box">
+                            <span>Rango</span>
+                            <strong id="hubRank">—</strong>
+                        </div>
+                    </div>
+                    <a href="pages/perfil" class="btn btn-sm" style="width:100%; justify-content:center; text-align:center;" id="hubProfileBtn">
+                        Ver Mi Perfil
+                    </a>
+                </div>
+
+                <!-- TOP MILLONARIOS / LEADERBOARD -->
+                <div class="leaderboard-card">
+                    <div class="leaderboard-header">
+                        <h3><img src="/recursos/iconos/trofeo.png" alt="Trofeo" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;">Top Millonarios</h3>
+                        <span>COMUNIDAD</span>
+                    </div>
+                    <div class="leaderboard-list" id="homeLeaderboard">
+                        <!-- Injected by JS -->
+                        <div class="leaderboard-row" style="opacity:0.4;">
+                            <div class="leaderboard-user-info">
+                                <div class="leaderboard-rank">—</div>
+                                <div class="loading-pulse" style="width:80px;"></div>
+                            </div>
+                            <div class="leaderboard-value">—</div>
+                        </div>
+                        <div class="leaderboard-row" style="opacity:0.3;">
+                            <div class="leaderboard-user-info">
+                                <div class="leaderboard-rank">—</div>
+                                <div class="loading-pulse" style="width:60px;"></div>
+                            </div>
+                            <div class="leaderboard-value">—</div>
+                        </div>
+                        <div class="leaderboard-row" style="opacity:0.2;">
+                            <div class="leaderboard-user-info">
+                                <div class="leaderboard-rank">—</div>
+                                <div class="loading-pulse" style="width:70px;"></div>
+                            </div>
+                            <div class="leaderboard-value">—</div>
+                        </div>
+                    </div>
+                    <div class="leaderboard-user-self" id="lbSelfRow">Inicia sesión para ver tu posición</div>
+                </div>
+
+                <!-- MINIJUEGO RÁPIDO -->
+                <div class="minijuego-quick" style="border-color: rgba(0, 176, 255, 0.2); background: linear-gradient(135deg, rgba(0, 176, 255, 0.06), rgba(0, 176, 255, 0.02));">
+                    <div class="minijuego-quick-header">
+                        <span style="font-size:1.5rem;">🤖</span>
+                        <h3>Módulo Panter Core AI</h3>
+                    </div>
+                    <p>Accede a la terminal interactiva. Realiza misiones de transporte, calcula el riesgo de básculas y gana monedas web para canjear por esmeraldas.</p>
+                    <a href="pages/minijuegos" class="btn btn-sm" style="width:100%; justify-content:center;">
+                        Acceder a la Terminal →
+                    </a>
+                </div>
+
+                <!-- ME INTERESA WIDGET -->
+                <div class="prereg-widget">
+                    <div class="prereg-widget-header">
+                        <h3>💚 Me Interesa</h3>
+                        <span style="font-size:0.7rem; color:var(--color-primary-light); font-weight:700; background:rgba(0, 176, 255,0.1); padding:2px 8px; border-radius:100px;">ABIERTO</span>
+                    </div>
+                    <p>Haz clic para que el equipo sepa que esperas <strong style="color:var(--text-primary);">Nuestra Tierra</strong>. Sin correo, sin spam.</p>
+                    <div style="text-align:center; margin-bottom:0.75rem;">
+                        <span style="font-family:var(--font-display); font-size:2rem; font-weight:800; color:var(--color-primary-light);" id="widgetInteresados">—</span>
+                        <span style="display:block; font-size:0.7rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">personas interesadas</span>
+                    </div>
+                    <a href="pages/meinteresa" class="btn btn-sm" style="width:100%; justify-content:center;">
+                        💚 ¡Me Interesa!
+                    </a>
+                </div>
+
+                <!-- SOBRE EL ESTUDIO -->
+                <div class="hub-card home-about-card" style="gap:1rem;">
+                    <div>
+                        <div class="hub-section-title" style="font-size:1rem; margin-bottom:0.5rem;">
+                            <span>🎮</span> Panter Studio
+                        </div>
+                        <p style="font-size:0.82rem; color:var(--text-secondary); margin:0; line-height:1.5;">
+                            Estudio indie independiente creando videojuegos con identidad colombiana. Nuestro enfoque: narrativa real, sistemas profundos y comunidad desde el día uno.
+                        </p>
+                    </div>
+                    <a href="pages/personal" class="btn btn-ghost btn-sm" style="width:100%; justify-content:center;">
+                        Conocer al Equipo
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+        <!-- ★ Anuncio inferior -->
+        <div class="ad-slot-wrapper ad-horizontal" id="ad-bottom">
+            <span class="ad-slot-label">Publicidad</span>
+            <div class="ad-slot-inner">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-8870488962578785"
+                     data-ad-slot="AUTO"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>
+
+<script src="/assets/js/core/firebase-config.js"></script>
+    <script src="/assets/js/minijuegos-enhancements.js"></script>
+    <script src="/assets/js/ui-enhancements.js"></script>
+    
+    
+
+    <script>
+    // ===== HOME HUB DYNAMIC CONTENT =====
+    (function() {
+        let currentUser = null;
+
+        function waitForFirebase(timeout = 8000) {
+            return new Promise((resolve) => {
+                if (window.auth && window.db && window.collection) return resolve(true);
+                const start = Date.now();
+                const t = setInterval(() => {
+                    if (window.auth && window.db && window.collection) {
+                        clearInterval(t); resolve(true);
+                    } else if (Date.now() - start > timeout) {
+                        clearInterval(t); resolve(false);
+                    }
+                }, 100);
+            });
+        }
+
+        // -- Leaderboard --
+        async function loadLeaderboard() {
+            const ok = await waitForFirebase();
+            if (!ok || !window.collection || !window.getDocs) return;
+            try {
+                const snap = await window.getDocs(window.collection(window.db, 'conductores'));
+                const lb = document.getElementById('homeLeaderboard');
+                if (!lb) return;
+                
+                const list = [];
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    const email = String(data.email || '').trim().toLowerCase();
+                    const isFounder = email === 'pantergamey@gmail.com';
+                    list.push({
+                        nombre_usuario: data.nombre_usuario,
+                        username: data.username,
+                        displayName: data.displayName,
+                        coins: Math.max(Number(data.coins || 0), Number(data.saldo || 0)),
+                        avatar: data.avatar || '😊',
+                        avatarImg: data.avatarImg || '',
+                        role: isFounder ? 'founder_ceo' : (data.role || 'viewer'),
+                        betaTesterStatus: data.betaTesterStatus || '',
+                        email: email,
+                        streak: Number(data.streak || 0),
+                        country: data.country || 'Colombia',
+                        favoriteProject: data.favoriteProject || 'Nuestra Tierra Job Simulator',
+                        bio: data.bio || '¡Hola! Soy un conductor orgulloso de Panter Studio.',
+                        createdAt: data.createdAt || ''
+                    });
+                });
+                
+                // Ordenar por monedas descendente
+                list.sort((a, b) => b.coins - a.coins);
+                
+                // Mostrar los mejores 5
+                let top5 = list.slice(0, 5);
+                const founderItem = list.find(u => String(u.email || '').toLowerCase() === 'pantergamey@gmail.com');
+                const hasFounder = top5.some(u => String(u.email || '').toLowerCase() === 'pantergamey@gmail.com');
+                if (founderItem && !hasFounder) {
+                    top5.push(founderItem);
+                }
+                
+                // Hacer la lista accesible para el click handler
+                window.leaderboardCachedList = top5;
+
+                lb.innerHTML = '';
+                const medals = [
+                    '<img src="/recursos/iconos/1er-premio.png" alt="🥇" style="width:20px;height:20px;vertical-align:middle;">',
+                    '<img src="/recursos/iconos/segundo-lugar.png" alt="🥈" style="width:20px;height:20px;vertical-align:middle;">',
+                    '<img src="/recursos/iconos/3er-lugar.png" alt="🥉" style="width:20px;height:20px;vertical-align:middle;">'
+                ];
+                const topClasses = ['top-1','top-2','top-3'];
+                
+                 const ROLE_LABELS = {
+                    founder_ceo: 'Fundador',
+                    director: 'Director',
+                    administrador: 'Admin',
+                    programador: 'Dev',
+                    modelador: '3D Mod',
+                    usuario: 'Miembro',
+                    viewer: 'Miembro',
+                    vip: 'VIP',
+                    community_manager: 'CM',
+                    support_ops: 'Soporte',
+                    youtuber: 'Youtuber',
+                    streamer: 'Streamer'
+                };
+
+                const roleBadgeTones = {
+                    founder_ceo: 'color: #fde68a; border: 1px solid rgba(251,191,36,.4); background: linear-gradient(135deg, rgba(251,191,36,.25), rgba(28,33,46,.8)); text-shadow: 0 0 4px rgba(251,191,36,.5); box-shadow: 0 0 8px rgba(251,191,36,.25);',
+                    director: 'color: #fca5a5; border: 1px solid rgba(239,68,68,.3); background: rgba(239,68,68,.08);',
+                    administrador: 'color: #80f0ff; border: 1px solid rgba(0,240,255,.3); background: rgba(0,240,255,.08);',
+                    programador: 'color: #fda4af; border: 1px solid rgba(248,113,113,.2); background: rgba(248,113,113,.08);',
+                    modelador: 'color: #93c5fd; border: 1px solid rgba(96,165,250,.2); background: rgba(96,165,250,.08);',
+                    community_manager: 'color: #d8b4fe; border: 1px solid rgba(168,85,247,.2); background: rgba(168,85,247,.08);',
+                    vip: 'color: #fde68a; border: 1px solid rgba(251,191,36,.2); background: rgba(251,191,36,.08);',
+                    youtuber: 'color: #fda4af; border: 1px solid rgba(248,113,113,.2); background: rgba(248,113,113,.08);',
+                    streamer: 'color: #fda4af; border: 1px solid rgba(248,113,113,.2); background: rgba(248,113,113,.08);',
+                    support_ops: 'color: #86efac; border: 1px solid rgba(74,222,128,.2); background: rgba(74,222,128,.08);'
+                };
+
+                let idx = -1;
+                let rank = 0;
+                top5.forEach(d => {
+                    idx++;
+                    rank++;
+                    const username = d.nombre_usuario || d.username || d.displayName || 'Anónimo';
+                    const coins = d.coins;
+                    const cls = rank <= 3 ? topClasses[rank-1] : '';
+                    const medal = d.role === 'founder_ceo' ? '👑' : (rank <= 3 ? medals[rank-1] : rank);
+                    
+                    let avatarHtml = `<span class="leaderboard-avatar">👤</span>`;
+                    if (d.avatarImg) {
+                        avatarHtml = `<img src="${d.avatarImg}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.1);flex-shrink:0;margin-right:2px;">`;
+                    } else if (d.avatar) {
+                        avatarHtml = `<span class="leaderboard-avatar" style="font-size:1rem;margin-right:2px;">${d.avatar}</span>`;
+                    }
+
+                    const betaBadge = d.betaTesterStatus === 'approved' ? `<span style="font-size:0.55rem;padding:0px 4px;border-radius:3px;font-weight:700;letter-spacing:0.3px;color:#86efac; border:1px solid rgba(16,185,129,.2); background:rgba(16,185,129,.08);" title="Beta Tester Oficial">Beta</span>` : '';
+                    
+                    const role = String(d.role || 'viewer').toLowerCase();
+                    const roleLabel = ROLE_LABELS[role] || '';
+                    const roleBadge = (roleLabel && role !== 'viewer' && role !== 'usuario') ? `<span style="font-size:0.55rem;padding:0px 4px;border-radius:3px;font-weight:700;letter-spacing:0.3px;${roleBadgeTones[role] || 'color:var(--text-secondary);border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);'}">${roleLabel}</span>` : '';
+
+                    let rowStyle = 'padding: 0.5rem 0.75rem;';
+                    let nameStyle = 'font-size:0.8rem; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:90px;';
+                    
+                    const isBeta = d.betaTesterStatus === 'approved';
+
+                    if (role === 'founder_ceo') {
+                        // Golden effect
+                        rowStyle += ' background: linear-gradient(95deg, rgba(251,191,36,0.12), rgba(20,24,35,0.7)); border-color: rgba(251,191,36,0.45); box-shadow: 0 0 12px rgba(251,191,36,0.25);';
+                        nameStyle += ' color: #fbbf24; font-weight: 800; text-shadow: 0 0 8px rgba(251,191,36,0.4);';
+                    } else if (role === 'director') {
+                        rowStyle += ' background: linear-gradient(95deg, rgba(239,68,68,0.1), rgba(20,24,35,0.7)); border-color: rgba(239,68,68,0.4); box-shadow: 0 0 10px rgba(239,68,68,0.22);';
+                        nameStyle += ' color: #fca5a5; font-weight: 700; text-shadow: 0 0 8px rgba(239,68,68,0.3);';
+                    } else if (role === 'administrador') {
+                        rowStyle += ' background: linear-gradient(95deg, rgba(0,240,255,0.1), rgba(20,24,35,0.7)); border-color: rgba(0,240,255,0.45); box-shadow: 0 0 10px rgba(0,240,255,0.22);';
+                        nameStyle += ' color: #80f0ff; font-weight: 700; text-shadow: 0 0 8px rgba(0,240,255,0.3);';
+                    } else if (role === 'programador' || role === 'modelador') {
+                        rowStyle += ' background: linear-gradient(95deg, rgba(0,176,255,0.08), rgba(20,24,35,0.7)); border-color: rgba(0,176,255,0.4); box-shadow: 0 0 10px rgba(0,176,255,0.2);';
+                        nameStyle += ' color: #e0f7ff;';
+                    } else if (role === 'community_manager') {
+                        rowStyle += ' background: linear-gradient(95deg, rgba(168,85,247,0.1), rgba(20,24,35,0.7)); border-color: rgba(168,85,247,0.4); box-shadow: 0 0 10px rgba(168,85,247,0.2);';
+                        nameStyle += ' color: #f5d0fe;';
+                    } else if (role === 'support_ops') {
+                        rowStyle += ' background: linear-gradient(95deg, rgba(16,185,129,0.08), rgba(20,24,35,0.7)); border-color: rgba(16,185,129,0.4); box-shadow: 0 0 10px rgba(16,185,129,0.2);';
+                        nameStyle += ' color: #a7f3d0;';
+                    } else if (role === 'youtuber' || role === 'streamer') {
+                        rowStyle += ' background: linear-gradient(95deg, rgba(239,68,68,0.08), rgba(20,24,35,0.7)); border-color: rgba(239,68,68,0.35); box-shadow: 0 0 10px rgba(239,68,68,0.18);';
+                        nameStyle += ' color: #fda4af;';
+                    } else if (role === 'vip') {
+                        rowStyle += ' background: linear-gradient(95deg, rgba(168,85,247,0.08), rgba(20,24,35,0.7)); border-color: rgba(168,85,247,0.35); box-shadow: 0 0 8px rgba(168,85,247,0.18);';
+                        nameStyle += ' color: #f3e8ff;';
+                    } else if (isBeta) {
+                        rowStyle += ' background: linear-gradient(95deg, rgba(16,185,129,0.08), rgba(20,24,35,0.7)); border-color: rgba(16,185,129,0.4); box-shadow: 0 0 10px rgba(16,185,129,0.2);';
+                        nameStyle += ' color: #a7f3d0;';
+                    }
+
+                    lb.innerHTML += `
+                        <div class="leaderboard-row ${cls}" style="${rowStyle}" onclick="openQuickProfile(${idx})">
+                            <div class="leaderboard-user-info" style="gap: 8px;">
+                                <div class="leaderboard-rank" style="font-size:0.75rem; width:22px; height:22px; flex-shrink:0;">${medal}</div>
+                                ${avatarHtml}
+                                <div style="display:flex; flex-direction:column; gap:1px; min-width:0;">
+                                    <span class="leaderboard-name" style="${nameStyle}">${username}</span>
+                                    <div style="display:flex; align-items:center; gap:4px; margin-top:1px; flex-wrap:wrap;">
+                                        ${roleBadge}
+                                        ${betaBadge}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="leaderboard-value" style="font-size:0.78rem;"><img src="/recursos/iconos/moneda.png" alt="Moneda" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;"> ${coins.toLocaleString()}</div>
+                        </div>`;
+                });
+                if (top5.length === 0) {
+                    lb.innerHTML = '<p style="text-align:center;font-size:0.8rem;color:var(--text-muted);padding:1rem;">¡Sé el primero en la tabla!</p>';
+                }
+            } catch(e) { console.warn('Leaderboard error:', e); }
+        }
+
+        window.openQuickProfile = function(index) {
+            const list = window.leaderboardCachedList;
+            if (!list || !list[index]) return;
+            const u = list[index];
+
+            const modal = document.getElementById('quickProfileModal');
+            const qpCard = document.getElementById('qpCard');
+            const avatarContainer = document.getElementById('qpAvatarContainer');
+            const usernameEl = document.getElementById('qpUsername');
+            const roleBadgeEl = document.getElementById('qpRoleBadge');
+            const betaBadgeEl = document.getElementById('qpBetaBadge');
+            const coinsEl = document.getElementById('qpCoins');
+            const streakEl = document.getElementById('qpStreak');
+            const countryEl = document.getElementById('qpCountry');
+            const favoriteEl = document.getElementById('qpFavorite');
+            const bioEl = document.getElementById('qpBio');
+            const joinedEl = document.getElementById('qpJoined');
+
+            if (!modal || !qpCard) return;
+
+            // Rango / Rol y Posición en Leaderboard para Estilos Épicos
+            const role = String(u.role || 'viewer').toLowerCase();
+            const isRank1 = (index === 0);
+
+            // Temas de colores y brillos
+            let cardBackground = 'rgba(18,22,33,0.92)';
+            let cardBorder = '1px solid rgba(255,255,255,0.1)';
+            let cardShadow = '0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)';
+            let nameGradient = 'linear-gradient(120deg, #fff, #b2c5d9)';
+
+            if (role === 'founder_ceo' || isRank1) {
+                // Tema Oro Legendario (CEO o Top #1 del servidor)
+                cardBackground = 'linear-gradient(135deg, rgba(20,24,35,0.96), rgba(28,24,15,0.96))';
+                cardBorder = '1px solid rgba(251,191,36,0.4)';
+                cardShadow = '0 20px 40px rgba(0,0,0,0.8), 0 0 25px rgba(251,191,36,0.25), inset 0 1px 0 rgba(251,191,36,0.1)';
+                nameGradient = 'linear-gradient(120deg, #ffd700, #fbbf24)';
+                avatarContainer.style.borderColor = 'rgba(251,191,36,0.6)';
+                avatarContainer.style.boxShadow = '0 8px 20px rgba(251,191,36,0.3)';
+            } else if (role === 'director') {
+                // Tema Rubí Místico (Director)
+                cardBackground = 'linear-gradient(135deg, rgba(20,24,35,0.96), rgba(35,18,18,0.96))';
+                cardBorder = '1px solid rgba(239,68,68,0.35)';
+                cardShadow = '0 20px 40px rgba(0,0,0,0.8), 0 0 20px rgba(239,68,68,0.2), inset 0 1px 0 rgba(239,68,68,0.1)';
+                nameGradient = 'linear-gradient(120deg, #fca5a5, #ef4444)';
+                avatarContainer.style.borderColor = 'rgba(239,68,68,0.5)';
+                avatarContainer.style.boxShadow = '0 8px 20px rgba(239,68,68,0.25)';
+            } else if (role === 'administrador') {
+                // Tema Diamante Cían (Admin)
+                cardBackground = 'linear-gradient(135deg, rgba(20,24,35,0.96), rgba(15,30,35,0.96))';
+                cardBorder = '1px solid rgba(0,240,255,0.35)';
+                cardShadow = '0 20px 40px rgba(0,0,0,0.8), 0 0 20px rgba(0,240,255,0.2), inset 0 1px 0 rgba(0,240,255,0.1)';
+                nameGradient = 'linear-gradient(120deg, #80f0ff, #00b0ff)';
+                avatarContainer.style.borderColor = 'rgba(0,240,255,0.5)';
+                avatarContainer.style.boxShadow = '0 8px 20px rgba(0,240,255,0.25)';
+            } else if (role === 'vip') {
+                // Tema Amatista (VIP)
+                cardBackground = 'linear-gradient(135deg, rgba(20,24,35,0.96), rgba(28,18,35,0.96))';
+                cardBorder = '1px solid rgba(168,85,247,0.3)';
+                cardShadow = '0 20px 40px rgba(0,0,0,0.7), 0 0 15px rgba(168,85,247,0.15), inset 0 1px 0 rgba(168,85,247,0.08)';
+                nameGradient = 'linear-gradient(120deg, #e9d5ff, #a855f7)';
+                avatarContainer.style.borderColor = 'rgba(168,85,247,0.4)';
+                avatarContainer.style.boxShadow = '0 8px 20px rgba(168,85,247,0.2)';
+            } else {
+                // Reset a estilo estándar
+                avatarContainer.style.borderColor = 'rgba(255,255,255,0.15)';
+                avatarContainer.style.boxShadow = '0 8px 16px rgba(0,0,0,0.3)';
+            }
+
+            // Aplicar estilos calculados a la tarjeta y al título
+            qpCard.style.background = cardBackground;
+            qpCard.style.border = cardBorder;
+            qpCard.style.boxShadow = cardShadow;
+            usernameEl.style.background = nameGradient;
+            usernameEl.style.webkitBackgroundClip = 'text';
+            usernameEl.style.webkitTextFillColor = 'transparent';
+
+            // Rellenar avatar
+            if (u.avatarImg) {
+                avatarContainer.innerHTML = `<img src="${u.avatarImg}" style="width:100%; height:100%; object-fit:cover;">`;
+            } else {
+                avatarContainer.textContent = u.avatar || '😊';
+            }
+
+            // Nombre
+            usernameEl.textContent = u.nombre_usuario || u.username || u.displayName || 'Conductor';
+
+            // Rango / Rol
+            const ROLE_LABELS_FULL = {
+                founder_ceo: 'Fundador / CEO 👑',
+                director: 'Director 🎭',
+                administrador: 'Administrador 🛡️',
+                programador: 'Programador 💻',
+                modelador: 'Modelador 3D 🎨',
+                community_manager: 'Community Manager 📢',
+                support_ops: 'Soporte Técnico 🔧',
+                vip: 'Miembro VIP ⭐',
+                youtuber: 'Creador Youtuber 🎥',
+                streamer: 'Creador Streamer 🎮',
+                viewer: 'Miembro Activo 👤',
+                usuario: 'Miembro Activo 👤'
+            };
+
+            roleBadgeEl.textContent = ROLE_LABELS_FULL[role] || 'Miembro Activo 👤';
+            roleBadgeEl.className = 'qp-role-badge';
+            
+            // Custom role styles
+            const badgeTones = {
+                founder_ceo: 'background: linear-gradient(135deg, rgba(251,191,36,.2), rgba(251,191,36,.05)); color:#fde68a; border:1px solid rgba(251,191,36,.45);',
+                director: 'background: rgba(239,68,68,.1); color:#fca5a5; border:1px solid rgba(239,68,68,.35);',
+                administrador: 'background: rgba(0,240,255,.1); color:#80f0ff; border:1px solid rgba(0,240,255,.45);',
+                programador: 'background: rgba(96,165,250,.1); color:#93c5fd; border:1px solid rgba(96,165,250,.35);',
+                modelador: 'background: rgba(96,165,250,.1); color:#93c5fd; border:1px solid rgba(96,165,250,.35);',
+                community_manager: 'background: rgba(168,85,247,.1); color:#d8b4fe; border:1px solid rgba(168,85,247,.35);',
+                vip: 'background: rgba(251,191,36,.1); color:#fde68a; border:1px solid rgba(251,191,36,.25);'
+            };
+            roleBadgeEl.setAttribute('style', `font-size:0.75rem; padding:3px 10px; border-radius:12px; font-weight:700; ${badgeTones[role] || 'background:rgba(255,255,255,0.05); color:#c4cfda; border:1px solid rgba(255,255,255,0.1);'}`);
+
+            // Beta tester status
+            if (u.betaTesterStatus === 'approved') {
+                betaBadgeEl.textContent = 'Beta Tester Oficial ✔';
+                betaBadgeEl.setAttribute('style', 'font-size:0.68rem; padding:2px 8px; border-radius:10px; background:rgba(16,185,129,0.1); color:#86efac; border:1px solid rgba(16,185,129,0.3); font-weight:bold; margin-top:4px; display:inline-block;');
+            } else {
+                betaBadgeEl.textContent = '';
+                betaBadgeEl.setAttribute('style', 'display:none;');
+            }
+
+            // Datos
+            coinsEl.textContent = Number(u.coins || 0).toLocaleString();
+            streakEl.innerHTML = `🔥 <span>${u.streak} ${u.streak === 1 ? 'día' : 'días'}</span>`;
+            
+            // Si el streak es alto presumir con color naranja encendido
+            if (u.streak >= 7) {
+                streakEl.setAttribute('style', 'font-size: 1.15rem; font-weight: bold; color: #ff9100; text-shadow: 0 0 8px rgba(255,145,0,0.5);');
+            } else {
+                streakEl.setAttribute('style', 'font-size: 1.15rem; font-weight: bold; color: #ff5252;');
+            }
+
+            countryEl.textContent = u.country || 'No definido';
+            favoriteEl.textContent = u.favoriteProject || 'No definido';
+            bioEl.textContent = `"${u.bio || '¡Hola! Soy un conductor orgulloso de Panter Studio.'}"`;
+
+            // Fecha
+            if (u.createdAt) {
+                const date = new Date(u.createdAt);
+                joinedEl.textContent = isNaN(date) ? '—' : date.toLocaleDateString('es-ES', { year:'numeric', month:'long', day:'numeric' });
+            } else {
+                joinedEl.textContent = '—';
+            }
+
+            modal.showModal();
+        };
+
+        // -- Devlogs --
+        async function loadDevlogs() {
+            const ok = await waitForFirebase();
+            if (!ok || !window.query || !window.orderBy || !window.limit || !window.getDocs) return;
+            try {
+                const q = window.query(
+                    window.collection(window.db, 'devlogs'),
+                    window.orderBy('createdAt', 'desc'),
+                    window.limit(3)
+                );
+                const snap = await window.getDocs(q);
+                const grid = document.getElementById('homeDevlogsGrid');
+                if (!grid) return;
+                if (snap.empty) {
+                    grid.innerHTML = '<p style="font-size:0.85rem;color:var(--text-muted);text-align:center;padding:1rem;">No hay novedades aún.</p>';
+                    return;
+                }
+                grid.innerHTML = '';
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    const title = d.title || 'Sin título';
+                    const summary = d.summary || d.body?.substring(0,120) || '';
+                    const img = d.imageUrl || 'https://i.imgur.com/1IRRyFY.jpeg';
+                    const date = d.createdAt ? new Date(d.createdAt.toDate ? d.createdAt.toDate() : d.createdAt).toLocaleDateString('es-CO', {day:'numeric',month:'short'}) : '';
+                    const tag = d.tag || 'UPDATE';
+                    grid.innerHTML += `
+                        <a href="pages/actualizaciones.html" class="mini-devlog-card">
+                            <img class="mini-devlog-img" src="${img}" alt="${title}" onerror="this.src='https://i.imgur.com/1IRRyFY.jpeg'">
+                            <div class="mini-devlog-body">
+                                <h4>${title}</h4>
+                                <p>${summary}</p>
+                                <div class="mini-devlog-meta">
+                                    <span>${tag}</span>
+                                    ${date}
+                                </div>
+                            </div>
+                        </a>`;
+                });
+            } catch(e) {
+                console.warn('Devlogs error:', e);
+                const grid = document.getElementById('homeDevlogsGrid');
+                if (grid) grid.innerHTML = '<p style="font-size:0.85rem;color:var(--text-muted);">No se pudieron cargar las novedades.</p>';
+            }
+        }
+
+        async function loadPreregStats() {
+            // Load "Me Interesa" counter real-time
+            const ok = await waitForFirebase();
+            if (!ok || !window.query || !window.collection || !window.where || !window.onSnapshot) return;
+            try {
+                const q = window.query(window.collection(window.db, 'conductores'), window.where('interested', '==', true));
+                window.onSnapshot(q, (snap) => {
+                    const total = snap.size;
+                    const statEl = document.getElementById('statRegistrados');
+                    const widgetEl = document.getElementById('widgetInteresados');
+                    if (statEl) statEl.textContent = total.toLocaleString();
+                    if (widgetEl) widgetEl.textContent = total.toLocaleString();
+                }, (e) => {
+                    console.warn('Interesados listener error:', e);
+                });
+            } catch(e) { console.warn('Interesados counter error:', e); }
+        }
+
+        // -- User account widget --
+        async function loadAccountWidget() {
+            const ok = await waitForFirebase();
+            if (!ok) return;
+            window.auth.onAuthStateChanged(async (user) => {
+                currentUser = user;
+                const nameEl = document.getElementById('hubAccountName');
+                const statusEl = document.getElementById('hubAccountStatus');
+                const avatarEl = document.getElementById('hubAccountAvatar');
+                const coinsEl = document.getElementById('hubCoins');
+                const emeraldsEl = document.getElementById('hubEmeralds');
+                const gamesEl = document.getElementById('hubGamesPlayed');
+                const rankEl = document.getElementById('hubRank');
+                const lbSelf = document.getElementById('lbSelfRow');
+
+                if (user) {
+                    if (nameEl) nameEl.textContent = user.displayName || 'Jugador';
+                    if (statusEl) statusEl.textContent = 'Sesión activa';
+                    if (avatarEl && user.photoURL) {
+                        avatarEl.innerHTML = `<img src="${user.photoURL}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="Avatar">`;
+                    }
+                    // Load user data from Firestore
+                    try {
+                        const docSnap = await window.getDoc(window.fsDoc(window.db, 'conductores', user.uid));
+                        if (docSnap.exists()) {
+                            const d = docSnap.data();
+                            if (coinsEl) coinsEl.textContent = (d.coins || 0).toLocaleString();
+                            if (emeraldsEl) emeraldsEl.textContent = (d.esmeraldas !== undefined ? d.esmeraldas : 0).toLocaleString();
+                            if (gamesEl) {
+                                // load streak/game count
+                                gamesEl.textContent = (d.streak || 0) + ' días';
+                            }
+                            if (rankEl) rankEl.textContent = d.level ? (d.level.charAt(0).toUpperCase() + d.level.slice(1)) : 'Visitante';
+                            if (nameEl) nameEl.textContent = d.nombre_usuario || d.username || user.displayName || 'Jugador';
+                            // Show leaderboard self position
+                            if (lbSelf) lbSelf.textContent = `Tu posición: buscando... · ${(d.coins||0).toLocaleString()} 🪙`;
+                        }
+                    } catch(e) { console.warn('Load user widget details error:', e); }
+                } else {
+                    currentUser = null;
+                    if (nameEl) nameEl.textContent = 'Invitado';
+                    if (statusEl) statusEl.textContent = 'No has iniciado sesión';
+                    if (coinsEl) coinsEl.textContent = '—';
+                    if (emeraldsEl) emeraldsEl.textContent = '—';
+                    if (gamesEl) gamesEl.textContent = '—';
+                    if (rankEl) rankEl.textContent = '—';
+                    if (lbSelf) lbSelf.textContent = 'Inicia sesión para ver tu posición';
+                }
+            });
+        }
+
+        // -- Active players stats (rough estimate from users collection) --
+        async function loadPlayerStats() {
+            const ok = await waitForFirebase();
+            if (!ok) return;
+            try {
+                const snap = await window.getDoc(window.fsDoc(window.db, 'settings', 'stats'));
+                if (snap.exists()) {
+                    const d = snap.data();
+                    const el = document.getElementById('statJugadores');
+                    if (el && d.jugadores) el.textContent = Number(d.jugadores).toLocaleString();
+                }
+            } catch(e) { /* silent */ }
+        }
+
+        // -- Load Community Announcements --
+        // -- Toggle Announcement Like --
+        async function toggleAnnouncementLike(annId) {
+            if (!currentUser) {
+                const modal = document.getElementById('authModal');
+                if (modal) {
+                    modal.hidden = false;
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    alert('Debes iniciar sesión para reaccionar a los anuncios.');
+                }
+                return;
+            }
+
+            const cacheKey = 'ps_announcements_cache';
+            let liveUpdated = false;
+            const uid = currentUser.uid;
+
+            // Online update via Firestore
+            const ok = await waitForFirebase();
+            if (ok && window.db && window.fsDoc && window.getDoc && window.updateDoc) {
+                try {
+                    const docRef = window.fsDoc(window.db, 'announcements', annId);
+                    const snap = await window.getDoc(docRef);
+                    if (snap.exists()) {
+                        const data = snap.data();
+                        let likes = Array.isArray(data.likes) ? data.likes : [];
+                        if (likes.includes(uid)) {
+                            likes = likes.filter(id => id !== uid);
+                        } else {
+                            likes.push(uid);
+                        }
+                        await window.updateDoc(docRef, { likes: likes });
+                        liveUpdated = true;
+                        
+                        // Update cache
+                        const cached = localStorage.getItem(cacheKey);
+                        if (cached) {
+                            try {
+                                const parsed = JSON.parse(cached);
+                                const idx = parsed.findIndex(a => a.id === annId);
+                                if (idx !== -1) {
+                                    parsed[idx].likes = likes;
+                                    localStorage.setItem(cacheKey, JSON.stringify(parsed));
+                                }
+                            } catch(e) {}
+                        }
+                    }
+                } catch(e) {
+                    console.warn('Firestore like toggle error:', e);
+                }
+            }
+
+            // Fallback / Offline local update
+            if (!liveUpdated) {
+                try {
+                    const cached = localStorage.getItem(cacheKey);
+                    if (cached) {
+                        const parsed = JSON.parse(cached);
+                        const idx = parsed.findIndex(a => a.id === annId);
+                        if (idx !== -1) {
+                            let likes = Array.isArray(parsed[idx].likes) ? parsed[idx].likes : [];
+                            if (likes.includes(uid)) {
+                                likes = likes.filter(id => id !== uid);
+                            } else {
+                                likes.push(uid);
+                            }
+                            parsed[idx].likes = likes;
+                            localStorage.setItem(cacheKey, JSON.stringify(parsed));
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            // Re-render
+            loadComunidadAnnouncements();
+        }
+
+        // -- Load Community Announcements --
+        async function loadComunidadAnnouncements() {
+            const ok = await waitForFirebase();
+            const banner = document.getElementById('comunidadAnnouncements');
+            if (!banner) return;
+
+            // Load local cache first to render immediately
+            const cacheKey = 'ps_announcements_cache';
+            const local = [];
+            try {
+                const cached = localStorage.getItem(cacheKey);
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (Array.isArray(parsed)) local.push(...parsed);
+                }
+            } catch(e) {}
+
+            function renderAnnouncements(items) {
+                if (!items || items.length === 0) {
+                    banner.style.display = 'none';
+                    return;
+                }
+                banner.style.display = 'block';
+
+                const icons = {
+                    general: '📢',
+                    update: '⚡',
+                    event: '🏆',
+                    alert: '⚠️',
+                    maintenance: '⚙️'
+                };
+                
+                // Sort by date descending, take top 2
+                const sorted = items.sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 2);
+
+                const uid = currentUser ? currentUser.uid : '';
+
+                banner.innerHTML = `
+                    <div class="ann-banner-header">
+                        <span>📢 Anuncios de la Comunidad</span>
+                        <a href="pages/actualizaciones.html" class="ann-banner-view-all">Ver todos →</a>
+                    </div>
+                    <div class="ann-banner-grid">
+                        ${sorted.map(d => {
+                            const icon = icons[d.type] || '📢';
+                            const date = d.createdAt ? new Date(d.createdAt).toLocaleDateString('es-CO', {day:'numeric', month:'short'}) : '';
+                            const likes = Array.isArray(d.likes) ? d.likes : [];
+                            const hasLiked = uid && likes.includes(uid);
+                            const likesCount = likes.length;
+
+                            return `
+                                <div class="ann-banner-item type-${d.type || 'general'}">
+                                    <div class="ann-banner-badge-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                                        <div class="ann-banner-badge">
+                                            <span>${icon}</span> ${String(d.type || 'general').toUpperCase()}
+                                        </div>
+                                        <button class="ann-like-btn ${hasLiked ? 'liked' : ''}" data-id="${d.id}" title="${hasLiked ? 'Quitar Me gusta' : 'Dar Me gusta'}" style="background:none; border:none; color:inherit; cursor:pointer; display:flex; align-items:center; gap:4px; font-size:0.8rem; outline:none; transition:transform 0.15s ease;">
+                                            <span class="like-heart" style="transition: transform 0.2s ease; display:inline-block; font-size:0.9rem;">${hasLiked ? '❤️' : '🤍'}</span>
+                                            <span class="like-count" style="font-weight:700; color:var(--text-secondary);">${likesCount}</span>
+                                        </button>
+                                    </div>
+                                    <h4 class="ann-banner-title">${d.title}</h4>
+                                    <p class="ann-banner-body">${d.body}</p>
+                                    <div class="ann-banner-meta">Por ${d.createdBy || 'Admin'} · ${date}</div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+
+                // Bind click delegation for likes only once
+                if (!banner.dataset.listenerBound) {
+                    banner.addEventListener('click', async (e) => {
+                        const likeBtn = e.target.closest('.ann-like-btn');
+                        if (!likeBtn) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const annId = likeBtn.dataset.id;
+                        if (annId) {
+                            likeBtn.style.transform = 'scale(1.25)';
+                            setTimeout(() => { likeBtn.style.transform = 'scale(1)'; }, 150);
+                            await toggleAnnouncementLike(annId);
+                        }
+                    });
+                    banner.dataset.listenerBound = 'true';
+                }
+            }
+
+            // Render cached first
+            if (local.length > 0) {
+                renderAnnouncements(local);
+            }
+
+            if (!ok) return;
+
+            // Then fetch live from Firestore
+            try {
+                const snap = await window.getDocs(window.collection(window.db, 'announcements'));
+                const docs = [];
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    let created = data.createdAt;
+                    if (created && created.toDate) created = created.toDate().toISOString();
+                    docs.push({ id: doc.id, ...data, createdAt: created });
+                });
+
+                // Update cache
+                localStorage.setItem(cacheKey, JSON.stringify(docs));
+                renderAnnouncements(docs);
+            } catch(e) {
+                console.warn('Error loading live announcements:', e);
+            }
+        }
+
+        // Run all
+        let started = false;
+        function startAll() {
+            if (started) return;
+            started = true;
+            console.log('[PanterHub] Inicializando todos los modulos dinámicos con Firebase...');
+            loadLeaderboard();
+            loadPreregStats();
+            loadAccountWidget();
+            loadPlayerStats();
+            loadComunidadAnnouncements();
+            loadDevlogs();
+        }
+
+        // Registrar listeners de inicio
+        document.addEventListener('firebaseReady', startAll);
+        document.addEventListener('DOMContentLoaded', () => {
+            // Si Firebase ya cargó antes del DOMContentLoaded
+            if (window.auth && window.db && window.collection) {
+                startAll();
+            }
+        });
+
+        // Fallback de seguridad por si no se disparan eventos
+        setTimeout(() => {
+            if (window.auth && window.db && window.collection) {
+                startAll();
+            }
+        }, 1500);
+    })();
+    </script>
+
+    <!-- Modal Premium para ver Perfil Rápido -->
+    <dialog id="quickProfileModal" style="border:none; padding:0; background:none; outline:none; max-width:420px; width:90%; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); margin:0;">
+        <div id="qpCard" style="background: rgba(18,22,33,0.92); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05); color: #fff; font-family: 'Inter', sans-serif; position: relative; transition: all 0.3s ease;">
+            
+            <button onclick="document.getElementById('quickProfileModal').close()" style="position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.05); border: none; color: #fff; font-size: 0.9rem; cursor: pointer; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">✕</button>
+
+            <!-- Encabezado de Perfil (Avatar + Rango) -->
+            <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 20px; margin-top: 10px;">
+                <div id="qpAvatarContainer" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)); border: 2px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); overflow: hidden;">👤</div>
+                <h3 id="qpUsername" style="font-size: 1.35rem; margin: 0 0 4px 0; font-weight: 700; background: linear-gradient(120deg, #fff, #b2c5d9); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">—</h3>
+                <div id="qpRoleBadge" style="margin-bottom: 6px;"></div>
+                <div id="qpBetaBadge"></div>
+            </div>
+
+            <!-- Datos Económicos / Estadísticas para presumir -->
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 0.72rem; color: #8f9ca6; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Monedas Web</div>
+                    <div style="font-size: 1.15rem; font-weight: bold; color: #ffd54f; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                        <img src="/recursos/iconos/moneda.png" alt="🪙" style="width:16px; height:16px;">
+                        <span id="qpCoins">—</span>
+                    </div>
+                </div>
+                <div style="text-align: center; border-left: 1px solid rgba(255,255,255,0.08);">
+                    <div style="font-size: 0.72rem; color: #8f9ca6; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Racha Diaria</div>
+                    <div id="qpStreak" style="font-size: 1.15rem; font-weight: bold; color: #ff5252; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                        🔥 <span>0 días</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalles extra (País, Biografía, etc.) -->
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.82rem; background: rgba(0,0,0,0.15); padding: 12px 16px; border-radius: 10px; margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #8f9ca6;">Origen:</span>
+                    <strong id="qpCountry">—</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #8f9ca6;">Proyecto favorito:</span>
+                    <strong id="qpFavorite">—</strong>
+                </div>
+                <div style="display: flex; flex-direction: column; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; margin-top: 4px;">
+                    <span style="color: #8f9ca6; margin-bottom: 4px;">Biografía:</span>
+                    <p id="qpBio" style="margin: 0; color: #d0d8e0; font-style: italic; line-height: 1.3; font-size: 0.8rem; word-break: break-word;">"—"</p>
+                </div>
+            </div>
+
+            <!-- Fecha de Ingreso -->
+            <div style="text-align: center; font-size: 0.72rem; color: #627280; margin-top: 12px;">
+                Conductor desde: <span id="qpJoined">—</span>
+            </div>
+        </div>
+    </dialog>
+
+    <style>
+        .leaderboard-row {
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s, background-color 0.2s;
+        }
+        .leaderboard-row:hover {
+            transform: translateY(-2px) scale(1.01);
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4), 0 0 10px rgba(255,255,255,0.02) !important;
+        }
+        dialog::backdrop {
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(5px);
+        }
+        /* Garantizar centrado y transicion limpia */
+        #quickProfileModal[open] {
+            animation: qpScaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        @keyframes qpScaleIn {
+            from {
+                transform: translate(-50%, -46%) scale(0.95);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+
+<%- include('partials/footer') %>
