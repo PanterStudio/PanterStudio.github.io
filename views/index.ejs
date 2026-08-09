@@ -1,389 +1,339 @@
 <%- include('partials/header', { 
     title: 'Inicio — Panter Studio', 
     currentPage: 'inicio',
-    description: 'Panter Studio Game Dev — Hub oficial del estudio indie. Sigue el desarrollo de Nuestra Tierra Job Simulator, gana monedas en minijuegos y únete a la comunidad fundadora.',
+    description: 'Panter Studio Game Dev — Hub oficial del estudio indie. Sigue el desarrollo de Nuestra Tierra Job Simulator, gana monedas en minijuegos y unete a la comunidad fundadora.',
     extraHead: `<style>
-        /* ===== INDEX-SPECIFIC STYLES ===== */
-        /* Premium Leaderboard Overrides */
-        .leaderboard-row {
+        body { background: #09090b !important; }
+
+        .index-page-wrap {
             position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            background: rgba(255, 255, 255, 0.01);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            min-height: 100vh;
+            background:
+                radial-gradient(ellipse 80% 60% at 70% -10%, rgba(168,85,247,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 10% 80%, rgba(99,102,241,0.08) 0%, transparent 60%),
+                #09090b;
         }
-        .leaderboard-row:hover {
-            transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.08);
-            background: rgba(255, 255, 255, 0.03);
-        }
-        .leaderboard-row::after {
+        .index-page-wrap::before {
             content: '';
-            position: absolute;
-            top: 0; left: -150%;
-            width: 50%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-            transform: skewX(-20deg);
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
+            z-index: 0;
         }
-        .leaderboard-row:hover::after {
-            left: 150%;
-            transition: all 0.8s ease-in-out;
+        .ix-wrap {
+            position: relative;
+            z-index: 1;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1.5rem 3rem;
         }
 
-        .hub-hero-actions {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .btn-sm {
-            padding: 0.55rem 1.25rem;
-            font-size: 0.9rem;
-        }
-        /* Right column layout */
-        .hub-right-col {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-        /* Devlog section */
-        .home-devlogs-section {
-            margin-top: 1.5rem;
-        }
-        /* Studio info strip */
-        .studio-info-strip {
+        /* HERO */
+        .ix-hero {
+            position: relative;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1rem;
-            padding: 1.25rem;
-            background: var(--bg-glass-card);
-            border: var(--border-glass);
-            border-radius: var(--border-radius-lg);
-        }
-        .info-strip-item {
-            display: flex;
-            flex-direction: column;
+            grid-template-columns: 1fr;
+            min-height: 420px;
+            padding: 1rem 0 0;
+            overflow: visible;
             align-items: center;
-            text-align: center;
-            gap: 4px;
         }
-        .info-strip-item strong {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: var(--color-primary-light);
-            font-family: var(--font-display);
-            line-height: 1;
+        @media (min-width: 900px) {
+            .ix-hero { grid-template-columns: 1fr 1fr; gap: 0; }
         }
-        .info-strip-item span {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        /* Minijuegos quick card */
-        .minijuego-quick {
-            background: linear-gradient(135deg, rgba(0, 176, 255,0.06), rgba(0, 176, 255,0.02));
-            border: 1px solid rgba(0, 176, 255,0.12);
-            border-radius: var(--border-radius-lg);
-            padding: 1.25rem;
-        }
-        .minijuego-quick-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 0.75rem;
-        }
-        .minijuego-quick-header h3 {
-            font-size: 1rem;
-            margin: 0;
-            font-weight: 700;
-        }
-        .minijuego-quick p {
-            font-size: 0.82rem;
-            color: var(--text-secondary);
-            margin: 0 0 1rem 0;
-            line-height: 1.4;
-        }
-        /* Preregistro widget */
-        .prereg-widget {
-            background: linear-gradient(135deg, rgba(212,175,55,0.07), rgba(212,175,55,0.02));
-            border: 1px solid rgba(212,175,55,0.2);
-            border-radius: var(--border-radius-lg);
-            padding: 1.25rem;
-        }
-        .prereg-widget-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.75rem;
-        }
-        .prereg-widget-header h3 {
-            font-size: 1rem;
-            margin: 0;
-            color: var(--color-accent);
-        }
-        .prereg-widget p {
-            font-size: 0.82rem;
-            color: var(--text-secondary);
-            margin: 0 0 1rem 0;
-            line-height: 1.4;
-        }
-        .prereg-bar-wrap {
-            background: rgba(0,0,0,0.3);
-            border-radius: 100px;
-            height: 6px;
-            overflow: hidden;
-            margin-bottom: 0.5rem;
-        }
-        .prereg-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #b8860b, var(--color-accent));
-            border-radius: 100px;
-            transition: width 1.5s var(--ease-smooth);
-            box-shadow: 0 0 8px rgba(212,175,55,0.4);
-        }
-        .prereg-bar-label {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            font-weight: 600;
-            margin-bottom: 1rem;
-        }
-        /* No skeleton flash */
-        .loading-pulse {
-            background: linear-gradient(90deg, var(--bg-glass-card) 25%, var(--bg-glass-card-hover) 50%, var(--bg-glass-card) 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: 4px;
-            height: 1em;
+        .ix-hero-text { position: relative; z-index: 3; padding: 1.25rem 0 1.5rem; }
+        .ix-hero-label {
             display: inline-block;
-            width: 60px;
+            font-size: 0.7rem; font-weight: 700;
+            letter-spacing: 3px; text-transform: uppercase;
+            color: #a855f7; margin-bottom: 0.5rem;
         }
+        .ix-hero-title {
+            font-family: 'Outfit', 'Moderniz', sans-serif;
+            font-weight: 900; line-height: 0.95; margin: 0 0 0.5rem;
+        }
+        .ix-hero-title .line1 {
+            display: block;
+            font-size: clamp(2.2rem, 5.5vw, 4.2rem);
+            color: #ffffff; letter-spacing: -2px;
+        }
+        .ix-hero-title .line2 {
+            display: block;
+            font-size: clamp(2.2rem, 5.5vw, 4.2rem);
+            background: linear-gradient(90deg, #a855f7 0%, #6366f1 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; letter-spacing: -2px;
+        }
+        .ix-hero-desc {
+            font-size: 0.95rem; color: #a1a1aa;
+            line-height: 1.55; max-width: 440px;
+            margin: 0.85rem 0 1.5rem;
+        }
+        .ix-hero-desc strong { color: #818cf8; font-weight: 600; }
+        .ix-hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .btn-ix-primary {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 0.75rem 1.75rem;
+            background: linear-gradient(135deg, #a855f7, #6366f1);
+            color: #fff; font-weight: 700; font-size: 0.9rem;
+            border-radius: 100px; text-decoration: none;
+            transition: all 0.3s ease; border: none; cursor: pointer;
+            box-shadow: 0 8px 30px rgba(168,85,247,0.4); white-space: nowrap;
+        }
+        .btn-ix-primary:hover { transform: translateY(-3px); box-shadow: 0 14px 40px rgba(168,85,247,0.55); color: #fff; }
+        .btn-ix-outline {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 0.75rem 1.5rem; background: rgba(255,255,255,0.04);
+            color: #e4e4e7; font-weight: 600; font-size: 0.9rem;
+            border-radius: 100px; text-decoration: none;
+            border: 1px solid rgba(255,255,255,0.12);
+            transition: all 0.3s ease; white-space: nowrap;
+        }
+        .btn-ix-outline:hover { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.25); color: #fff; }
+
+        .ix-hero-visual {
+            position: relative; display: flex;
+            align-items: flex-end; justify-content: center;
+            min-height: 360px; z-index: 2;
+        }
+        .ix-hero-glow {
+            position: absolute; width: 560px; height: 560px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(168,85,247,0.2) 0%, transparent 70%);
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            pointer-events: none; z-index: 1;
+        }
+        .ix-mascot {
+            position: relative; z-index: 3;
+            height: 400px; max-height: 52vh; object-fit: contain;
+            filter: drop-shadow(0 20px 50px rgba(0,0,0,0.9)) drop-shadow(0 0 50px rgba(168,85,247,0.3));
+            transition: transform 0.6s cubic-bezier(0.16,1,0.3,1);
+        }
+        .ix-mascot:hover { transform: translateY(-10px) scale(1.025); }
+
+        /* STATS */
+        .ix-stats {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            margin: 0.25rem 0 2rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.07); gap: 1px;
+        }
+        @media (min-width: 600px) { .ix-stats { grid-template-columns: repeat(4, 1fr); } }
+        .ix-stat {
+            background: rgba(255,255,255,0.01); padding: 1rem 1.25rem;
+            display: flex; align-items: center; gap: 0.75rem;
+            transition: background 0.25s;
+        }
+        .ix-stat:hover { background: rgba(255,255,255,0.03); }
+        .ix-stat-icon {
+            font-size: 1.3rem; flex-shrink: 0;
+            width: 38px; height: 38px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(168,85,247,0.1);
+            border: 1px solid rgba(168,85,247,0.2); border-radius: 10px;
+        }
+        .ix-stat-val { font-size: 1.25rem; font-weight: 900; font-family: 'Outfit', sans-serif; color: #fff; line-height: 1; }
+        .ix-stat-lbl { font-size: 0.63rem; color: #71717a; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-top: 3px; }
+
+        /* FEATURES */
+        .ix-section-label { font-size: 0.68rem; color: #a855f7; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 0.4rem; }
+        .ix-section-title { font-family: 'Outfit', sans-serif; font-size: clamp(1.2rem, 2.5vw, 1.7rem); font-weight: 900; color: #fff; margin: 0 0 1.25rem; }
+        .ix-features {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 1px; background: rgba(255,255,255,0.05);
+            border-radius: 16px; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.07); margin-bottom: 2.5rem;
+        }
+        @media (min-width: 768px) { .ix-features { grid-template-columns: repeat(4, 1fr); } }
+        .ix-feature {
+            background: rgba(255,255,255,0.012); padding: 1.35rem 1.25rem;
+            display: flex; flex-direction: column; gap: 0.5rem;
+            transition: background 0.25s; position: relative; overflow: hidden;
+        }
+        .ix-feature::after {
+            content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, #a855f7, #6366f1);
+            transform: scaleX(0); transform-origin: left; transition: transform 0.4s ease;
+        }
+        .ix-feature:hover { background: rgba(255,255,255,0.03); }
+        .ix-feature:hover::after { transform: scaleX(1); }
+        .ix-feature-icon {
+            font-size: 1.3rem; width: 42px; height: 42px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(168,85,247,0.1); border-radius: 11px;
+            border: 1px solid rgba(168,85,247,0.2); flex-shrink: 0;
+        }
+        .ix-feature h3 { font-family: 'Outfit', sans-serif; font-size: 0.85rem; font-weight: 800; color: #fff; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
+        .ix-feature p { font-size: 0.78rem; color: #71717a; margin: 0; line-height: 1.5; display: none; }
+        @media (min-width: 768px) { .ix-feature p { display: block; } }
+        .ix-feature-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.75rem; font-weight: 700; color: #a855f7;
+            text-decoration: none; margin-top: auto; padding-top: 0.5rem;
+            transition: gap 0.2s, color 0.2s;
+        }
+        .ix-feature-link:hover { gap: 10px; color: #c084fc; }
+
+        /* BOTTOM */
+        .ix-bottom { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        @media (min-width: 900px) { .ix-bottom { grid-template-columns: 1.9fr 1fr; } }
+
+        .ix-news-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+        .ix-news-title {
+            font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 800; color: #fff;
+            text-transform: uppercase; letter-spacing: 1px;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .ix-news-title::before { content: ''; display: block; width: 4px; height: 20px; background: linear-gradient(180deg, #a855f7, #6366f1); border-radius: 2px; }
+        .ix-view-all { font-size: 0.78rem; font-weight: 700; color: #a855f7; text-decoration: none; display: flex; align-items: center; gap: 4px; transition: gap 0.2s, color 0.2s; }
+        .ix-view-all:hover { gap: 8px; color: #c084fc; }
+
+        .ix-news-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+        @media (max-width: 600px) { .ix-news-grid { grid-template-columns: 1fr; } }
+        @media (min-width: 601px) and (max-width: 860px) { .ix-news-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .ix-news-card {
+            position: relative; border-radius: 16px; overflow: hidden;
+            background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07);
+            text-decoration: none; display: block; transition: transform 0.3s, border-color 0.3s;
+        }
+        .ix-news-card:hover { transform: translateY(-5px); border-color: rgba(168,85,247,0.35); }
+        .ix-news-img-wrap { overflow: hidden; height: 105px; }
+        .ix-news-img { width: 100%; height: 105px; object-fit: cover; display: block; filter: brightness(0.65); transition: filter 0.35s, transform 0.35s; }
+        .ix-news-card:hover .ix-news-img { filter: brightness(0.9); transform: scale(1.06); }
+        .ix-news-body { padding: 0.75rem; }
+        .ix-news-tag { display: inline-block; font-size: 0.58rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; padding: 2px 7px; border-radius: 5px; background: rgba(168,85,247,0.15); color: #c4b5fd; margin-bottom: 0.4rem; }
+        .ix-news-card-title { font-family: 'Outfit', sans-serif; font-size: 0.82rem; font-weight: 800; color: #fff; line-height: 1.3; margin: 0; }
+
+        @keyframes ix-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .ix-shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.03) 75%); background-size: 200% 100%; animation: ix-shimmer 1.8s infinite; border-radius: 8px; }
+
+        .ix-community {
+            background: linear-gradient(145deg, rgba(99,102,241,0.12), rgba(168,85,247,0.06));
+            border: 1px solid rgba(168,85,247,0.2); border-radius: 16px;
+            padding: 1.5rem 1.5rem; display: flex; flex-direction: column; gap: 0.85rem;
+        }
+        .ix-community-icon { font-size: 2.2rem; filter: drop-shadow(0 0 20px rgba(168,85,247,0.7)); }
+        .ix-community h3 { font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 900; color: #fff; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
+        .ix-community p { font-size: 0.85rem; color: #a1a1aa; margin: 0; line-height: 1.55; }
+        .ix-community-stat { font-size: 0.82rem; color: #a1a1aa; }
+        .ix-community-stat strong { font-size: 1.15rem; color: #fff; font-weight: 900; }
+        .btn-me-interesa {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 0.9rem 1.5rem; background: linear-gradient(135deg, #16a34a, #15803d);
+            color: #fff; font-weight: 700; font-size: 0.9rem; border-radius: 100px;
+            text-decoration: none; transition: all 0.3s; margin-top: auto;
+            box-shadow: 0 6px 22px rgba(22,163,74,0.4);
+        }
+        .btn-me-interesa:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(22,163,74,0.55); color: #fff; }
+
+        .ix-data-bridge { display: none !important; visibility: hidden; pointer-events: none; }
+        .comunidad-announcements-banner { margin-bottom: 2rem; }
     </style>`
   }) %>
 
-</nav>
+<div class="index-page-wrap">
+<div class="ix-wrap">
 
-    <!-- MAIN CONTAINER -->
-    <div class="container" style="padding-top: 0.5rem;">
+    <div id="comunidadAnnouncements" class="comunidad-announcements-banner" style="display:none;"></div>
 
-
-        <!-- TABLÓN DE ANUNCIOS COMUNIDAD -->
-        <div id="comunidadAnnouncements" class="comunidad-announcements-banner" style="display: none;"></div>
-
-        <!-- HUB GRID: LEFT (main) / RIGHT (sidebar) -->
-        <div class="hub-grid">
-
-            <!-- ===== COLUMNA IZQUIERDA ===== -->
-            <div class="hub-left-col" style="display:flex; flex-direction:column; gap:1.5rem;">
-
-                <!-- FLAGSHIP HERO -->
-                <div class="hub-hero-premium">
-                    <img src="https://i.imgur.com/1IRRyFY.jpeg" alt="Nuestra Tierra Job Simulator" class="hub-hero-bg">
-                    <div class="hub-hero-overlay"></div>
-                    <div class="hub-hero-content">
-                        <span class="hub-hero-badge">★ NUESTRO JUEGO ESTRELLA</span>
-                        <h1 class="hub-hero-title" style="font-size:clamp(1.8rem,4vw,2.8rem);">Nuestra Tierra</h1>
-                        <p class="hub-hero-desc">
-                            El primer simulador móvil de trabajos tradicionales y modernos con toda la identidad de nuestra cultura. Recorre el campo, atiende tu tienda y sé parte del día uno.
-                        </p>
-                        <div class="hub-hero-actions">
-                            <a href="pages/meinteresa" class="btn btn-sm">💚 Me Interesa</a>
-                            <a href="pages/betatester" class="btn btn-ghost btn-sm" style="border-color:var(--color-primary); color:var(--color-primary-light);">⚙️ Conviertete en Beta Tester</a>
-                            <a href="pages/actualizaciones" class="btn btn-ghost btn-sm">Ver Novedades</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STUDIO STATS STRIP -->
-                <div class="studio-info-strip">
-                    <div class="info-strip-item">
-                        <strong id="statRegistrados">—</strong>
-                        <span>Interesados</span>
-                    </div>
-                    <div class="info-strip-item">
-                        <strong id="statJugadores">—</strong>
-                        <span>Jugadores Activos</span>
-                    </div>
-                    <div class="info-strip-item">
-                        <strong>2025</strong>
-                        <span>Año de Fundación</span>
-                    </div>
-                </div>
-
-
-                <!-- HOW IT WORKS -->
-                <div class="home-steps-section">
-                    <div class="hub-section-title">
-                        <span style="color:var(--color-primary-light);">🚀</span> Cómo Empezar
-                    </div>
-                    <div class="hub-steps-grid">
-                        <div class="step-card">
-                            <span class="step-number">01</span>
-                            <h4>Crea tu Cuenta</h4>
-                            <p>Regístrate con Google en segundos y asegura tu identidad en la comunidad.</p>
-                        </div>
-                        <div class="step-card">
-                        <span class="step-number">02</span>
-                        <h4>Di «Me Interesa»</h4>
-                        <p>Marca tu interés en el juego con un solo clic. Sin datos personales, sin spam.</p>
-                    </div>
-                        <div class="step-card">
-                            <span class="step-number">03</span>
-                            <h4>Juega y Gana</h4>
-                            <p>Participa en minijuegos diarios para ganar monedas y subir en el ranking.</p>
-                        </div>
-                        <div class="step-card">
-                            <span class="step-number">04</span>
-                            <h4>Sigue el Dev</h4>
-                            <p>Recibe devlogs exclusivos y novedades antes de que salgan a redes sociales.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- DEVLOGS GRID IN HOME -->
-                <div class="home-devlogs-section">
-                    <div class="hub-section-title">
-                        <span>⚡</span> Últimas Novedades de Desarrollo
-                    </div>
-                    <div class="mini-devlogs-grid" id="homeDevlogsGrid">
-                        <!-- Injected by JS -->
-                        <div style="text-align:center; padding:2rem; width:100%;">
-                            <div class="loading-pulse" style="width:200px; height:20px;"></div>
-                        </div>
-                    </div>
-                </div>
-
+    <section class="ix-hero">
+        <div class="ix-hero-text">
+            <span class="ix-hero-label">Bienvenido a</span>
+            <h1 class="ix-hero-title">
+                <span class="line1">NUESTRA TIERRA</span>
+                <span class="line2">JOB SIMULATOR</span>
+            </h1>
+            <p class="ix-hero-desc">
+                El primer simulador de trabajos y conduccion en un mundo abierto inspirado en <strong>Colombia</strong>.
+            </p>
+            <div class="ix-hero-actions">
+                <a href="pages/meinteresa" class="btn-ix-primary">&#128154; Me Interesa</a>
+                <a href="pages/actualizaciones" class="btn-ix-outline">&#9654; Ver Novedades</a>
             </div>
+        </div>
+        <div class="ix-hero-visual">
+            <div class="ix-hero-glow"></div>
+            <img src="/recursos/Pantera.png" alt="Pantera, mascota de Nuestra Tierra" class="ix-mascot">
+        </div>
+    </section>
 
-            <!-- ===== COLUMNA DERECHA ===== -->
-            <div class="hub-right-col">
+    <div class="ix-stats">
+        <div class="ix-stat"><div class="ix-stat-icon">&#128506;</div><div><div class="ix-stat-val">+100 KM</div><div class="ix-stat-lbl">De Carreteras</div></div></div>
+        <div class="ix-stat"><div class="ix-stat-icon">&#128188;</div><div><div class="ix-stat-val">+15</div><div class="ix-stat-lbl">Trabajos</div></div></div>
+        <div class="ix-stat"><div class="ix-stat-icon">&#128667;</div><div><div class="ix-stat-val">+20</div><div class="ix-stat-lbl">Vehiculos</div></div></div>
+        <div class="ix-stat"><div class="ix-stat-icon">&#128101;</div><div><div class="ix-stat-val"><span id="statJugadores">+10K</span></div><div class="ix-stat-lbl">Jugadores</div></div></div>
+    </div>
 
-                <!-- CUENTA / WIDGET USUARIO -->
-                <div class="hub-account-widget">
-                    <div class="account-profile-header">
-                        <div class="account-avatar" id="hubAccountAvatar">👤</div>
-                        <div class="account-info">
-                            <h4 id="hubAccountName">Invitado</h4>
-                            <p id="hubAccountStatus">No has iniciado sesión</p>
-                        </div>
-                    </div>
-                    <div class="account-stats-row" id="hubAccountStats">
-                        <div class="account-stat-box">
-                            <span>Monedas</span>
-                            <strong class="coins-highlight" id="hubCoins">—</strong>
-                        </div>
-                        <div class="account-stat-box">
-                            <span><img src="/recursos/iconos/esmeralda.png" alt="Esmeralda" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;">Esmeraldas</span>
-                            <strong class="emeralds-highlight" id="hubEmeralds">—</strong>
-                        </div>
-                        <div class="account-stat-box">
-                            <span>Partidas</span>
-                            <strong id="hubGamesPlayed">—</strong>
-                        </div>
-                        <div class="account-stat-box">
-                            <span>Rango</span>
-                            <strong id="hubRank">—</strong>
-                        </div>
-                    </div>
-                    <a href="pages/perfil" class="btn btn-sm" style="width:100%; justify-content:center; text-align:center;" id="hubProfileBtn">
-                        Ver Mi Perfil
-                    </a>
-                </div>
-
-                <!-- TOP MILLONARIOS / LEADERBOARD -->
-                <div class="leaderboard-card">
-                    <div class="leaderboard-header">
-                        <h3><img src="/recursos/iconos/trofeo.png" alt="Trofeo" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;">Top Millonarios</h3>
-                        <span>COMUNIDAD</span>
-                    </div>
-                    <div class="leaderboard-list" id="homeLeaderboard">
-                        <!-- Injected by JS -->
-                        <div class="leaderboard-row" style="opacity:0.4;">
-                            <div class="leaderboard-user-info">
-                                <div class="leaderboard-rank">—</div>
-                                <div class="loading-pulse" style="width:80px;"></div>
-                            </div>
-                            <div class="leaderboard-value">—</div>
-                        </div>
-                        <div class="leaderboard-row" style="opacity:0.3;">
-                            <div class="leaderboard-user-info">
-                                <div class="leaderboard-rank">—</div>
-                                <div class="loading-pulse" style="width:60px;"></div>
-                            </div>
-                            <div class="leaderboard-value">—</div>
-                        </div>
-                        <div class="leaderboard-row" style="opacity:0.2;">
-                            <div class="leaderboard-user-info">
-                                <div class="leaderboard-rank">—</div>
-                                <div class="loading-pulse" style="width:70px;"></div>
-                            </div>
-                            <div class="leaderboard-value">—</div>
-                        </div>
-                    </div>
-                    <div class="leaderboard-user-self" id="lbSelfRow">Inicia sesión para ver tu posición</div>
-                </div>
-
-                <!-- MINIJUEGO RÁPIDO -->
-                <div class="minijuego-quick" style="border-color: rgba(0, 176, 255, 0.2); background: linear-gradient(135deg, rgba(0, 176, 255, 0.06), rgba(0, 176, 255, 0.02));">
-                    <div class="minijuego-quick-header">
-                        <span style="font-size:1.5rem;">🤖</span>
-                        <h3>Módulo Panter Core AI</h3>
-                    </div>
-                    <p>Accede a la terminal interactiva. Realiza misiones de transporte, calcula el riesgo de básculas y gana monedas web para canjear por esmeraldas.</p>
-                    <a href="pages/minijuegos" class="btn btn-sm" style="width:100%; justify-content:center;">
-                        Acceder a la Terminal →
-                    </a>
-                </div>
-
-                <!-- ME INTERESA WIDGET -->
-                <div class="prereg-widget">
-                    <div class="prereg-widget-header">
-                        <h3>💚 Me Interesa</h3>
-                        <span style="font-size:0.7rem; color:var(--color-primary-light); font-weight:700; background:rgba(0, 176, 255,0.1); padding:2px 8px; border-radius:100px;">ABIERTO</span>
-                    </div>
-                    <p>Haz clic para que el equipo sepa que esperas <strong style="color:var(--text-primary);">Nuestra Tierra</strong>. Sin correo, sin spam.</p>
-                    <div style="text-align:center; margin-bottom:0.75rem;">
-                        <span style="font-family:var(--font-display); font-size:2rem; font-weight:800; color:var(--color-primary-light);" id="widgetInteresados">—</span>
-                        <span style="display:block; font-size:0.7rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">personas interesadas</span>
-                    </div>
-                    <a href="pages/meinteresa" class="btn btn-sm" style="width:100%; justify-content:center;">
-                        💚 ¡Me Interesa!
-                    </a>
-                </div>
-
-                <!-- SOBRE EL ESTUDIO -->
-                <div class="hub-card home-about-card" style="gap:1rem;">
-                    <div>
-                        <div class="hub-section-title" style="font-size:1rem; margin-bottom:0.5rem;">
-                            <span>🎮</span> Panter Studio
-                        </div>
-                        <p style="font-size:0.82rem; color:var(--text-secondary); margin:0; line-height:1.5;">
-                            Estudio indie independiente creando videojuegos con identidad colombiana. Nuestro enfoque: narrativa real, sistemas profundos y comunidad desde el día uno.
-                        </p>
-                    </div>
-                    <a href="pages/personal" class="btn btn-ghost btn-sm" style="width:100%; justify-content:center;">
-                        Conocer al Equipo
-                    </a>
-                </div>
-
-            </div>
+    <p class="ix-section-label">Todo sobre el juego</p>
+    <h2 class="ix-section-title">Explora cada modo de juego</h2>
+    <div class="ix-features">
+        <div class="ix-feature">
+            <div class="ix-feature-icon">&#127918;</div>
+            <h3>Modo Carrera</h3>
+            <p>Acepta trabajos, gana dinero y haz crecer tu imperio de transporte.</p>
+            <a href="pages/meinteresa" class="ix-feature-link">Ver Mas &#8594;</a>
+        </div>
+        <div class="ix-feature">
+            <div class="ix-feature-icon">&#127757;</div>
+            <h3>Mundo Abierto</h3>
+            <p>Explora ciudades, carreteras, campos y mucho mas de Colombia.</p>
+            <a href="wiki/como-comenzar" class="ix-feature-link">Explorar &#8594;</a>
+        </div>
+        <div class="ix-feature">
+            <div class="ix-feature-icon">&#129309;</div>
+            <h3>Multijugador</h3>
+            <p>Unete a convoyos, juega con amigos y forma tu propia empresa.</p>
+            <a href="pages/minijuegos" class="ix-feature-link">Conectar &#8594;</a>
+        </div>
+        <div class="ix-feature">
+            <div class="ix-feature-icon">&#127942;</div>
+            <h3>Eventos y Retos</h3>
+            <p>Participa en eventos semanales y gana recompensas unicas.</p>
+            <a href="pages/actualizaciones" class="ix-feature-link">Ver Eventos &#8594;</a>
         </div>
     </div>
 
-        <!-- ★ Anuncio inferior -->
-        <div class="ad-slot-wrapper ad-horizontal" id="ad-bottom">
-            <span class="ad-slot-label">Publicidad</span>
-            <div class="ad-slot-inner">
-                <ins class="adsbygoogle"
-                     style="display:block"
-                     data-ad-client="ca-pub-8870488962578785"
-                     data-ad-slot="AUTO"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    <div class="ix-bottom">
+        <div>
+            <div class="ix-news-header">
+                <div class="ix-news-title">Ultimas Noticias</div>
+                <a href="pages/actualizaciones" class="ix-view-all">Ver todas &#8594;</a>
+            </div>
+            <div class="ix-news-grid" id="homeDevlogsGrid">
+                <div class="ix-news-card"><div class="ix-news-img-wrap"><div class="ix-shimmer" style="height:130px;"></div></div><div class="ix-news-body"><div class="ix-shimmer" style="height:13px;width:55px;margin-bottom:8px;"></div><div class="ix-shimmer" style="height:15px;width:90%;"></div></div></div>
+                <div class="ix-news-card"><div class="ix-news-img-wrap"><div class="ix-shimmer" style="height:130px;"></div></div><div class="ix-news-body"><div class="ix-shimmer" style="height:13px;width:55px;margin-bottom:8px;"></div><div class="ix-shimmer" style="height:15px;width:80%;"></div></div></div>
+                <div class="ix-news-card"><div class="ix-news-img-wrap"><div class="ix-shimmer" style="height:130px;"></div></div><div class="ix-news-body"><div class="ix-shimmer" style="height:13px;width:55px;margin-bottom:8px;"></div><div class="ix-shimmer" style="height:15px;width:85%;"></div></div></div>
             </div>
         </div>
+        <div class="ix-community">
+            <div class="ix-community-icon">&#128062;</div>
+            <h3>Unete a la Comunidad</h3>
+            <p>Forma parte de nuestra comunidad y no te pierdas ninguna novedad del desarrollo de Nuestra Tierra.</p>
+            <div class="ix-community-stat"><strong id="statRegistrados">&#8212;</strong> personas interesadas</div>
+            <a href="pages/meinteresa" class="btn-me-interesa">&#128154; &#161;Me Interesa!</a>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<div class="ix-data-bridge" aria-hidden="true">
+    <span id="hubAccountName"></span><span id="hubAccountStatus"></span>
+    <div id="hubAccountAvatar"></div>
+    <div id="hubAccountStats"><span id="hubCoins"></span><span id="hubEmeralds"></span><span id="hubGamesPlayed"></span><span id="hubRank"></span></div>
+    <a id="hubProfileBtn"></a><div id="homeLeaderboard"></div><div id="lbSelfRow"></div><span id="widgetInteresados"></span>
+</div>
+
+<div class="ad-slot-wrapper ad-horizontal" id="ad-bottom">
+    <span class="ad-slot-label">Publicidad</span>
+    <div class="ad-slot-inner">
+        <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-8870488962578785" data-ad-slot="AUTO" data-ad-format="auto" data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+</div>
 
 <script src="/assets/js/core/firebase-config.js"></script>
     <script src="/assets/js/minijuegos-enhancements.js"></script>
@@ -750,15 +700,13 @@
                     const date = d.createdAt ? new Date(d.createdAt.toDate ? d.createdAt.toDate() : d.createdAt).toLocaleDateString('es-CO', {day:'numeric',month:'short'}) : '';
                     const tag = d.tag || 'UPDATE';
                     grid.innerHTML += `
-                        <a href="pages/actualizaciones.html" class="mini-devlog-card">
-                            <img class="mini-devlog-img" src="${img}" alt="${title}" onerror="this.src='https://i.imgur.com/1IRRyFY.jpeg'">
-                            <div class="mini-devlog-body">
-                                <h4>${title}</h4>
-                                <p>${summary}</p>
-                                <div class="mini-devlog-meta">
-                                    <span>${tag}</span>
-                                    ${date}
-                                </div>
+                        <a href="pages/actualizaciones" class="ix-news-card">
+                            <div class="ix-news-img-wrap">
+                                <img class="ix-news-img" src="${img}" alt="${title}" onerror="this.src='https://i.imgur.com/1IRRyFY.jpeg'">
+                            </div>
+                            <div class="ix-news-body">
+                                <span class="ix-news-tag">${tag}</span>
+                                <p class="ix-news-card-title">${title}</p>
                             </div>
                         </a>`;
                 });
