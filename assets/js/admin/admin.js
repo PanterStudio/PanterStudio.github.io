@@ -4,8 +4,78 @@ const FOUNDER_CEO_EMAIL = 'pantergamey@gmail.com';
 const ADMIN_EMAILS_LS_KEY = 'panterAdminEmails';
 const DEFAULT_ADMIN_EMAILS = [
     'pantergamey@gmail.com',
-    'panterstudiogamedev@gmail.com'
+    'panterstudiogamedev@gmail.com',
+    'ceo@panterstudio.lat',
+    'admin@panterstudio.lat',
+    'soporte@panterstudio.lat'
 ];
+
+const PRESET_ADMIN_ACCOUNTS = {
+    'pantergamey': {
+        password: 'PanterCEO#2026!',
+        role: 'founder_ceo',
+        displayName: 'PanterGameY (CEO)',
+        email: 'pantergamey@gmail.com',
+        uid: 'preset-pantergamey-uid'
+    },
+    'pantergamey@gmail.com': {
+        password: 'PanterCEO#2026!',
+        role: 'founder_ceo',
+        displayName: 'PanterGameY (CEO)',
+        email: 'pantergamey@gmail.com',
+        uid: 'preset-pantergamey-uid'
+    },
+    'ceo@panterstudio.lat': {
+        password: 'PanterCEO#2026!',
+        role: 'founder_ceo',
+        displayName: 'CEO / Propietario',
+        email: 'ceo@panterstudio.lat',
+        uid: 'preset-ceo-uid'
+    },
+    'admin@panterstudio.lat': {
+        password: 'PanterAdmin#2026!',
+        role: 'administrador',
+        displayName: 'Equipo Administrativo',
+        email: 'admin@panterstudio.lat',
+        uid: 'preset-admin-uid'
+    },
+    'soporte@panterstudio.lat': {
+        password: 'PanterSoporte#2026!',
+        role: 'soporte',
+        displayName: 'Personal de Soporte',
+        email: 'soporte@panterstudio.lat',
+        uid: 'preset-soporte-uid'
+    }
+};
+
+const SESSION_STORAGE_KEY = 'panterAdminSession';
+
+function getStoredSession() {
+    try {
+        const stored = sessionStorage.getItem(SESSION_STORAGE_KEY) || localStorage.getItem(SESSION_STORAGE_KEY);
+        return stored ? JSON.parse(stored) : null;
+    } catch {
+        return null;
+    }
+}
+
+function saveStoredSession(userSession) {
+    try {
+        sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(userSession));
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(userSession));
+    } catch (e) {
+        console.warn('No se pudo guardar la sesión:', e);
+    }
+}
+
+function clearStoredSession() {
+    try {
+        sessionStorage.removeItem(SESSION_STORAGE_KEY);
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+    } catch (e) {
+        console.warn('Error al limpiar la sesión:', e);
+    }
+}
 
 const SITE_ROOT = (document.body?.dataset.siteRoot || '.').replace(/\/$/, '');
 
@@ -14,26 +84,21 @@ function toSitePath(path) {
 }
 
 const ROLE_LABELS = {
+    admin_owner: 'ADMIN / OWNER',
     founder_ceo: 'Fundador / CEO',
     director: 'Director',
     administrador: 'Administrador',
+    soporte: 'Personal de Soporte',
     programador: 'Programador',
     modelador: 'Modelador',
+    moderador: 'Moderador',
+    creador_contenido: 'Creador de Contenido',
     usuario: 'Usuario',
     vip: 'VIP',
     viewer: 'Solo lectura'
 };
 
-const CEO_ASSIGNABLE_ROLES = {
-    director: 'Director',
-    administrador: 'Administrador',
-    programador: 'Programador',
-    modelador: 'Modelador',
-    usuario: 'Usuario',
-    vip: 'VIP'
-};
-
-const PANEL_ACCESS_ROLES = new Set(['founder_ceo', 'director', 'administrador', 'programador', 'modelador']);
+const PANEL_ACCESS_ROLES = new Set(['admin_owner', 'founder_ceo', 'director', 'administrador', 'soporte', 'programador', 'modelador']);
 const EMAIL_ANALYSIS_COLLECTIONS = ['conductores', 'preregistros'];
 
 const gate = document.getElementById('adminGate');
@@ -74,6 +139,8 @@ const tabInfo = {
     betatesters: { title: 'Beta Testers', sub: 'Inscripciones para el equipo de pruebas en Android.' },
     accounts: { title: 'Gestión de Cuentas (CEO)', sub: 'Miembros del equipo y niveles de rol autorizados.' },
     support: { title: 'Soporte al Jugador', sub: 'Búsqueda de usuarios, edición de perfiles, saldos, mascotas y logs de canjes.' },
+    announcements: { title: 'Anuncios', sub: 'Publicación de novedades para la comunidad.' },
+    staff: { title: 'Personal del Estudio', sub: 'Equipo visible en la web, rangos y mapeo de roles de Discord.' },
     siteconfig: { title: 'Configuración Global', sub: 'Modificación de parámetros de la web, donaciones y bonos en Firestore.' },
     visibility: { title: 'Visibilidad del Sitio', sub: 'Gestión del modo de mantenimiento global y accesos por página.' }
 };
@@ -102,6 +169,14 @@ tabButtons.forEach(btn => {
             loadGlobalRedeemLogs();
         } else if (tabName === 'siteconfig') {
             loadSiteConfig();
+        } else if (tabName === 'staff') {
+            loadStaffMembers();
+            loadDiscordRoleMapping();
+            if (window.PanterRoles) {
+                window.PanterRoles.loadRoleConfig(true)
+                    .then(() => refreshRoleUI())
+                    .catch(() => {});
+            }
         } else if (tabName === 'visibility') {
             loadSiteVisibilitySettings();
         }
@@ -109,23 +184,47 @@ tabButtons.forEach(btn => {
 });
 
 function normalizeRole(role) {
+    if (window.PanterRoles) return window.PanterRoles.normalize(role);
     const n = String(role || '').trim().toLowerCase();
     if (n === 'admin' || n === 'admin_general') return 'administrador';
+    if (n === 'support' || n === 'support_ops' || n === 'soporte_ops') return 'soporte';
     if (n === 'developer') return 'programador';
     if (n === 'modeler') return 'modelador';
     return Object.prototype.hasOwnProperty.call(ROLE_LABELS, n) ? n : 'usuario';
 }
 
 function getRoleLabel(role) {
+    if (window.PanterRoles) return window.PanterRoles.get(role).label;
     return ROLE_LABELS[normalizeRole(role)] || ROLE_LABELS.usuario;
 }
 
 function canRoleAccessPanel(role) {
+    if (window.PanterRoles) return window.PanterRoles.canAccessAdminPanel(role);
     return PANEL_ACCESS_ROLES.has(normalizeRole(role));
 }
 
 function isFounderEmail(email) {
-    return String(email || '').trim().toLowerCase() === FOUNDER_CEO_EMAIL;
+    const e = String(email || '').trim().toLowerCase();
+    return e === FOUNDER_CEO_EMAIL || e === 'ceo@panterstudio.lat' || e === 'pantergamey' || e === 'pantergameyt';
+}
+
+function isCeoAccount(user, profile = null) {
+    if (!user && !profile) return false;
+    const isCeo = val => {
+        if (!val) return false;
+        const c = String(val).trim().toLowerCase();
+        return c === 'pantergamey' || c === 'pantergameyt' || c === 'pantergamey@gmail.com' || c === 'ceo@panterstudio.lat' || c === 'admin@psgd.me' || c === 'founder_ceo';
+    };
+    return isCeo(user?.username) ||
+           isCeo(user?.displayName) ||
+           isCeo(user?.globalName) ||
+           isCeo(user?.email) ||
+           isCeo(user?.role) ||
+           isCeo(profile?.username) ||
+           isCeo(profile?.nombre_usuario) ||
+           isCeo(profile?.displayName) ||
+           isCeo(profile?.email) ||
+           isCeo(profile?.role);
 }
 
 function setCeoMessage(message, isError = false) {
@@ -148,6 +247,8 @@ function addEmailToIndex(indexMap, email, patch = {}) {
         uid: '',
         email: normalizedEmail,
         name: '',
+        username: '',
+        avatarUrl: '',
         role: 'usuario',
         isAdmin: false,
         sources: new Set()
@@ -155,6 +256,8 @@ function addEmailToIndex(indexMap, email, patch = {}) {
 
     if (patch.uid) current.uid = patch.uid;
     if (patch.name) current.name = patch.name;
+    if (patch.username) current.username = patch.username;
+    if (patch.avatarUrl) current.avatarUrl = patch.avatarUrl;
     if (patch.role) current.role = patch.role;
     if (typeof patch.isAdmin === 'boolean') current.isAdmin = patch.isAdmin;
     if (Array.isArray(patch.sources)) {
@@ -169,24 +272,36 @@ function addEmailToIndex(indexMap, email, patch = {}) {
     indexMap.set(normalizedEmail, current);
 }
 
-function createRoleOptions(selectedRole) {
-    const normalized = normalizeRole(selectedRole);
-    return Object.entries(CEO_ASSIGNABLE_ROLES)
-        .map(([value, label]) => `<option value="${value}"${value === normalized ? ' selected' : ''}>${label}</option>`)
-        .join('');
-}
-
-// Role visual config for account cards
-const ROLE_CARD_STYLES = {
-    founder_ceo:   { color: '#fbbf24', border: 'rgba(251,191,36,0.4)',   bg: 'rgba(251,191,36,0.08)',  icon: '👑' },
-    director:      { color: '#f87171', border: 'rgba(248,113,113,0.4)', bg: 'rgba(248,113,113,0.08)', icon: '🔴' },
-    administrador: { color: '#22d3ee', border: 'rgba(34,211,238,0.4)',  bg: 'rgba(34,211,238,0.08)',  icon: '🛡️' },
-    programador:   { color: '#60a5fa', border: 'rgba(96,165,250,0.4)',  bg: 'rgba(96,165,250,0.08)',  icon: '💻' },
-    modelador:     { color: '#a78bfa', border: 'rgba(167,139,250,0.4)', bg: 'rgba(167,139,250,0.08)', icon: '🎨' },
-    vip:           { color: '#34d399', border: 'rgba(52,211,153,0.4)',  bg: 'rgba(52,211,153,0.08)',  icon: '⭐' },
-    usuario:       { color: '#94a3b8', border: 'rgba(148,163,184,0.2)', bg: 'rgba(148,163,184,0.05)', icon: '👤' },
-    viewer:        { color: '#64748b', border: 'rgba(100,116,139,0.2)', bg: 'rgba(100,116,139,0.05)', icon: '👁️' },
+// Role visual config for account cards (espejo de roles.js / paleta oficial)
+const ROLE_CARD_FALLBACK = {
+    founder_ceo:   { color: '#f1c40f', border: 'rgba(241,196,15,0.4)',   bg: 'rgba(241,196,15,0.08)',  icon: '<i class="fa-solid fa-crown" aria-hidden="true"></i>' },
+    director:      { color: '#ff0000', border: 'rgba(255,0,0,0.4)',      bg: 'rgba(255,0,0,0.08)',     icon: '<i class="fa-solid fa-user-tie" aria-hidden="true"></i>' },
+    administrador: { color: '#f1c40f', border: 'rgba(241,196,15,0.4)',   bg: 'rgba(241,196,15,0.08)',  icon: '<i class="fa-solid fa-shield-halved" aria-hidden="true"></i>' },
+    soporte:       { color: '#00a715', border: 'rgba(0,167,21,0.4)',     bg: 'rgba(0,167,21,0.08)',    icon: '<i class="fa-solid fa-headset" aria-hidden="true"></i>' },
+    programador:   { color: '#ffbc00', border: 'rgba(255,188,0,0.4)',    bg: 'rgba(255,188,0,0.08)',   icon: '<i class="fa-solid fa-code" aria-hidden="true"></i>' },
+    modelador:     { color: '#6f5cff', border: 'rgba(111,92,255,0.4)',   bg: 'rgba(111,92,255,0.08)',  icon: '<i class="fa-solid fa-cube" aria-hidden="true"></i>' },
+    moderador:     { color: '#e67e22', border: 'rgba(230,126,34,0.4)',   bg: 'rgba(230,126,34,0.08)',  icon: '<i class="fa-solid fa-gavel" aria-hidden="true"></i>' },
+    creador_contenido: { color: '#9d00ff', border: 'rgba(157,0,255,0.4)', bg: 'rgba(157,0,255,0.08)', icon: '<i class="fa-solid fa-photo-film" aria-hidden="true"></i>' },
+    vip:           { color: '#ff7ddf', border: 'rgba(255,125,223,0.4)',  bg: 'rgba(255,125,223,0.08)', icon: '<i class="fa-solid fa-star" aria-hidden="true"></i>' },
+    usuario:       { color: '#0055ff', border: 'rgba(0,85,255,0.3)',     bg: 'rgba(0,85,255,0.06)',    icon: '<i class="fa-solid fa-user" aria-hidden="true"></i>' },
+    viewer:        { color: '#64748b', border: 'rgba(100,116,139,0.2)',  bg: 'rgba(100,116,139,0.05)', icon: '<i class="fa-solid fa-eye" aria-hidden="true"></i>' },
 };
+
+const ROLE_CARD_STYLES = (function buildRoleCardStyles() {
+    const R = window.PanterRoles || null;
+    if (!R || !R.ROLE_DEFS) return ROLE_CARD_FALLBACK;
+    const out = Object.assign({}, ROLE_CARD_FALLBACK);
+    Object.values(R.ROLE_DEFS).forEach(def => {
+        if (!def || !def.id) return;
+        out[def.id] = {
+            color: def.color,
+            border: def.border,
+            bg: def.bg,
+            icon: `<i class="${def.icon}" aria-hidden="true"></i>`
+        };
+    });
+    return out;
+})();
 
 function getInitials(name, email) {
     if (name && name.trim()) {
@@ -214,7 +329,7 @@ function renderCeoUsersTable(filterText = '') {
     if (rows.length === 0) {
         container.innerHTML = `
             <div class="accounts-empty">
-                <div style="font-size:2.5rem; margin-bottom:0.75rem;">🔍</div>
+                <div style="font-size:2.5rem; margin-bottom:0.75rem;"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></div>
                 <div style="font-size:0.9rem; color:var(--admin-text-muted);">No se encontraron usuarios.</div>
             </div>`;
         return;
@@ -224,7 +339,10 @@ function renderCeoUsersTable(filterText = '') {
         const isFounder = isFounderEmail(user.email);
         const canAssignRole = Boolean(user.uid);
         const rowRole = isFounder ? 'founder_ceo' : normalizeRole(user.role);
-        const style = ROLE_CARD_STYLES[rowRole] || ROLE_CARD_STYLES.usuario;
+        const roleDef = window.PanterRoles ? window.PanterRoles.get(rowRole) : null;
+        const style = roleDef
+            ? { color: roleDef.color, border: roleDef.border, bg: roleDef.bg, icon: `<i class="${roleDef.icon}" aria-hidden="true"></i>` }
+            : (ROLE_CARD_STYLES[rowRole] || ROLE_CARD_STYLES.usuario);
         const roleLabel = isFounder ? 'Fundador / CEO'
                         : (canAssignRole ? (getRoleLabel(rowRole)) : 'Sin cuenta');
         const sources = Array.from(user.sources || []);
@@ -250,27 +368,21 @@ function renderCeoUsersTable(filterText = '') {
                 </span>
             </div>
 
-            <!-- Role editor (disabled for founder / no account) -->
-            <div class="account-card-bottom ${isFounder || !canAssignRole ? 'account-card-locked' : ''}">
+            <!-- Acciones del directorio -->
+            <div class="account-card-bottom ${isFounder ? 'account-card-locked' : ''}">
                 ${isFounder ? `
                     <div class="account-locked-msg">
-                        👑 Cuenta fundadora — no modificable
-                    </div>
-                ` : !canAssignRole ? `
-                    <div class="account-locked-msg">
-                        ⚠️ Sin cuenta registrada — no se puede asignar rol
+                        <i class="fa-solid fa-crown" aria-hidden="true"></i> Cuenta fundadora — directorio de solo lectura
                     </div>
                 ` : `
-                    <div class="account-role-editor">
-                        <label class="account-role-label">Asignar nuevo rol</label>
-                        <div class="account-role-row">
-                            <select class="account-role-select" data-role-select="${user.uid}">
-                                ${createRoleOptions(rowRole)}
-                            </select>
-                            <button class="account-save-btn" data-role-save="${user.uid}">
-                                💾 Guardar
-                            </button>
-                        </div>
+                    <div class="account-card-actions">
+                        <button type="button" class="account-manage-btn" data-manage-staff="${user.uid}"
+                            ${canAssignRole ? '' : 'disabled title="Este correo no tiene una cuenta registrada."'}>
+                            <i class="fa-solid fa-user-gear" aria-hidden="true"></i> Gestionar en Personal
+                        </button>
+                        <button type="button" class="account-delete-btn" data-user-delete="${user.uid}" title="Eliminar este usuario de Firestore">
+                            <i class="fa-solid fa-trash" aria-hidden="true"></i> Eliminar usuario
+                        </button>
                     </div>
                 `}
             </div>
@@ -295,12 +407,15 @@ async function loadCeoUsers() {
         const usersSnapshot = await window.getDocs(window.collection(window.db, 'conductores'));
         usersSnapshot.docs.forEach((docSnap) => {
             const data = docSnap.data() || {};
+            if (data.eliminado === true) return;
             const email = String(data.email || '').trim().toLowerCase();
             if (!isValidEmailValue(email)) return;
 
             addEmailToIndex(emailIndexMap, email, {
                 uid: docSnap.id,
                 name: String(data.username || data.displayName || '').trim(),
+                username: String(data.username || '').trim(),
+                avatarUrl: String(data.avatarUrl || data.photoURL || data.avatarImg || '').trim(),
                 role: isFounderEmail(email) ? 'founder_ceo' : normalizeRole(data.role),
                 isAdmin: Boolean(data.isAdmin),
                 sources: ['conductores']
@@ -324,6 +439,7 @@ async function loadCeoUsers() {
             if (!snap) return;
             snap.docs.forEach((docSnap) => {
                 const data = docSnap.data() || {};
+                if (data.eliminado === true) return;
                 const email = String(data.email || '').trim().toLowerCase();
                 if (isValidEmailValue(email)) {
                     addEmailToIndex(emailIndexMap, email, { sources: [collectionName] });
@@ -343,40 +459,229 @@ async function loadCeoUsers() {
     }
 }
 
-async function saveCeoUserRole(uid, role) {
-    if (!window.db || !window.fsDoc || !window.setDoc) {
-        setCeoMessage('No se pudo actualizar el rol: Firebase no esta listo.', true);
+function describeFirestoreFailure(error) {
+    const code = String(error && error.code || '').toLowerCase();
+    const raw = String(error && error.message || error || '');
+    const message = raw.toLowerCase();
+
+    if (code.includes('permission-denied') || message.includes('missing or insufficient permissions')) {
+        return {
+            kind: 'permission',
+            text: 'Firestore rechazó la operación (permission-denied): faltan desplegar las reglas de seguridad actualizadas.'
+        };
+    }
+    if (code.includes('unavailable') || message.includes('unavailable') || message.includes('failed to get document') || message.includes('network')) {
+        return {
+            kind: 'network',
+            text: 'No se pudo conectar con Firestore (unavailable). Revisa la conexión e inténtalo de nuevo.'
+        };
+    }
+    if (code.includes('unauthenticated') || message.includes('unauthenticated')) {
+        return {
+            kind: 'auth',
+            text: 'La sesión no está autenticada en Firebase (unauthenticated). Inicia sesión de nuevo.'
+        };
+    }
+    return {
+        kind: 'error',
+        text: `Error de Firestore (${code || 'desconocido'}): ${raw.slice(0, 160) || 'sin detalle'}`
+    };
+}
+
+async function removeCeoUserDocument(uid) {
+    if (!window.db || !window.fsDoc) {
+        throw new Error('Firestore no disponible');
+    }
+
+    let deleteError = null;
+    if (typeof window.deleteDoc === 'function') {
+        try {
+            await window.deleteDoc(window.fsDoc(window.db, 'conductores', uid));
+            return { mode: 'deleted', error: null };
+        } catch (error) {
+            deleteError = error;
+            console.warn('No se pudo borrar el documento; se intenta borrado lógico:', error);
+        }
+    }
+
+    if (typeof window.setDoc === 'function') {
+        try {
+            await window.setDoc(window.fsDoc(window.db, 'conductores', uid), {
+                eliminado: true,
+                eliminadoEn: new Date().toISOString(),
+                eliminadoPor: currentUser ? (currentUser.uid || currentUser.email || 'admin') : 'admin'
+            }, { merge: true });
+            return { mode: 'soft', error: deleteError };
+        } catch (error) {
+            throw error || deleteError;
+        }
+    }
+
+    throw deleteError || new Error('No hay un método de borrado disponible');
+}
+
+function findCeoUser(uid) {
+    return ceoUsersList.find((item) => String(item.uid) === String(uid)) || null;
+}
+
+function isProtectedCeoUser(item) {
+    if (!item) return true;
+    return isFounderEmail(item.email) || normalizeRole(item.role) === 'founder_ceo';
+}
+
+function setCeoDeleteMessage(text, isError = false) {
+    const el = document.getElementById('ceoDeleteUserMsg');
+    if (!el) return;
+    el.textContent = text || '';
+    el.style.color = isError ? '#fca5a5' : '#fbbf24';
+}
+
+let pendingCeoDeleteUid = null;
+
+function openCeoDeleteModal(uid) {
+    const item = findCeoUser(uid);
+    if (!item || !item.uid) {
+        setCeoMessage('No se pudo identificar la cuenta a eliminar.', true);
+        return;
+    }
+    if (isProtectedCeoUser(item)) {
+        setCeoMessage('La cuenta Fundador/CEO está protegida y no puede eliminarse.', true);
         return;
     }
 
-    const normalizedRole = normalizeRole(role);
-    const userItem = ceoUsersList.find((item) => item.uid === uid);
-    if (!userItem) return;
-    if (!userItem.uid) {
-        setCeoMessage('Este correo no tiene cuenta en conductores. No se puede asignar rol.', true);
-        return;
+    pendingCeoDeleteUid = String(item.uid);
+
+    const nameEl = document.getElementById('ceoDeleteUserName');
+    const detailEl = document.getElementById('ceoDeleteUserDetail');
+    if (nameEl) nameEl.textContent = item.name || item.email || item.uid;
+    if (detailEl) detailEl.textContent = [item.email || 'Sin correo', item.uid].filter(Boolean).join(' · ');
+
+    setCeoDeleteMessage('');
+
+    const confirmBtn = document.getElementById('ceoDeleteConfirmBtn');
+    if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '<i class="fa-solid fa-trash" aria-hidden="true"></i> Eliminar usuario';
     }
-    if (isFounderEmail(userItem.email)) {
-        setCeoMessage('La cuenta Fundador/CEO no puede ser modificada.', true);
-        return;
+
+    const modal = document.getElementById('ceoDeleteUserModal');
+    if (modal) modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    confirmBtn?.focus();
+}
+
+function closeCeoDeleteModal() {
+    pendingCeoDeleteUid = null;
+    const modal = document.getElementById('ceoDeleteUserModal');
+    if (modal) modal.classList.remove('open');
+    document.body.style.overflow = '';
+    setCeoDeleteMessage('');
+}
+
+function isCurrentSessionUser(item) {
+    if (!item) return false;
+    const targetUid = String(item.uid || '');
+    const targetEmail = String(item.email || '').trim().toLowerCase();
+
+    const sessionUid = currentUser ? String(currentUser.uid || '') : '';
+    const sessionEmail = currentUser ? String(currentUser.email || '').trim().toLowerCase() : '';
+    if ((sessionUid && targetUid && sessionUid === targetUid) || (sessionEmail && targetEmail && sessionEmail === targetEmail)) {
+        return true;
     }
 
     try {
-        await window.setDoc(window.fsDoc(window.db, 'conductores', uid), {
-            role: normalizedRole,
-            isAdmin: canRoleAccessPanel(normalizedRole),
-            roleUpdatedAt: new Date().toISOString(),
-            roleUpdatedBy: currentUser?.uid || ''
-        }, { merge: true });
+        const discordUser = window.DiscordAuth && typeof window.DiscordAuth.getUser === 'function'
+            ? window.DiscordAuth.getUser()
+            : null;
+        if (discordUser) {
+            const discordUid = String(discordUser.uid || '');
+            const discordEmail = String(discordUser.email || '').trim().toLowerCase();
+            if ((discordUid && targetUid && discordUid === targetUid) || (discordEmail && targetEmail && discordEmail === targetEmail)) {
+                return true;
+            }
+        }
+    } catch (e) { /* sesión de Discord no disponible */ }
 
-        userItem.role = normalizedRole;
-        userItem.isAdmin = canRoleAccessPanel(normalizedRole);
+    return false;
+}
 
+function clearSessionAfterUserDeletion() {
+    try {
+        localStorage.removeItem('discord_user_session');
+        localStorage.removeItem('discord_access_token_store');
+        localStorage.removeItem('ps_local_profile');
+        sessionStorage.removeItem('discord_access_token');
+        sessionStorage.removeItem('panterDiscordGuildContext');
+    } catch (e) {
+        console.warn('No se pudo limpiar la sesión local:', e);
+    }
+    clearStoredSession();
+    try {
+        if (window.DiscordAuth && typeof window.DiscordAuth.logout === 'function') {
+            window.DiscordAuth.logout();
+        }
+    } catch (e) { /* ignore */ }
+    currentUser = null;
+}
+
+async function confirmCeoUserDeletion() {
+    const uid = pendingCeoDeleteUid;
+    if (!uid) return;
+
+    const item = findCeoUser(uid);
+    if (!item) {
+        closeCeoDeleteModal();
+        setCeoMessage('La cuenta ya no está en la lista.', true);
+        return;
+    }
+    if (isProtectedCeoUser(item)) {
+        closeCeoDeleteModal();
+        setCeoMessage('La cuenta Fundador/CEO está protegida y no puede eliminarse.', true);
+        return;
+    }
+
+    const confirmBtn = document.getElementById('ceoDeleteConfirmBtn');
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> Eliminando...';
+    }
+    setCeoDeleteMessage('');
+
+    const closesCurrentSession = isCurrentSessionUser(item);
+
+    try {
+        const result = await removeCeoUserDocument(uid);
+        ceoUsersList = ceoUsersList.filter((entry) => String(entry.uid) !== String(uid));
         renderCeoUsersTable(ceoEmailSearchInput?.value || '');
-        setCeoMessage(`Rol actualizado: ${userItem.email} -> ${ROLE_LABELS[normalizedRole]}`);
-    } catch (err) {
-        console.error('Error guardando rol CEO:', err);
-        setCeoMessage('No se pudo guardar el rol. Revisa permisos.', true);
+        closeCeoDeleteModal();
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="fa-solid fa-trash" aria-hidden="true"></i> Eliminar usuario';
+        }
+
+        if (result.mode === 'soft') {
+            const detail = describeFirestoreFailure(result.error);
+            setCeoMessage(`Cuenta marcada como eliminada (borrado lógico). ${detail.text}`.trim(), true);
+        } else {
+            setCeoMessage(`Cuenta eliminada: ${item.email || uid}`);
+        }
+
+        if (closesCurrentSession) {
+            clearSessionAfterUserDeletion();
+            setCeoMessage('Tu propia cuenta fue eliminada. Cerrando sesión...', true);
+            window.setTimeout(() => {
+                window.location.href = toSitePath('index.html');
+            }, 1400);
+        }
+    } catch (error) {
+        console.error('No se pudo eliminar la cuenta:', error);
+        const detail = describeFirestoreFailure(error);
+        setCeoDeleteMessage(detail.text, true);
+        setCeoMessage(`No se pudo eliminar la cuenta: ${detail.text}`, true);
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="fa-solid fa-trash" aria-hidden="true"></i> Reintentar';
+        }
     }
 }
 
@@ -385,16 +690,66 @@ function bindCeoRoleActions() {
     if (!container) return;
 
     container.addEventListener('click', (event) => {
-        const target = event.target.closest('[data-role-save]');
-        if (!target) return;
+        const manageBtn = event.target.closest('[data-manage-staff]');
+        if (manageBtn) {
+            event.preventDefault();
+            manageCeoUserInStaff(manageBtn.getAttribute('data-manage-staff'));
+            return;
+        }
 
-        const saveUid = target.getAttribute('data-role-save');
-        if (!saveUid) return;
-
-        const selectEl = container.querySelector(`[data-role-select="${saveUid}"]`);
-        if (!(selectEl instanceof HTMLSelectElement)) return;
-        saveCeoUserRole(saveUid, selectEl.value);
+        const deleteBtn = event.target.closest('[data-user-delete]');
+        if (deleteBtn) {
+            event.preventDefault();
+            openCeoDeleteModal(deleteBtn.getAttribute('data-user-delete'));
+        }
     });
+
+    document.getElementById('ceoDeleteCancelBtn')?.addEventListener('click', closeCeoDeleteModal);
+    document.getElementById('ceoDeleteConfirmBtn')?.addEventListener('click', confirmCeoUserDeletion);
+    document.getElementById('ceoDeleteUserModal')?.addEventListener('click', (event) => {
+        if (event.target && event.target.id === 'ceoDeleteUserModal') {
+            closeCeoDeleteModal();
+        }
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        const modal = document.getElementById('ceoDeleteUserModal');
+        if (modal && modal.classList.contains('open')) {
+            closeCeoDeleteModal();
+        }
+    });
+}
+
+/**
+ * Lleva una cuenta del directorio CEO al módulo Personal, cargando sus datos
+ * en el formulario integrado del equipo.
+ */
+function manageCeoUserInStaff(uid) {
+    const item = findCeoUser(uid);
+    if (!item || !item.uid) {
+        setCeoMessage('No se pudo identificar la cuenta para gestionarla.', true);
+        return;
+    }
+
+    const staffTab = document.querySelector('.sidebar-tab[data-tab="staff"]');
+    if (staffTab instanceof HTMLElement) staffTab.click();
+
+    const member = {
+        uid: item.uid,
+        nombre: item.name || item.username || item.email || 'Miembro',
+        username: item.username || '',
+        avatarUrl: item.avatarUrl || '',
+        role: normalizeRole(item.role),
+        estado: 'online',
+        orden: 999,
+        especialidad: '',
+        descripcion: ''
+    };
+
+    window.setTimeout(() => {
+        fillStaffForm(member);
+        staffSetMessage('Completa el rango, la especialidad y guarda para añadirlo al equipo.', 'info');
+    }, 80);
 }
 
 // ---------- Beta Testers Management ----------
@@ -427,15 +782,15 @@ async function loadBetaTesters() {
 
         listContainer.innerHTML = applicants.map((app) => {
             const status = app.betaTesterStatus || 'pending';
-            let statusLabel = 'Pendiente 🟡';
-            if (status === 'approved') statusLabel = 'Aprobado 🟢';
-            if (status === 'rejected') statusLabel = 'Rechazado 🔴';
+            let statusLabel = 'Pendiente <i class="fa-solid fa-circle" style="color:#facc15" aria-hidden="true"></i>';
+            if (status === 'approved') statusLabel = 'Aprobado <i class="fa-solid fa-circle" style="color:#22c55e" aria-hidden="true"></i>';
+            if (status === 'rejected') statusLabel = 'Rechazado <i class="fa-solid fa-circle" style="color:#ef4444" aria-hidden="true"></i>';
 
             const skills = [];
-            if (app.betaTesterSkillBugs) skills.push('🐛 Reportar Bugs');
-            if (app.betaTesterSkillHours) skills.push('⏰ +5 horas/sem');
-            if (app.betaTesterSkillRecord) skills.push('📹 Grabar Pantalla');
-            if (app.betaTesterSkillDiscord) skills.push('💬 Discord Activo');
+            if (app.betaTesterSkillBugs) skills.push('<i class="fa-solid fa-bug" aria-hidden="true"></i> Reportar Bugs');
+            if (app.betaTesterSkillHours) skills.push('<i class="fa-solid fa-clock" aria-hidden="true"></i> +5 horas/sem');
+            if (app.betaTesterSkillRecord) skills.push('<i class="fa-solid fa-video" aria-hidden="true"></i> Grabar Pantalla');
+            if (app.betaTesterSkillDiscord) skills.push('<i class="fa-solid fa-comment-dots" aria-hidden="true"></i> Discord Activo');
 
             const skillsHtml = skills.length
                 ? skills.map(s => `<span class="admin-role-pill" style="font-size:0.75rem;">${s}</span>`).join(' ')
@@ -451,9 +806,9 @@ async function loadBetaTesters() {
                         <span id="status-badge-${app.uid}"><span class="status-badge status-${status}">${statusLabel}</span></span>
                     </div>
                     <div class="beta-card-specs">
-                        <span class="spec-badge">📱 ${app.betaTesterDevice || 'Android'}</span>
-                        <span class="spec-badge">💾 RAM: ${app.betaTesterRAM || 'N/A'}</span>
-                        <span class="spec-badge">🤖 Version: ${app.betaTesterAndroidVersion || 'N/A'}</span>
+                        <span class="spec-badge"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> ${app.betaTesterDevice || 'Android'}</span>
+                        <span class="spec-badge"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> RAM: ${app.betaTesterRAM || 'N/A'}</span>
+                        <span class="spec-badge"><i class="fa-solid fa-robot" aria-hidden="true"></i> Version: ${app.betaTesterAndroidVersion || 'N/A'}</span>
                     </div>
                     <div class="beta-card-skills" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
                         ${skillsHtml}
@@ -463,8 +818,8 @@ async function loadBetaTesters() {
                         ${app.betaTesterWhy || 'Sin respuesta.'}
                     </div>
                     <div class="beta-card-actions">
-                        <button class="btn btn-sm btn-block" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: #a7f3d0;" onclick="setBetaStatus('${app.uid}', 'approved')">Aprobar 🟢</button>
-                        <button class="btn btn-sm btn-block btn-danger" onclick="setBetaStatus('${app.uid}', 'rejected')">Rechazar 🔴</button>
+                        <button class="btn btn-sm btn-block" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: #a7f3d0;" onclick="setBetaStatus('${app.uid}', 'approved')">Aprobar <i class="fa-solid fa-circle" style="color:#22c55e" aria-hidden="true"></i></button>
+                        <button class="btn btn-sm btn-block btn-danger" onclick="setBetaStatus('${app.uid}', 'rejected')">Rechazar <i class="fa-solid fa-circle" style="color:#ef4444" aria-hidden="true"></i></button>
                     </div>
                 </div>
             `;
@@ -486,9 +841,9 @@ window.setBetaStatus = async function(uid, status) {
 
         const badge = document.getElementById(`status-badge-${uid}`);
         if (badge) {
-            let label = 'Pendiente 🟡';
-            if (status === 'approved') label = 'Aprobado 🟢';
-            if (status === 'rejected') label = 'Rechazado 🔴';
+            let label = 'Pendiente <i class="fa-solid fa-circle" style="color:#facc15" aria-hidden="true"></i>';
+            if (status === 'approved') label = 'Aprobado <i class="fa-solid fa-circle" style="color:#22c55e" aria-hidden="true"></i>';
+            if (status === 'rejected') label = 'Rechazado <i class="fa-solid fa-circle" style="color:#ef4444" aria-hidden="true"></i>';
             badge.innerHTML = `<span class="status-badge status-${status}">${label}</span>`;
         }
 
@@ -531,7 +886,7 @@ async function calculateStats() {
         if (tu) tu.textContent = totalUsers;
         if (tb) tb.textContent = totalBetas;
         if (ab) ab.textContent = approvedBetas;
-        if (tc) tc.textContent = `${totalCoins.toLocaleString('es-ES')} 🪙`;
+        if (tc) tc.innerHTML = `${totalCoins.toLocaleString('es-ES')} <i class="fa-solid fa-coins" aria-hidden="true"></i>`;
     } catch (err) {
         console.warn('Error calculando estadisticas:', err);
     }
@@ -549,7 +904,7 @@ async function searchSupportUser() {
 
     const query = searchInput.value.trim().toLowerCase();
     if (!query) {
-        msg.textContent = '⚠️ Introduce un nombre, apodo o correo válido.';
+        msg.textContent = ' Introduce un nombre, apodo o correo válido.';
         card.hidden = true;
         return;
     }
@@ -581,7 +936,7 @@ async function searchSupportUser() {
         });
 
         if (foundUsers.length === 0) {
-            msg.textContent = '❌ Jugador no encontrado.';
+            msg.textContent = ' Jugador no encontrado.';
             return;
         }
 
@@ -623,7 +978,7 @@ function displaySelectedSupportUser(user) {
     // Set fields
     document.getElementById('editSupportDisplayName').value = user.displayName || '';
     document.getElementById('editSupportUsername').value = user.username || '';
-    document.getElementById('editSupportAvatar').value = user.avatar || '😊';
+    document.getElementById('editSupportAvatar').value = user.avatar || '';
     document.getElementById('editSupportAvatarImg').value = user.avatarImg || '';
     document.getElementById('editSupportCountry').value = user.country || '';
 
@@ -707,13 +1062,13 @@ async function saveSupportUserChanges() {
 
         await window.setDoc(userDocRef, updateData, { merge: true });
 
-        actionMsg.textContent = '✅ Todos los cambios se guardaron exitosamente en la base de datos.';
+        actionMsg.textContent = ' Todos los cambios se guardaron exitosamente en la base de datos.';
         actionMsg.className = 'admin-message success';
 
         calculateStats();
     } catch (err) {
         console.error('Error guardando soporte:', err);
-        actionMsg.textContent = '❌ No se pudieron guardar los cambios.';
+        actionMsg.textContent = ' No se pudieron guardar los cambios.';
         actionMsg.className = 'admin-message error';
     }
 }
@@ -735,11 +1090,11 @@ async function resetCooldown(type) {
         }
         await window.setDoc(userDocRef, updateField, { merge: true });
         
-        actionMsg.textContent = `✅ Cooldown de ${type === 'work' ? 'Trabajo 💼' : 'Riesgo ⚠️'} reiniciado con éxito.`;
+        actionMsg.textContent = ` Cooldown de ${type === 'work' ? 'Trabajo ' : 'Riesgo '} reiniciado con éxito.`;
         actionMsg.className = 'admin-message success';
     } catch (err) {
         console.error(err);
-        actionMsg.textContent = '❌ Error al reiniciar cooldown.';
+        actionMsg.textContent = ' Error al reiniciar cooldown.';
         actionMsg.className = 'admin-message error';
     }
 }
@@ -777,16 +1132,16 @@ async function loadGlobalRedeemLogs() {
             const emeralds = data.esmeraldas || data.emeralds || 0;
             const status = data.status || 'completed';
             
-            let statusBadge = '<span class="status-badge status-approved">Completado 🟢</span>';
-            if (status === 'pending') statusBadge = '<span class="status-badge status-pending">Pendiente 🟡</span>';
-            if (status === 'failed' || status === 'rejected') statusBadge = '<span class="status-badge status-rejected">Error 🔴</span>';
+            let statusBadge = '<span class="status-badge status-approved">Completado <i class="fa-solid fa-circle" style="color:#22c55e" aria-hidden="true"></i></span>';
+            if (status === 'pending') statusBadge = '<span class="status-badge status-pending">Pendiente <i class="fa-solid fa-circle" style="color:#facc15" aria-hidden="true"></i></span>';
+            if (status === 'failed' || status === 'rejected') statusBadge = '<span class="status-badge status-rejected">Error <i class="fa-solid fa-circle" style="color:#ef4444" aria-hidden="true"></i></span>';
 
             tbody.innerHTML += `
                 <tr>
                     <td>${date}</td>
                     <td><strong>${player}</strong><br><small style="color:var(--admin-text-muted);">${data.email || ''}</small></td>
-                    <td style="color:#fbbf24; font-weight:700;">🪙 ${coins}</td>
-                    <td style="color:#00b0ff; font-weight:700;">💎 ${emeralds}</td>
+                    <td style="color:#fbbf24; font-weight:700;"><i class="fa-solid fa-coins" aria-hidden="true"></i> ${coins}</td>
+                    <td style="color:#00b0ff; font-weight:700;"><i class="fa-solid fa-gem" aria-hidden="true"></i> ${emeralds}</td>
                     <td>${statusBadge}</td>
                 </tr>
             `;
@@ -865,9 +1220,30 @@ function playWelcomeAnimation(user, role) {
 }
 
 async function resolveUserAccess(user) {
+    if (!user) return { isAdmin: false, role: 'usuario' };
     const email = String(user?.email || '').trim().toLowerCase();
-    const isFounder = email === FOUNDER_CEO_EMAIL;
+    const uname = String(user?.username || '').trim().toLowerCase();
 
+    // Asegura que la jerarquía y los permisos personalizados estén cargados
+    // antes de decidir si la cuenta puede entrar al panel.
+    if (window.PanterRoles && typeof window.PanterRoles.loadRoleConfig === 'function') {
+        try { await window.PanterRoles.loadRoleConfig(true); } catch (e) { /* sin conexión */ }
+    }
+
+    if (PRESET_ADMIN_ACCOUNTS[email]) {
+        const preset = PRESET_ADMIN_ACCOUNTS[email];
+        return { isAdmin: true, role: preset.role };
+    }
+    if (uname && PRESET_ADMIN_ACCOUNTS[uname]) {
+        const preset = PRESET_ADMIN_ACCOUNTS[uname];
+        return { isAdmin: true, role: preset.role };
+    }
+
+    if (isCeoAccount(user)) {
+        return { isAdmin: true, role: 'founder_ceo' };
+    }
+
+    const isFounder = isFounderEmail(email);
     if (isFounder) {
         return { isAdmin: true, role: 'founder_ceo' };
     }
@@ -884,6 +1260,10 @@ async function resolveUserAccess(user) {
         } catch (err) {
             console.error('No se pudo leer perfil de usuario para rol admin:', err);
         }
+    }
+
+    if (isCeoAccount(user, profileData)) {
+        return { isAdmin: true, role: 'founder_ceo' };
     }
 
     const isAdminByList = getAdminEmails().includes(email);
@@ -914,9 +1294,74 @@ function updateProfileUI(user, role) {
 }
 
 function setupCeoTools(user, role) {
-    const isCeo = isFounderEmail(user?.email) || normalizeRole(role) === 'founder_ceo';
+    const isCeo = isCeoAccount(user) || isFounderEmail(user?.email) || normalizeRole(role) === 'founder_ceo';
     if (sidebarAccountsTab) {
         sidebarAccountsTab.hidden = !isCeo;
+    }
+}
+
+async function handleEmailPasswordLogin(emailInput, passwordInput) {
+    const email = String(emailInput || '').trim().toLowerCase();
+    const password = String(passwordInput || '').trim();
+
+    if (!email || !password) {
+        if (gateMessage) {
+            gateMessage.textContent = ' Por favor ingresa tu correo y contraseña.';
+            gateMessage.className = 'admin-message error';
+        }
+        return;
+    }
+
+    if (gateMessage) {
+        gateMessage.textContent = 'Verificando credenciales...';
+        gateMessage.className = 'admin-message';
+    }
+
+    // 1. Verificar cuentas de administrador configuradas
+    if (PRESET_ADMIN_ACCOUNTS[email]) {
+        const preset = PRESET_ADMIN_ACCOUNTS[email];
+        if (preset.password === password) {
+            const sessionUser = {
+                uid: preset.uid,
+                email: preset.email,
+                displayName: preset.displayName,
+                role: preset.role,
+                isAdmin: true
+            };
+            saveStoredSession(sessionUser);
+            currentUser = sessionUser;
+            updateProfileUI(sessionUser, preset.role);
+            showPanel();
+            playWelcomeAnimation(sessionUser, preset.role);
+            setupCeoTools(sessionUser, preset.role);
+            calculateStats();
+            loadBetaTesters();
+            if (gateMessage) gateMessage.textContent = '';
+            return;
+        } else {
+            if (gateMessage) {
+                gateMessage.textContent = ' Contraseña incorrecta para ' + email;
+                gateMessage.className = 'admin-message error';
+            }
+            return;
+        }
+    }
+
+    // 2. Intentar autenticación con Firebase Email/Password Auth
+    if (window.auth && window.signInWithEmailAndPassword) {
+        try {
+            const userCredential = await window.signInWithEmailAndPassword(window.auth, email, password);
+            const user = userCredential.user;
+            await handleAuthStateChange(user);
+            return;
+        } catch (err) {
+            console.warn('Firebase signInWithEmailAndPassword error:', err);
+        }
+    }
+
+    if (gateMessage) {
+        gateMessage.textContent = ' Correo o contraseña no válidos para el panel.';
+        gateMessage.className = 'admin-message error';
     }
 }
 
@@ -925,8 +1370,21 @@ async function handleAuthStateChange(user) {
     const loginBtn = document.getElementById('adminLoginBtn');
 
     if (!user) {
+        const storedSession = getStoredSession();
+        if (storedSession && storedSession.isAdmin) {
+            currentUser = storedSession;
+            updateProfileUI(storedSession, storedSession.role);
+            showPanel();
+            setupCeoTools(storedSession, storedSession.role);
+            calculateStats();
+            loadBetaTesters();
+            if (gateMessage) gateMessage.textContent = '';
+            return;
+        }
+
         if (gateMessage) {
-            gateMessage.textContent = 'Inicia sesión con tu cuenta de administrador de Google.';
+            gateMessage.textContent = 'Ingresa tus credenciales de administrador';
+            gateMessage.className = 'admin-message';
         }
         if (loginBtn) {
             loginBtn.style.display = 'block';
@@ -942,8 +1400,8 @@ async function handleAuthStateChange(user) {
 
     if (!isAdmin) {
         if (gateMessage) {
-            gateMessage.textContent = '❌ Tu cuenta (' + user.email + ') no tiene permisos de administrador.';
-            gateMessage.style.color = 'red';
+            gateMessage.textContent = ' Tu cuenta (' + user.email + ') no tiene permisos de administrador.';
+            gateMessage.className = 'admin-message error';
         }
         if (loginBtn) {
             loginBtn.style.display = 'block';
@@ -955,17 +1413,25 @@ async function handleAuthStateChange(user) {
         gateMessage.textContent = '';
     }
 
+    saveStoredSession({
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName || user.email,
+        role,
+        isAdmin: true
+    });
+
     updateProfileUI(user, role);
     showPanel();
     playWelcomeAnimation(user, role);
     setupCeoTools(user, role);
 
-    // Initial load statistics & active beta testers tab checks
     calculateStats();
     loadBetaTesters();
 }
 
 async function handleLogout() {
+    clearStoredSession();
     try {
         if (window.auth && window.signOut) {
             await window.signOut(window.auth);
@@ -982,6 +1448,16 @@ function bindEvents() {
     if (goHomeBtn) {
         goHomeBtn.addEventListener('click', () => {
             window.location.replace(toSitePath('index.html'));
+        });
+    }
+
+    const adminLoginForm = document.getElementById('adminLoginForm');
+    if (adminLoginForm) {
+        adminLoginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const emailInput = document.getElementById('adminEmailInput')?.value;
+            const passwordInput = document.getElementById('adminPasswordInput')?.value;
+            handleEmailPasswordLogin(emailInput, passwordInput);
         });
     }
 
@@ -1058,6 +1534,42 @@ function bindEvents() {
         });
     }
 
+    // Personal del Estudio + mapeo Discord
+    populateStaffRoleSelect();
+    document.getElementById('staffRefreshBtn')?.addEventListener('click', () => {
+        loadStaffDirectory(true);
+        loadStaffMembers();
+        loadDiscordRoleMapping();
+        if (window.PanterRoles) {
+            window.PanterRoles.loadRoleConfig(true)
+                .then(() => refreshRoleUI())
+                .catch(() => {});
+        }
+    });
+    document.getElementById('staffSaveBtn')?.addEventListener('click', saveStaffFromForm);
+    document.getElementById('staffResetBtn')?.addEventListener('click', () => resetStaffForm());
+    document.getElementById('staffUserPickBtn')?.addEventListener('click', () => {
+        const uid = document.getElementById('staffUserPicker')?.value || '';
+        if (!uid) {
+            staffSetMessage('Selecciona un usuario registrado o deja el formulario vacío para crear un miembro manual.', 'info');
+            return;
+        }
+        loadDirectoryUserIntoForm(uid);
+    });
+    document.getElementById('staffUserPicker')?.addEventListener('change', (event) => {
+        const uid = event.target instanceof HTMLSelectElement ? event.target.value : '';
+        if (uid) loadDirectoryUserIntoForm(uid);
+    });
+    document.getElementById('staffAdminList')?.addEventListener('click', (event) => {
+        handleStaffListClick(event).catch((error) => {
+            console.error(error);
+            staffSetMessage('Ocurrió un error al procesar la acción.', true);
+        });
+    });
+    document.getElementById('discordMapSaveBtn')?.addEventListener('click', saveDiscordRoleMapping);
+    document.getElementById('discordMapReloadBtn')?.addEventListener('click', loadDiscordRoleMapping);
+    bindRoleManager();
+
     bindCeoRoleActions();
 }
 
@@ -1099,7 +1611,7 @@ async function loadSiteConfig() {
     } catch (err) {
         console.error('Error cargando configuración:', err);
         if (actionMsg) {
-            actionMsg.textContent = '❌ Error al cargar configuración de la base de datos.';
+            actionMsg.textContent = ' Error al cargar configuración de la base de datos.';
             actionMsg.className = 'admin-message error';
         }
     }
@@ -1144,11 +1656,11 @@ async function saveSiteConfig() {
             }, { merge: true })
         ]);
 
-        actionMsg.textContent = '✅ Configuración guardada correctamente en Firestore.';
+        actionMsg.textContent = ' Configuración guardada correctamente en Firestore.';
         actionMsg.className = 'admin-message success';
     } catch (err) {
         console.error('Error guardando configuración:', err);
-        actionMsg.textContent = '❌ No se pudo guardar la configuración.';
+        actionMsg.textContent = ' No se pudo guardar la configuración.';
         actionMsg.className = 'admin-message error';
     }
 }
@@ -1180,7 +1692,7 @@ async function loadSiteVisibilitySettings() {
     } catch (err) {
         console.error('Error cargando visibilidad:', err);
         if (actionMsg) {
-            actionMsg.textContent = '❌ Error al cargar configuración de visibilidad.';
+            actionMsg.textContent = ' Error al cargar configuración de visibilidad.';
             actionMsg.className = 'admin-message error';
         }
     }
@@ -1219,12 +1731,1142 @@ async function saveSiteVisibilitySettings() {
             updatedAt: new Date().toISOString()
         }, { merge: true });
 
-        actionMsg.textContent = '✅ Visibilidad del sitio guardada exitosamente en Firestore.';
+        actionMsg.textContent = ' Visibilidad del sitio guardada exitosamente en Firestore.';
         actionMsg.className = 'admin-message success';
     } catch (err) {
         console.error('Error guardando visibilidad:', err);
-        actionMsg.textContent = '❌ Error al guardar visibilidad del sitio.';
+        actionMsg.textContent = ' Error al guardar visibilidad del sitio.';
         actionMsg.className = 'admin-message error';
+    }
+}
+
+// ---------- Personal del Estudio (colección equipo) ----------
+
+const STAFF_COLLECTION = 'equipo';
+const STAFF_FALLBACK_ROLES = ['admin_owner', 'founder_ceo', 'director', 'administrador', 'programador', 'modelador', 'moderador', 'soporte', 'creador_contenido', 'vip', 'usuario'];
+
+let staffMembersCache = [];
+let staffDirectoryCache = [];
+let staffDirectoryLoaded = false;
+let editingStaffUid = null;
+
+function staffEscape(value) {
+    if (window.PanterRoles) return window.PanterRoles.escapeHtml(value);
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function staffSetMessage(text, tone = 'info') {
+    const el = document.getElementById('staffFormMsg');
+    if (!el) return;
+    let kind = tone;
+    if (tone === true) kind = 'error';
+    if (tone === false) kind = 'info';
+    if (!['info', 'success', 'warning', 'error'].includes(kind)) kind = 'info';
+    const colors = { info: '#7dd3fc', success: '#86efac', warning: '#fbbf24', error: '#fca5a5' };
+    el.textContent = text || '';
+    el.style.color = colors[kind];
+    el.dataset.tone = kind;
+}
+
+function staffDiscordSetMessage(text, isError) {
+    const el = document.getElementById('discordMapMsg');
+    if (!el) return;
+    el.textContent = text || '';
+    el.style.color = isError ? '#fca5a5' : '#7dd3fc';
+}
+
+function staffRoleLabel(role) {
+    return window.PanterRoles ? window.PanterRoles.get(role).label : (ROLE_LABELS[role] || role);
+}
+
+function staffRoleOptions(selected) {
+    const R = window.PanterRoles;
+    const normalized = R ? R.normalize(selected) : (selected || 'usuario');
+    const ids = R ? R.orderedRoleIds() : STAFF_FALLBACK_ROLES.slice();
+    if (R && !ids.includes(normalized) && R.ROLE_DEFS[normalized]) ids.push(normalized);
+    return ids.map(id => {
+        const def = R ? R.get(id) : null;
+        const label = def ? def.label : (ROLE_LABELS[id] || id);
+        return `<option value="${id}"${id === normalized ? ' selected' : ''}>${staffEscape(label)}</option>`;
+    }).join('');
+}
+
+function populateStaffRoleSelect(selected) {
+    const select = document.getElementById('staffFieldRole');
+    if (!select) return;
+    const value = selected || select.value || 'usuario';
+    select.innerHTML = staffRoleOptions(value);
+    select.value = window.PanterRoles ? window.PanterRoles.normalize(value) : value;
+}
+
+function staffAvatar(member) {
+    return member.avatarUrl || member.avatarImg || member.discordAvatarUrl || member.photoURL || 'https://cdn.discordapp.com/embed/avatars/0.png';
+}
+
+function renderStaffAdminList() {
+    const list = document.getElementById('staffAdminList');
+    if (!list) return;
+
+    if (!staffMembersCache.length) {
+        list.innerHTML = `
+            <div class="empty-state" style="grid-column:1/-1;">
+                <div class="empty-state-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></div>
+                <div class="empty-state-text">Aún no hay miembros en la colección <code>equipo</code>. Selecciona un usuario o crea el primero con el formulario de arriba.</div>
+            </div>`;
+        return;
+    }
+
+    list.innerHTML = staffMembersCache.map(member => {
+        const R = window.PanterRoles;
+        const role = R ? R.normalize(member.role) : (member.role || 'usuario');
+        const roleDef = R ? R.get(role) : null;
+        const badge = R ? R.badgeHtml(role) : staffEscape(staffRoleLabel(role));
+        const name = member.nombre || member.displayName || member.username || 'Miembro';
+        const username = member.username ? `@${member.username}` : (member.discordId ? `ID ${member.discordId}` : (member.email || roleDef?.label || role));
+        const specialty = member.especialidad || member.staffSpecialty || 'Sin especialidad';
+
+        return `
+        <div class="ps-admin-staff-card" data-staff-row="${staffEscape(member.uid)}" data-local="${member.localOnly ? 'true' : 'false'}">
+            <div class="ps-admin-staff-head">
+                <img src="${staffEscape(staffAvatar(member))}" alt="Avatar de ${staffEscape(name)}" loading="lazy" onerror="this.style.visibility='hidden'">
+                <div>
+                    <strong>${staffEscape(name)}</strong>
+                    <small>${staffEscape(username)}</small>
+                </div>
+            </div>
+            <div>
+                ${badge}
+                ${member.localOnly ? '<span class="ps-admin-local-pill"><i class="fa-solid fa-hard-drive" aria-hidden="true"></i> Local</span>' : ''}
+            </div>
+            <div class="ps-staff-card-meta">
+                <small><i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i> ${staffEscape(specialty)}</small>
+                <small><i class="fa-solid fa-ranking-star" aria-hidden="true"></i> Orden ${Number(member.orden || 999)}</small>
+            </div>
+            <div class="ps-admin-staff-actions">
+                <button type="button" class="btn" data-staff-action="edit"><i class="fa-solid fa-pen" aria-hidden="true"></i> Editar</button>
+                <button type="button" class="btn" data-staff-action="delete"><i class="fa-solid fa-trash" aria-hidden="true"></i> Eliminar</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function staffMemberDirectoryLabel(item) {
+    const name = item.nombre || item.username || item.email || item.uid;
+    const detail = item.email || item.username || (item.discordId ? `ID ${item.discordId}` : '');
+    return detail && detail !== name ? `${name} — ${detail}` : String(name || item.uid);
+}
+
+function populateStaffUserPicker() {
+    const select = document.getElementById('staffUserPicker');
+    if (!select) return;
+    const current = select.value;
+    const rows = staffDirectoryCache.slice().sort((a, b) =>
+        String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es')
+    );
+    const options = ['<option value="">— Nuevo miembro manual —</option>'];
+    rows.forEach(item => {
+        const inTeam = staffMembersCache.some(member => String(member.uid) === String(item.uid));
+        options.push(`<option value="${staffEscape(item.uid)}">${staffEscape(staffMemberDirectoryLabel(item))}${inTeam ? ' · En equipo' : ''}</option>`);
+    });
+    select.innerHTML = options.join('');
+    if (current && rows.some(item => String(item.uid) === String(current))) {
+        select.value = current;
+    }
+}
+
+async function loadStaffDirectory(force) {
+    if (staffDirectoryLoaded && !force) {
+        populateStaffUserPicker();
+        return staffDirectoryCache;
+    }
+    if (!window.db || !window.collection || !window.getDocs) return staffDirectoryCache;
+
+    try {
+        const snap = await window.getDocs(window.collection(window.db, 'conductores'));
+        staffDirectoryCache = snap.docs.map(docSnap => {
+            const data = docSnap.data() || {};
+            if (data.eliminado === true) return null;
+            const uid = docSnap.id;
+            const discordId = String(
+                data.discordId || data.discord_id || (String(uid).startsWith('discord_') ? String(uid).slice(8) : '')
+            ).replace(/\D/g, '');
+            return {
+                uid,
+                discordId,
+                nombre: String(data.nombre || data.displayName || data.username || data.nombre_usuario || data.email || uid),
+                username: String(data.username || ''),
+                email: String(data.email || '').trim().toLowerCase(),
+                avatarUrl: String(data.avatarUrl || data.photoURL || data.avatarImg || ''),
+                role: normalizeRole(data.role),
+                estado: String(data.estado || 'online')
+            };
+        }).filter(Boolean);
+        staffDirectoryLoaded = true;
+        populateStaffUserPicker();
+    } catch (error) {
+        console.warn('No se pudo cargar el directorio de usuarios:', error);
+    }
+
+    return staffDirectoryCache;
+}
+
+function loadDirectoryUserIntoForm(uid) {
+    const item = staffDirectoryCache.find(entry => String(entry.uid) === String(uid));
+    if (!item) {
+        staffSetMessage('No se encontró el usuario seleccionado. Actualiza el directorio.', 'warning');
+        return;
+    }
+    fillStaffForm({
+        uid: item.uid,
+        nombre: item.nombre,
+        username: item.username,
+        avatarUrl: item.avatarUrl,
+        role: item.role,
+        estado: item.estado,
+        orden: 999,
+        especialidad: '',
+        descripcion: ''
+    });
+    staffSetMessage(`Usuario cargado: ${item.nombre}. Completa el rango y guarda.`, 'info');
+}
+
+async function loadStaffMembers() {
+    const list = document.getElementById('staffAdminList');
+    populateStaffRoleSelect();
+    if (!list) return;
+
+    list.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-icon"><i class="fa-solid fa-circle-notch fa-spin"></i></div><div class="empty-state-text">Cargando personal...</div></div>`;
+
+    const hidden = staffReadHidden();
+    const localMembers = staffReadLocal().filter((member) => !hidden.has(String(member.uid)));
+    let remoteMembers = [];
+    let remoteError = null;
+
+    await loadStaffDirectory();
+
+    if (window.db && window.collection && window.getDocs) {
+        try {
+            const snap = await window.getDocs(window.collection(window.db, STAFF_COLLECTION));
+            remoteMembers = snap.docs
+                .map(docSnap => Object.assign({ uid: docSnap.id }, docSnap.data() || {}))
+                .filter(member => member && !member.archivado && (member.nombre || member.displayName || member.username))
+                .filter(member => !hidden.has(String(member.uid)));
+        } catch (error) {
+            remoteError = error;
+        }
+    } else {
+        remoteError = new Error('Firestore no disponible');
+    }
+
+    const merged = new Map();
+    remoteMembers.forEach((member) => merged.set(String(member.uid), member));
+    localMembers.forEach((member) => merged.set(String(member.uid), Object.assign({}, member, { localOnly: true })));
+
+    staffMembersCache = Array.from(merged.values()).sort((a, b) => {
+        const rankA = window.PanterRoles ? window.PanterRoles.rank(a.role) : 0;
+        const rankB = window.PanterRoles ? window.PanterRoles.rank(b.role) : 0;
+        if (rankA !== rankB) return rankB - rankA;
+        return Number(a.orden || 999) - Number(b.orden || 999);
+    });
+
+    renderStaffAdminList();
+    populateStaffUserPicker();
+
+    if (remoteError) {
+        const detail = describeFirestoreFailure(remoteError);
+        const localCount = localMembers.length;
+        const suffix = localCount
+            ? ` Mostrando ${localCount} miembro${localCount === 1 ? '' : 's'} guardado${localCount === 1 ? '' : 's'} en este navegador.`
+            : ' Los cambios se guardarán en este navegador hasta que despliegues las reglas.';
+
+        if (!staffMembersCache.length) {
+            list.innerHTML = `
+                <div class="empty-state" style="grid-column:1/-1;">
+                    <div class="empty-state-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></div>
+                    <div class="empty-state-text">No se pudo leer la colección <code>equipo</code>. ${detail.text}${suffix}</div>
+                </div>`;
+        }
+        staffSetMessage(`${detail.text}${suffix}`, 'warning');
+    }
+}
+
+function fillStaffForm(member) {
+    if (!member) return;
+    editingStaffUid = member.uid;
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el && value !== undefined && value !== null) el.value = value;
+    };
+    const uidInput = document.getElementById('staffFieldUid');
+    if (uidInput) {
+        const discordId = String(
+            member.discordId || (String(member.uid || '').startsWith('discord_') ? String(member.uid).slice(8) : member.uid || '')
+        ).trim();
+        uidInput.value = discordId;
+        uidInput.readOnly = true;
+    }
+    setValue('staffFieldNombre', member.nombre || member.displayName || '');
+    setValue('staffFieldUsername', member.username || '');
+    setValue('staffFieldAvatar', staffAvatar(member));
+    const roleValue = window.PanterRoles ? window.PanterRoles.normalize(member.role) : (member.role || 'usuario');
+    populateStaffRoleSelect(roleValue);
+    setValue('staffFieldRole', roleValue);
+    setValue('staffFieldEspecialidad', member.especialidad || member.staffSpecialty || '');
+    setValue('staffFieldDescripcion', member.descripcion || member.staffDescription || '');
+    setValue('staffFieldEstado', ['online', 'idle', 'dnd', 'offline'].includes(member.estado) ? member.estado : 'online');
+    setValue('staffFieldOrden', member.orden || '');
+    const picker = document.getElementById('staffUserPicker');
+    if (picker && member.uid) picker.value = member.uid;
+    staffSetMessage(`Editando a ${member.nombre || member.displayName || member.uid}.`, false);
+    document.getElementById('staffForm')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function resetStaffForm(clearMessage = true) {
+    editingStaffUid = null;
+    const form = document.getElementById('staffForm');
+    if (form) form.reset();
+    const uidInput = document.getElementById('staffFieldUid');
+    if (uidInput) uidInput.readOnly = false;
+    populateStaffRoleSelect('usuario');
+    const roleSelect = document.getElementById('staffFieldRole');
+    if (roleSelect) roleSelect.value = 'usuario';
+    const estado = document.getElementById('staffFieldEstado');
+    if (estado) estado.value = 'online';
+    const picker = document.getElementById('staffUserPicker');
+    if (picker) picker.value = '';
+    if (clearMessage) staffSetMessage('', false);
+}
+
+function staffSlug(value) {
+    const base = String(value || '').trim().toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+    return base || `miembro_${Date.now()}`;
+}
+
+const STAFF_LOCAL_KEY = 'ps_staff_local';
+const STAFF_HIDDEN_KEY = 'ps_staff_hidden';
+
+function staffReadLocal() {
+    try {
+        const raw = localStorage.getItem(STAFF_LOCAL_KEY);
+        const list = raw ? JSON.parse(raw) : [];
+        return Array.isArray(list) ? list.filter((item) => item && item.uid) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function staffWriteLocal(list) {
+    try {
+        localStorage.setItem(STAFF_LOCAL_KEY, JSON.stringify(Array.isArray(list) ? list : []));
+    } catch (e) {
+        console.warn('No se pudo guardar el personal local:', e);
+    }
+}
+
+function staffUpsertLocal(record) {
+    if (!record || !record.uid) return;
+    const list = staffReadLocal().filter((item) => String(item.uid) !== String(record.uid));
+    list.push(Object.assign({}, record, { localOnly: true, pendienteSincronizar: true }));
+    staffWriteLocal(list);
+    staffUnhideUid(record.uid);
+}
+
+function staffRemoveLocal(uid) {
+    const list = staffReadLocal().filter((item) => String(item.uid) !== String(uid));
+    staffWriteLocal(list);
+}
+
+function staffReadHidden() {
+    try {
+        const raw = localStorage.getItem(STAFF_HIDDEN_KEY);
+        const list = raw ? JSON.parse(raw) : [];
+        return new Set(Array.isArray(list) ? list.map(String) : []);
+    } catch (e) {
+        return new Set();
+    }
+}
+
+function staffHideUid(uid) {
+    const hidden = staffReadHidden();
+    hidden.add(String(uid));
+    try {
+        localStorage.setItem(STAFF_HIDDEN_KEY, JSON.stringify(Array.from(hidden)));
+    } catch (e) {
+        console.warn('No se pudo registrar el borrado local:', e);
+    }
+}
+
+function staffUnhideUid(uid) {
+    const hidden = staffReadHidden();
+    if (!hidden.has(String(uid))) return;
+    hidden.delete(String(uid));
+    try {
+        localStorage.setItem(STAFF_HIDDEN_KEY, JSON.stringify(Array.from(hidden)));
+    } catch (e) { /* ignore */ }
+}
+
+function staffNormalizeRoleValue(value) {
+    const raw = String(value || '').trim().toLowerCase();
+    const normalized = window.PanterRoles ? window.PanterRoles.normalize(raw) : raw;
+    if (window.PanterRoles) {
+        return window.PanterRoles.ROLE_DEFS[normalized] ? normalized : 'usuario';
+    }
+    return STAFF_FALLBACK_ROLES.includes(normalized) ? normalized : 'usuario';
+}
+
+/**
+ * Normaliza los datos del formulario a un esquema tipado y sin `undefined`.
+ * `nombre` es obligatorio (1..80) y `role` pertenece a la lista cerrada de
+ * la regla de Firestore. Los campos opcionales vacíos se omiten.
+ */
+function buildStaffPayload(raw = {}) {
+    const source = raw && typeof raw === 'object' ? raw : {};
+    const nombre = String(source.nombre == null ? '' : source.nombre).trim().replace(/\s+/g, ' ').slice(0, 80);
+    const role = staffNormalizeRoleValue(source.role || source.rol || 'usuario');
+
+    const rawOrder = source.orden;
+    const orderNumber = (rawOrder === '' || rawOrder === null || rawOrder === undefined) ? NaN : Number(rawOrder);
+    const orden = Number.isFinite(orderNumber) ? Math.min(9999, Math.max(0, Math.trunc(orderNumber))) : 999;
+
+    const payload = {
+        nombre,
+        role,
+        rol: role,
+        estado: ['online', 'idle', 'dnd', 'offline'].includes(source.estado) ? source.estado : 'online',
+        orden
+    };
+
+    const username = String(source.username == null ? '' : source.username).trim().slice(0, 60);
+    if (username) payload.username = username;
+
+    const especialidad = String(source.especialidad == null ? '' : source.especialidad).trim().slice(0, 80);
+    if (especialidad) payload.especialidad = especialidad;
+
+    const descripcion = String(source.descripcion == null ? '' : source.descripcion).trim().slice(0, 1200);
+    if (descripcion) payload.descripcion = descripcion;
+
+    const avatarUrl = String(source.avatarUrl == null ? '' : source.avatarUrl).trim().slice(0, 500);
+    if (/^https?:\/\//i.test(avatarUrl)) payload.avatarUrl = avatarUrl;
+
+    const rawUid = String(source.uid == null ? '' : source.uid).trim();
+    const explicitDiscord = String(source.discordId == null ? '' : source.discordId).trim();
+    let discordId = '';
+    if (/^\d{5,25}$/.test(explicitDiscord)) {
+        discordId = explicitDiscord;
+    } else if (rawUid.startsWith('discord_')) {
+        const derived = rawUid.slice('discord_'.length);
+        if (/^\d{5,25}$/.test(derived)) discordId = derived;
+    }
+    if (discordId) payload.discordId = discordId;
+
+    return payload;
+}
+
+async function persistStaffMember(uid, payload) {
+    const now = new Date().toISOString();
+    const record = Object.assign({ uid }, payload, {
+        actualizadoEn: now,
+        actualizadoPor: currentUser ? (currentUser.uid || currentUser.email || 'admin') : 'admin'
+    });
+
+    if (!window.db || !window.fsDoc || !window.setDoc) {
+        staffUpsertLocal(record);
+        return { record, local: true, error: new Error('Firestore no disponible') };
+    }
+
+    try {
+        await window.setDoc(window.fsDoc(window.db, STAFF_COLLECTION, uid), record, { merge: true });
+    } catch (error) {
+        console.error('No se pudo guardar el miembro en Firestore:', error);
+        staffUpsertLocal(record);
+        return { record, local: true, error };
+    }
+
+    staffRemoveLocal(uid);
+    staffUnhideUid(uid);
+
+    // Refleja los rangos del equipo en perfiles existentes, sin crear perfiles parciales.
+    if (window.getDoc && window.setDoc && payload.role) {
+        try {
+            const profileRef = window.fsDoc(window.db, 'conductores', uid);
+            const profileSnap = await window.getDoc(profileRef);
+            if (profileSnap.exists()) {
+                const profileUpdate = {
+                    role: payload.role,
+                    roleEquipo: payload.role,
+                    actualizadoEn: now
+                };
+                if (String(uid).startsWith('discord_')) {
+                    profileUpdate.staffSpecialty = payload.especialidad || '';
+                    profileUpdate.staffDescription = payload.descripcion || '';
+                }
+                await window.setDoc(profileRef, profileUpdate, { merge: true });
+            }
+        } catch (error) {
+            console.warn('No se pudo reflejar el rango en el perfil del miembro:', error);
+        }
+    }
+
+    return { record, local: false, error: null };
+}
+
+function staffUidFromInput(value) {
+    const raw = String(value == null ? '' : value).trim();
+    if (!raw) return '';
+    if (/^\d{5,25}$/.test(raw)) return `discord_${raw}`;
+    return raw;
+}
+
+async function saveStaffFromForm() {
+    const nombreInput = document.getElementById('staffFieldNombre');
+    const nombreRaw = String(nombreInput?.value || '').trim();
+    const uidInput = document.getElementById('staffFieldUid');
+
+    let uid = String(editingStaffUid || '').trim();
+    if (!uid) uid = staffUidFromInput(uidInput?.value);
+    if (uid && (uid.includes('/') || uid.length > 120)) {
+        staffSetMessage('El UID no es válido: no puede contener "/" ni superar 120 caracteres.', 'error');
+        uidInput?.focus();
+        return;
+    }
+    if (!uid) {
+        const base = `team_${staffSlug(nombreRaw || 'miembro')}`;
+        const alreadyExists = staffMembersCache.some((item) => String(item.uid) === base)
+            || staffReadLocal().some((item) => String(item.uid) === base);
+        uid = alreadyExists ? `${base}_${Date.now().toString(36).slice(-4)}` : base;
+    }
+
+    const payload = buildStaffPayload({
+        uid,
+        nombre: nombreRaw,
+        username: document.getElementById('staffFieldUsername')?.value || '',
+        avatarUrl: document.getElementById('staffFieldAvatar')?.value || '',
+        role: document.getElementById('staffFieldRole')?.value || 'usuario',
+        especialidad: document.getElementById('staffFieldEspecialidad')?.value || '',
+        descripcion: document.getElementById('staffFieldDescripcion')?.value || '',
+        estado: document.getElementById('staffFieldEstado')?.value || 'online',
+        orden: document.getElementById('staffFieldOrden')?.value
+    });
+
+    if (!payload.nombre) {
+        staffSetMessage('El nombre visible es obligatorio.', 'error');
+        nombreInput?.focus();
+        return;
+    }
+
+    const saveBtn = document.getElementById('staffSaveBtn');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> Guardando...';
+    }
+
+    try {
+        const result = await persistStaffMember(uid, payload);
+        const detail = result.local ? describeFirestoreFailure(result.error) : null;
+        resetStaffForm(false);
+        await loadStaffMembers();
+        if (result.local) {
+            staffSetMessage(
+                `"${payload.nombre}" se guardó en este navegador (sin sincronizar). ${detail.text} Despliega firestore.rules para publicarlo en la web.`,
+                'warning'
+            );
+        } else {
+            staffSetMessage(`Miembro "${payload.nombre}" guardado correctamente.`, 'success');
+        }
+    } catch (error) {
+        console.error('No se pudo guardar el miembro:', error);
+        const detail = describeFirestoreFailure(error);
+        staffSetMessage(`No se pudo guardar. ${detail.text}`, 'error');
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar';
+        }
+    }
+}
+
+async function deleteStaffMember(uid) {
+    let remoteError = null;
+
+    if (window.db && window.fsDoc && window.setDoc) {
+        try {
+            // Borrado lógico: conserva el documento para auditoría y evita
+            // depender de permisos de delete desde sesiones Discord.
+            await window.setDoc(window.fsDoc(window.db, STAFF_COLLECTION, uid), {
+                archivado: true,
+                actualizadoEn: new Date().toISOString(),
+                actualizadoPor: currentUser ? (currentUser.uid || currentUser.email || 'admin') : 'admin'
+            }, { merge: true });
+            staffRemoveLocal(uid);
+            staffUnhideUid(uid);
+            return { local: false, error: null };
+        } catch (error) {
+            remoteError = error;
+        }
+    } else {
+        remoteError = new Error('Firestore no disponible');
+    }
+
+    // Firestore rechazó el borrado: se oculta y elimina del almacenamiento local
+    // para que la acción tenga efecto en este navegador.
+    staffRemoveLocal(uid);
+    staffHideUid(uid);
+    return { local: true, error: remoteError };
+}
+
+async function handleStaffListClick(event) {
+    const actionBtn = event.target.closest('[data-staff-action]');
+    const card = event.target.closest('[data-staff-row]');
+    if (!card) return;
+    const uid = card.dataset.staffRow;
+    const member = staffMembersCache.find(item => String(item.uid) === String(uid));
+    if (!member) return;
+
+    if (!actionBtn) return;
+    const action = actionBtn.dataset.staffAction;
+
+    if (action === 'edit') {
+        fillStaffForm(member);
+        return;
+    }
+
+    if (action === 'delete') {
+        if (!window.confirm(`¿Eliminar a ${member.nombre || member.displayName || uid} del equipo?`)) return;
+        actionBtn.disabled = true;
+        try {
+            const result = await deleteStaffMember(uid);
+            await loadStaffMembers();
+            if (result.local) {
+                const detail = describeFirestoreFailure(result.error);
+                staffSetMessage(`Miembro oculto en este navegador. ${detail.text}`, 'warning');
+            } else {
+                staffSetMessage('Miembro eliminado del equipo.', 'success');
+            }
+        } catch (error) {
+            console.error('No se pudo eliminar el miembro:', error);
+            const detail = describeFirestoreFailure(error);
+            staffSetMessage(`No se pudo eliminar. ${detail.text}`, 'error');
+        } finally {
+            actionBtn.disabled = false;
+        }
+    }
+}
+
+// ---------- Gestor de roles y colores ----------
+
+const ROLE_PERMISSION_LABELS = {
+    team: 'Personal',
+    ticketStaff: 'Tickets',
+    adminPanel: 'Panel admin',
+    manageTeam: 'Gestionar equipo'
+};
+
+function roleContrastColor(hex) {
+    const clean = String(hex || '').replace('#', '');
+    if (clean.length !== 6) return '#ffffff';
+    const r = parseInt(clean.slice(0, 2), 16);
+    const g = parseInt(clean.slice(2, 4), 16);
+    const b = parseInt(clean.slice(4, 6), 16);
+    const luz = 0.299 * r + 0.587 * g + 0.114 * b;
+    return luz > 165 ? '#0b0f17' : '#ffffff';
+}
+
+function roleManagerSetMessage(text, tone = 'info') {
+    const el = document.getElementById('roleEditorMsg');
+    if (!el) return;
+    const colors = { info: '#7dd3fc', success: '#86efac', warning: '#fbbf24', error: '#fca5a5' };
+    el.textContent = text || '';
+    el.style.color = colors[tone] || colors.info;
+}
+
+function getRoleManagerRoles() {
+    const R = window.PanterRoles;
+    if (!R) return [];
+    const config = R.getRoleConfig();
+    return (config.roles || []).slice().sort((a, b) => {
+        const byRank = Number(b.rank || 0) - Number(a.rank || 0);
+        if (byRank !== 0) return byRank;
+        return String(a.label || a.id).localeCompare(String(b.label || b.id), 'es');
+    });
+}
+
+function renderRoleManagerList() {
+    const list = document.getElementById('roleManagerList');
+    if (!list) return;
+    const R = window.PanterRoles;
+    if (!R) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-state-text">El módulo de roles no está disponible.</div></div>';
+        return;
+    }
+
+    const roles = getRoleManagerRoles();
+    if (!roles.length) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-state-text">No hay roles configurados.</div></div>';
+        return;
+    }
+
+    list.innerHTML = roles.map(role => {
+        const permissions = R.rolePermissions(role);
+        const activePerms = Object.keys(ROLE_PERMISSION_LABELS)
+            .filter(key => permissions[key] === true)
+            .map(key => `<span class="ps-role-perm active">${ROLE_PERMISSION_LABELS[key]}</span>`)
+            .join('');
+        const noPerms = '<span class="ps-role-perm">Sin permisos</span>';
+        const usedBy = staffMembersCache.filter(member => R.normalize(member.role) === role.id).length;
+
+        return `
+        <div class="ps-role-item${role.custom ? ' is-custom' : ''}" data-role-id="${staffEscape(role.id)}" style="--ps-role-item-color:${staffEscape(role.color)};">
+            <span class="ps-role-swatch" style="background:${staffEscape(role.color)};color:${roleContrastColor(role.color)};">
+                <i class="${staffEscape(role.icon || 'fa-solid fa-user')}" aria-hidden="true"></i>
+            </span>
+            <div class="ps-role-item-info">
+                <strong>
+                    ${staffEscape(role.label || role.id)}
+                    <span class="ps-role-item-rank">prioridad ${Number(role.rank || 0)}</span>
+                    ${role.custom ? '<span class="ps-role-custom-pill">Personalizado</span>' : ''}
+                </strong>
+                <small>${staffEscape(role.description || role.id)}${usedBy ? ` · ${usedBy} miembro${usedBy === 1 ? '' : 's'}` : ''}</small>
+                <div class="ps-role-item-perms">${activePerms || noPerms}</div>
+            </div>
+            <div class="ps-role-item-actions">
+                <button type="button" class="btn" data-role-edit="${staffEscape(role.id)}">
+                    <i class="fa-solid fa-pen" aria-hidden="true"></i> Editar
+                </button>
+                <button type="button" class="btn" data-role-duplicate="${staffEscape(role.id)}">
+                    <i class="fa-solid fa-clone" aria-hidden="true"></i> Duplicar
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function setRoleEditorField(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = Boolean(value);
+    else el.value = value == null ? '' : value;
+}
+
+function openRoleEditor(roleId, template) {
+    const R = window.PanterRoles;
+    if (!R) return;
+    const roles = getRoleManagerRoles();
+    const role = roleId ? (roles.find(item => item.id === roleId) || R.ROLE_DEFS[roleId]) : null;
+    const source = role || template || null;
+    const isEditing = Boolean(role);
+    const isDuplicate = !isEditing && Boolean(template);
+
+    const id = isEditing ? String(role.id) : '';
+    const label = source
+        ? (isDuplicate ? `${source.label} (copia)` : source.label)
+        : '';
+    const shortLabel = source ? (isDuplicate ? `${source.shortLabel || source.label} copia` : (source.shortLabel || '')) : '';
+    let keyId = '';
+    if (isEditing) {
+        keyId = String(role.id);
+    } else if (isDuplicate) {
+        const baseKey = R.roleSlug(`${source.id}_copia`) || 'rol_copia';
+        keyId = baseKey;
+        let suffix = 2;
+        while (R.ROLE_DEFS[keyId]) {
+            keyId = `${baseKey.slice(0, 36)}_${suffix}`;
+            suffix += 1;
+        }
+    }
+    const color = (source && source.color) || '#0055ff';
+    const fixedColor = Boolean(isEditing && !role.custom);
+    const permissions = source
+        ? R.rolePermissions(source)
+        : { team: true, ticketStaff: false, adminPanel: false, manageTeam: false };
+
+    setRoleEditorField('roleEditorId', id);
+    setRoleEditorField('roleEditorLabel', label);
+    setRoleEditorField('roleEditorShort', shortLabel);
+    setRoleEditorField('roleEditorKey', keyId);
+    setRoleEditorField('roleEditorColor', color);
+    setRoleEditorField('roleEditorColorHex', color);
+    const colorPicker = document.getElementById('roleEditorColor');
+    const colorHex = document.getElementById('roleEditorColorHex');
+    if (colorPicker) colorPicker.disabled = fixedColor;
+    if (colorHex) colorHex.disabled = fixedColor;
+    const rankInput = document.getElementById('roleEditorRank');
+    if (rankInput) rankInput.disabled = fixedColor;
+    setRoleEditorField('roleEditorIcon', (source && source.icon) || 'fa-solid fa-user');
+    setRoleEditorField('roleEditorRank', source ? Number(source.rank || 20) : 20);
+    setRoleEditorField('roleEditorDiscordId', (source && source.discordRoleId) || '');
+    setRoleEditorField('roleEditorDescription', (source && source.description) || '');
+    setRoleEditorField('rolePermTeam', permissions.team);
+    setRoleEditorField('rolePermTicketStaff', permissions.ticketStaff);
+    setRoleEditorField('rolePermAdminPanel', permissions.adminPanel);
+    setRoleEditorField('rolePermManageTeam', permissions.manageTeam);
+
+    const keyInput = document.getElementById('roleEditorKey');
+    if (keyInput) keyInput.disabled = isEditing || isDuplicate;
+
+    const deleteBtn = document.getElementById('roleEditorDeleteBtn');
+    if (deleteBtn) {
+        deleteBtn.disabled = !isEditing || !role.custom;
+        deleteBtn.title = isEditing && !role.custom
+            ? 'Los roles base solo se pueden editar; crea uno personalizado si necesitas otro rango.'
+            : '';
+    }
+
+    const saveBtn = document.getElementById('roleEditorSaveBtn');
+    if (saveBtn) {
+        saveBtn.innerHTML = isEditing
+            ? '<i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar cambios'
+            : '<i class="fa-solid fa-plus" aria-hidden="true"></i> Crear rol';
+    }
+
+    const heading = isEditing
+        ? `Editando “${role.label}”.${fixedColor ? ' Su color y posición jerárquica son fijos.' : ''}`
+        : (isDuplicate ? 'Duplicando rol. Ajusta los datos y crea el nuevo rango.' : 'Nuevo rol. Define nombre, color y permisos.');
+    roleManagerSetMessage(heading, 'info');
+    const pane = document.getElementById('tab-staff');
+    if (pane && pane.classList.contains('active')) {
+        document.getElementById('roleEditorForm')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function collectRoleDraft() {
+    const R = window.PanterRoles;
+    if (!R) throw new Error('Módulo de roles no disponible.');
+
+    const label = String(document.getElementById('roleEditorLabel')?.value || '').trim().slice(0, 48);
+    if (!label) throw new Error('El nombre visible del rol es obligatorio.');
+
+    const shortLabel = String(document.getElementById('roleEditorShort')?.value || '').trim().slice(0, 24) || label;
+    const keyValue = String(document.getElementById('roleEditorKey')?.value || '').trim();
+    const editId = String(document.getElementById('roleEditorId')?.value || '').trim();
+    const id = R.roleSlug(editId || keyValue || label);
+    if (!id) throw new Error('El identificador del rol no es válido.');
+
+    if (!editId && R.ROLE_DEFS[id]) {
+        throw new Error(`Ya existe un rol con el identificador “${id}”. Elige otro.`);
+    }
+
+    const color = R.ROLE_COLORS[id]
+        || R.normalizeHexColor(document.getElementById('roleEditorColorHex')?.value)
+        || R.normalizeHexColor(document.getElementById('roleEditorColor')?.value)
+        || '#94a3b8';
+
+    const rankValue = Number(document.getElementById('roleEditorRank')?.value);
+    const rank = Number.isFinite(rankValue) ? Math.max(0, Math.min(1000, Math.trunc(rankValue))) : 20;
+
+    return {
+        id,
+        label,
+        shortLabel,
+        rank,
+        color,
+        icon: String(document.getElementById('roleEditorIcon')?.value || 'fa-solid fa-user').trim().slice(0, 80),
+        description: String(document.getElementById('roleEditorDescription')?.value || '').trim().slice(0, 240),
+        discordRoleId: String(document.getElementById('roleEditorDiscordId')?.value || '').replace(/\D/g, '').slice(0, 25),
+        permissions: {
+            team: Boolean(document.getElementById('rolePermTeam')?.checked),
+            ticketStaff: Boolean(document.getElementById('rolePermTicketStaff')?.checked),
+            adminPanel: Boolean(document.getElementById('rolePermAdminPanel')?.checked),
+            manageTeam: Boolean(document.getElementById('rolePermManageTeam')?.checked)
+        }
+    };
+}
+
+async function saveRoleFromEditor() {
+    const R = window.PanterRoles;
+    if (!R) {
+        roleManagerSetMessage('El módulo de roles no está disponible.', 'error');
+        return;
+    }
+
+    let draft;
+    try {
+        draft = collectRoleDraft();
+    } catch (error) {
+        roleManagerSetMessage(error.message, 'error');
+        return;
+    }
+
+    const saveBtn = document.getElementById('roleEditorSaveBtn');
+    if (saveBtn) saveBtn.disabled = true;
+    roleManagerSetMessage('Guardando rol y sincronizando Discord…', 'info');
+
+    try {
+        const config = R.getRoleConfig();
+        const roles = (config.roles || []).slice();
+        const index = roles.findIndex(role => role.id === draft.id);
+        if (index >= 0) roles[index] = draft;
+        else roles.push(draft);
+
+        let syncWarning = '';
+        try {
+            await R.saveRoleConfig({
+                roles,
+                updatedBy: currentUser ? (currentUser.uid || currentUser.email || 'admin') : 'admin'
+            });
+        } catch (error) {
+            console.error('No se pudo guardar roles_config en Firestore:', error);
+            syncWarning = ' El cambio quedó aplicado en este navegador, pero Firestore lo rechazó. Revisa las reglas de roles_config.';
+        }
+
+        refreshRoleUI();
+        openRoleEditor(draft.id);
+        roleManagerSetMessage(
+            `Rol “${draft.label}” guardado. La página Personal y las insignias de tickets usarán este color.${syncWarning}`,
+            syncWarning ? 'warning' : 'success'
+        );
+        await loadDiscordRoleMapping();
+    } catch (error) {
+        console.error('No se pudo guardar el rol:', error);
+        roleManagerSetMessage(`No se pudo guardar el rol. ${describeFirestoreFailure(error).text}`, 'error');
+    } finally {
+        if (saveBtn) saveBtn.disabled = false;
+    }
+}
+
+async function deleteRoleFromEditor() {
+    const R = window.PanterRoles;
+    if (!R) return;
+    const id = String(document.getElementById('roleEditorId')?.value || '').trim();
+    if (!id) {
+        roleManagerSetMessage('Selecciona un rol personalizado para eliminarlo.', 'warning');
+        return;
+    }
+    const role = R.ROLE_DEFS[id];
+    if (!role || !role.custom) {
+        roleManagerSetMessage('Los roles base no se pueden eliminar. Puedes editar su color, nombre o permisos.', 'warning');
+        return;
+    }
+    if (!window.confirm(`¿Eliminar el rol “${role.label}”? Los miembros que lo tengan pasarán a Usuario.`)) return;
+
+    const deleteBtn = document.getElementById('roleEditorDeleteBtn');
+    if (deleteBtn) deleteBtn.disabled = true;
+
+    try {
+        const config = R.getRoleConfig();
+        const roles = (config.roles || []).filter(item => item.id !== id);
+        let syncWarning = '';
+        try {
+            await R.saveRoleConfig({
+                roles,
+                updatedBy: currentUser ? (currentUser.uid || currentUser.email || 'admin') : 'admin'
+            });
+        } catch (error) {
+            console.error('No se pudo eliminar el rol de Firestore:', error);
+            syncWarning = ' Firestore lo rechazó; el cambio solo se aplicó en este navegador.';
+        }
+        refreshRoleUI();
+        openRoleEditor(null);
+        roleManagerSetMessage(`Rol eliminado.${syncWarning}`, syncWarning ? 'warning' : 'success');
+        await loadDiscordRoleMapping();
+    } catch (error) {
+        console.error('No se pudo eliminar el rol:', error);
+        roleManagerSetMessage(`No se pudo eliminar el rol. ${describeFirestoreFailure(error).text}`, 'error');
+    } finally {
+        if (deleteBtn) deleteBtn.disabled = false;
+    }
+}
+
+async function restoreOfficialRolePalette() {
+    const R = window.PanterRoles;
+    if (!R) return;
+    if (!window.confirm('¿Restaurar los colores oficiales de los rangos base? Los roles personalizados conservarán su color.')) return;
+
+    const btn = document.getElementById('roleManagerResetBtn');
+    if (btn) btn.disabled = true;
+    try {
+        const config = R.getRoleConfig();
+        const roles = (config.roles || []).map(role => {
+            const official = R.OFFICIAL_ROLE_COLORS[role.id];
+            if (!official) return role;
+            return Object.assign({}, role, {
+                color: official,
+                bg: R.hexToRgba(official, 0.12),
+                border: R.hexToRgba(official, 0.35)
+            });
+        });
+
+        let syncWarning = '';
+        try {
+            await R.saveRoleConfig({
+                roles,
+                updatedBy: currentUser ? (currentUser.uid || currentUser.email || 'admin') : 'admin'
+            });
+        } catch (error) {
+            console.error('No se pudo restaurar la paleta en Firestore:', error);
+            syncWarning = ' Firestore lo rechazó; la paleta solo se aplicó en este navegador.';
+        }
+
+        refreshRoleUI();
+        openRoleEditor(null);
+        roleManagerSetMessage(`Paleta oficial restaurada.${syncWarning}`, syncWarning ? 'warning' : 'success');
+        await loadDiscordRoleMapping();
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
+function refreshRoleUI() {
+    const currentRole = document.getElementById('staffFieldRole')?.value || 'usuario';
+    populateStaffRoleSelect(currentRole);
+    renderStaffAdminList();
+    renderRoleManagerList();
+}
+
+function bindRoleManager() {
+    const R = window.PanterRoles;
+    if (!R) return;
+
+    document.getElementById('roleManagerList')?.addEventListener('click', (event) => {
+        const editBtn = event.target.closest('[data-role-edit]');
+        if (editBtn) {
+            openRoleEditor(editBtn.getAttribute('data-role-edit'));
+            return;
+        }
+        const duplicateBtn = event.target.closest('[data-role-duplicate]');
+        if (duplicateBtn) {
+            const id = duplicateBtn.getAttribute('data-role-duplicate');
+            const source = R.ROLE_DEFS[id];
+            if (source) openRoleEditor(null, source);
+        }
+    });
+
+    document.getElementById('roleEditorSaveBtn')?.addEventListener('click', saveRoleFromEditor);
+    document.getElementById('roleEditorDeleteBtn')?.addEventListener('click', deleteRoleFromEditor);
+    document.getElementById('roleEditorNewBtn')?.addEventListener('click', () => openRoleEditor(null));
+    document.getElementById('roleManagerResetBtn')?.addEventListener('click', restoreOfficialRolePalette);
+
+    const colorInput = document.getElementById('roleEditorColor');
+    const hexInput = document.getElementById('roleEditorColorHex');
+    colorInput?.addEventListener('input', () => {
+        if (hexInput) hexInput.value = String(colorInput.value || '').toLowerCase();
+    });
+    hexInput?.addEventListener('input', () => {
+        const color = R.normalizeHexColor(hexInput.value);
+        if (color && colorInput) colorInput.value = color;
+    });
+
+    document.addEventListener('panter:roles-config', () => {
+        if (!document.getElementById('roleManagerList')) return;
+        renderRoleManagerList();
+        const roleValue = document.getElementById('staffFieldRole')?.value || 'usuario';
+        populateStaffRoleSelect(roleValue);
+        const R = window.PanterRoles;
+        staffMembersCache.sort((a, b) => {
+            const rankA = R ? R.rank(a.role) : 0;
+            const rankB = R ? R.rank(b.role) : 0;
+            if (rankA !== rankB) return rankB - rankA;
+            return Number(a.orden || 999) - Number(b.orden || 999);
+        });
+        renderStaffAdminList();
+    });
+
+    renderRoleManagerList();
+    openRoleEditor(null);
+}
+
+// ---------- Mapeo de roles Discord → Web ----------
+
+function parseDiscordRoleMap(text) {
+    return String(text || '')
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(Boolean)
+        .map(line => {
+            const parts = line.split('|').map(part => part.trim());
+            let id = '';
+            let name = '';
+            let role = 'usuario';
+
+            if (parts.length >= 3) {
+                id = parts[0];
+                name = parts[1];
+                role = parts[2];
+            } else if (parts.length === 2) {
+                const maybeRole = window.PanterRoles ? window.PanterRoles.normalize(parts[1]) : parts[1];
+                const known = window.PanterRoles ? Boolean(window.PanterRoles.ROLE_DEFS[maybeRole]) : true;
+                if (known) {
+                    name = parts[0];
+                    role = maybeRole;
+                } else {
+                    id = parts[0];
+                    name = parts[1];
+                }
+            } else {
+                name = parts[0];
+                role = window.PanterRoles ? window.PanterRoles.normalize(parts[0]) : 'usuario';
+            }
+
+            return {
+                id: String(id || ''),
+                name: String(name || ''),
+                role: window.PanterRoles ? window.PanterRoles.normalize(role) : role
+            };
+        })
+        .filter(entry => entry.id || entry.name);
+}
+
+async function loadDiscordRoleMapping() {
+    if (!window.PanterRoles) {
+        staffDiscordSetMessage('El módulo de roles aún no está disponible.', true);
+        return;
+    }
+
+    staffDiscordSetMessage('Cargando mapeo...', false);
+    try {
+        const cfg = await window.PanterRoles.loadDiscordConfig(true);
+        const setValue = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.value = value;
+        };
+        setValue('discordGuildId', cfg.guildId || '');
+        setValue('discordGuildName', cfg.guildName || '');
+        setValue('discordAdminRoleIds', (cfg.adminRoleIds || []).join(', '));
+        const map = (cfg.roles || [])
+            .map(entry => `${entry.id || ''} | ${entry.name || ''} | ${entry.role || 'usuario'}`)
+            .join('\n');
+        setValue('discordRoleMap', map);
+        staffDiscordSetMessage('Mapeo cargado. Edita los IDs reales de Discord y guarda.', false);
+    } catch (error) {
+        console.error('No se pudo cargar el mapeo de roles:', error);
+        staffDiscordSetMessage('No se pudo cargar el mapeo desde Firestore.', true);
+    }
+}
+
+async function saveDiscordRoleMapping() {
+    if (!window.PanterRoles) {
+        staffDiscordSetMessage('El módulo de roles aún no está disponible.', true);
+        return;
+    }
+
+    const guildId = String(document.getElementById('discordGuildId')?.value || '').trim();
+    const guildName = String(document.getElementById('discordGuildName')?.value || '').trim() || 'Panter Studio';
+    const adminRoleIds = String(document.getElementById('discordAdminRoleIds')?.value || '')
+        .split(/[,\s]+/)
+        .map(id => id.trim())
+        .filter(Boolean);
+    const roles = parseDiscordRoleMap(document.getElementById('discordRoleMap')?.value || '');
+
+    const btn = document.getElementById('discordMapSaveBtn');
+    if (btn) btn.disabled = true;
+    staffDiscordSetMessage('Guardando mapeo...', false);
+
+    try {
+        await window.PanterRoles.saveDiscordConfig({ guildId, guildName, adminRoleIds, roles });
+        staffDiscordSetMessage('Mapeo guardado. Los usuarios deben iniciar sesión de nuevo para refrescar roles.', false);
+    } catch (error) {
+        console.error('No se pudo guardar el mapeo de roles:', error);
+        staffDiscordSetMessage('No se pudo guardar el mapeo. Revisa las reglas de Firestore.', true);
+    } finally {
+        if (btn) btn.disabled = false;
     }
 }
 
@@ -1271,6 +2913,36 @@ function initAdminPanel() {
     setTimeout(() => {
         hideWelcomeOverlay();
     }, 3000);
+
+    let storedSession = getStoredSession();
+    if (!storedSession) {
+        try {
+            const rawDiscord = localStorage.getItem('discord_user_session');
+            if (rawDiscord) {
+                const discordUser = JSON.parse(rawDiscord);
+                if (discordUser && isCeoAccount(discordUser)) {
+                    storedSession = {
+                        uid: discordUser.uid || 'discord-ceo',
+                        email: discordUser.email || 'pantergamey@gmail.com',
+                        displayName: discordUser.displayName || discordUser.username || 'PanterGameY',
+                        username: discordUser.username || 'PanterGameY',
+                        role: 'founder_ceo',
+                        isAdmin: true
+                    };
+                    saveStoredSession(storedSession);
+                }
+            }
+        } catch (e) {}
+    }
+
+    if (storedSession && storedSession.isAdmin) {
+        currentUser = storedSession;
+        updateProfileUI(storedSession, storedSession.role);
+        showPanel();
+        setupCeoTools(storedSession, storedSession.role);
+        calculateStats();
+        loadBetaTesters();
+    }
 
     if (bootAuthListener()) return;
 

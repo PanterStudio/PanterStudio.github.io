@@ -10,14 +10,41 @@
   const REDEEM_COLLECTION     = 'coin_redemptions';
 
   const ROLE_LABELS = {
-    founder_ceo: 'Fundador / CEO', director: 'Director', administrador: 'Administrador',
+    admin_owner: 'ADMIN / OWNER', founder_ceo: 'Fundador / CEO',
+    director: 'Director', administrador: 'Administrador',
+    moderador: 'Moderador',
+    soporte: 'Soporte', support_ops: 'Soporte',
     programador: 'Programador',    modelador: 'Modelador',
-    usuario: 'Miembro',            viewer: 'Miembro',
-    vip: 'VIP',                    community_manager: 'Community Manager',
-    support_ops: 'Soporte',        youtuber: 'Youtuber',
-    streamer: 'Streamer'
+    creador_contenido: 'Creador de Contenido',
+    usuario: 'Usuario',            viewer: 'Usuario',
+    vip: 'VIP',                    community_manager: 'Creador de Contenido',
+    youtuber: 'Creador de Contenido', streamer: 'Creador de Contenido'
   };
-  const SPECIAL_ACCESS_ROLES = new Set(['founder_ceo','director','administrador','programador','modelador']);
+  const SPECIAL_ACCESS_ROLES = new Set(['founder_ceo','director','administrador','soporte','support_ops','programador','modelador']);
+
+  function isCeoIdentifier(str) {
+    if (!str) return false;
+    const clean = String(str).trim().toLowerCase();
+    return clean === 'pantergamey' || 
+           clean === 'pantergameyt' || 
+           clean === 'pantergamey@gmail.com' || 
+           clean === 'ceo@panterstudio.lat' ||
+           clean === 'admin@psgd.me';
+  }
+
+  function isCeoAccount(user, data = null) {
+    if (!user && !data) return false;
+    return isCeoIdentifier(user?.username) ||
+           isCeoIdentifier(user?.displayName) ||
+           isCeoIdentifier(user?.globalName) ||
+           isCeoIdentifier(user?.email) ||
+           isCeoIdentifier(data?.username) ||
+           isCeoIdentifier(data?.nombre_usuario) ||
+           isCeoIdentifier(data?.displayName) ||
+           isCeoIdentifier(data?.email) ||
+           user?.role === 'founder_ceo' ||
+           data?.role === 'founder_ceo';
+  }
 
   /* ── DOM ── */
   const $  = id  => document.getElementById(id);
@@ -103,6 +130,7 @@
   /* ── Estado ── */
   let currentUser     = null;
   let currentUserData = null;
+  let profileTeamUnsubscribe = null;
   let currentConductorData = null;
   let settings        = {};
   let supportSnapshot = { total: 0, count: 0, sponsor: null };
@@ -124,7 +152,22 @@
   }
   function coinsToEmeralds(c) { return Math.floor((Number(c || 0) / COINS_PER_EXCHANGE) * EMERALDS_PER_EXCHANGE); }
   function formatEmeralds(v)  { return `${Number(v || 0)} Esmeraldas`; }
-  function roleLabel(r)       { return ROLE_LABELS[String(r || 'viewer').toLowerCase()] || 'Miembro'; }
+  function roleLabel(r) {
+    const R = window.PanterRoles;
+    if (R && typeof R.get === 'function') {
+      const def = R.get(r);
+      if (def && def.label) return def.label;
+    }
+    return ROLE_LABELS[String(r || 'viewer').toLowerCase()] || 'Miembro';
+  }
+  function roleColor(r) {
+    const R = window.PanterRoles;
+    if (R && typeof R.get === 'function') {
+      const def = R.get(r);
+      if (def && def.color) return def.color;
+    }
+    return '#94a3b8';
+  }
   function providerLabel(u)   { const id = u?.providerData?.[0]?.providerId || 'password'; return id.includes('google') ? 'Google' : id.includes('password') ? 'Email' : id; }
   function generateReferralCode(uid) { return String(uid || '').slice(0, 6).toUpperCase(); }
   function normalizeCode(c)   { return String(c || '').replace(/\s+/g,'').trim().toUpperCase().slice(0, 32); }
@@ -180,12 +223,21 @@
   }
 
   /* ── Firebase wait ── */
-  function waitForFirebase(timeout = 7000) {
+  function waitForFirebase(timeout = 12000) {
     return new Promise(resolve => {
-      const ok = () => window.db && window.auth && window.collection && window.getDocs && window.getDoc && window.fsDoc && window.setDoc && window.updateDoc && window.addDoc && window.signInWithEmailAndPassword && window.createUserWithEmailAndPassword && window.signOut && window.updateProfile && window.sendPasswordResetEmail && window.onAuthStateChanged;
+      const ok = () => window.db && window.collection && window.getDoc && window.fsDoc && window.onAuthStateChanged;
       if (ok()) return resolve(true);
+      let resolved = false;
+      const onReady = () => {
+        if (resolved) return;
+        if (ok()) { resolved = true; clearInterval(t); document.removeEventListener('firebaseReady', onReady); resolve(true); }
+      };
+      document.addEventListener('firebaseReady', onReady);
       const start = Date.now();
-      const t = setInterval(() => { if (ok()) { clearInterval(t); resolve(true); } else if (Date.now() - start > timeout) { clearInterval(t); resolve(false); } }, 100);
+      const t = setInterval(() => {
+        if (ok()) { resolved = true; clearInterval(t); document.removeEventListener('firebaseReady', onReady); resolve(true); }
+        else if (Date.now() - start > timeout) { resolved = true; clearInterval(t); document.removeEventListener('firebaseReady', onReady); console.error('[Perfil] Firebase timeout'); resolve(true); }
+      }, 150);
     });
   }
 
@@ -201,7 +253,63 @@
   }
 
   async function getUserData(uid) {
-    try { const s = await window.getDoc(window.fsDoc(window.db, 'conductores', uid)); return s.exists() ? s.data() || null : null; } catch { return null; }
+    if (!window.db || !uid) return null;
+    try {
+      const s = await window.getDoc(window.fsDoc(window.db, 'conductores', uid));
+      if (s.exists()) return s.data() || null;
+
+      // Reconciliación con cuentas previas creadas con Google / Email
+      const dUser = window.DiscordAuth ? window.DiscordAuth.getUser() : null;
+      if (dUser && window.collection && window.getDocs && window.query && window.where) {
+        // 1. Búsqueda por email
+        if (dUser.email && !dUser.email.endsWith('@discord.local')) {
+          const qEmail = window.query(
+            window.collection(window.db, 'conductores'),
+            window.where('email', '==', dUser.email.toLowerCase().trim())
+          );
+          const snapEmail = await window.getDocs(qEmail);
+          if (!snapEmail.empty) {
+            const legacyData = snapEmail.docs[0].data();
+            console.log('Perfil: Vinculada cuenta previa por email:', snapEmail.docs[0].id);
+            await window.setDoc(window.fsDoc(window.db, 'conductores', uid), {
+              ...legacyData,
+              linkedLegacyUid: snapEmail.docs[0].id,
+              discordId: dUser.id || dUser.discordId,
+              discordUsername: dUser.username,
+              avatarUrl: dUser.photoURL || dUser.avatarUrl,
+              migratedAt: new Date().toISOString()
+            }, { merge: true });
+            return legacyData;
+          }
+        }
+
+        // 2. Búsqueda por username de Discord previo
+        if (dUser.username) {
+          const qTag = window.query(
+            window.collection(window.db, 'conductores'),
+            window.where('betaTesterDiscord', '==', dUser.username.trim())
+          );
+          const snapTag = await window.getDocs(qTag);
+          if (!snapTag.empty) {
+            const legacyData = snapTag.docs[0].data();
+            console.log('Perfil: Vinculada cuenta previa por Discord tag:', snapTag.docs[0].id);
+            await window.setDoc(window.fsDoc(window.db, 'conductores', uid), {
+              ...legacyData,
+              linkedLegacyUid: snapTag.docs[0].id,
+              discordId: dUser.id || dUser.discordId,
+              discordUsername: dUser.username,
+              avatarUrl: dUser.photoURL || dUser.avatarUrl,
+              migratedAt: new Date().toISOString()
+            }, { merge: true });
+            return legacyData;
+          }
+        }
+      }
+      return null;
+    } catch (e) {
+      console.warn('Error en getUserData:', e);
+      return null;
+    }
   }
 
   async function getConductorData(uid) {
@@ -213,7 +321,7 @@
     const name = extras.displayName || user.displayName || user.email?.split('@')[0] || 'Miembro';
     const payload = {
       displayName: name, nombre_usuario: name, username: extras.username || name, email: user.email || '',
-      avatar: '😊', bio: '', favoriteProject: 'Nuestra Tierra Job Simulator',
+      avatar: '', bio: '', favoriteProject: 'Nuestra Tierra Job Simulator',
       country: 'Colombia', coins: 0, emeralds: 0, level: 'visitor',
       referralCode: generateReferralCode(user.uid), referredBy: null,
       referralCount: 0, referralCoins: 0, streak: 0, lastDaily: null,
@@ -331,7 +439,7 @@
       const newCoins    = Number(currentUserData.coins || 0) - coins;
       const newEmeralds = Number(currentUserData.esmeraldas || 0) + emeralds;
       await updateUserData(uid, { coins: newCoins, esmeraldas: newEmeralds });
-      await addActivity(uid, 'exchange', `Canje: ${coins} 🪙 → ${emeralds} Esmeraldas (Juego)`, -coins);
+      await addActivity(uid, 'exchange', `Canje: ${coins} → ${emeralds} Esmeraldas (Juego)`, -coins);
       currentUserData.coins      = newCoins;
       currentUserData.esmeraldas = newEmeralds;
       return { ok: true, msg: `Canje exitoso: +${emeralds} Esmeraldas` };
@@ -349,12 +457,20 @@
   }
 
   /* ── Render helpers ── */
-  function badge(label, tone) { return `<span class="bp${tone ? ' ' + tone : ''}">${esc(label)}</span>`; }
+  function badge(label, tone) {
+    const text = String(label);
+    const safe = text.includes('<i ') ? text : esc(text);
+    return `<span class="bp${tone ? ' ' + tone : ''}">${safe}</span>`;
+  }
 
   function renderBadges(data, user) {
     const b = [];
-    if (user?.emailVerified)                       b.push(badge('✓ Email', 'g'));
-    if (data.betaTesterStatus === 'approved')      b.push(badge('Beta Tester', 'beta'));
+    if (user?.emailVerified)                       b.push(badge('<i class="fa-solid fa-check" aria-hidden="true"></i> Email', 'g'));
+    if (data.betaTesterStatus === 'approved') {
+      b.push(badge('<i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Beta Tester Oficial', 'beta'));
+    } else if (data.betaTesterRequest) {
+      b.push(badge('<i class="fa-solid fa-flask" aria-hidden="true"></i> Tester Inscrito', 'aqua'));
+    }
     if (preregSnapshot.registered)                 b.push(badge('Pre-reg', 'b'));
     if (Number(data.referralCount || 0) > 0)       b.push(badge(data.referralCount + ' refs', 'pu'));
     if (supportSnapshot.total > 0)                 b.push(badge('Patroc.', 'go'));
@@ -362,21 +478,21 @@
     // Custom achievements logic
     const coins = Number(data.coins || 0);
     if (coins >= 100000) {
-      b.push(badge('👑 Millonario', 'go'));
+      b.push(badge('<i class="fa-solid fa-crown" aria-hidden="true"></i> Millonario', 'go'));
     } else if (coins >= 50000) {
-      b.push(badge('💎 Adinerado', 'aqua'));
+      b.push(badge('<i class="fa-solid fa-gem" aria-hidden="true"></i> Adinerado', 'aqua'));
     }
 
     const streak = Number(data.streak || 0);
     if (streak >= 30) {
-      b.push(badge('🔥 Fuego Puro', 'r'));
+      b.push(badge('<i class="fa-solid fa-fire" aria-hidden="true"></i> Fuego Puro', 'r'));
     } else if (streak >= 7) {
-      b.push(badge('📅 Constante', 'g'));
+      b.push(badge('<i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Constante', 'g'));
     }
 
     const pet = data.pet || null;
     if (pet && Number(pet.level || 0) >= 5) {
-      b.push(badge('🐾 Entrenador', 'pu'));
+      b.push(badge('<i class="fa-solid fa-paw" aria-hidden="true"></i> Entrenador', 'pu'));
     }
 
     const r = String(data.role || '').toLowerCase();
@@ -392,10 +508,10 @@
   }
 
   function renderSponsorLevel(level) {
-    const bm = { visitor:'👤', supporter:'💖', bronze:'🥉', silver:'🥈', gold:'🥇', platinum:'💎', founder:'🏆' };
+    const bm = { visitor:'<i class="fa-solid fa-user" aria-hidden="true"></i>', supporter:'<i class="fa-solid fa-heart" style="color:#f472b6" aria-hidden="true"></i>', bronze:'<i class="fa-solid fa-medal" style="color:#cd7f32" aria-hidden="true"></i>', silver:'<i class="fa-solid fa-medal" style="color:#c0c0c0" aria-hidden="true"></i>', gold:'<i class="fa-solid fa-medal" style="color:#ffd700" aria-hidden="true"></i>', platinum:'<i class="fa-solid fa-gem" aria-hidden="true"></i>', founder:'<i class="fa-solid fa-trophy" aria-hidden="true"></i>' };
     const dm = { visitor:'Haz una donación para subir de nivel.', supporter:'Gracias por apoyar.', bronze:'Miembro Bronce.', silver:'Acceso anticipado.', gold:'Extras exclusivos.', platinum:'Beneficios premium.', founder:'Fundador.' };
     const l  = String(level || 'visitor').toLowerCase();
-    if (sponsorBadge)     sponsorBadge.textContent     = bm[l] || '👤';
+    if (sponsorBadge) sponsorBadge.innerHTML = bm[l] || bm.visitor;
     if (sponsorLevelName) sponsorLevelName.textContent = getLevelName(l);
     if (sponsorLevelDesc) sponsorLevelDesc.textContent = dm[l] || dm.visitor;
   }
@@ -416,40 +532,90 @@
   function renderProfile() {
     if (!currentUser || !currentUserData) return;
     const d    = currentUserData;
-    const isFounder = String(currentUser?.email || '').trim().toLowerCase() === 'pantergamey@gmail.com';
+    const isFounder = isCeoAccount(currentUser, d);
     if (isFounder) {
       d.role = 'founder_ceo';
+      d.isAdmin = true;
     }
-    const name = String(d.nombre_usuario || d.displayName || d.username || currentUser.displayName || currentUser.email?.split('@')[0] || 'Miembro');
+    const name = String(d.nombre_usuario || d.displayName || d.username || currentUser.displayName || currentUser.username || currentUser.email?.split('@')[0] || 'Usuario Discord');
     const role = String(d.role || 'viewer').toLowerCase();
     const set  = (el, v) => { if (el) el.textContent = v; };
 
+    const avatarImage = d.avatarImg || currentUser.photoURL || currentUser.avatarUrl;
     if (profileAvatarLetter) {
-      if (d.avatarImg) {
-        profileAvatarLetter.innerHTML = `<img src="${esc(d.avatarImg)}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+      if (avatarImage) {
+        profileAvatarLetter.innerHTML = `<img src="${esc(avatarImage)}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
       } else {
-        profileAvatarLetter.textContent = d.avatar || '😊';
+        profileAvatarLetter.innerHTML = d.avatar || '<i class="fa-solid fa-user" aria-hidden="true"></i>';
       }
     }
     const levelStr = String(d.rango || d.nivel || getLevelName(d.level));
     set(profileDisplayName, name);
     set(profileEmail, currentUser.email || '');
+    set(profileServerNick, currentUser.serverNick || name);
+    set(profileServerName, currentUser.serverName || 'PanterStudio Discord');
     set(profileUid, 'ID Juego: ' + String(d.id_usuario || d.uid || currentUser.uid || '').slice(0, 12).toUpperCase());
     set(profileCoins, String(Number(d.coins || 0)));
     set(profileLevel, levelStr);
     set(profileLevelText, levelStr);
-    set(profileRole, roleLabel(role));
-    set(profileRoleText, roleLabel(role));
     set(profileJoinDate, formatDate(d.createdAt));
     set(profileStreak, String(Number(d.streak || 0)));
     set(profileStreakText, String(Number(d.streak || 0)));
     
+    // Render Live Discord Server Roles & Badges
+    const badgesContainer = $('profileBadges');
+    const badgesSidebarContainer = $('profileBadgesSidebar');
+
+    const R = window.PanterRoles;
+    const resolvedRole = R ? R.resolveRole(currentUser, d) : role;
+    const resolvedColor = roleColor(resolvedRole);
+    set(profileRole, roleLabel(resolvedRole));
+    set(profileRoleText, roleLabel(resolvedRole));
+    [profileRole, profileRoleText].forEach(el => {
+      if (el) {
+        el.style.color = resolvedColor;
+        el.style.borderColor = `${resolvedColor}66`;
+        el.style.background = `${resolvedColor}1f`;
+      }
+    });
+    const roleBadgeHtml = R
+      ? R.badgeHtml(resolvedRole, { className: 'ps-role-badge-profile' })
+      : `<span class="discord-role-pill role-member">${esc(roleLabel(role))}</span>`;
+
+    const extraPills = [];
+
+    // Add live roles fetched from Discord Server API
+    if (Array.isArray(currentUser.serverRoles) && currentUser.serverRoles.length > 0) {
+      currentUser.serverRoles.slice(0, 6).forEach(r => {
+        extraPills.push(`<span class="discord-role-pill role-discord-server"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> ${esc(r)}</span>`);
+      });
+    }
+
+    extraPills.push('<span class="discord-role-pill role-discord"><i class="fa-brands fa-discord" aria-hidden="true"></i> Autenticado con Discord</span>');
+    extraPills.push('<span class="discord-role-pill role-gamer"><i class="fa-solid fa-gamepad" aria-hidden="true"></i> Conductor Nuestra Tierra</span>');
+
+    const rolesHtml = roleBadgeHtml + extraPills.join('');
+
+    if (badgesContainer) badgesContainer.innerHTML = rolesHtml;
+    if (badgesSidebarContainer) badgesSidebarContainer.innerHTML = rolesHtml;
+
     // Set level progress bar fill based on streak
     const streak = Number(d.streak || 0);
     const progressPercent = Math.min(100, Math.max(5, (streak % 7 || (streak > 0 ? 7 : 0)) / 7 * 100));
     if (profileLevelBarFill) {
       profileLevelBarFill.style.width = `${progressPercent}%`;
     }
+
+    // Set tab info fields
+    set($('tabInfoServerNick'), currentUser.serverNick || name);
+    set($('tabInfoServerName'), currentUser.serverName || 'PanterStudio Game Dev');
+    set($('tabInfoDiscordId'), currentUser.discordId || currentUser.id || '—');
+
+    // Setup profile tab switching
+    setupProfileTabs();
+
+    // Fetch user tickets from SoporteSaaS backend
+    loadUserTickets();
 
     set(profileVerificationStatusSide, currentUser.emailVerified ? 'Sí' : 'No');
     set(profileProviderSide, providerLabel(currentUser));
@@ -499,11 +665,11 @@
         const petLevel = pet.level || 1;
         const avatarId = pet.avatarId || 'classic';
         const PET_AVATARS = {
-          classic: '🐈‍⬛',
-          cyber: '🤖🐈‍⬛',
-          astronaut: '👨‍🚀🐈‍⬛',
-          detective: '🕵️🐈‍⬛',
-          golden: '👑🐈‍⬛'
+          classic: '<i class="fa-solid fa-cat" aria-hidden="true"></i>',
+          cyber: '<i class="fa-solid fa-robot" aria-hidden="true"></i><i class="fa-solid fa-cat" aria-hidden="true"></i>',
+          astronaut: '<i class="fa-solid fa-user-astronaut" aria-hidden="true"></i><i class="fa-solid fa-cat" aria-hidden="true"></i>',
+          detective: '<i class="fa-solid fa-user-secret" aria-hidden="true"></i><i class="fa-solid fa-cat" aria-hidden="true"></i>',
+          golden: '<i class="fa-solid fa-crown" aria-hidden="true"></i><i class="fa-solid fa-cat" aria-hidden="true"></i>'
         };
 
         const hunger = Math.round(pet.hunger !== undefined ? pet.hunger : 100);
@@ -511,7 +677,7 @@
         const energy = Math.round(pet.energy !== undefined ? pet.energy : 100);
 
         const petAvatar = $('profilePetAvatar');
-        if (petAvatar) petAvatar.textContent = PET_AVATARS[avatarId] || '🐈‍⬛';
+        if (petAvatar) petAvatar.innerHTML = PET_AVATARS[avatarId] || PET_AVATARS.classic;
 
         const petNameEl = $('profilePetName');
         if (petNameEl) petNameEl.textContent = petName;
@@ -520,13 +686,13 @@
         if (petLevelEl) petLevelEl.textContent = petLevel;
 
         const petHungerEl = $('profilePetHunger');
-        if (petHungerEl) petHungerEl.textContent = `🥩 ${hunger}%`;
+        if (petHungerEl) petHungerEl.innerHTML = `<i class="fa-solid fa-drumstick-bite" aria-hidden="true"></i> ${hunger}%`;
 
         const petHappinessEl = $('profilePetHappiness');
-        if (petHappinessEl) petHappinessEl.textContent = `🧶 ${happiness}%`;
+        if (petHappinessEl) petHappinessEl.innerHTML = `<i class="fa-solid fa-yarn" aria-hidden="true"></i> ${happiness}%`;
 
         const petEnergyEl = $('profilePetEnergy');
-        if (petEnergyEl) petEnergyEl.textContent = `⚡ ${energy}%`;
+        if (petEnergyEl) petEnergyEl.innerHTML = `<i class="fa-solid fa-bolt" aria-hidden="true"></i> ${energy}%`;
 
         // Render food/toy inventory
         const inv = d.inventory || {};
@@ -556,8 +722,8 @@
           unlocked.forEach(avId => {
             const emoji = PET_AVATARS[avId];
             if (emoji) {
-              const isSelected = d.avatar === emoji;
-              gridHtml += `<button type="button" class="av-opt${isSelected ? ' selected' : ''}" data-avatar="${emoji}" role="radio" aria-checked="${isSelected ? 'true' : 'false'}" aria-label="Avatar de Mascota ${avId}">${emoji}</button>`;
+              const isSelected = d.pet && d.pet.avatarId === avId;
+              gridHtml += `<button type="button" class="av-opt${isSelected ? ' selected' : ''}" data-avatar="${avId}" role="radio" aria-checked="${isSelected ? 'true' : 'false'}" aria-label="Avatar de Mascota ${avId}">${emoji}</button>`;
             }
           });
           unlockedPetAvatarsGrid.innerHTML = gridHtml;
@@ -568,7 +734,7 @@
               $$('.av-opt').forEach(x => x.classList.remove('selected'));
               b.classList.add('selected');
               $('editAvatarValue').value = b.dataset.avatar;
-              if (editProfileImagePreview) editProfileImagePreview.innerHTML = b.dataset.avatar;
+              if (editProfileImagePreview) editProfileImagePreview.innerHTML = PET_AVATARS[b.dataset.avatar] || '';
               if (editProfileImageInput) editProfileImageInput.value = '';
               if (removeProfileImageBtn) removeProfileImageBtn.style.display = 'none';
             });
@@ -588,7 +754,7 @@
     checkDailyCooldown(d.lastDaily);
      renderBadges(d, currentUser);
     if (profileAdminTools) profileAdminTools.hidden = !(SPECIAL_ACCESS_ROLES.has(role) || isFounder);
-    if (profileBetaTesterCard) profileBetaTesterCard.hidden = (d.betaTesterStatus !== 'approved');
+    if (profileBetaTesterCard) profileBetaTesterCard.hidden = !(d.betaTesterStatus === 'approved' || d.betaTesterRequest);
 
     // Control de visibilidad de la sección de reclamo de código de referido manual
     const manualRefBox = $('manualReferralBox');
@@ -607,16 +773,16 @@
       activityList.innerHTML = '<li class="act-item"><div class="act-txt"><div class="act-title" style="color:#2d5570">Sin actividad reciente</div></div></li>';
       return;
     }
-    const icons = { register:'🎉', referral:'👥', spin:'🎰', daily:'📅', profile:'📝', exchange:'💎' };
+    const icons = { register:'<i class="fa-solid fa-champagne-glasses" aria-hidden="true"></i>', referral:'<i class="fa-solid fa-users" aria-hidden="true"></i>', spin:'<i class="fa-solid fa-dice" aria-hidden="true"></i>', daily:'<i class="fa-solid fa-calendar-days" aria-hidden="true"></i>', profile:'<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>', exchange:'<i class="fa-solid fa-gem" aria-hidden="true"></i>' };
     activityList.innerHTML = items.map(item => {
       const c = Number(item.coins || 0);
       return `<li class="act-item">
-        <div class="act-ico">${icons[item.type] || '✨'}</div>
+        <div class="act-ico">${icons[item.type] || '<i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>'}</div>
         <div class="act-txt">
           <div class="act-title">${esc(item.description || 'Actividad')}</div>
           <div class="act-time">${esc(formatDateLong(item.createdAt))}</div>
         </div>
-        <div class="act-coins${c < 0 ? ' neg' : ''}">${c ? `${c > 0 ? '+' : ''}${c} 🪙` : ''}</div>
+        <div class="act-coins${c < 0 ? ' neg' : ''}">${c ? `${c > 0 ? '+' : ''}${c} <i class="fa-solid fa-coins" aria-hidden="true"></i>` : ''}</div>
       </li>`;
     }).join('');
   }
@@ -642,7 +808,7 @@
     redeemHistoryList.innerHTML = history.map(item => `
       <div class="rdm-hist-item">
         <div>
-          <strong>${esc(String(item.coins || 0))} 🪙 → ${esc(formatEmeralds(item.emeralds || coinsToEmeralds(item.coins || 0)))}</strong>
+          <strong>${esc(String(item.coins || 0))} <i class="fa-solid fa-coins" aria-hidden="true"></i> → ${esc(formatEmeralds(item.emeralds || coinsToEmeralds(item.coins || 0)))}</strong>
           <small>${esc(formatDateLong(item.createdAt))}</small>
         </div>
         <span class="rdm-status ${item.status || 'completed'}">${esc(item.status || 'completado')}</span>
@@ -665,28 +831,89 @@
     renderRedemptionHistory(redemptions);
   }
 
+  function subscribeProfileTeamRole(user) {
+    if (profileTeamUnsubscribe) {
+      try { profileTeamUnsubscribe(); } catch (e) { /* noop */ }
+      profileTeamUnsubscribe = null;
+    }
+    if (!user || !window.db || !window.fsDoc || typeof window.onSnapshot !== 'function') return;
+    try {
+      profileTeamUnsubscribe = window.onSnapshot(
+        window.fsDoc(window.db, 'equipo', user.uid),
+        snap => {
+          if (!currentUser || currentUser.uid !== user.uid || !currentUserData) return;
+          const team = snap.exists() ? snap.data() || {} : null;
+          if (team && team.archivado !== true && team.role) currentUserData.teamRole = team.role;
+          else delete currentUserData.teamRole;
+          renderProfile();
+        },
+        error => console.warn('[Perfil] No se pudo observar el rango del equipo:', error.message)
+      );
+    } catch (error) {
+      console.warn('[Perfil] Suscripción de rango no disponible:', error.message);
+    }
+  }
+
   /* ── Auth state handler ── */
   async function handleAuthStateChange(user) {
     currentUser = user;
-    if (!user) { currentUserData = null; currentConductorData = null; showAuth(); return; }
-    currentUserData = await getUserData(user.uid);
-    currentConductorData = await getConductorData(user.uid);
+    if (!user) { currentUserData = null; currentConductorData = null; subscribeProfileTeamRole(null); showAuth(); return; }
+    try {
+      currentUserData = await getUserData(user.uid);
+      currentConductorData = await getConductorData(user.uid);
+    } catch (e) {}
     if (!currentUserData) {
-      try {
-        currentUserData = await createUserDoc(user, { displayName: user.displayName || user.email?.split('@')[0] || 'Miembro' });
-      } catch (err) {
-        if (isPermDenied(err)) {
-          currentUserData = { displayName: user.displayName || user.email?.split('@')[0] || 'Miembro', username: user.email?.split('@')[0] || 'Miembro', email: user.email || '', avatar: '😊', bio: '', favoriteProject: '', country: '', coins: 0, emeralds: 0, level: 'visitor', referralCode: generateReferralCode(user.uid), referredBy: null, referralCount: 0, referralCoins: 0, streak: 0, lastDaily: null, role: 'viewer', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-          setAuthMessage('Firestore bloqueó el perfil (permission-denied). Ajusta reglas de "conductores".', 'error');
-        } else throw err;
-      }
+      const isCeo = isCeoAccount(user);
+      currentUserData = {
+        displayName: isCeo ? 'PanterGameY' : (user.displayName || user.username || user.email?.split('@')[0] || 'Usuario Discord'),
+        username: isCeo ? 'PanterGameY' : (user.username || 'Usuario'),
+        email: user.email || '',
+        avatarImg: user.photoURL || user.avatarUrl,
+        coins: 1000,
+        emeralds: 10,
+        level: 'member',
+        role: isCeo ? 'founder_ceo' : (user.role || 'viewer'),
+        isAdmin: isCeo || Boolean(user.isAdmin),
+        createdAt: new Date().toISOString()
+      };
+    } else if (isCeoAccount(user, currentUserData)) {
+      currentUserData.role = 'founder_ceo';
+      currentUserData.isAdmin = true;
     }
-    supportSnapshot = await loadSupportSnapshot(user);
-    preregSnapshot  = await loadPreregSnapshot(user);
+    // Rango asignado desde el Panel Admin (roster `equipo`) con prioridad.
+    if (!isCeoAccount(user, currentUserData) && window.db && window.fsDoc && window.getDoc) {
+      try {
+        const teamSnap = await window.getDoc(window.fsDoc(window.db, 'equipo', user.uid));
+        if (teamSnap.exists()) {
+          const teamMember = teamSnap.data() || {};
+          if (teamMember.archivado !== true && teamMember.role) {
+            currentUserData.teamRole = teamMember.role;
+          }
+        }
+      } catch (e) { /* roster no disponible */ }
+    }
+    subscribeProfileTeamRole(user);
     showDashboard();
     renderProfile();
-    await loadDashboardData();
+    try {
+      supportSnapshot = await loadSupportSnapshot(user);
+      preregSnapshot  = await loadPreregSnapshot(user);
+      await loadDashboardData();
+    } catch (e) {}
   }
+
+  document.addEventListener('panter:user-profile', event => {
+    const detail = event.detail || {};
+    if (!currentUser || !detail.user || currentUser.uid !== detail.user.uid || !detail.profile) return;
+    currentUserData = { ...currentUserData, ...detail.profile };
+    currentConductorData = { ...currentConductorData, ...detail.profile };
+    renderProfile();
+  });
+
+  // Los colores/etiquetas del Gestor de Roles se aplican al perfil al instante.
+  document.addEventListener('panter:roles-config', () => {
+    if (currentUser && currentUserData) renderProfile();
+  });
 
   /* ══════════════════════════════════════
      EVENTOS
@@ -708,7 +935,12 @@
   loginForm?.addEventListener('submit', async e => {
     e.preventDefault();
     setAuthMessage('Iniciando sesión...');
-    try { await window.signInWithEmailAndPassword(window.auth, String($('loginEmail')?.value || '').trim(), String($('loginPassword')?.value || '')); }
+    try {
+      const email = String($('loginEmail')?.value || $('perfilLoginEmail')?.value || '').trim();
+      const password = String($('loginPassword')?.value || $('perfilLoginPassword')?.value || '');
+      await window.DiscordAuth.loginWithEmail(email, password);
+      setAuthMessage('Sesión iniciada con éxito', 'success');
+    }
     catch (err) { setAuthMessage(getAuthError(err), 'error'); }
   });
 
@@ -750,20 +982,27 @@
   /* Logout */
   logoutBtn?.addEventListener('click', async () => { try { await window.signOut(window.auth); } catch (e) { console.error(e); } });
 
-  /* Google Auth */
-  $('googleAuthBtn')?.addEventListener('click', async () => {
-    if (!await waitForFirebase()) { setAuthMessage('Firebase no está listo. Recarga la página.', 'error'); return; }
+  /* Discord / Auth */
+  const handleDiscordAuth = async () => {
     try {
-      setAuthMessage('Conectando con Google...');
-      const provider = new window.GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
-      setAuthMessage('Iniciando sesión...');
-      await window.signInWithPopup(window.auth, provider);
+      setAuthMessage('Conectando con Discord...');
+      if (!window.DiscordAuth) {
+        setAuthMessage('Módulo de Discord no listo. Recarga la página.', 'error');
+        return;
+      }
+      setAuthMessage('Redirigiendo a Discord OAuth 2.0...');
+      const user = await window.DiscordAuth.login();
+      if (user) {
+        setAuthMessage(`¡Bienvenido ${user.displayName || user.username || 'Usuario'}!`, 'success');
+      }
     } catch (err) {
-      console.error('Google Sign-In Error:', err);
-      setAuthMessage(getAuthError(err), 'error');
+      console.error('Discord Sign-In Error:', err);
+      setAuthMessage(err.message || 'Error al autenticar con Discord', 'error');
     }
-  });
+  };
+
+  $('discordAuthBtn')?.addEventListener('click', handleDiscordAuth);
+  $('googleAuthBtn')?.addEventListener('click', handleDiscordAuth);
 
   /* Bonus diario */
   claimDailyBtn?.addEventListener('click', async () => {
@@ -791,7 +1030,7 @@
     renderProfile();
     await loadDashboardData();
     if (dailyBonusMessage) {
-      dailyBonusMessage.textContent = `+${bonus} 🪙${streak >= 7 ? ' + bonus de racha' : ''}!`;
+        dailyBonusMessage.innerHTML = `+${bonus} <i class="fa-solid fa-coins" aria-hidden="true"></i>${streak >= 7 ? ' + bonus de racha' : ''}!`;
       dailyBonusMessage.className   = 'success';
     }
   });
@@ -837,16 +1076,15 @@
       }
       const res = await window.applyReferralCode(code, currentUser.uid, currentUserData);
       if (res.applied) {
-        msg.textContent = `¡Código canjeado con éxito! Recibes +${res.reward} monedas 🪙.`;
+        msg.textContent = '¡Código de invitación registrado con éxito!';
         msg.className = 'success';
         input.value = '';
         // Actualizar el perfil local
         currentUserData.referredBy = code;
-        currentUserData.coins = Number(currentUserData.coins || 0) + res.reward;
         // Re-render
         renderProfile();
         await loadDashboardData();
-        await addActivity(currentUser.uid, 'referral', 'Código de referido manual reclamado', res.reward);
+        await addActivity(currentUser.uid, 'referral', 'Invitación registrada', 0);
       } else {
         const errors = {
           'self': 'No puedes usar tu propio código.',
@@ -974,11 +1212,11 @@
         }
 
         // Historial emisor
-        await addActivity(currentUser.uid, 'transfer_sent', `PanterPay: Envío de ${amount} 🪙 a ${recipientName}`, -amount);
+        await addActivity(currentUser.uid, 'transfer_sent', `PanterPay: Envío de ${amount} a ${recipientName}`, -amount);
         // Historial receptor
-        await addActivity(recipientUid, 'transfer_received', `PanterPay: Recibiste ${amount} 🪙 de ${senderName}`, amount);
+        await addActivity(recipientUid, 'transfer_received', `PanterPay: Recibiste ${amount} de ${senderName}`, amount);
 
-        msg.textContent = `¡Transferencia de ${amount} 🪙 a ${recipientName} realizada!`;
+        msg.innerHTML = `¡Transferencia de ${amount} <i class="fa-solid fa-coins" aria-hidden="true"></i> a ${esc(recipientName)} realizada!`;
         msg.className = 'success';
 
       } else {
@@ -1006,70 +1244,33 @@
   /* Editar perfil */
   editProfileBtn?.addEventListener('click', () => {
     if (!currentUserData || !editProfileModal) return;
-    $('editDisplayName').value    = currentUserData.displayName || currentUser?.displayName || '';
-    $('editBio').value            = currentUserData.bio || '';
-    $('editFavoriteProject').value= currentUserData.favoriteProject || '';
-    $('editCountry').value        = currentUserData.country || '';
-    $('editAvatarValue').value    = currentUserData.avatar || '😊';
-    $$('.av-opt').forEach(b => b.classList.toggle('selected', b.dataset.avatar === (currentUserData.avatar || '😊')));
+    const discordName = currentUserData.displayName || currentUser?.displayName || 'Usuario';
+    const discordAvatar = currentUserData.avatarImg || currentUser?.photoURL || 'https://cdn.discordapp.com/embed/avatars/0.png';
 
-    if (currentUserData.avatarImg) {
-      editProfileImagePreview && (editProfileImagePreview.innerHTML = `<img src="${esc(currentUserData.avatarImg)}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`);
-      if (editProfileImageInput) editProfileImageInput.value = currentUserData.avatarImg;
-      if (removeProfileImageBtn) removeProfileImageBtn.style.display = '';
-    } else {
-      editProfileImagePreview && (editProfileImagePreview.innerHTML = $('editAvatarValue')?.value || '😊');
-      if (editProfileImageInput) editProfileImageInput.value = '';
-      if (removeProfileImageBtn) removeProfileImageBtn.style.display = 'none';
-    }
+    const previewName = $('editDiscordNamePreview');
+    if (previewName) previewName.textContent = discordName;
+    const previewImg = $('editDiscordAvatarPreview');
+    if (previewImg) previewImg.src = discordAvatar;
+
+    if ($('editDisplayName')) $('editDisplayName').value = discordName;
+    if ($('editBio')) $('editBio').value = currentUserData.bio || '';
+    if ($('editFavoriteProject')) $('editFavoriteProject').value = currentUserData.favoriteProject || '';
+    if ($('editCountry')) $('editCountry').value = currentUserData.country || '';
 
     editProfileModal.showModal();
   });
 
-  $$('.av-opt').forEach(b => {
-    b.addEventListener('click', () => {
-      $$('.av-opt').forEach(x => x.classList.remove('selected'));
-      b.classList.add('selected');
-      $('editAvatarValue').value = b.dataset.avatar || '😊';
-      if (editProfileImagePreview) editProfileImagePreview.innerHTML = b.dataset.avatar || '😊';
-      if (editProfileImageInput) editProfileImageInput.value = '';
-      if (removeProfileImageBtn) removeProfileImageBtn.style.display = 'none';
-    });
+  document.querySelectorAll('.btn-edit-profile-trigger').forEach(b => {
+    b.addEventListener('click', () => editProfileBtn?.click());
   });
-
-  if (editProfileImageInput) {
-    editProfileImageInput.addEventListener('input', () => {
-      const url = String(editProfileImageInput.value || '').trim();
-      if (url) {
-        editProfileImagePreview && (editProfileImagePreview.innerHTML = `<img src="${esc(url)}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`);
-        if (removeProfileImageBtn) removeProfileImageBtn.style.display = '';
-        $('editAvatarValue').value = '';
-        $$('.av-opt').forEach(x => x.classList.remove('selected'));
-      } else {
-        editProfileImagePreview && (editProfileImagePreview.innerHTML = $('editAvatarValue')?.value || '😊');
-        if (removeProfileImageBtn) removeProfileImageBtn.style.display = 'none';
-      }
-    });
-  }
-
-  removeProfileImageBtn?.addEventListener('click', () => {
-    if (editProfileImageInput) editProfileImageInput.value = '';
-    if (editProfileImagePreview) editProfileImagePreview.innerHTML = $('editAvatarValue')?.value || '😊';
-    if (removeProfileImageBtn) removeProfileImageBtn.style.display = 'none';
-  });
+  $('editProfileBtnCard')?.addEventListener('click', () => editProfileBtn?.click());
 
   editProfileForm?.addEventListener('submit', async e => {
     e.preventDefault(); if (!currentUser) return;
-    const avatarImgUrl = String(editProfileImageInput?.value || '').trim();
-    const nameVal = String($('editDisplayName')?.value || '').trim();
     const p = {
-      displayName:     nameVal,
-      nombre_usuario:  nameVal,
       bio:             String($('editBio')?.value             || '').trim(),
       favoriteProject: String($('editFavoriteProject')?.value || '').trim(),
-      country:         String($('editCountry')?.value         || '').trim(),
-      avatar:          avatarImgUrl ? '' : String($('editAvatarValue')?.value || '😊'),
-      avatarImg:       avatarImgUrl || ''
+      country:         String($('editCountry')?.value         || '').trim()
     };
 
     const petNameInput = $('editPetName');
@@ -1081,7 +1282,6 @@
     }
 
     await updateUserData(currentUser.uid, p);
-    await window.updateProfile(currentUser, { displayName: nameVal });
     await addActivity(currentUser.uid, 'profile', 'Perfil actualizado', 0);
     currentUserData = { ...currentUserData, ...p };
     renderProfile();
@@ -1108,11 +1308,11 @@
     const active = pet.avatarId || 'classic';
 
     const PET_AVATARS = {
-      classic: '🐈‍⬛',
-      cyber: '🤖🐈‍⬛',
-      astronaut: '👨‍🚀🐈‍⬛',
-      detective: '🕵️🐈‍⬛',
-      golden: '👑🐈‍⬛'
+      classic: '<i class="fa-solid fa-cat" aria-hidden="true"></i>',
+      cyber: '<i class="fa-solid fa-robot" aria-hidden="true"></i><i class="fa-solid fa-cat" aria-hidden="true"></i>',
+      astronaut: '<i class="fa-solid fa-user-astronaut" aria-hidden="true"></i><i class="fa-solid fa-cat" aria-hidden="true"></i>',
+      detective: '<i class="fa-solid fa-user-secret" aria-hidden="true"></i><i class="fa-solid fa-cat" aria-hidden="true"></i>',
+      golden: '<i class="fa-solid fa-crown" aria-hidden="true"></i><i class="fa-solid fa-cat" aria-hidden="true"></i>'
     };
 
     const PET_AVATAR_NAMES = {
@@ -1189,11 +1389,11 @@
     if (itemKey === 'steak') {
       hunger = Math.min(100, hunger + 40);
       happiness = Math.min(100, happiness + 15);
-      if (msgEl) msgEl.textContent = '¡Panter Pet comió un delicioso Filete! 🥩';
+      if (msgEl) msgEl.textContent = '¡Panter Pet comió un delicioso Filete! ';
     } else if (itemKey === 'yarn') {
       happiness = Math.min(100, happiness + 50);
       exp += 20;
-      if (msgEl) msgEl.textContent = '¡Panter Pet jugó felizmente con la Lana! 🧶';
+      if (msgEl) msgEl.textContent = '¡Panter Pet jugó felizmente con la Lana! ';
     }
 
     // Level up check
@@ -1201,7 +1401,7 @@
     if (exp >= reqExp) {
       exp -= reqExp;
       level += 1;
-      if (msgEl) msgEl.textContent += ' ¡SUBIÓ DE NIVEL! 🎉';
+      if (msgEl) msgEl.textContent += ' ¡SUBIÓ DE NIVEL! ';
     }
 
     try {
@@ -1229,8 +1429,172 @@
     }
   };
 
+  function setupProfileTabs() {
+    const tabBtns = document.querySelectorAll('.profile-tab-btn');
+    const tabContents = document.querySelectorAll('.profile-tab-content');
+
+    tabBtns.forEach(btn => {
+      btn.onclick = () => {
+        const targetId = btn.dataset.target;
+        tabBtns.forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        tabContents.forEach(c => c.classList.remove('active'));
+
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        const targetContent = document.getElementById(targetId);
+        if (targetContent) targetContent.classList.add('active');
+      };
+    });
+  }
+
+  async function loadUserTickets() {
+    const container = document.getElementById('profileTicketsList');
+    if (!container || !currentUser) return;
+
+    try {
+      if (window.SoporteJS && typeof window.SoporteJS.getMisTickets === 'function') {
+        const tickets = await window.SoporteJS.getMisTickets(currentUser.uid);
+        if (Array.isArray(tickets) && tickets.length > 0) {
+          container.innerHTML = tickets.map(t => `
+            <div class="ticket-card">
+              <div>
+                <div class="ticket-card-header">
+                  <span class="ticket-code">${esc(t.codigo || `#TK-${t.id}`)}</span>
+                  <span class="ticket-status ${(t.estado || 'Abierto').toLowerCase().replace(/\s+/g, '-')}">${esc(t.estado || 'Abierto')}</span>
+                </div>
+                <h4 class="ticket-card-title">${esc(t.titulo)}</h4>
+                <p class="ticket-card-desc">${esc(t.descripcion)}</p>
+              </div>
+              <div class="ticket-card-meta">
+                <span>Categoría: <b>${esc(t.categoria)}</b></span>
+                <span><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> ${esc(formatDateLong(t.creadoEn))}</span>
+              </div>
+            </div>
+          `).join('');
+          return;
+        }
+      }
+    } catch (err) {
+      console.log('No se pudieron cargar tickets:', err);
+    }
+
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: #94a3b8; background: rgba(15, 23, 42, 0.4); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.1);">
+        <div style="font-size: 2.5rem; margin-bottom: 10px;"><i class="fa-solid fa-ticket" aria-hidden="true"></i></div>
+        <p style="font-weight: 700; font-size: 1.1rem; color: #f1f5f9; margin-bottom: 6px;">No tienes tickets de soporte creados</p>
+        <p style="font-size: 0.85rem; margin-bottom: 16px;">¿Necesitas ayuda con algún juego o problema técnico? Presiona "Crear Nuevo Ticket".</p>
+        <button class="btn-create-ticket" onclick="document.getElementById('btnOpenCreateTicketModal')?.click()" style="display:inline-flex; border:none; cursor:pointer;">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i> Crear Primer Ticket
+        </button>
+      </div>
+    `;
+  }
+
+  function setupCreateTicketModal() {
+    const modal = document.getElementById('createTicketModal');
+    const openBtn = document.getElementById('btnOpenCreateTicketModal');
+    const closeBtn = document.getElementById('btnCloseCreateTicketModal');
+    const cancelBtn = document.getElementById('btnCancelCreateTicket');
+    const form = document.getElementById('createTicketForm');
+    const msgEl = document.getElementById('createTicketMessage');
+
+    if (!modal) return;
+
+    const showModal = () => { if (typeof modal.showModal === 'function') modal.showModal(); else modal.style.display = 'block'; };
+    const closeModal = () => { if (typeof modal.close === 'function') modal.close(); else modal.style.display = 'none'; };
+
+    if (openBtn) openBtn.onclick = showModal;
+    if (closeBtn) closeBtn.onclick = closeModal;
+    if (cancelBtn) cancelBtn.onclick = closeModal;
+
+    if (form) {
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        if (!currentUser) {
+          if (msgEl) { msgEl.textContent = 'Debes iniciar sesión para enviar un ticket.'; msgEl.style.color = '#f87171'; }
+          return;
+        }
+
+        const titulo = document.getElementById('ticketTitleInput').value.trim();
+        const descripcion = document.getElementById('ticketDescInput').value.trim();
+        const catValue = document.getElementById('ticketCategorySelect').value;
+        const catMap = { '1': 'tecnico', '2': 'cuenta', '3': 'bug', '4': 'otro' };
+        const categoria = catMap[catValue] || 'tecnico';
+
+        if (!titulo || !descripcion) {
+          if (msgEl) { msgEl.textContent = 'Ingresa título y descripción.'; msgEl.style.color = '#f87171'; }
+          return;
+        }
+
+        if (msgEl) { msgEl.textContent = ' Enviando ticket y notificando a Discord...'; msgEl.style.color = '#38bdf8'; }
+
+        try {
+          if (!window.SoporteJS || typeof window.SoporteJS.crearTicket !== 'function') {
+            await new Promise(r => setTimeout(r, 400));
+          }
+          if (window.SoporteJS && typeof window.SoporteJS.crearTicket === 'function') {
+            const ticket = await window.SoporteJS.crearTicket({
+              titulo,
+              descripcion,
+              categoria,
+              prioridad: 'normal',
+              usuarioId: currentUser.uid,
+              usuarioNombre: currentUser.displayName || currentUser.username || currentUser.email,
+              usuarioEmail: currentUser.email
+            });
+
+            if (msgEl) { msgEl.textContent = ` Ticket ${ticket.codigo} creado y enviado a Discord exitosamente!`; msgEl.style.color = '#4ade80'; }
+            form.reset();
+            setTimeout(() => {
+              closeModal();
+              loadUserTickets();
+            }, 1200);
+          } else {
+            // Fallback de creación si SoporteJS no está en window todavía
+            const codigo = `TKT-${Math.floor(Math.random() * 90000) + 10000}`;
+            const docData = {
+              codigo,
+              titulo,
+              descripcion,
+              categoria,
+              prioridad: 'normal',
+              estado: 'Abierto',
+              usuarioId: currentUser.uid,
+              usuarioNombre: currentUser.displayName || currentUser.username || currentUser.email,
+              usuarioEmail: currentUser.email,
+              creadoEn: new Date().toISOString()
+            };
+            if (window.db && window.addDoc && window.collection) {
+              await window.addDoc(window.collection(window.db, 'soporte_tickets'), docData);
+            }
+            if (msgEl) { msgEl.textContent = ` Ticket ${codigo} creado exitosamente!`; msgEl.style.color = '#4ade80'; }
+            form.reset();
+            setTimeout(() => {
+              closeModal();
+              loadUserTickets();
+            }, 1200);
+          }
+        } catch (err) {
+          console.error('[Perfil] Error enviando ticket:', err);
+          let errMsg = err?.message || 'Error de conexión';
+          if (String(err?.code || '').includes('permission-denied')) {
+            errMsg = 'Permiso denegado en Firestore. El webhook de Discord pudo haberse enviado. Contacta al admin para verificar las reglas de seguridad.';
+          } else if (errMsg.includes('Firebase') || errMsg.includes('Firestore')) {
+            errMsg = 'No se pudo conectar con el servidor. Recarga la página e intenta de nuevo.';
+          }
+          if (msgEl) { msgEl.textContent = ` ${errMsg}`; msgEl.style.color = '#f87171'; }
+        }
+      };
+    }
+  }
+
   /* ── Init ── */
   async function init() {
+    setupProfileTabs();
+    setupCreateTicketModal();
     if (!await waitForFirebase()) { setAuthMessage('No se pudo conectar con Firebase.', 'error'); return; }
     prefillReferralField();
     settings = await loadSettings();

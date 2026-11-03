@@ -9,7 +9,11 @@
     <link rel="icon" href="../../recursos/PSGD.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="../../assets/css/modules.css">
     <link rel="stylesheet" href="../../assets/css/admin.css">
+    <script src="../../assets/js/core/roles.js"></script>
+    <script src="../../assets/js/core/discord-auth.js"></script>
+    <script src="../../assets/js/core/role-badges.js"></script>
     <script src="../../assets/js/core/firebase-config.js"></script>
     <style>
     /* ═══════════════════════════════════════
@@ -667,6 +671,41 @@
     .modal-btn-cancel { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 9px; color: var(--admin-text-secondary); cursor: pointer; font-size: 0.85rem; font-weight: 700; padding: 8px 18px; font-family: inherit; transition: all 0.2s; }
     .modal-btn-save { background: rgba(0,176,255,0.15); border: 1px solid rgba(0,176,255,0.5); border-radius: 9px; color: #40c4ff; cursor: pointer; font-size: 0.85rem; font-weight: 800; padding: 8px 18px; font-family: inherit; transition: all 0.2s; }
     .modal-btn-save:hover { background: rgba(0,176,255,0.3); box-shadow: 0 0 18px rgba(0,176,255,0.25); }
+    .modal-btn-danger {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(239,68,68,0.14);
+        border: 1px solid rgba(239,68,68,0.5);
+        border-radius: 9px;
+        color: #fca5a5;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 800;
+        padding: 8px 18px;
+        font-family: inherit;
+        transition: all 0.2s;
+    }
+    .modal-btn-danger:hover { background: rgba(239,68,68,0.28); box-shadow: 0 0 18px rgba(239,68,68,0.25); }
+    .modal-btn-danger:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
+    .ceo-delete-warning {
+        margin: 0 0 0.85rem;
+        color: var(--admin-text-secondary);
+        font-size: 0.85rem;
+        line-height: 1.55;
+    }
+    .ceo-delete-target {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(239,68,68,0.28);
+        background: rgba(239,68,68,0.07);
+    }
+    .ceo-delete-target strong { color: #fff; font-size: 0.95rem; }
+    .ceo-delete-target span { color: var(--admin-text-muted); font-size: 0.75rem; word-break: break-all; }
+    #ceoDeleteUserMsg { min-height: 1.1em; }
 
     /* ── Estados vacíos ── */
     .empty-state {
@@ -677,6 +716,8 @@
     .empty-state-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
     .empty-state-text { font-size: 0.9rem; }
     </style>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 </head>
 <body class="admin-page" data-site-root="../..">
 
@@ -703,8 +744,27 @@
         <section class="admin-gate" id="adminGate">
             <img src="../../recursos/PSGD.png" alt="Logo Panter Studio" class="admin-logo">
             <h1>Panter Panel</h1>
-            <p id="adminGateMessage" class="admin-message">Verificando tu cuenta...</p>
-            <button id="adminLoginBtn" class="btn" style="margin-top: 15px; display: none;">Iniciar Sesion con Google</button>
+            <p id="adminGateMessage" class="admin-message">Ingresa tus credenciales de administrador</p>
+            
+            <form id="adminLoginForm" style="width: 100%; margin-top: 1.25rem; display: flex; flex-direction: column; gap: 12px;" onsubmit="return false;">
+                <div class="form-group" style="margin-bottom: 0; text-align: left;">
+                    <label for="adminEmailInput" class="form-label">Usuario o Correo Electrónico</label>
+                    <input type="text" id="adminEmailInput" class="form-input" placeholder="PanterGameY o ejemplo@panterstudio.lat" required autocomplete="username">
+                </div>
+                <div class="form-group" style="margin-bottom: 0; text-align: left;">
+                    <label for="adminPasswordInput" class="form-label">Contraseña</label>
+                    <input type="password" id="adminPasswordInput" class="form-input" placeholder="••••••••••••" required autocomplete="current-password">
+                </div>
+                <button type="submit" id="adminEmailLoginBtn" class="btn btn-block" style="margin-top: 8px; background: rgba(0, 176, 255, 0.2); border-color: rgba(0, 176, 255, 0.4); color: #40c4ff; font-weight: 700;">
+                    <i class="fa-solid fa-user-lock" aria-hidden="true"></i> Iniciar Sesión
+                </button>
+            </form>
+
+            <div style="margin-top: 1.25rem; width: 100%; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1rem;">
+                <button id="adminLoginBtn" class="btn btn-block" style="display: none; background: transparent; border-color: rgba(255,255,255,0.15); font-size: 0.85rem;">
+                    <i class="fa-solid fa-globe" aria-hidden="true"></i> Continuar con Google
+                </button>
+            </div>
         </section>
 
         <!-- Main Dashboard Panel -->
@@ -720,25 +780,14 @@
                     <div class="sidebar-nav">
                         <!-- Gestión -->
                         <div class="sidebar-section-label">Gestión</div>
-                        <button class="sidebar-tab active" data-tab="dashboard">📊 Resumen</button>
-                        <button class="sidebar-tab" data-tab="betatesters">⚙️ Beta Testers</button>
-                        <button class="sidebar-tab" data-tab="accounts" id="sidebarAccountsTab" hidden>👥 Cuentas (CEO)</button>
-                        <button class="sidebar-tab" data-tab="support">💬 Soporte</button>
-                        <button class="sidebar-tab" data-tab="announcements">📢 Anuncios</button>
-                        <button class="sidebar-tab" data-tab="staff">🛡️ Personal</button>
-                        <button class="sidebar-tab" data-tab="siteconfig">⚙️ Configuración</button>
-                        <button class="sidebar-tab" data-tab="visibility">🌐 Visibilidad</button>
-                        
-                        <div class="sidebar-divider"></div>
-
-                        <!-- Desarrollo -->
-                        <div class="sidebar-section-label">Desarrollo</div>
-                        <button class="sidebar-tab" data-tab="roadmap">🗺️ Roadmap</button>
-                        <button class="sidebar-tab" data-tab="ideas">💡 Ideas</button>
-                        <button class="sidebar-tab" data-tab="changelog">📋 Changelog</button>
-                        <button class="sidebar-tab" data-tab="bugs">🐛 Bugs</button>
-                        <button class="sidebar-tab" data-tab="assets">📦 Assets</button>
-                        <button class="sidebar-tab" data-tab="notepad">📝 Pizarrón</button>
+                        <button class="sidebar-tab active" data-tab="dashboard"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Resumen</button>
+                        <button class="sidebar-tab" data-tab="betatesters"><i class="fa-solid fa-gears" aria-hidden="true"></i> Beta Testers</button>
+                        <button class="sidebar-tab" data-tab="accounts" id="sidebarAccountsTab" hidden><i class="fa-solid fa-users" aria-hidden="true"></i> Cuentas (CEO)</button>
+                        <button class="sidebar-tab" data-tab="support"><i class="fa-solid fa-comment-dots" aria-hidden="true"></i> Soporte</button>
+                        <button class="sidebar-tab" data-tab="announcements"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Anuncios</button>
+                        <button class="sidebar-tab" data-tab="staff"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Personal</button>
+                        <button class="sidebar-tab" data-tab="siteconfig"><i class="fa-solid fa-gears" aria-hidden="true"></i> Configuración</button>
+                        <button class="sidebar-tab" data-tab="visibility"><i class="fa-solid fa-globe" aria-hidden="true"></i> Visibilidad</button>
                     </div>
                     <div class="sidebar-footer">
                         <button id="adminGoHomeBtn" class="btn btn-block">Ir al Inicio</button>
@@ -772,7 +821,7 @@
                             </div>
                             <div class="stat-card">
                                 <span class="stat-label">Monedas en Circulacion</span>
-                                <strong id="statTotalCoins">0 🪙</strong>
+                                <strong id="statTotalCoins">0 <i class="fa-solid fa-coins" aria-hidden="true"></i></strong>
                             </div>
                             <div class="stat-card">
                                 <span class="stat-label">Betas Aprobados</span>
@@ -810,16 +859,16 @@
                         <div class="admin-card">
                             <div class="card-header-actions">
                                 <div>
-                                    <h3>👥 Gestión de Cuentas</h3>
-                                    <p style="margin:0;">Asigna roles del equipo de Panter Studio a los usuarios.</p>
+                                    <h3><i class="fa-solid fa-users" aria-hidden="true"></i> Directorio de Cuentas</h3>
+                                    <p style="margin:0;">Consulta las cuentas registradas. Para asignar rangos, colores y permisos usa el módulo <strong>Personal</strong> con el botón <strong>Gestionar en Personal</strong>.</p>
                                 </div>
-                                <button id="adminCeoRefreshUsersBtn" class="btn">🔄 Actualizar</button>
+                                <button id="adminCeoRefreshUsersBtn" class="btn"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Actualizar</button>
                             </div>
 
                             <!-- Search + stats bar -->
                             <div class="accounts-toolbar">
                                 <div class="accounts-search-wrap">
-                                    <span class="accounts-search-icon">🔍</span>
+                                    <span class="accounts-search-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
                                     <input type="search" id="adminCeoEmailSearch"
                                         placeholder="Buscar por nombre o correo..."
                                         class="accounts-search-input">
@@ -838,12 +887,25 @@
 
                     <!-- ══ TAB: Soporte ══ -->
                     <div class="tab-pane" id="tab-support">
+
+                        <!-- Banner Panel de Tickets -->
+                        <div style="background:linear-gradient(135deg,rgba(0,176,255,0.1),rgba(0,176,255,0.03));border:1px solid rgba(0,176,255,0.3);border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+                            <div style="font-size:2.2rem;"><i class="fa-solid fa-headset" aria-hidden="true"></i></div>
+                            <div style="flex:1;">
+                                <h3 style="margin:0 0 4px;color:#fff;font-size:1rem;">Panel de Tickets de Soporte</h3>
+                                <p style="margin:0;font-size:0.82rem;color:rgba(176,188,206,0.7);">Gestiona tickets de soporte de los usuarios: asigna, responde, cambia estado y cierra casos desde el panel dedicado.</p>
+                            </div>
+                            <a href="soporte-admin.html" target="_blank" class="btn" style="background:rgba(0,176,255,0.15);border-color:rgba(0,176,255,0.4);color:#40c4ff;text-decoration:none;white-space:nowrap;">
+                                <i class="fa-solid fa-ticket" aria-hidden="true"></i> Abrir Panel de Tickets →
+                            </a>
+                        </div>
+
                         <div class="admin-card">
                             <h3>Soporte al Jugador</h3>
                             <p>Busca un jugador por su correo electrónico, ID o nombre de usuario para visualizar y editar CUALQUIER aspecto de su cuenta (perfil, saldos, mascota, permisos, etc.).</p>
                             <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
                                 <input type="text" id="supportSearchEmail" placeholder="Introduce correo, ID de conductor o nombre de usuario" class="form-input" style="flex:1; min-width: 250px;">
-                                <button id="supportSearchBtn" class="btn">🔍 Buscar Jugador</button>
+                                <button id="supportSearchBtn" class="btn"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Buscar Jugador</button>
                             </div>
                             <p id="supportSearchMessage" class="admin-message" style="margin-top: 10px;"></p>
                             
@@ -854,13 +916,13 @@
                                         <h4 id="supportUserTitle" style="margin: 0 0 4px 0; color: #fff; font-size:1.3rem;">Usuario Encontrado</h4>
                                         <p id="supportUserEmailLabel" style="font-size: 0.85rem; color: var(--admin-text-secondary); margin:0;">correo@ejemplo.com</p>
                                     </div>
-                                    <button id="supportSaveChangesBtn" class="btn" style="background:rgba(0,176,255,0.15); border-color:rgba(0,176,255,0.4); color:#40c4ff; height: 42px;">💾 Guardar Todos los Cambios</button>
+                                    <button id="supportSaveChangesBtn" class="btn" style="background:rgba(0,176,255,0.15); border-color:rgba(0,176,255,0.4); color:#40c4ff; height: 42px;"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar Todos los Cambios</button>
                                 </div>
 
                                 <form id="supportUserEditForm" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;" onsubmit="return false;">
                                     <!-- 1. Perfil / Datos Básicos -->
                                     <div class="admin-card" style="margin-bottom:0; padding:18px; background:rgba(0,0,0,0.25); border-color:rgba(255,255,255,0.04);">
-                                        <h4 style="font-size:0.9rem; color:#40c4ff; margin-top:0; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">👤 Perfil</h4>
+                                        <h4 style="font-size:0.9rem; color:#40c4ff; margin-top:0; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;"><i class="fa-solid fa-user" aria-hidden="true"></i> Perfil</h4>
                                         <div class="form-group" style="margin-bottom:10px;">
                                             <label class="form-label" style="font-size:0.75rem;">Nombre Público</label>
                                             <input type="text" id="editSupportDisplayName" class="form-input" style="padding: 6px 10px; font-size:0.82rem;">
@@ -885,7 +947,7 @@
 
                                     <!-- 2. Economía y Saldos -->
                                     <div class="admin-card" style="margin-bottom:0; padding:18px; background:rgba(0,0,0,0.25); border-color:rgba(255,255,255,0.04);">
-                                        <h4 style="font-size:0.9rem; color:#40c4ff; margin-top:0; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">🪙 Economía</h4>
+                                        <h4 style="font-size:0.9rem; color:#40c4ff; margin-top:0; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;"><i class="fa-solid fa-coins" aria-hidden="true"></i> Economía</h4>
                                         <div class="form-group" style="margin-bottom:10px;">
                                             <label class="form-label" style="font-size:0.75rem;">Monedas Web (saldo)</label>
                                             <input type="number" id="editSupportCoins" class="form-input" style="padding: 6px 10px; font-size:0.82rem;">
@@ -906,7 +968,7 @@
 
                                     <!-- 3. Roles y Permisos -->
                                     <div class="admin-card" style="margin-bottom:0; padding:18px; background:rgba(0,0,0,0.25); border-color:rgba(255,255,255,0.04);">
-                                        <h4 style="font-size:0.9rem; color:#40c4ff; margin-top:0; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">🛡️ Permisos y Rango</h4>
+                                        <h4 style="font-size:0.9rem; color:#40c4ff; margin-top:0; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Permisos y Rango</h4>
                                         <div class="form-group" style="margin-bottom:10px;">
                                             <label class="form-label" style="font-size:0.75rem;">Rol en la Web</label>
                                             <select id="editSupportRole" class="form-select" style="padding: 6px 10px; font-size:0.82rem; height:auto;">
@@ -938,9 +1000,9 @@
                                             <label class="form-label" style="font-size:0.75rem;">Estado Beta Tester</label>
                                             <select id="editSupportBetaTesterStatus" class="form-select" style="padding: 6px 10px; font-size:0.82rem; height:auto;">
                                                 <option value="">No Postulado</option>
-                                                <option value="pending">Pendiente 🟡</option>
-                                                <option value="approved">Aprobado 🟢</option>
-                                                <option value="rejected">Rechazado 🔴</option>
+                                                <option value="pending">Pendiente </option>
+                                                <option value="approved">Aprobado </option>
+                                                <option value="rejected">Rechazado </option>
                                             </select>
                                         </div>
                                         <div class="form-group" style="margin-bottom:10px;">
@@ -955,7 +1017,7 @@
 
                                     <!-- 4. Mascota y Cooldowns -->
                                     <div class="admin-card" style="margin-bottom:0; padding:18px; background:rgba(0,0,0,0.25); border-color:rgba(255,255,255,0.04);">
-                                        <h4 style="font-size:0.9rem; color:#40c4ff; margin-top:0; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">🐾 Mascota y Cooldowns</h4>
+                                        <h4 style="font-size:0.9rem; color:#40c4ff; margin-top:0; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;"><i class="fa-solid fa-paw" aria-hidden="true"></i> Mascota y Cooldowns</h4>
                                         <div class="form-group" style="margin-bottom:10px;">
                                             <label class="form-label" style="font-size:0.75rem;">Nombre Mascota</label>
                                             <input type="text" id="editSupportPetName" class="form-input" style="padding: 6px 10px; font-size:0.82rem;">
@@ -985,8 +1047,8 @@
                                             </div>
                                         </div>
                                         <div style="margin-top:12px; display:flex; flex-direction:column; gap:6px;">
-                                            <button type="button" id="btnResetWorkCooldown" class="btn btn-sm" style="width:100%; font-size:0.72rem; padding:4px;">Reset Cooldown Trabajo 💼</button>
-                                            <button type="button" id="btnResetRiskCooldown" class="btn btn-sm" style="width:100%; font-size:0.72rem; padding:4px;">Reset Cooldown Riesgo ⚠️</button>
+                                            <button type="button" id="btnResetWorkCooldown" class="btn btn-sm" style="width:100%; font-size:0.72rem; padding:4px;">Reset Cooldown Trabajo <i class="fa-solid fa-briefcase" aria-hidden="true"></i></button>
+                                            <button type="button" id="btnResetRiskCooldown" class="btn btn-sm" style="width:100%; font-size:0.72rem; padding:4px;">Reset Cooldown Riesgo <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></button>
                                         </div>
                                     </div>
                                 </form>
@@ -994,11 +1056,11 @@
                             </div>
                         </div>
 
-                        <!-- 🛠️ Global System Tools / Redeem History -->
+                        <!-- Global System Tools / Redeem History -->
                         <div class="admin-card" style="margin-top: 20px;">
                             <div class="card-header-actions">
-                                <h3>📋 Últimos Canjes de Monedas (Comunidad)</h3>
-                                <button id="btnRefreshRedeemLogs" class="btn btn-sm">🔄 Recargar Canjes</button>
+                                <h3><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Últimos Canjes de Monedas (Comunidad)</h3>
+                                <button id="btnRefreshRedeemLogs" class="btn btn-sm"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Recargar Canjes</button>
                             </div>
                             <p>Registro histórico de los canjes de monedas web realizados por los jugadores de la comunidad.</p>
                             <div class="admin-table-scroll">
@@ -1026,26 +1088,213 @@
                     <div class="tab-pane" id="tab-announcements">
                         <div class="admin-card">
                             <div class="card-header-actions">
-                                <h3>📢 Tablón de Anuncios</h3>
+                                <h3><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Tablón de Anuncios</h3>
                                 <button class="btn" onclick="openAnnouncementModal()">+ Nuevo Anuncio</button>
                             </div>
                             <p>Publica anuncios visibles para toda la comunidad de Panter Studio. Se guardan en la nube.</p>
                             <div id="announcementsList" class="announcements-list">
-                                <div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">Cargando anuncios...</div></div>
+                                <div class="empty-state"><div class="empty-state-icon"><i class="fa-solid fa-inbox" aria-hidden="true"></i></div><div class="empty-state-text">Cargando anuncios...</div></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ══ TAB: Personal (Firestore) ══ -->
+                    <!-- ══ TAB: Personal (equipo + roles) ══ -->
                     <div class="tab-pane" id="tab-staff">
                         <div class="admin-card">
                             <div class="card-header-actions">
-                                <h3>🛡️ Personal del Estudio</h3>
-                                <button class="btn" id="staffRefreshBtn">Actualizar</button>
+                                <div>
+                                    <h3><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Personal del Estudio</h3>
+                                    <p style="margin:0;">Gestiona el equipo visible en la página <strong>Personal</strong> y personaliza los rangos, colores y permisos del sitio.</p>
+                                </div>
+                                <button class="btn" id="staffRefreshBtn">
+                                    <i class="fa-solid fa-rotate" aria-hidden="true"></i> Actualizar
+                                </button>
                             </div>
-                            <p>Vista rápida de todos los miembros con rol de staff activos en la base de datos.</p>
-                            <div id="staffAdminList" class="staff-admin-list" style="margin-top:1rem;">
-                                <div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-text">Cargando personal...</div></div>
+
+                            <!-- Selector de usuario registrado -->
+                            <div class="ps-staff-picker">
+                                <label for="staffUserPicker">Agregar o seleccionar un usuario de la plataforma</label>
+                                <div class="ps-staff-picker-row">
+                                    <select id="staffUserPicker">
+                                        <option value="">— Nuevo miembro manual —</option>
+                                    </select>
+                                    <button type="button" class="btn" id="staffUserPickBtn">
+                                        <i class="fa-solid fa-user-plus" aria-hidden="true"></i> Cargar en formulario
+                                    </button>
+                                </div>
+                                <small class="ps-field-help" id="staffUserPickerMsg">Elige una cuenta registrada para rellenar UID, nombre, avatar y Discord ID automáticamente.</small>
+                            </div>
+
+                            <form id="staffForm" class="ps-admin-grid" style="margin-top:1rem;" onsubmit="return false;">
+                                <div class="ps-admin-staff-card">
+                                    <label>Discord User ID
+                                        <input type="text" id="staffFieldUid" placeholder="123456789012345678 o discord_123456789012345678" autocomplete="off">
+                                    </label>
+                                    <label>Nombre visible
+                                        <input type="text" id="staffFieldNombre" placeholder="PanterGameYT" maxlength="80" autocomplete="off">
+                                    </label>
+                                    <label>Usuario de Discord
+                                        <input type="text" id="staffFieldUsername" placeholder="pantergamey" maxlength="60" autocomplete="off">
+                                    </label>
+                                    <label>URL del avatar
+                                        <input type="text" id="staffFieldAvatar" placeholder="https://cdn.discordapp.com/..." autocomplete="off">
+                                    </label>
+                                    <label>Estado
+                                        <select id="staffFieldEstado">
+                                            <option value="online">En línea</option>
+                                            <option value="idle">Ausente</option>
+                                            <option value="dnd">No molestar</option>
+                                            <option value="offline">Offline</option>
+                                        </select>
+                                    </label>
+                                    <small class="ps-field-help">El Discord User ID es opcional, pero permite enlazar el rol con el servidor.</small>
+                                </div>
+                                <div class="ps-admin-staff-card">
+                                    <label>Rango / Grupo principal
+                                        <select id="staffFieldRole"></select>
+                                    </label>
+                                    <label>Especialidad
+                                        <input type="text" id="staffFieldEspecialidad" list="staffSpecialtyList" placeholder="Programador, Modelador, Diseñador..." maxlength="80" autocomplete="off">
+                                        <datalist id="staffSpecialtyList">
+                                            <option value="Programador"></option>
+                                            <option value="Modelador 3D"></option>
+                                            <option value="Diseñador Gráfico"></option>
+                                            <option value="Diseñador de Interfaz"></option>
+                                            <option value="Artista Conceptual"></option>
+                                            <option value="Animador"></option>
+                                            <option value="Compositor / Audio"></option>
+                                            <option value="Guionista"></option>
+                                            <option value="Director Creativo"></option>
+                                            <option value="Community Manager"></option>
+                                            <option value="Soporte Técnico"></option>
+                                            <option value="Moderador"></option>
+                                        </datalist>
+                                    </label>
+                                    <label>Descripción
+                                        <textarea id="staffFieldDescripcion" rows="4" maxlength="1200" placeholder="Responsabilidades dentro del estudio…"></textarea>
+                                    </label>
+                                    <label>Orden de prioridad (menor aparece primero)
+                                        <input type="number" id="staffFieldOrden" placeholder="1" min="0" step="1">
+                                    </label>
+                                    <div class="ps-admin-staff-actions">
+                                        <button type="button" class="btn" id="staffSaveBtn">
+                                            <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar
+                                        </button>
+                                        <button type="button" class="btn" id="staffResetBtn">
+                                            <i class="fa-solid fa-eraser" aria-hidden="true"></i> Limpiar
+                                        </button>
+                                    </div>
+                                    <small class="ps-field-help" id="staffFormMsg"></small>
+                                </div>
+                            </form>
+
+                            <h4 class="ps-admin-subtitle">Directorio del equipo</h4>
+                            <div id="staffAdminList" class="ps-admin-grid" style="margin-top:1rem;">
+                                <div class="empty-state"><div class="empty-state-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></div><div class="empty-state-text">Cargando personal...</div></div>
+                            </div>
+
+                            <!-- Gestor de roles y colores -->
+                            <section class="ps-role-manager" id="roleManager">
+                                <div class="ps-role-manager-head">
+                                    <div>
+                                        <h4><i class="fa-solid fa-palette" aria-hidden="true"></i> Gestor de Roles y Colores</h4>
+                                        <p>Personaliza la paleta de cada rango, crea roles nuevos y ajusta sus permisos. Los cambios se sincronizan con Firestore, el mapeo de Discord, la página Personal y las insignias de tickets.</p>
+                                    </div>
+                                    <button type="button" class="btn" id="roleManagerResetBtn">
+                                        <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Restaurar paleta oficial
+                                    </button>
+                                </div>
+
+                                <div id="roleManagerList" class="ps-role-manager-list">
+                                    <div class="empty-state"><div class="empty-state-text">Cargando roles...</div></div>
+                                </div>
+
+                                <form id="roleEditorForm" class="ps-role-editor" onsubmit="return false;">
+                                    <input type="hidden" id="roleEditorId">
+                                    <div class="ps-role-editor-grid">
+                                        <label>Nombre visible
+                                            <input type="text" id="roleEditorLabel" maxlength="48" placeholder="Moderador Jefe" autocomplete="off">
+                                        </label>
+                                        <label>Etiqueta corta
+                                            <input type="text" id="roleEditorShort" maxlength="24" placeholder="Mod Jefe" autocomplete="off">
+                                        </label>
+                                        <label>Identificador
+                                            <input type="text" id="roleEditorKey" maxlength="40" placeholder="moderador_jefe" autocomplete="off">
+                                        </label>
+                                        <label>Color Hex
+                                            <span class="ps-role-color-row">
+                                                <input type="color" id="roleEditorColor" value="#0055ff" aria-label="Selector de color">
+                                                <input type="text" id="roleEditorColorHex" maxlength="7" placeholder="#0055ff" autocomplete="off">
+                                            </span>
+                                            <small>Los roles base mantienen su color oficial; los roles personalizados sí permiten cambiarlo.</small>
+                                        </label>
+                                        <label>Icono Font Awesome
+                                            <input type="text" id="roleEditorIcon" maxlength="80" placeholder="fa-solid fa-shield-halved" autocomplete="off">
+                                        </label>
+                                        <label>Prioridad (mayor = más alto)
+                                            <input type="number" id="roleEditorRank" min="0" max="1000" step="1" placeholder="50">
+                                        </label>
+                                        <label>Discord Role ID
+                                            <input type="text" id="roleEditorDiscordId" maxlength="25" placeholder="123456789012345678" autocomplete="off">
+                                        </label>
+                                        <label class="ps-role-editor-wide">Descripción
+                                            <input type="text" id="roleEditorDescription" maxlength="240" placeholder="Qué representa este rango dentro del estudio" autocomplete="off">
+                                        </label>
+                                    </div>
+                                    <fieldset class="ps-role-permissions">
+                                        <legend>Permisos del rango</legend>
+                                        <label><input type="checkbox" id="rolePermTeam"> Aparece en Personal</label>
+                                        <label><input type="checkbox" id="rolePermTicketStaff"> Staff de tickets</label>
+                                        <label><input type="checkbox" id="rolePermAdminPanel"> Acceso al panel admin</label>
+                                        <label><input type="checkbox" id="rolePermManageTeam"> Gestionar equipo</label>
+                                    </fieldset>
+                                    <div class="ps-admin-staff-actions">
+                                        <button type="button" class="btn" id="roleEditorSaveBtn">
+                                            <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar rol
+                                        </button>
+                                        <button type="button" class="btn" id="roleEditorNewBtn">
+                                            <i class="fa-solid fa-plus" aria-hidden="true"></i> Nuevo rol
+                                        </button>
+                                        <button type="button" class="btn" id="roleEditorDeleteBtn">
+                                            <i class="fa-solid fa-trash" aria-hidden="true"></i> Eliminar rol
+                                        </button>
+                                    </div>
+                                    <small class="ps-field-help" id="roleEditorMsg"></small>
+                                </form>
+                            </section>
+
+                            <div class="ps-discord-map">
+                                <h4><i class="fa-brands fa-discord" aria-hidden="true"></i> Mapeo de roles Discord → Web</h4>
+                                <p>El <strong>Discord Role ID</strong> de cada rango se sincroniza automáticamente desde el Gestor de Roles. Aquí puedes revisar el resto del mapeo. El rol con permiso <strong>Administrator</strong> recibe automáticamente <strong>ADMIN / OWNER</strong>.</p>
+                                <div class="ps-admin-grid">
+                                    <div class="ps-admin-staff-card">
+                                        <label>Discord Guild ID
+                                            <input type="text" id="discordGuildId" placeholder="123456789012345678" autocomplete="off">
+                                        </label>
+                                        <label>Nombre del servidor
+                                            <input type="text" id="discordGuildName" placeholder="Panter Studio" autocomplete="off">
+                                        </label>
+                                        <label>IDs de roles con Administrator (separados por coma)
+                                            <input type="text" id="discordAdminRoleIds" placeholder="123456789012345678, 987654321098765432" autocomplete="off">
+                                        </label>
+                                        <small class="ps-field-help">Opcional: además del permiso Administrator, estos IDs otorgan acceso total.</small>
+                                    </div>
+                                    <div class="ps-admin-staff-card">
+                                        <label>Mapeos de roles
+                                            <textarea id="discordRoleMap" rows="7" placeholder="ID_DISCORD | Nombre del rol | rol_web"></textarea>
+                                        </label>
+                                        <small class="ps-field-help">Una línea por rol. Ejemplo: <code>123456789 | Fundador | founder_ceo</code>. Los roles personalizados usan su identificador del gestor.</small>
+                                        <div class="ps-admin-staff-actions">
+                                            <button type="button" class="btn" id="discordMapSaveBtn">
+                                                <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar mapeo
+                                            </button>
+                                            <button type="button" class="btn" id="discordMapReloadBtn">
+                                                <i class="fa-solid fa-rotate" aria-hidden="true"></i> Recargar
+                                            </button>
+                                        </div>
+                                        <small class="ps-field-help" id="discordMapMsg"></small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1053,12 +1302,12 @@
                     <!-- ══ TAB: Configuración del Sitio (settings) ══ -->
                     <div class="tab-pane" id="tab-siteconfig">
                         <div class="admin-card">
-                            <h3>⚙️ Configuración Global del Sitio</h3>
+                            <h3><i class="fa-solid fa-gears" aria-hidden="true"></i> Configuración Global del Sitio</h3>
                             <p>Modifica los parámetros de recompensa, bonos diarios y enlaces externos almacenados en Firestore.</p>
                             <form id="siteConfigForm" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:20px;" onsubmit="return false;">
                                 <!-- Bonos y Recompensas -->
                                 <div class="admin-card" style="margin-bottom:0; padding:20px; background:rgba(0,0,0,0.15); border-color:rgba(255,255,255,0.04);">
-                                    <h4 style="font-size:0.95rem; color:#40c4ff; margin-top:0; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">🪙 Economía Web</h4>
+                                    <h4 style="font-size:0.95rem; color:#40c4ff; margin-top:0; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;"><i class="fa-solid fa-coins" aria-hidden="true"></i> Economía Web</h4>
                                     <div class="form-group">
                                         <label class="form-label">Monedas por Referido</label>
                                         <input type="number" id="cfgReferralCoins" class="form-input" placeholder="ej. 50">
@@ -1075,7 +1324,7 @@
 
                                 <!-- Donaciones y Metas -->
                                 <div class="admin-card" style="margin-bottom:0; padding:20px; background:rgba(0,0,0,0.15); border-color:rgba(255,255,255,0.04);">
-                                    <h4 style="font-size:0.95rem; color:#40c4ff; margin-top:0; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">🎁 Donaciones y Metas</h4>
+                                    <h4 style="font-size:0.95rem; color:#40c4ff; margin-top:0; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;"><i class="fa-solid fa-gift" aria-hidden="true"></i> Donaciones y Metas</h4>
                                     <div class="form-group">
                                         <label class="form-label">Meta de Donaciones ($ USD)</label>
                                         <input type="number" id="cfgDonationGoal" class="form-input" placeholder="ej. 500">
@@ -1100,7 +1349,7 @@
 
                                 <!-- Anuncio del Tablón Superior -->
                                 <div class="admin-card" style="grid-column: 1 / -1; margin-bottom:0; padding:20px; background:rgba(0,0,0,0.15); border-color:rgba(255,255,255,0.04);">
-                                    <h4 style="font-size:0.95rem; color:#40c4ff; margin-top:0; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">📢 Anuncio General Superior (Tablón)</h4>
+                                    <h4 style="font-size:0.95rem; color:#40c4ff; margin-top:0; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Anuncio General Superior (Tablón)</h4>
                                     <div class="form-group" style="margin-bottom:0;">
                                         <label class="form-label">Texto del Banner (Vacío para ocultar en la página de actualizaciones)</label>
                                         <textarea id="cfgAnnouncementText" class="form-textarea" rows="2" placeholder="ej. ¡Nuestra Tierra Alpha 0.5 disponible próximamente!"></textarea>
@@ -1108,7 +1357,7 @@
                                 </div>
                             </form>
                             <div style="display:flex; justify-content:flex-end; margin-top:20px;">
-                                <button id="btnSaveSiteConfig" class="btn" style="background:rgba(16, 185, 129, 0.15); border-color:rgba(16, 185, 129, 0.4); color:#a7f3d0;">💾 Guardar Configuración</button>
+                                <button id="btnSaveSiteConfig" class="btn" style="background:rgba(16, 185, 129, 0.15); border-color:rgba(16, 185, 129, 0.4); color:#a7f3d0;"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar Configuración</button>
                             </div>
                             <p id="siteConfigActionMessage" class="admin-message" style="margin-top:15px;"></p>
                         </div>
@@ -1117,27 +1366,25 @@
                     <!-- ══ TAB: Visibilidad y Acceso (site-visibility) ══ -->
                     <div class="tab-pane" id="tab-visibility">
                         <div class="admin-card">
-                            <h3>🌐 Control de Visibilidad y Accesos</h3>
+                            <h3><i class="fa-solid fa-globe" aria-hidden="true"></i> Control de Visibilidad y Accesos</h3>
                             <p>Administra el acceso público de las páginas individuales y controla si el sitio completo se encuentra bajo mantenimiento global.</p>
-                            
-                            <!-- Global Maintenance -->
-                            <div class="admin-card" style="padding:20px; background:rgba(239, 68, 68, 0.05); border-color:rgba(239, 68, 68, 0.2); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:20px;">
+
+                            <!-- Modo mantenimiento desactivado -->
+                            <div class="admin-card" style="padding:20px; background:rgba(34, 197, 94, 0.06); border-color:rgba(34, 197, 94, 0.25); display:flex; gap:14px; align-items:flex-start; margin-bottom:20px;">
+                                <div style="font-size:1.6rem; line-height:1; color:#4ade80;"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></div>
                                 <div>
-                                    <h4 style="margin:0 0 4px 0; color:#f87171;">⚠️ Mantenimiento Global del Sitio</h4>
-                                    <p style="margin:0; font-size:0.82rem; color:var(--admin-text-secondary);">Si se activa, todos los usuarios (excepto el CEO) verán una pantalla de mantenimiento y no podrán interactuar.</p>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:8px;">
-                                    <input type="checkbox" id="cfgGlobalMaintenance" style="width:22px; height:22px; margin:0; cursor:pointer;">
-                                    <label for="cfgGlobalMaintenance" class="form-label" style="margin:0; font-weight:800; color:#f87171; cursor:pointer;">Activar Bloqueo Global</label>
+                                    <h4 style="margin:0 0 4px 0; color:#4ade80;"><i class="fa-solid fa-lock-open" aria-hidden="true"></i> Modo mantenimiento desactivado</h4>
+                                    <p style="margin:0; font-size:0.82rem; color:var(--admin-text-secondary);">El bloqueo global y las restricciones de acceso están desactivados de forma permanente. Todos los usuarios autenticados pueden navegar e interactuar con la web con normalidad.</p>
                                 </div>
                             </div>
+                            <input type="checkbox" id="cfgGlobalMaintenance" hidden aria-hidden="true" tabindex="-1">
 
                             <h4 style="margin-top:20px; margin-bottom:12px; font-size:1.1rem; color:#40c4ff;">Configuración por Página</h4>
                             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
                                 
                                 <!-- Perfil -->
                                 <div class="admin-card" style="margin-bottom:0; padding:15px; background:rgba(0,0,0,0.15); border-color:rgba(255,255,255,0.04);">
-                                    <h4 style="margin-top:0; margin-bottom:10px; color:#fff; font-size:0.9rem;">👤 Mi Perfil (perfil.html)</h4>
+                                    <h4 style="margin-top:0; margin-bottom:10px; color:#fff; font-size:0.9rem;"><i class="fa-solid fa-user" aria-hidden="true"></i> Mi Perfil (perfil.html)</h4>
                                     <div class="form-group" style="display:flex; flex-direction:row; align-items:center; gap:8px; margin-bottom:10px;">
                                         <input type="checkbox" id="cfgMaint_perfil" style="width:16px; height:16px; margin:0; cursor:pointer;">
                                         <label for="cfgMaint_perfil" class="form-label" style="margin:0; cursor:pointer;">Bajo Mantenimiento</label>
@@ -1150,7 +1397,7 @@
 
                                 <!-- Donaciones -->
                                 <div class="admin-card" style="margin-bottom:0; padding:15px; background:rgba(0,0,0,0.15); border-color:rgba(255,255,255,0.04);">
-                                    <h4 style="margin-top:0; margin-bottom:10px; color:#fff; font-size:0.9rem;">🎁 Apoyanos (donaciones.html)</h4>
+                                    <h4 style="margin-top:0; margin-bottom:10px; color:#fff; font-size:0.9rem;"><i class="fa-solid fa-gift" aria-hidden="true"></i> Apoyanos (donaciones.html)</h4>
                                     <div class="form-group" style="display:flex; flex-direction:row; align-items:center; gap:8px; margin-bottom:10px;">
                                         <input type="checkbox" id="cfgMaint_donaciones" style="width:16px; height:16px; margin:0; cursor:pointer;">
                                         <label for="cfgMaint_donaciones" class="form-label" style="margin:0; cursor:pointer;">Bajo Mantenimiento</label>
@@ -1163,7 +1410,7 @@
 
                                 <!-- Personal -->
                                 <div class="admin-card" style="margin-bottom:0; padding:15px; background:rgba(0,0,0,0.15); border-color:rgba(255,255,255,0.04);">
-                                    <h4 style="margin-top:0; margin-bottom:10px; color:#fff; font-size:0.9rem;">👥 Personal (personal.html)</h4>
+                                    <h4 style="margin-top:0; margin-bottom:10px; color:#fff; font-size:0.9rem;"><i class="fa-solid fa-users" aria-hidden="true"></i> Personal (personal.html)</h4>
                                     <div class="form-group" style="display:flex; flex-direction:row; align-items:center; gap:8px; margin-bottom:10px;">
                                         <input type="checkbox" id="cfgMaint_personal" style="width:16px; height:16px; margin:0; cursor:pointer;">
                                         <label for="cfgMaint_personal" class="form-label" style="margin:0; cursor:pointer;">Bajo Mantenimiento</label>
@@ -1176,7 +1423,7 @@
 
                                 <!-- Actualizaciones -->
                                 <div class="admin-card" style="margin-bottom:0; padding:15px; background:rgba(0,0,0,0.15); border-color:rgba(255,255,255,0.04);">
-                                    <h4 style="margin-top:0; margin-bottom:10px; color:#fff; font-size:0.9rem;">📢 Actualizaciones (actualizaciones.html)</h4>
+                                    <h4 style="margin-top:0; margin-bottom:10px; color:#fff; font-size:0.9rem;"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Actualizaciones (actualizaciones.html)</h4>
                                     <div class="form-group" style="display:flex; flex-direction:row; align-items:center; gap:8px; margin-bottom:10px;">
                                         <input type="checkbox" id="cfgMaint_actualizaciones" style="width:16px; height:16px; margin:0; cursor:pointer;">
                                         <label for="cfgMaint_actualizaciones" class="form-label" style="margin:0; cursor:pointer;">Bajo Mantenimiento</label>
@@ -1189,7 +1436,7 @@
 
                             </div>
                             <div style="display:flex; justify-content:flex-end; margin-top:20px;">
-                                <button id="btnSaveVisibility" class="btn" style="background:rgba(0, 176, 255, 0.15); border-color:rgba(0, 176, 255, 0.4); color:#40c4ff;">💾 Guardar Cambios de Visibilidad</button>
+                                <button id="btnSaveVisibility" class="btn" style="background:rgba(0, 176, 255, 0.15); border-color:rgba(0, 176, 255, 0.4); color:#40c4ff;"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar Cambios de Visibilidad</button>
                             </div>
                             <p id="visibilityActionMessage" class="admin-message" style="margin-top:15px;"></p>
                         </div>
@@ -1199,69 +1446,69 @@
                     <div class="tab-pane" id="tab-roadmap">
                         <div class="admin-card">
                             <div class="card-header-actions">
-                                <h3>🗺️ Roadmap del Juego</h3>
-                                <button class="btn" onclick="exportKanban()">📋 Exportar</button>
+                                <h3><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> Roadmap del Juego</h3>
+                                <button class="btn" onclick="exportKanban()"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Exportar</button>
                             </div>
                             <p>Organiza las tareas del videojuego con tarjetas. Guardado local en tu navegador.</p>
                             <div class="kanban-board" id="kanbanBoard">
                                 <div class="kanban-col" data-col="ideas">
-                                    <div class="kanban-col-header">💡 Ideas <span class="kanban-col-count" id="count-ideas">0</span></div>
+                                    <div class="kanban-col-header"><i class="fa-solid fa-lightbulb" aria-hidden="true"></i> Ideas <span class="kanban-col-count" id="count-ideas">0</span></div>
                                     <div class="kanban-cards" id="cards-ideas"></div>
                                     <div class="kanban-add-form" id="form-ideas">
                                         <input type="text" placeholder="Título de la tarea..." id="kanban-title-ideas">
                                         <textarea rows="2" placeholder="Descripción breve..." id="kanban-desc-ideas"></textarea>
                                         <select id="kanban-tag-ideas">
-                                            <option value="gameplay">🎮 Gameplay</option>
-                                            <option value="ui">🖥️ UI</option>
-                                            <option value="economia">💰 Economía</option>
-                                            <option value="arte">🎨 Arte</option>
-                                            <option value="audio">🎵 Audio</option>
-                                            <option value="tecnico">⚙️ Técnico</option>
+                                            <option value="gameplay"> Gameplay</option>
+                                            <option value="ui"> UI</option>
+                                            <option value="economia"> Economía</option>
+                                            <option value="arte"> Arte</option>
+                                            <option value="audio"> Audio</option>
+                                            <option value="tecnico"> Técnico</option>
                                         </select>
                                         <select id="kanban-prio-ideas">
-                                            <option value="high">🔴 Alta</option>
-                                            <option value="medium">🟡 Media</option>
-                                            <option value="low">⚪ Baja</option>
+                                            <option value="high"> Alta</option>
+                                            <option value="medium"> Media</option>
+                                            <option value="low"> Baja</option>
                                         </select>
                                         <div class="kanban-add-form-actions">
-                                            <button class="btn-kanban-save" onclick="saveKanbanCard('ideas')">✓ Guardar</button>
-                                            <button class="btn-kanban-cancel" onclick="closeKanbanForm('ideas')">✗ Cancelar</button>
+                                            <button class="btn-kanban-save" onclick="saveKanbanCard('ideas')"><i class="fa-solid fa-check" aria-hidden="true"></i> Guardar</button>
+                                            <button class="btn-kanban-cancel" onclick="closeKanbanForm('ideas')"><i class="fa-solid fa-xmark" aria-hidden="true"></i> Cancelar</button>
                                         </div>
                                     </div>
                                     <button class="btn-add-kanban" onclick="openKanbanForm('ideas')">+ Agregar tarea</button>
                                 </div>
                                 <div class="kanban-col" data-col="progress">
-                                    <div class="kanban-col-header">🔧 En Progreso <span class="kanban-col-count" id="count-progress">0</span></div>
+                                    <div class="kanban-col-header"><i class="fa-solid fa-wrench" aria-hidden="true"></i> En Progreso <span class="kanban-col-count" id="count-progress">0</span></div>
                                     <div class="kanban-cards" id="cards-progress"></div>
                                     <div class="kanban-add-form" id="form-progress">
                                         <input type="text" placeholder="Título..." id="kanban-title-progress">
                                         <textarea rows="2" placeholder="Descripción..." id="kanban-desc-progress"></textarea>
-                                        <select id="kanban-tag-progress"><option value="gameplay">🎮 Gameplay</option><option value="ui">🖥️ UI</option><option value="economia">💰 Economía</option><option value="arte">🎨 Arte</option><option value="audio">🎵 Audio</option><option value="tecnico">⚙️ Técnico</option></select>
-                                        <select id="kanban-prio-progress"><option value="high">🔴 Alta</option><option value="medium">🟡 Media</option><option value="low">⚪ Baja</option></select>
+                                        <select id="kanban-tag-progress"><option value="gameplay"> Gameplay</option><option value="ui"> UI</option><option value="economia"> Economía</option><option value="arte"> Arte</option><option value="audio"> Audio</option><option value="tecnico"> Técnico</option></select>
+                                        <select id="kanban-prio-progress"><option value="high"> Alta</option><option value="medium"> Media</option><option value="low"> Baja</option></select>
                                         <div class="kanban-add-form-actions">
-                                            <button class="btn-kanban-save" onclick="saveKanbanCard('progress')">✓ Guardar</button>
-                                            <button class="btn-kanban-cancel" onclick="closeKanbanForm('progress')">✗ Cancelar</button>
+                                            <button class="btn-kanban-save" onclick="saveKanbanCard('progress')"><i class="fa-solid fa-check" aria-hidden="true"></i> Guardar</button>
+                                            <button class="btn-kanban-cancel" onclick="closeKanbanForm('progress')"><i class="fa-solid fa-xmark" aria-hidden="true"></i> Cancelar</button>
                                         </div>
                                     </div>
                                     <button class="btn-add-kanban" onclick="openKanbanForm('progress')">+ Agregar tarea</button>
                                 </div>
                                 <div class="kanban-col" data-col="done">
-                                    <div class="kanban-col-header">✅ Completado <span class="kanban-col-count" id="count-done">0</span></div>
+                                    <div class="kanban-col-header"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Completado <span class="kanban-col-count" id="count-done">0</span></div>
                                     <div class="kanban-cards" id="cards-done"></div>
                                     <div class="kanban-add-form" id="form-done">
                                         <input type="text" placeholder="Título..." id="kanban-title-done">
                                         <textarea rows="2" placeholder="Descripción..." id="kanban-desc-done"></textarea>
-                                        <select id="kanban-tag-done"><option value="gameplay">🎮 Gameplay</option><option value="ui">🖥️ UI</option><option value="economia">💰 Economía</option><option value="arte">🎨 Arte</option><option value="audio">🎵 Audio</option><option value="tecnico">⚙️ Técnico</option></select>
-                                        <select id="kanban-prio-done"><option value="high">🔴 Alta</option><option value="medium">🟡 Media</option><option value="low">⚪ Baja</option></select>
+                                        <select id="kanban-tag-done"><option value="gameplay"> Gameplay</option><option value="ui"> UI</option><option value="economia"> Economía</option><option value="arte"> Arte</option><option value="audio"> Audio</option><option value="tecnico"> Técnico</option></select>
+                                        <select id="kanban-prio-done"><option value="high"> Alta</option><option value="medium"> Media</option><option value="low"> Baja</option></select>
                                         <div class="kanban-add-form-actions">
-                                            <button class="btn-kanban-save" onclick="saveKanbanCard('done')">✓ Guardar</button>
-                                            <button class="btn-kanban-cancel" onclick="closeKanbanForm('done')">✗ Cancelar</button>
+                                            <button class="btn-kanban-save" onclick="saveKanbanCard('done')"><i class="fa-solid fa-check" aria-hidden="true"></i> Guardar</button>
+                                            <button class="btn-kanban-cancel" onclick="closeKanbanForm('done')"><i class="fa-solid fa-xmark" aria-hidden="true"></i> Cancelar</button>
                                         </div>
                                     </div>
                                     <button class="btn-add-kanban" onclick="openKanbanForm('done')">+ Agregar tarea</button>
                                 </div>
                                 <div class="kanban-col" data-col="discarded">
-                                    <div class="kanban-col-header">🗑️ Descartado <span class="kanban-col-count" id="count-discarded">0</span></div>
+                                    <div class="kanban-col-header"><i class="fa-solid fa-trash-can" aria-hidden="true"></i> Descartado <span class="kanban-col-count" id="count-discarded">0</span></div>
                                     <div class="kanban-cards" id="cards-discarded"></div>
                                     <button class="btn-add-kanban" onclick="openKanbanForm('discarded')" style="display:none;"></button>
                                 </div>
@@ -1272,34 +1519,34 @@
                     <!-- ══ TAB: Banco de Ideas ══ -->
                     <div class="tab-pane" id="tab-ideas">
                         <div class="admin-card">
-                            <h3>💡 Banco de Ideas</h3>
+                            <h3><i class="fa-solid fa-lightbulb" aria-hidden="true"></i> Banco de Ideas</h3>
                             <p>Captura ideas rápidas, clasifícalas y decídete qué implementar. Guardado local.</p>
                             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:1rem;">
                                 <input type="text" id="ideaTitle" class="form-input" placeholder="Título de la idea...">
                                 <select id="ideaCategory" class="form-select">
-                                    <option value="mecanica">🎮 Mecánica</option>
-                                    <option value="historia">📖 Historia</option>
-                                    <option value="arte">🎨 Arte</option>
-                                    <option value="musica">🎵 Música</option>
-                                    <option value="monetizacion">💰 Monetización</option>
-                                    <option value="comunidad">🌐 Comunidad</option>
-                                    <option value="otro">📌 Otro</option>
+                                    <option value="mecanica"> Mecánica</option>
+                                    <option value="historia"> Historia</option>
+                                            <option value="arte"> Arte</option>
+                                    <option value="musica"> Música</option>
+                                    <option value="monetizacion"> Monetización</option>
+                                    <option value="comunidad"> Comunidad</option>
+                                    <option value="otro"> Otro</option>
                                 </select>
                             </div>
                             <textarea id="ideaBody" class="form-textarea" rows="3" placeholder="Describe la idea con detalle..." style="margin-bottom:8px; resize:none;"></textarea>
                             <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:1.5rem;">
-                                <button class="btn" onclick="saveIdea()">💾 Guardar Idea</button>
+                                <button class="btn" onclick="saveIdea()"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar Idea</button>
                                 <div class="ideas-toolbar" style="margin:0; flex:1;">
                                     <input type="text" id="ideasSearch" placeholder="Buscar ideas..." oninput="renderIdeas()">
                                     <select id="ideasFilter" onchange="renderIdeas()">
                                         <option value="">Todas</option>
-                                        <option value="mecanica">🎮 Mecánica</option>
-                                        <option value="historia">📖 Historia</option>
-                                        <option value="arte">🎨 Arte</option>
-                                        <option value="musica">🎵 Música</option>
-                                        <option value="monetizacion">💰 Monetización</option>
-                                        <option value="comunidad">🌐 Comunidad</option>
-                                        <option value="otro">📌 Otro</option>
+                                    <option value="mecanica"> Mecánica</option>
+                                    <option value="historia"> Historia</option>
+                                            <option value="arte"> Arte</option>
+                                    <option value="musica"> Música</option>
+                                    <option value="monetizacion"> Monetización</option>
+                                    <option value="comunidad"> Comunidad</option>
+                                    <option value="otro"> Otro</option>
                                     </select>
                                 </div>
                             </div>
@@ -1311,7 +1558,7 @@
                     <div class="tab-pane" id="tab-changelog">
                         <div class="admin-card">
                             <div class="card-header-actions">
-                                <h3>📋 Changelog Interno</h3>
+                                <h3><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Changelog Interno</h3>
                                 <button class="btn" onclick="openChangelogModal()">+ Nueva Entrada</button>
                             </div>
                             <p>Registro privado de versiones del juego. Guardado local.</p>
@@ -1323,15 +1570,15 @@
                     <div class="tab-pane" id="tab-bugs">
                         <div class="admin-card">
                             <div class="card-header-actions">
-                                <h3>🐛 Tracker de Bugs</h3>
+                                <h3><i class="fa-solid fa-bug" aria-hidden="true"></i> Tracker de Bugs</h3>
                                 <button class="btn" onclick="openBugModal()">+ Reportar Bug</button>
                             </div>
                             <p>Registra y gestiona los bugs del videojuego. Guardado local.</p>
                             <div class="bug-filters">
                                 <button class="bug-filter-btn active" data-filter="all" onclick="filterBugs('all', this)">Todos</button>
-                                <button class="bug-filter-btn" data-filter="new" onclick="filterBugs('new', this)">🔴 Nuevo</button>
-                                <button class="bug-filter-btn" data-filter="review" onclick="filterBugs('review', this)">🟡 En revisión</button>
-                                <button class="bug-filter-btn" data-filter="resolved" onclick="filterBugs('resolved', this)">🟢 Resuelto</button>
+                                <button class="bug-filter-btn" data-filter="new" onclick="filterBugs('new', this)"><i class="fa-solid fa-circle" style="color:#ef4444" aria-hidden="true"></i> Nuevo</button>
+                                <button class="bug-filter-btn" data-filter="review" onclick="filterBugs('review', this)"><i class="fa-solid fa-circle" style="color:#facc15" aria-hidden="true"></i> En revisión</button>
+                                <button class="bug-filter-btn" data-filter="resolved" onclick="filterBugs('resolved', this)"><i class="fa-solid fa-circle" style="color:#22c55e" aria-hidden="true"></i> Resuelto</button>
                             </div>
                             <div id="bugsList" class="bugs-list"></div>
                         </div>
@@ -1341,7 +1588,7 @@
                     <div class="tab-pane" id="tab-assets">
                         <div class="admin-card">
                             <div class="card-header-actions">
-                                <h3>📦 Inventario de Assets</h3>
+                                <h3><i class="fa-solid fa-box" aria-hidden="true"></i> Inventario de Assets</h3>
                                 <button class="btn" onclick="openAssetModal()">+ Agregar Asset</button>
                             </div>
                             <p>Registra sprites, audios, mapas y más recursos del videojuego. Guardado local.</p>
@@ -1349,11 +1596,11 @@
                                 <input type="text" id="assetsSearch" class="form-input" placeholder="Buscar asset..." oninput="renderAssets()" style="flex:1; min-width:160px;">
                                 <select id="assetsFilter" class="form-select" onchange="renderAssets()" style="min-width:130px;">
                                     <option value="">Todos los tipos</option>
-                                    <option value="sprite">🖼️ Sprite</option>
-                                    <option value="audio">🎵 Audio</option>
-                                    <option value="ui">🖥️ UI</option>
-                                    <option value="mapa">🗺️ Mapa</option>
-                                    <option value="otro">📌 Otro</option>
+                                    <option value="sprite"> Sprite</option>
+                                            <option value="audio"> Audio</option>
+                                            <option value="ui"> UI</option>
+                                    <option value="mapa"> Mapa</option>
+                                    <option value="otro"> Otro</option>
                                 </select>
                             </div>
                             <div id="assetsList" class="assets-grid"></div>
@@ -1364,10 +1611,10 @@
                     <div class="tab-pane" id="tab-notepad">
                         <div class="admin-card">
                             <div class="card-header-actions">
-                                <h3>📝 Pizarrón del Estudio</h3>
+                                <h3><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Pizarrón del Estudio</h3>
                                 <div style="display:flex; gap:6px;">
                                     <button class="btn" onclick="addNotepadPage()">+ Página</button>
-                                    <button class="btn" onclick="exportNotepad()">📤 Exportar</button>
+                                    <button class="btn" onclick="exportNotepad()"><i class="fa-solid fa-upload" aria-hidden="true"></i> Exportar</button>
                                 </div>
                             </div>
                             <p>Editor libre para notas, decisiones de diseño y reuniones. Auto-guardado. Guardado local.</p>
@@ -1382,11 +1629,11 @@
                                     <button class="notepad-tool-btn" onclick="insertNoteHeading()">H2</button>
                                     <button class="notepad-tool-btn" onclick="execNoteCmd('removeFormat')" style="color:#f87171;">Limpiar</button>
                                     <span style="flex:1;"></span>
-                                    <button class="notepad-tool-btn" onclick="clearNotepad()" style="color:#f87171; margin-left:auto;">🗑️ Borrar</button>
+                                    <button class="notepad-tool-btn" onclick="clearNotepad()" style="color:#f87171; margin-left:auto;"><i class="fa-solid fa-trash-can" aria-hidden="true"></i> Borrar</button>
                                 </div>
                                 <div class="notepad-editor" id="notepadEditor" contenteditable="true" spellcheck="true"></div>
                                 <div class="notepad-status">
-                                    <span id="notepadSavedIndicator" class="saved-indicator">✓ Guardado</span>
+                                    <span id="notepadSavedIndicator" class="saved-indicator"><i class="fa-solid fa-check" aria-hidden="true"></i> Guardado</span>
                                     <span id="notepadWordCount">0 palabras</span>
                                     <span id="notepadPageName" style="margin-left:auto; font-weight:700; color:var(--admin-text-secondary);"></span>
                                 </div>
@@ -1404,14 +1651,14 @@
     <!-- Modal: Anuncio -->
     <div class="admin-modal-overlay" id="announcementModal">
         <div class="admin-modal">
-            <h3>📢 Nuevo Anuncio</h3>
+            <h3><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Nuevo Anuncio</h3>
             <div class="modal-form-group">
                 <label>Tipo</label>
                 <select id="annType" class="form-select">
-                    <option value="general">📋 General</option>
-                    <option value="evento">🎉 Evento</option>
-                    <option value="update">🚀 Actualización</option>
-                    <option value="urgente">🚨 Urgente</option>
+                    <option value="general"> General</option>
+                    <option value="evento"> Evento</option>
+                    <option value="update"> Actualización</option>
+                    <option value="urgente"> Urgente</option>
                 </select>
             </div>
             <div class="modal-form-group">
@@ -1424,7 +1671,7 @@
             </div>
             <div class="modal-actions">
                 <button class="modal-btn-cancel" onclick="closeModal('announcementModal')">Cancelar</button>
-                <button class="modal-btn-save" onclick="saveAnnouncement()">📢 Publicar</button>
+                <button class="modal-btn-save" onclick="saveAnnouncement()"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Publicar</button>
             </div>
         </div>
     </div>
@@ -1432,7 +1679,7 @@
     <!-- Modal: Changelog -->
     <div class="admin-modal-overlay" id="changelogModal">
         <div class="admin-modal">
-            <h3>📋 Nueva Entrada de Changelog</h3>
+            <h3><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Nueva Entrada de Changelog</h3>
             <div class="modal-form-group">
                 <label>Versión (ej. v0.4.2)</label>
                 <input type="text" id="clVersion" placeholder="v0.0.0">
@@ -1440,10 +1687,10 @@
             <div class="modal-form-group">
                 <label>Tipo</label>
                 <select id="clType" class="form-select">
-                    <option value="feat">✨ Nuevo Feature</option>
-                    <option value="fix">🐛 Fix de Bug</option>
-                    <option value="balance">⚖️ Balance</option>
-                    <option value="content">📦 Contenido</option>
+                    <option value="feat"> Nuevo Feature</option>
+                    <option value="fix"> Fix de Bug</option>
+                    <option value="balance"> Balance</option>
+                    <option value="content"> Contenido</option>
                 </select>
             </div>
             <div class="modal-form-group">
@@ -1452,7 +1699,7 @@
             </div>
             <div class="modal-actions">
                 <button class="modal-btn-cancel" onclick="closeModal('changelogModal')">Cancelar</button>
-                <button class="modal-btn-save" onclick="saveChangelog()">💾 Guardar</button>
+                <button class="modal-btn-save" onclick="saveChangelog()"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar</button>
             </div>
         </div>
     </div>
@@ -1460,7 +1707,7 @@
     <!-- Modal: Bug -->
     <div class="admin-modal-overlay" id="bugModal">
         <div class="admin-modal">
-            <h3>🐛 Reportar Bug</h3>
+            <h3><i class="fa-solid fa-bug" aria-hidden="true"></i> Reportar Bug</h3>
             <div class="modal-form-group">
                 <label>Título del Bug</label>
                 <input type="text" id="bugTitle" placeholder="Descripción corta del bug...">
@@ -1473,18 +1720,18 @@
                 <div class="modal-form-group">
                     <label>Prioridad</label>
                     <select id="bugPriority" class="form-select">
-                        <option value="critico">🔴 Crítico</option>
-                        <option value="alto">🟠 Alto</option>
-                        <option value="medio">🟡 Medio</option>
-                        <option value="bajo">⚪ Bajo</option>
+                        <option value="critico"> Crítico</option>
+                        <option value="alto"> Alto</option>
+                        <option value="medio"> Medio</option>
+                        <option value="bajo"> Bajo</option>
                     </select>
                 </div>
                 <div class="modal-form-group">
                     <label>Plataforma</label>
                     <select id="bugPlatform" class="form-select">
-                        <option value="android">📱 Android</option>
-                        <option value="web">🌐 Web</option>
-                        <option value="ambas">📱🌐 Ambas</option>
+                        <option value="android"> Android</option>
+                        <option value="web"> Web</option>
+                        <option value="ambas"> Ambas</option>
                     </select>
                 </div>
             </div>
@@ -1494,7 +1741,7 @@
             </div>
             <div class="modal-actions">
                 <button class="modal-btn-cancel" onclick="closeModal('bugModal')">Cancelar</button>
-                <button class="modal-btn-save" onclick="saveBug()">🐛 Guardar Bug</button>
+                <button class="modal-btn-save" onclick="saveBug()"><i class="fa-solid fa-bug" aria-hidden="true"></i> Guardar Bug</button>
             </div>
         </div>
     </div>
@@ -1502,7 +1749,7 @@
     <!-- Modal: Asset -->
     <div class="admin-modal-overlay" id="assetModal">
         <div class="admin-modal">
-            <h3>📦 Nuevo Asset</h3>
+            <h3><i class="fa-solid fa-box" aria-hidden="true"></i> Nuevo Asset</h3>
             <div class="modal-form-group">
                 <label>Nombre del Asset</label>
                 <input type="text" id="assetName" placeholder="ej. sprite_truck_red.png">
@@ -1511,19 +1758,19 @@
                 <div class="modal-form-group">
                     <label>Tipo</label>
                     <select id="assetType" class="form-select">
-                        <option value="sprite">🖼️ Sprite</option>
-                        <option value="audio">🎵 Audio</option>
-                        <option value="ui">🖥️ UI</option>
-                        <option value="mapa">🗺️ Mapa</option>
-                        <option value="otro">📌 Otro</option>
+                                    <option value="sprite"> Sprite</option>
+                                            <option value="audio"> Audio</option>
+                                            <option value="ui"> UI</option>
+                                    <option value="mapa"> Mapa</option>
+                                    <option value="otro"> Otro</option>
                     </select>
                 </div>
                 <div class="modal-form-group">
                     <label>Estado</label>
                     <select id="assetStatus" class="form-select">
-                        <option value="listo">✅ Listo</option>
-                        <option value="progreso">🔧 En progreso</option>
-                        <option value="pendiente">⏳ Pendiente</option>
+                        <option value="listo"> Listo</option>
+                        <option value="progreso"> En progreso</option>
+                        <option value="pendiente"> Pendiente</option>
                     </select>
                 </div>
             </div>
@@ -1537,7 +1784,28 @@
             </div>
             <div class="modal-actions">
                 <button class="modal-btn-cancel" onclick="closeModal('assetModal')">Cancelar</button>
-                <button class="modal-btn-save" onclick="saveAsset()">📦 Guardar</button>
+                <button class="modal-btn-save" onclick="saveAsset()"><i class="fa-solid fa-box" aria-hidden="true"></i> Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Eliminar cuenta (Cuentas CEO) -->
+    <div class="admin-modal-overlay" id="ceoDeleteUserModal" role="dialog" aria-modal="true" aria-labelledby="ceoDeleteUserTitle">
+        <div class="admin-modal">
+            <h3 id="ceoDeleteUserTitle"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Eliminar cuenta</h3>
+            <p class="ceo-delete-warning">
+                Se eliminará el documento del usuario en la colección <code>conductores</code>. Esta acción no se puede deshacer.
+            </p>
+            <div class="ceo-delete-target">
+                <strong id="ceoDeleteUserName">—</strong>
+                <span id="ceoDeleteUserDetail"></span>
+            </div>
+            <small class="ps-field-help" id="ceoDeleteUserMsg" aria-live="polite"></small>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn-cancel" id="ceoDeleteCancelBtn">Cancelar</button>
+                <button type="button" class="modal-btn-danger" id="ceoDeleteConfirmBtn">
+                    <i class="fa-solid fa-trash" aria-hidden="true"></i> Eliminar usuario
+                </button>
             </div>
         </div>
     </div>

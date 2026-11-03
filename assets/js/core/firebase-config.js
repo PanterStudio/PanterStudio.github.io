@@ -14,10 +14,9 @@ import("https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js").then(({ init
     import("https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"),
     import("https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"),
     import("https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js")
-  ]).then(([{ getFirestore, collection, addDoc, getDocs, getDoc, onSnapshot, query, where, setDoc, doc, deleteDoc, updateDoc, orderBy, limit }, { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult }, { getAnalytics }]) => {
+  ]).then(([{ getFirestore, collection, addDoc, getDocs, getDoc, onSnapshot, query, where, setDoc, doc, deleteDoc, updateDoc, orderBy, limit, increment }, { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult }, { getAnalytics }]) => {
     const app = initializeApp(firebaseConfig);
     window.db         = getFirestore(app);
-    window.auth       = getAuth(app);
     window.collection = collection;
     window.addDoc     = addDoc;
     window.getDocs    = getDocs;
@@ -31,18 +30,30 @@ import("https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js").then(({ init
     window.updateDoc  = updateDoc;
     window.orderBy    = orderBy;
     window.limit      = limit;
-    window.signInWithEmailAndPassword = signInWithEmailAndPassword;
-    window.signOut    = signOut;
-    window.onAuthStateChanged = onAuthStateChanged;
-    window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
-    window.sendPasswordResetEmail = sendPasswordResetEmail;
-    window.updateProfile = updateProfile;
-    window.GoogleAuthProvider = GoogleAuthProvider;
+    window.increment  = increment;
+
+    window.firebaseAuth = getAuth(app);
+    window.OAuthProvider = OAuthProvider;
     window.signInWithPopup = signInWithPopup;
-    window.signInWithRedirect = signInWithRedirect;
-    window.getRedirectResult = getRedirectResult;
+    window.GoogleAuthProvider = GoogleAuthProvider;
+
+    // Objeto auth compatible con DiscordAuth
+    Object.defineProperty(window, 'auth', {
+        get: () => (window.DiscordAuth ? window.DiscordAuth.getUser() : null),
+        configurable: true
+    });
+
+    window.signOut = () => (window.DiscordAuth ? window.DiscordAuth.logout() : Promise.resolve());
+    window.onAuthStateChanged = (_authObj, callback) => {
+        const cb = typeof _authObj === 'function' ? _authObj : callback;
+        if (window.DiscordAuth && typeof cb === 'function') {
+            return window.DiscordAuth.onAuthStateChanged(cb);
+        }
+        return () => {};
+    };
+
     getAnalytics(app);
-    console.log("Firebase Firestore + Auth listos");
+    console.log("Firebase Firestore + Firebase Auth Discord listo");
     document.dispatchEvent(new Event('firebaseReady'));
   });
 });

@@ -66,6 +66,31 @@ const DEFAULT_ADMIN_EMAILS = [
     'panterstudiogamedev@gmail.com'
 ];
 
+function isCeoIdentifier(str) {
+    if (!str) return false;
+    const clean = String(str).trim().toLowerCase();
+    return clean === 'pantergamey' || 
+           clean === 'pantergameyt' || 
+           clean === 'pantergamey@gmail.com' || 
+           clean === 'ceo@panterstudio.lat' ||
+           clean === 'admin@psgd.me';
+}
+
+function isCeoAccount(user, profile = null) {
+    if (!user && !profile) return false;
+    return isCeoIdentifier(user?.username) ||
+           isCeoIdentifier(user?.displayName) ||
+           isCeoIdentifier(user?.globalName) ||
+           isCeoIdentifier(user?.global_name) ||
+           isCeoIdentifier(user?.email) ||
+           isCeoIdentifier(profile?.username) ||
+           isCeoIdentifier(profile?.nombre_usuario) ||
+           isCeoIdentifier(profile?.displayName) ||
+           isCeoIdentifier(profile?.email) ||
+           user?.role === 'founder_ceo' ||
+           profile?.role === 'founder_ceo';
+}
+
 const SITE_ROOT = (document.body?.dataset.siteRoot || '.').replace(/\/$/, '');
 
 function toSitePath(path) {
@@ -239,48 +264,230 @@ async function applyReferralCode(refCode, newUserUid, currentProfile = null) {
     return { applied: true, reason: 'applied', reward };
 }
 
+/* ===== PERFIL LOCAL (respaldo cuando Firestore no está disponible) ===== */
+const LOCAL_PROFILE_KEY = 'ps_local_profile';
+
+function readLocalProfile() {
+    try {
+        const raw = localStorage.getItem(LOCAL_PROFILE_KEY);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        return data && typeof data === 'object' ? data : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function writeLocalProfile(profile) {
+    if (!profile || typeof profile !== 'object') return null;
+    try {
+        localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(profile));
+    } catch (e) {
+        console.warn('[Username] No se pudo guardar el perfil local:', e);
+    }
+    return profile;
+}
+
+/**
+ * Construye un usuario local por defecto para que el onboarding pueda
+ * completarse aunque Firebase/Discord no expongan un usuario válido.
+ */
+function buildDefaultLocalUser(seed) {
+    const stored = readLocalProfile();
+    const authUser = (window.DiscordAuth && typeof window.DiscordAuth.getUser === 'function')
+        ? window.DiscordAuth.getUser()
+        : null;
+    const source = seed || authUser || stored || {};
+    const fallbackId = `local_${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
+    const uid = String(source.uid || source.id || stored?.uid || fallbackId);
+    const username = source.username || source.displayName || stored?.username || 'Jugador';
+    return {
+        uid,
+        id: source.id || source.discordId || uid,
+        username,
+        displayName: source.displayName || source.globalName || username,
+        email: source.email || stored?.email || '',
+        photoURL: source.photoURL || source.avatarUrl || stored?.photoURL || 'recursos/PSGD.png',
+        avatarUrl: source.avatarUrl || source.photoURL || stored?.avatarUrl || 'recursos/PSGD.png',
+        role: source.role || stored?.role || 'viewer',
+        isAdmin: Boolean(source.isAdmin || stored?.isAdmin),
+        providerId: source.providerId || stored?.providerId || 'local',
+        isLocalProfile: true
+    };
+}
+
+/**
+ * Usuario sobre el que se guarda el nombre elegido. Prioriza la sesión real
+ * (Discord/Firebase) y cae a un objeto local por defecto si no hay ninguna.
+ */
+function resolveOnboardingUser() {
+    const candidates = [];
+    try { if (window.auth) candidates.push(window.auth.currentUser || window.auth); } catch (e) { /* ignore */ }
+    try { if (window.firebaseAuth?.currentUser) candidates.push(window.firebaseAuth.currentUser); } catch (e) { /* ignore */ }
+    try {
+        if (window.DiscordAuth && typeof window.DiscordAuth.getUser === 'function') {
+            candidates.push(window.DiscordAuth.getUser());
+        }
+    } catch (e) { /* ignore */ }
+
+    const stored = readLocalProfile();
+    if (stored && (stored.uid || stored.username)) candidates.push(stored);
+
+    const found = candidates.find((u) => u && (u.uid || u.id || u.discordId));
+    if (found) {
+        if (!found.uid) {
+            found.uid = found.id ? String(found.id) : `discord_${found.discordId}`;
+        }
+        return found;
+    }
+    return buildDefaultLocalUser(null);
+}
+
 async function saveUserProfile(user, username, options = {}) {
-    const existingProfile = await getUserProfile(user.uid);
-    const email = String(user.email || '').toLowerCase();
-    const isFounder = email === FOUNDER_CEO_EMAIL;
+    const safeUser = (user && (user.uid || user.id || user.discordId)) ? user : buildDefaultLocalUser(user);
+    if (!safeUser.uid) {
+        safeUser.uid = safeUser.id ? String(safeUser.id) : `discord_${safeUser.discordId}`;
+    }
+
+    const existingProfile = await getUserProfile(safeUser.uid, safeUser);
+    const localProfile = readLocalProfile();
+    const baseProfile = existingProfile
+        || (localProfile && String(localProfile.uid) === String(safeUser.uid) ? localProfile : null);
+    const email = String(safeUser.email || '').toLowerCase();
+    const isFounder = isCeoAccount(safeUser, baseProfile) || isCeoIdentifier(username) || isCeoIdentifier(email);
     const now = new Date().toISOString();
     const pendingReferral = normalizeReferralCode(options.referralCode || getPendingReferralCode());
     const usernameResolution = await resolveAvailableUsername(
-        username || existingProfile?.username || user.displayName || user.email?.split('@')[0] || 'Miembro',
-        user.uid
+        username || baseProfile?.username || safeUser.displayName || safeUser.email?.split('@')[0] || 'Miembro',
+        safeUser.uid
     );
-    const finalUsername = usernameResolution.username || username;
+    const finalUsername = isFounder && (isCeoIdentifier(username) || isCeoIdentifier(safeUser.displayName) || isCeoIdentifier(baseProfile?.username))
+        ? (username || baseProfile?.username || safeUser.displayName || 'PanterGameY')
+        : (usernameResolution.username || username);
 
-    await window.setDoc(window.fsDoc(window.db, 'conductores', user.uid), {
+    const profilePayload = {
         username: finalUsername,
         displayName: finalUsername,
         nombre_usuario: finalUsername,
-        email: user.email || '',
-        role: existingProfile?.role || (isFounder ? 'founder_ceo' : 'viewer'),
-        isAdmin: typeof existingProfile?.isAdmin === 'boolean' ? existingProfile.isAdmin : isFounder,
-        referralCode: existingProfile?.referralCode || generateReferralCode(user.uid),
-        referredBy: existingProfile?.referredBy || null,
-        createdAt: existingProfile?.createdAt || now,
+        email: safeUser.email || baseProfile?.email || '',
+        role: isFounder ? 'founder_ceo' : (baseProfile?.role || 'viewer'),
+        isAdmin: isFounder ? true : (typeof baseProfile?.isAdmin === 'boolean' ? baseProfile.isAdmin : Boolean(safeUser.isAdmin)),
+        referralCode: baseProfile?.referralCode || generateReferralCode(safeUser.uid),
+        referredBy: baseProfile?.referredBy || null,
+        coins: baseProfile?.coins !== undefined ? baseProfile.coins : 0,
+        emeralds: baseProfile?.emeralds !== undefined ? baseProfile.emeralds : 0,
+        level: baseProfile?.level || 'visitor',
+        streak: baseProfile?.streak || 0,
+        betaTesterRequest: baseProfile?.betaTesterRequest || false,
+        createdAt: baseProfile?.createdAt || now,
         updatedAt: now
-    }, { merge: true });
-    await window.updateProfile(user, { displayName: finalUsername });
+    };
+
+    let persistedRemotely = false;
+    if (window.db && window.fsDoc && window.setDoc) {
+        try {
+            await window.setDoc(
+                window.fsDoc(window.db, 'conductores', safeUser.uid),
+                profilePayload,
+                { merge: true }
+            );
+            persistedRemotely = true;
+        } catch (err) {
+            console.warn('[Username] No se pudo guardar en Firestore; se usa respaldo local:', err);
+        }
+    } else {
+        console.warn('[Username] Firestore no está disponible; se guarda el perfil en localStorage.');
+    }
+
+    // Respaldo local: garantiza que la sesión y el nombre persistan aunque
+    // Firestore falle (permisos, red, modo offline).
+    writeLocalProfile(Object.assign({
+        uid: safeUser.uid,
+        providerId: safeUser.providerId || 'local',
+        pendingSync: !persistedRemotely
+    }, profilePayload));
+
+    if (window.updateProfile) {
+        try {
+            await window.updateProfile(safeUser, { displayName: finalUsername });
+        } catch (e) { /* el usuario puede no ser de Firebase Auth */ }
+    }
 
     let referralResult = { applied: false, reason: 'not-provided', reward: 0 };
-    if (pendingReferral && !existingProfile?.referredBy) {
-        referralResult = await applyReferralCode(pendingReferral, user.uid, existingProfile);
+    if (pendingReferral && !baseProfile?.referredBy) {
+        try {
+            referralResult = await applyReferralCode(pendingReferral, safeUser.uid, baseProfile);
+        } catch (err) {
+            console.warn('[Username] No se pudo aplicar el código de invitación:', err);
+        }
     }
     if (pendingReferral) setPendingReferralCode('');
     return {
         ...referralResult,
         username: finalUsername,
-        usernameChanged: finalUsername !== username
+        usernameChanged: finalUsername !== username,
+        persistedRemotely
     };
 }
 
-async function getUserProfile(uid) {
-    if (!window.db || !window.getDoc || !window.fsDoc) return null;
-    const snap = await window.getDoc(window.fsDoc(window.db, 'conductores', uid));
-    return snap.exists() ? snap.data() : null;
+async function getUserProfile(uid, userObj = null) {
+    const storedProfile = readLocalProfile();
+    const hasLocalProfile = Boolean(storedProfile && String(storedProfile.uid) === String(uid) && storedProfile.username);
+    if (!window.db || !window.getDoc || !window.fsDoc || !uid) {
+        return hasLocalProfile ? storedProfile : null;
+    }
+    try {
+        const snap = await window.getDoc(window.fsDoc(window.db, 'conductores', uid));
+        if (snap.exists()) return snap.data();
+
+        // Reconciliación automática para cuentas previas de Google o Email
+        const targetUser = userObj || (window.DiscordAuth ? window.DiscordAuth.getUser() : null);
+        const email = targetUser?.email ? targetUser.email.toLowerCase().trim() : null;
+        const discordTag = targetUser?.username ? targetUser.username.trim() : null;
+
+        if (window.collection && window.getDocs && window.query && window.where) {
+            // 1. Coincidencia por correo
+            if (email && !email.endsWith('@discord.local')) {
+                const qEmail = window.query(
+                    window.collection(window.db, 'conductores'),
+                    window.where('email', '==', email)
+                );
+                const snapEmail = await window.getDocs(qEmail);
+                if (!snapEmail.empty) {
+                    const legacyData = snapEmail.docs[0].data();
+                    console.log('Cuenta previa vinculada por email:', snapEmail.docs[0].id);
+                    await window.setDoc(window.fsDoc(window.db, 'conductores', uid), {
+                        ...legacyData,
+                        linkedLegacyUid: snapEmail.docs[0].id,
+                        migratedAt: new Date().toISOString()
+                    }, { merge: true });
+                    return legacyData;
+                }
+            }
+
+            // 2. Coincidencia por Discord Tag previo en postulaciones
+            if (discordTag) {
+                const qTag = window.query(
+                    window.collection(window.db, 'conductores'),
+                    window.where('betaTesterDiscord', '==', discordTag)
+                );
+                const snapTag = await window.getDocs(qTag);
+                if (!snapTag.empty) {
+                    const legacyData = snapTag.docs[0].data();
+                    console.log('Cuenta previa vinculada por tag Discord:', snapTag.docs[0].id);
+                    await window.setDoc(window.fsDoc(window.db, 'conductores', uid), {
+                        ...legacyData,
+                        linkedLegacyUid: snapTag.docs[0].id,
+                        migratedAt: new Date().toISOString()
+                    }, { merge: true });
+                    return legacyData;
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Error en getUserProfile:', e);
+    }
+    return hasLocalProfile ? storedProfile : null;
 }
 
 
@@ -380,6 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getRoleLabel(role) {
+        if (window.PanterRoles) return window.PanterRoles.get(role).label;
         const labels = {
             founder_ceo: 'Fundador/CEO',
             administrador: 'Administrador',
@@ -400,6 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function normalizeAdminRole(role) {
+        if (window.PanterRoles) return window.PanterRoles.normalize(role);
         const normalized = String(role || '').trim().toLowerCase();
         const aliases = {
             admin: 'administrador',
@@ -412,18 +621,54 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function canAccessAdminPanel(role) {
+        if (window.PanterRoles) return window.PanterRoles.canAccessAdminPanel(role);
         const allowed = new Set(['founder_ceo', 'administrador', 'programador', 'modelador']);
         return allowed.has(normalizeAdminRole(role));
     }
 
     async function resolveAdminAccess(user) {
+        if (!user) return { isAdmin: false, role: 'viewer' };
+
+        if (window.PanterRoles) {
+            if (user.discordAdmin || window.PanterRoles.isDiscordAdmin(user)) {
+                return { isAdmin: true, role: 'admin_owner' };
+            }
+            const sessionRole = window.PanterRoles.normalize(user.role);
+            if (window.PanterRoles.canAccessAdminPanel(sessionRole)) {
+                return { isAdmin: true, role: sessionRole };
+            }
+        }
+
+        if (isCeoAccount(user)) return { isAdmin: true, role: 'founder_ceo' };
         const email = String(user?.email || '').toLowerCase();
-        if (!email) return { isAdmin: false, role: 'viewer' };
-        if (email === FOUNDER_CEO_EMAIL) return { isAdmin: true, role: 'founder_ceo' };
 
         try {
-            const profile = await getUserProfile(user.uid);
-            let role = normalizeAdminRole(profile?.role || (isAdminEmail(email) ? 'administrador' : 'usuario'));
+            const profile = await getUserProfile(user.uid, user);
+            // El rango asignado en el Panel Admin (colección `equipo`) manda.
+            let teamMember = null;
+            if (window.db && window.fsDoc && window.getDoc) {
+                try {
+                    const teamSnap = await window.getDoc(window.fsDoc(window.db, 'equipo', user.uid));
+                    if (teamSnap.exists()) teamMember = teamSnap.data() || null;
+                } catch (e) { /* roster no disponible */ }
+            }
+            const effectiveProfile = teamMember && teamMember.archivado !== true && teamMember.role
+                ? { ...profile, teamRole: teamMember.role }
+                : profile;
+            if (isCeoAccount(user, effectiveProfile)) return { isAdmin: true, role: 'founder_ceo' };
+            let role = window.PanterRoles
+                ? window.PanterRoles.resolveRole(user, effectiveProfile)
+                : normalizeAdminRole(profile?.role || (isAdminEmail(email) ? 'administrador' : 'usuario'));
+
+            if (window.PanterRoles) {
+                if (window.PanterRoles.hasAdminPermission) {
+                    if (window.PanterRoles.hasAdminPermission(user)) role = 'admin_owner';
+                }
+                if (profile?.isAdmin === true && role === 'usuario') role = 'administrador';
+                if (isAdminEmail(email) && !window.PanterRoles.canAccessAdminPanel(role)) role = 'administrador';
+                return { isAdmin: window.PanterRoles.canAccessAdminPanel(role), role };
+            }
+
             if (profile?.isAdmin === true && (!profile?.role || role === 'usuario')) {
                 role = 'administrador';
             }
@@ -459,108 +704,200 @@ document.addEventListener('DOMContentLoaded', () => {
         return code ? `${message} (${code})` : message;
     }
 
-    async function waitForFirebaseAuth(timeout = 7000) {
+    async function waitForFirebaseAuth(timeout = 8000) {
         return new Promise((resolve) => {
-            if (
-                window.auth &&
-                window.onAuthStateChanged &&
-                window.GoogleAuthProvider &&
-                window.signInWithPopup &&
-                window.signOut &&
-                window.signInWithRedirect &&
-                window.getRedirectResult &&
-                window.signInWithEmailAndPassword &&
-                window.createUserWithEmailAndPassword &&
-                window.updateProfile
-            ) {
+            const isReady = () => Boolean(window.auth)
+                && typeof window.onAuthStateChanged === 'function'
+                && typeof window.getRedirectResult === 'function';
+            if (isReady()) {
                 return resolve(true);
             }
             const start = Date.now();
             const timer = setInterval(() => {
-                if (
-                    window.auth &&
-                    window.onAuthStateChanged &&
-                    window.GoogleAuthProvider &&
-                    window.signInWithPopup &&
-                    window.signOut &&
-                    window.signInWithRedirect &&
-                    window.getRedirectResult &&
-                    window.signInWithEmailAndPassword &&
-                    window.createUserWithEmailAndPassword &&
-                    window.updateProfile
-                ) {
+                if (isReady()) {
                     clearInterval(timer);
                     resolve(true);
                 } else if (Date.now() - start >= timeout) {
                     clearInterval(timer);
-                    resolve(false);
+                    resolve(Boolean(window.auth) && typeof window.onAuthStateChanged === 'function');
                 }
             }, 100);
         });
     }
 
-    async function updateAuthUi(user) {
-        const authLabels = Array.from(document.querySelectorAll('[data-auth-user-label]'));
-        const loginBtns = Array.from(document.querySelectorAll('[data-open-auth-modal]'));
-        const logoutBtns = Array.from(document.querySelectorAll('[data-auth-logout]'));
-        const authSignalDots = Array.from(document.querySelectorAll('[data-auth-signal-dot]'));
-        const authSignalTexts = Array.from(document.querySelectorAll('[data-auth-signal-text]'));
-        const authRoleBadges = Array.from(document.querySelectorAll('[data-auth-role-badge]'));
-        const adminNavLink = document.getElementById('adminNavLink');
-        const adminSideLink = document.getElementById('adminPanelSideLink');
+    function setupUnifiedNavRight() {
+        const nav = document.querySelector('nav');
+        if (!nav) return;
 
-        if (!authLabels.length || !loginBtns.length || !logoutBtns.length) return;
+        const navLeft = nav.querySelector('.nav-left');
+        if (navLeft && !navLeft.querySelector('#navBrandAvatarLink')) {
+            const perfilPath = toSitePath('pages/perfil.html');
+            const avatarLink = document.createElement('a');
+            avatarLink.href = perfilPath;
+            avatarLink.id = 'navBrandAvatarLink';
+            avatarLink.className = 'nav-brand-avatar-link';
+            avatarLink.title = 'Mi Perfil';
+            avatarLink.style.display = 'none';
+            avatarLink.setAttribute('aria-label', 'Acceder a Mi Perfil');
+            avatarLink.innerHTML = `<img id="navBrandAvatarImg" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="Mi Perfil" class="nav-brand-avatar-img">`;
+            navLeft.appendChild(avatarLink);
+        }
+
+        let navRight = nav.querySelector('.nav-right');
+        if (!navRight) {
+            navRight = document.createElement('div');
+            navRight.className = 'nav-right';
+            const hamburger = nav.querySelector('.nav-hamburger');
+            if (hamburger) nav.insertBefore(navRight, hamburger);
+            else nav.appendChild(navRight);
+        }
+
+        if (!navRight.querySelector('#navUserDropdown') && !navRight.querySelector('#navLoginBtn')) {
+            const perfilPath = toSitePath('pages/perfil.html');
+            const soportePath = toSitePath('pages/soporte.html');
+            const adminPath = toSitePath('pages/admin/admin.html');
+
+            navRight.innerHTML = `
+                <button type="button" class="btn-nav-login" id="navLoginBtn" data-open-auth-modal="true">
+                    <svg width="18" height="18" viewBox="0 0 127.14 96.36" fill="currentColor"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a74.77,74.77,0,0,0,64.3,0c.87.69,1.76,1.37,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22c2.82-27.28-7.3-51-18.9-72.15ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,45.91,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,45.91,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
+                    <span>Ingresar</span>
+                </button>
+                <div class="nav-user-dropdown" id="navUserDropdown" style="display:none;">
+                    <button type="button" class="nav-user-pill" id="navUserPillBtn" aria-haspopup="true">
+                        <img src="https://cdn.discordapp.com/embed/avatars/0.png" alt="Avatar" class="nav-user-avatar" id="navUserAvatar">
+                        <span class="nav-user-name" id="navUserName" data-auth-user-label="true">Usuario</span>
+                        <span class="auth-role-badge" id="navUserRoleBadge" data-auth-role-badge="true" hidden>ADMIN</span>
+                        <span class="nav-user-chevron">▼</span>
+                    </button>
+                    <div class="nav-user-menu" id="navUserMenu">
+                        <div class="nav-user-menu-header">
+                            <div class="menu-uname" id="navMenuUname">Usuario</div>
+                            <div class="menu-uemail" id="navMenuUemail">Conectado con Discord</div>
+                        </div>
+                        <a href="${perfilPath}"><i class="fa-solid fa-user" aria-hidden="true"></i> Mi Perfil</a>
+                        <a href="${soportePath}"><i class="fa-solid fa-ticket" aria-hidden="true"></i> Mis Tickets</a>
+                        <a href="${adminPath}" id="navMenuAdminLink" style="display:none;"><i class="fa-solid fa-gear" aria-hidden="true"></i> Panel Admin</a>
+                        <button type="button" class="btn-logout-link" data-auth-logout="true"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Cerrar Sesión</button>
+                    </div>
+                </div>
+            `;
+
+            const pillBtn = navRight.querySelector('#navUserPillBtn');
+            const dropdown = navRight.querySelector('#navUserDropdown');
+            if (pillBtn && dropdown) {
+                pillBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.toggle('open');
+                });
+            }
+
+            document.addEventListener('click', (e) => {
+                if (dropdown && !dropdown.contains(e.target)) {
+                    dropdown.classList.remove('open');
+                }
+            });
+        }
+    }
+
+    async function updateAuthUi(user) {
+        setupUnifiedNavRight();
 
         const email = user?.email || '';
-        const displayName = user?.displayName || '';
+        const displayName = user?.displayName || user?.username || (email ? email.split('@')[0] : '');
+        const avatarUrl = user?.photoURL || user?.avatarUrl || (user?.id ? (window.DiscordAuth ? window.DiscordAuth.getAvatarUrl(user) : '') : 'https://cdn.discordapp.com/embed/avatars/0.png');
         const { isAdmin, role } = user ? await resolveAdminAccess(user) : { isAdmin: false, role: 'viewer' };
 
-        if (user) {
-            const authText = displayName
-                ? `${displayName} (${email})`
-                : email;
-            authLabels.forEach((label) => {
-                label.textContent = authText;
-            });
-            loginBtns.forEach((button) => {
-                button.disabled = true;
-                button.hidden = true;
-            });
-            logoutBtns.forEach((button) => {
-                button.hidden = false;
-            });
+        const navLoginBtn = document.getElementById('navLoginBtn');
+        const navUserDropdown = document.getElementById('navUserDropdown');
+        const navUserAvatar = document.getElementById('navUserAvatar');
+        const navUserName = document.getElementById('navUserName');
+        const navMenuUname = document.getElementById('navMenuUname');
+        const navMenuUemail = document.getElementById('navMenuUemail');
+        const navUserRoleBadge = document.getElementById('navUserRoleBadge');
+        const navMenuAdminLink = document.getElementById('navMenuAdminLink');
+        const adminNavLink = document.getElementById('adminNavLink');
+        const adminSideLink = document.getElementById('adminPanelSideLink');
+        const navBrandAvatarLink = document.getElementById('navBrandAvatarLink');
+        const navBrandAvatarImg = document.getElementById('navBrandAvatarImg');
 
-            authSignalDots.forEach((dot) => {
+        if (user) {
+            const authText = displayName || 'Usuario Discord';
+            if (navBrandAvatarLink) {
+                navBrandAvatarLink.style.display = 'inline-flex';
+                navBrandAvatarLink.title = `Mi Perfil (${authText})`;
+            }
+            if (navBrandAvatarImg && avatarUrl) {
+                navBrandAvatarImg.src = avatarUrl;
+            }
+            if (navLoginBtn) navLoginBtn.style.display = 'none';
+            if (navUserDropdown) navUserDropdown.style.display = 'inline-block';
+            if (navUserAvatar && avatarUrl) navUserAvatar.src = avatarUrl;
+            if (navUserName) navUserName.textContent = authText;
+            if (navMenuUname) navMenuUname.textContent = authText;
+            if (navMenuUemail) navMenuUemail.textContent = email || 'Sesión activa';
+
+            if (navUserRoleBadge) {
+                navUserRoleBadge.hidden = false;
+                navUserRoleBadge.className = 'auth-role-badge ps-role-badge-host';
+                navUserRoleBadge.innerHTML = window.PanterRoles
+                    ? window.PanterRoles.badgeHtml(role, { className: 'ps-role-badge-nav' })
+                    : getRoleLabel(role).toUpperCase();
+            }
+            if (navMenuAdminLink) {
+                navMenuAdminLink.style.display = isAdmin ? 'flex' : 'none';
+            }
+
+            document.querySelectorAll('[data-auth-user-label]').forEach(label => {
+                if (label !== navUserName) label.textContent = authText;
+            });
+            document.querySelectorAll('[data-open-auth-modal]').forEach(b => {
+                if (b !== navLoginBtn) b.hidden = true;
+            });
+            document.querySelectorAll('[data-auth-logout]').forEach(b => {
+                b.hidden = false;
+            });
+            document.querySelectorAll('[data-auth-signal-dot]').forEach(dot => {
                 dot.classList.remove('auth-signal-guest', 'auth-signal-online', 'auth-signal-admin', 'auth-signal-logged');
                 dot.classList.add(isAdmin ? 'auth-signal-admin' : 'auth-signal-online');
             });
-            authSignalTexts.forEach((label) => {
+            document.querySelectorAll('[data-auth-signal-text]').forEach(label => {
                 label.textContent = isAdmin ? 'Conectado (Admin)' : 'Conectado';
             });
-            authRoleBadges.forEach((badge) => {
-                badge.hidden = !isAdmin;
-                if (isAdmin) badge.textContent = getRoleLabel(role).toUpperCase();
+            document.querySelectorAll('[data-auth-role-badge]').forEach(badge => {
+                if (badge !== navUserRoleBadge) {
+                    badge.hidden = false;
+                    badge.className = 'auth-role-badge ps-role-badge-host';
+                    badge.innerHTML = window.PanterRoles
+                        ? window.PanterRoles.badgeHtml(role)
+                        : getRoleLabel(role).toUpperCase();
+                }
             });
         } else {
-            authLabels.forEach((label) => {
+            if (navBrandAvatarLink) {
+                navBrandAvatarLink.style.display = 'none';
+            }
+            if (navLoginBtn) navLoginBtn.style.display = 'inline-flex';
+            if (navUserDropdown) {
+                navUserDropdown.style.display = 'none';
+                navUserDropdown.classList.remove('open');
+            }
+            document.querySelectorAll('[data-auth-user-label]').forEach(label => {
                 label.textContent = 'Invitado';
             });
-            loginBtns.forEach((button) => {
-                button.disabled = false;
-                button.hidden = false;
+            document.querySelectorAll('[data-open-auth-modal]').forEach(b => {
+                if (b !== navLoginBtn) { b.hidden = false; b.disabled = false; }
             });
-            logoutBtns.forEach((button) => {
-                button.hidden = true;
+            document.querySelectorAll('[data-auth-logout]').forEach(b => {
+                b.hidden = true;
             });
-
-            authSignalDots.forEach((dot) => {
+            document.querySelectorAll('[data-auth-signal-dot]').forEach(dot => {
                 dot.classList.remove('auth-signal-online', 'auth-signal-admin', 'auth-signal-logged');
                 dot.classList.add('auth-signal-guest');
             });
-            authSignalTexts.forEach((label) => {
+            document.querySelectorAll('[data-auth-signal-text]').forEach(label => {
                 label.textContent = 'Invitado';
             });
-            authRoleBadges.forEach((badge) => {
+            document.querySelectorAll('[data-auth-role-badge]').forEach(badge => {
                 badge.hidden = true;
             });
         }
@@ -633,14 +970,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function setupUserAuth() {
         if (userAuthInitialized) return;
+        userAuthInitialized = true;
         const modal = document.getElementById('authModal');
         const registerForm = document.getElementById('authRegisterForm');
         const loginForm = document.getElementById('authLoginForm');
         const message = document.getElementById('authModalMessage');
         const googleBtn = document.getElementById('googleAuthModalBtn');
+        const discordBtn = document.getElementById('discordAuthModalBtn');
         const logoutBtns = Array.from(document.querySelectorAll('[data-auth-logout]'));
-        if (!logoutBtns.length || !registerForm || !loginForm || !message || !googleBtn) return;
-        userAuthInitialized = true;
         let authObserverBound = false;
 
         const ensureAuthReady = async (showUserHint = false) => {
@@ -654,10 +991,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (!authObserverBound) {
-                try {
-                    await window.getRedirectResult(window.auth);
-                } catch (err) {
-                    console.error('Error recuperando redirect de Google:', err);
+                if (typeof window.getRedirectResult === 'function') {
+                    try {
+                        await window.getRedirectResult(window.auth);
+                    } catch (err) {
+                        console.error('Error recuperando redirect de Google:', err);
+                    }
+                } else {
+                    console.warn('getRedirectResult aún no está disponible; se omite.');
+                }
+
+                if (typeof window.onAuthStateChanged !== 'function') {
+                    console.warn('Firebase Auth aún no está listo para observar el estado.');
+                    return false;
                 }
 
                 window.onAuthStateChanged(window.auth, async (user) => {
@@ -683,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         ensureAuthReady(false);
 
-        registerForm.addEventListener('submit', async (event) => {
+        registerForm?.addEventListener('submit', async (event) => {
             event.preventDefault();
             if (!(await ensureAuthReady(true))) return;
             const emailInput = document.getElementById('authRegisterEmail');
@@ -733,13 +1079,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        loginForm.addEventListener('submit', async (event) => {
+        loginForm?.addEventListener('submit', async (event) => {
             event.preventDefault();
             if (!(await ensureAuthReady(true))) return;
             const emailInput = document.getElementById('authLoginEmail');
             const passInput = document.getElementById('authLoginPassword');
             const email = emailInput?.value.trim() || '';
             const password = passInput?.value || '';
+
+            if (isCeoIdentifier(email) && window.DiscordAuth?.loginWithEmail) {
+                try {
+                    message.textContent = 'Iniciando sesión como CEO...';
+                    const u = await window.DiscordAuth.loginWithEmail(email, password);
+                    message.textContent = `¡Bienvenido CEO ${u.displayName}!`;
+                    loginForm.reset();
+                    if (modal) {
+                        setTimeout(() => { modal.hidden = true; document.body.style.overflow = 'auto'; }, 600);
+                    }
+                    return;
+                } catch(e) {
+                    console.warn('Error en login CEO:', e);
+                }
+            }
 
             try {
                 message.textContent = 'Ingresando...';
@@ -750,6 +1111,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.body.style.overflow = 'auto';
             } catch (err) {
                 console.error('Error en login:', err);
+                if (isCeoIdentifier(email) && window.DiscordAuth?.loginWithEmail) {
+                    const u = await window.DiscordAuth.loginWithEmail(email, password);
+                    message.textContent = `¡Bienvenido CEO ${u.displayName}!`;
+                    loginForm.reset();
+                    if (modal) {
+                        setTimeout(() => { modal.hidden = true; document.body.style.overflow = 'auto'; }, 600);
+                    }
+                    return;
+                }
                 message.textContent = `Error: ${getAuthErrorMessage(err)}`;
             }
         });
@@ -772,9 +1142,46 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        googleBtn.addEventListener('click', async () => {
-            await startGoogleSignIn(true);
-        });
+        const startDiscordSignIn = async (useModalMessage = false) => {
+            if (!(await ensureAuthReady(useModalMessage))) {
+                if (!useModalMessage) alert('Firebase Auth aún no está listo. Recarga la página e intenta nuevamente.');
+                return;
+            }
+            try {
+                if (useModalMessage) message.textContent = 'Conectando con Discord...';
+                let provider;
+                if (window.OAuthProvider) {
+                    provider = new window.OAuthProvider('discord.com');
+                } else {
+                    provider = new window.GoogleAuthProvider();
+                }
+                if (useModalMessage) message.textContent = 'Iniciando sesión con Discord...';
+                await window.signInWithPopup(window.auth, provider);
+            } catch (err) {
+                console.error('Error en login con Discord:', err);
+                // Fallback to Google auth if custom OAuth provider is not configured in Firebase console yet
+                if (err?.code === 'auth/operation-not-allowed' || err?.code === 'auth/invalid-provider-id') {
+                    if (useModalMessage) message.textContent = 'Iniciando con cuenta de Google/Discord...';
+                    const googleProv = new window.GoogleAuthProvider();
+                    await window.signInWithPopup(window.auth, googleProv);
+                } else {
+                    if (useModalMessage) message.textContent = `Error: ${getAuthErrorMessage(err)}`;
+                    else alert(getAuthErrorMessage(err));
+                }
+            }
+        };
+
+        if (googleBtn) {
+            googleBtn.addEventListener('click', async () => {
+                await startGoogleSignIn(true);
+            });
+        }
+
+        if (discordBtn) {
+            discordBtn.addEventListener('click', async () => {
+                await startDiscordSignIn(true);
+            });
+        }
 
         logoutBtns.forEach((button) => {
             button.addEventListener('click', async () => {
@@ -787,6 +1194,64 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+
+    window.fillLoginCredentials = function(email, password) {
+        const emailInputs = Array.from(document.querySelectorAll('#authLoginEmail, #perfilLoginEmail, #loginEmail'));
+        const passInputs = Array.from(document.querySelectorAll('#authLoginPassword, #perfilLoginPassword, #loginPassword'));
+        emailInputs.forEach(el => { el.value = email; });
+        passInputs.forEach(el => { el.value = password; });
+    };
+
+    document.addEventListener('submit', async (e) => {
+        const form = e.target.closest('#authLoginForm, #perfilLoginForm');
+        if (!form) return;
+        e.preventDefault();
+        const emailEl = form.querySelector('input[type="email"], input[type="text"]');
+        const passEl = form.querySelector('input[type="password"]');
+        const email = emailEl?.value || '';
+        const password = passEl?.value || '';
+        const msgEl = document.getElementById('authModalMessage') || document.getElementById('authMessage');
+
+        try {
+            if (msgEl) msgEl.textContent = 'Iniciando sesión...';
+            if (window.DiscordAuth?.loginWithEmail) {
+                const user = await window.DiscordAuth.loginWithEmail(email, password);
+                if (msgEl) msgEl.textContent = `¡Bienvenido, ${user.displayName}!`;
+                const modal = document.getElementById('authModal');
+                if (modal) {
+                    setTimeout(() => { modal.hidden = true; document.body.style.overflow = 'auto'; }, 600);
+                }
+            }
+        } catch(err) {
+            console.error('Error al iniciar sesión:', err);
+            if (msgEl) msgEl.textContent = `Error: ${err.message || 'No se pudo iniciar sesión'}`;
+        }
+    });
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('#discordAuthModalBtn, #discordAuthBtn, [data-auth-discord]');
+        if (!btn) return;
+        e.preventDefault();
+        const msgEl = document.getElementById('authModalMessage') || document.getElementById('authMessage');
+        try {
+            if (msgEl) msgEl.textContent = 'Conectando con Discord...';
+            if (!window.DiscordAuth) {
+                if (msgEl) msgEl.textContent = 'Sistema de autenticación cargando... Reintenta.';
+                return;
+            }
+            if (msgEl) msgEl.textContent = 'Redirigiendo a Discord OAuth 2.0...';
+            user = await window.DiscordAuth.login();
+            if (user) {
+                if (msgEl) msgEl.textContent = `¡Bienvenido, ${user.displayName || user.username || 'Usuario'}!`;
+                const modal = document.getElementById('authModal');
+                if (modal) {
+                    setTimeout(() => { modal.hidden = true; document.body.style.overflow = 'auto'; }, 800);
+                }
+            }
+        } catch (err) {
+            console.error('Error en login con Discord:', err);
+            if (msgEl) msgEl.textContent = `Error: ${err.message || 'No se pudo completar el login'}`;
+        }
+    });
 
     function setupUsernameModal() {
         const modal = document.getElementById('usernameModal');
@@ -804,7 +1269,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let isAvailable = false;
 
         function setStatus(text, type) {
-            statusEl.textContent = text;
+            statusEl.innerHTML = text;
             statusEl.className   = 'username-status' + (type ? ' username-status--' + type : '');
         }
 
@@ -846,7 +1311,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     setStatus('"' + clean + '" ya está en uso.', 'error');
                     renderSuggestions(generateSuggestions(clean));
                 } else {
-                    setStatus('¡Disponible! ✓', 'ok');
+                    setStatus('¡Disponible! <i class="fa-solid fa-check" aria-hidden="true"></i>', 'ok');
                     suggBox.hidden = true;
                     confirmBtn.disabled = false;
                     isAvailable = true;
@@ -875,19 +1340,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
         confirmBtn.addEventListener('click', async () => {
             if (!isAvailable || !lastChecked) return;
-            const user = window.auth?.currentUser;
-            if (!user) return;
+            if (confirmBtn.dataset.saving === 'true') return;
+            confirmBtn.dataset.saving = 'true';
             confirmBtn.disabled = true;
             setStatus('Guardando...', 'checking');
+
+            const user = resolveOnboardingUser();
+            let finalName = lastChecked;
+            let persistedRemotely = false;
+
             try {
-                await saveUserProfile(user, lastChecked);
-                modal.hidden = true;
-                document.body.style.overflow = 'auto';
-                updateAuthUi(user);
-            } catch {
-                setStatus('Error al guardar. Intenta de nuevo.', 'error');
-                confirmBtn.disabled = false;
+                const result = await saveUserProfile(user, lastChecked);
+                if (result && result.username) finalName = result.username;
+                persistedRemotely = Boolean(result && result.persistedRemotely);
+            } catch (err) {
+                // Respaldo final: el nombre queda guardado en localStorage para
+                // que la sesión continúe aunque Firestore falle.
+                console.warn('[Username] Error al guardar el perfil; se usa respaldo local:', err);
+                writeLocalProfile({
+                    uid: user.uid,
+                    username: lastChecked,
+                    displayName: lastChecked,
+                    nombre_usuario: lastChecked,
+                    email: user.email || '',
+                    role: user.role || 'viewer',
+                    isAdmin: Boolean(user.isAdmin),
+                    providerId: user.providerId || 'local',
+                    coins: 0,
+                    emeralds: 0,
+                    level: 'visitor',
+                    streak: 0,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    pendingSync: true
+                });
             }
+
+            // Cerrar el onboarding siempre: el usuario pasa a la vista principal
+            // sin quedarse congelado esperando a la red.
+            usernameModalShown = true;
+            modal.hidden = true;
+            document.body.style.overflow = 'auto';
+            setStatus('', '');
+            delete confirmBtn.dataset.saving;
+
+            if (window.PanterRoles && typeof window.PanterRoles.refresh === 'function') {
+                try { window.PanterRoles.refresh(); } catch (e) { /* ignore */ }
+            }
+
+            // Refleja el nombre elegido en la barra de sesión aunque el usuario
+            // de Discord conserve su displayName original.
+            const displayUser = Object.assign({}, user, {
+                displayName: finalName,
+                username: user.username || finalName
+            });
+
+            try {
+                await updateAuthUi(displayUser);
+            } catch (err) {
+                console.warn('[Username] No se pudo refrescar la barra de sesión:', err);
+            }
+
+            document.dispatchEvent(new CustomEvent('ps:username-confirmed', {
+                detail: { user: displayUser, username: finalName, persistedRemotely }
+            }));
         });
     }
 
@@ -1077,7 +1593,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (boton.tagName === 'A' && (!destino || destino === '#')) {
                 e.preventDefault();
-                alert("🚀 ¡Esta función estará disponible próximamente en Panter Studio!");
+                alert(" ¡Esta función estará disponible próximamente en Panter Studio!");
             } 
             // Si es un botón de "Descargar", confirmamos la acción
             else if (boton.textContent.includes('Descargar')) {
@@ -1186,11 +1702,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isDarkMode) {
             body.setAttribute('data-theme', 'dark');
             body.classList.add('dark-mode');
-            darkModeToggle.textContent = '☀️';
+            darkModeToggle.innerHTML = '<i class="fa-solid fa-sun" aria-hidden="true"></i>';
+            darkModeToggle.setAttribute('aria-label', 'Cambiar a modo claro');
         } else {
             body.setAttribute('data-theme', 'light');
             body.classList.remove('dark-mode');
-            darkModeToggle.textContent = '🌙';
+            darkModeToggle.innerHTML = '<i class="fa-solid fa-moon" aria-hidden="true"></i>';
+            darkModeToggle.setAttribute('aria-label', 'Cambiar a modo oscuro');
         }
 
         darkModeToggle.addEventListener('click', () => {
@@ -1199,17 +1717,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 body.setAttribute('data-theme', 'light');
                 body.classList.remove('dark-mode');
                 localStorage.setItem('darkMode', 'false');
-                darkModeToggle.textContent = '🌙';
+                darkModeToggle.innerHTML = '<i class="fa-solid fa-moon" aria-hidden="true"></i>';
+                darkModeToggle.setAttribute('aria-label', 'Cambiar a modo oscuro');
             } else {
                 body.setAttribute('data-theme', 'dark');
                 body.classList.add('dark-mode');
                 localStorage.setItem('darkMode', 'true');
-                darkModeToggle.textContent = '☀️';
+                darkModeToggle.innerHTML = '<i class="fa-solid fa-sun" aria-hidden="true"></i>';
+                darkModeToggle.setAttribute('aria-label', 'Cambiar a modo claro');
             }
         });
     }
 
     // Particles effect
+    if (window.tsParticles && typeof window.tsParticles.load === 'function' && document.getElementById('tsparticles')) {
     tsParticles.load("tsparticles", {
         background: {
             color: {
@@ -1282,7 +1803,10 @@ document.addEventListener('DOMContentLoaded', () => {
         detectRetina: true,
     }).then(container => {
         particlesContainer = container;
+    }).catch((error) => {
+        console.warn('No se pudo iniciar el efecto de partículas:', error);
     });
+    }
 
     // Pre-registro form
     const preregistroForm = document.getElementById('preregistro-form');
@@ -1360,7 +1884,7 @@ function openPanel(side) {
     panel.classList.add('active');
     
     // Efecto de sonido simulado (opcional)
-    console.log(`Panel ${side} abierto con efecto de garras de pantera 🐾`);
+    console.log(`Panel ${side} abierto con efecto de garras de pantera `);
 }
 
 // Función para cerrar panel
@@ -1492,4 +2016,178 @@ function preventScroll(side, isOpen) {
         initHamburger();
     }
 })();
+
+/* ========================================
+   GLOBAL AUTH SYNC & ANIMATED STATS
+   ======================================== */
+(function() {
+    function initStatsCounters() {
+        const counterCards = document.querySelectorAll('.stat-card-number, #counterPlayers');
+        if (!counterCards.length) return;
+
+        if (!('IntersectionObserver' in window)) return;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const el = entry.target;
+                    const text = el.textContent.trim();
+                    const numMatch = text.match(/[\d,.]+/);
+                    if (numMatch && !el.dataset.animated) {
+                        el.dataset.animated = 'true';
+                        const rawNumStr = numMatch[0].replace(/,/g, '');
+                        const targetNum = parseFloat(rawNumStr);
+                        if (isNaN(targetNum)) return;
+                        const suffix = text.replace(numMatch[0], '');
+                        const duration = 1200;
+                        const start = performance.now();
+
+                        function updateCount(now) {
+                            const elapsed = now - start;
+                            const progress = Math.min(elapsed / duration, 1);
+                            const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+                            const current = targetNum * ease;
+                            if (targetNum >= 1000) {
+                                el.textContent = Math.floor(current).toLocaleString('en-US') + suffix;
+                            } else if (targetNum % 1 !== 0) {
+                                el.textContent = current.toFixed(1) + suffix;
+                            } else {
+                                el.textContent = Math.floor(current) + suffix;
+                            }
+                            if (progress < 1) requestAnimationFrame(updateCount);
+                        }
+                        requestAnimationFrame(updateCount);
+                    }
+                }
+            });
+        }, { threshold: 0.15 });
+
+        counterCards.forEach(c => observer.observe(c));
+    }
+
+    function initLiveBetaTestersCount() {
+        const els = document.querySelectorAll('#indexBetaCountNum, #betaTestersCount');
+        if (!els.length) return;
+
+        const cached = localStorage.getItem('ps_beta_testers_count') || '29';
+        els.forEach(el => el.textContent = cached);
+
+        const fetchCount = async () => {
+            if (!window.db || !window.collection || !window.getDocs || !window.query || !window.where) return;
+            try {
+                const q = window.query(
+                    window.collection(window.db, 'conductores'),
+                    window.where('betaTesterRequest', '==', true)
+                );
+                const snap = await window.getDocs(q);
+                if (snap && typeof snap.size === 'number' && snap.size > 0) {
+                    localStorage.setItem('ps_beta_testers_count', snap.size);
+                    els.forEach(el => el.textContent = snap.size);
+                }
+            } catch (err) {
+                console.warn('Error fetching beta testers count:', err);
+            }
+        };
+
+        if (window.db) {
+            fetchCount();
+        } else {
+            document.addEventListener('firebaseReady', fetchCount, { once: true });
+        }
+    }
+
+    function initGlobalAuthAndNav() {
+        if (typeof setupUnifiedNavRight === 'function') {
+            setupUnifiedNavRight();
+        }
+        const currentUser = (window.DiscordAuth && typeof window.DiscordAuth.getUser === 'function')
+            ? window.DiscordAuth.getUser()
+            : null;
+        if (typeof updateAuthUi === 'function') {
+            updateAuthUi(currentUser);
+        }
+        initStatsCounters();
+        initLiveBetaTestersCount();
+        if (currentUser) {
+            if (window.db) checkUserBetaStatus(currentUser);
+            else document.addEventListener('firebaseReady', () => checkUserBetaStatus(currentUser), { once: true });
+        }
+    }
+
+    async function checkUserBetaStatus(user) {
+        if (!user || !window.db || !window.fsDoc || !window.getDoc) return;
+        try {
+            const snap = await window.getDoc(window.fsDoc(window.db, 'conductores', user.uid));
+            if (snap.exists() && snap.data().betaTesterRequest) {
+                const betaBtns = document.querySelectorAll('.btn-beta-action');
+                betaBtns.forEach(btn => {
+                    btn.innerHTML = '<i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Pase Activo (Ver Estado) <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>';
+                    btn.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.8), rgba(0, 176, 255, 0.8))';
+                    btn.style.borderColor = '#10b981';
+                });
+            }
+        } catch (e) {
+            console.warn('Error checking user beta status:', e);
+        }
+    }
+
+    // Global Logout Handler
+    document.addEventListener('click', async (e) => {
+        const logoutBtn = e.target.closest('[data-auth-logout]');
+        if (!logoutBtn) return;
+        e.preventDefault();
+        try {
+            if (window.DiscordAuth && typeof window.DiscordAuth.logout === 'function') {
+                await window.DiscordAuth.logout();
+            }
+            if (window.signOut && window.auth) {
+                await window.signOut(window.auth);
+            }
+        } catch (err) {
+            console.warn('Error during logout:', err);
+        }
+        if (typeof updateAuthUi === 'function') {
+            updateAuthUi(null);
+        }
+        window.location.reload();
+    });
+
+    // Global modal trigger for any [data-open-auth-modal]
+    document.addEventListener('click', (e) => {
+        const trigger = e.target.closest('[data-open-auth-modal]');
+        if (!trigger) return;
+        const modal = document.getElementById('authModal');
+        if (modal) {
+            modal.hidden = false;
+            document.body.style.overflow = 'hidden';
+        } else if (window.DiscordAuth && typeof window.DiscordAuth.login === 'function') {
+            window.DiscordAuth.login();
+        }
+    });
+
+    document.addEventListener('discordAuthChanged', (e) => {
+        if (typeof updateAuthUi === 'function') {
+            updateAuthUi(e.detail?.user || null);
+        }
+        if (e.detail?.user) {
+            checkUserBetaStatus(e.detail.user);
+        }
+    });
+
+    document.addEventListener('authStateChanged', (e) => {
+        if (typeof updateAuthUi === 'function') {
+            updateAuthUi(e.detail?.user || null);
+        }
+        if (e.detail?.user) {
+            checkUserBetaStatus(e.detail.user);
+        }
+    });
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initGlobalAuthAndNav);
+    } else {
+        initGlobalAuthAndNav();
+    }
+})();
+
 

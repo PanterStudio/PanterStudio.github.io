@@ -373,7 +373,8 @@
                 snap.forEach(doc => {
                     const data = doc.data();
                     const email = String(data.email || '').trim().toLowerCase();
-                    const isFounder = email === 'pantergamey@gmail.com';
+                    const uname = String(data.username || data.nombre_usuario || data.displayName || '').trim().toLowerCase();
+                    const isFounder = email === 'pantergamey@gmail.com' || uname === 'pantergamey' || uname === 'pantergameyt' || data.role === 'founder_ceo';
                     list.push({
                         nombre_usuario: data.nombre_usuario,
                         username: data.username,
@@ -397,8 +398,9 @@
                 
                 // Mostrar los mejores 5
                 let top5 = list.slice(0, 5);
-                const founderItem = list.find(u => String(u.email || '').toLowerCase() === 'pantergamey@gmail.com');
-                const hasFounder = top5.some(u => String(u.email || '').toLowerCase() === 'pantergamey@gmail.com');
+                const isCeoMatch = u => String(u.email || '').toLowerCase() === 'pantergamey@gmail.com' || ['pantergamey', 'pantergameyt'].includes(String(u.username || u.nombre_usuario || u.displayName || '').toLowerCase()) || u.role === 'founder_ceo';
+                const founderItem = list.find(isCeoMatch);
+                const hasFounder = top5.some(isCeoMatch);
                 if (founderItem && !hasFounder) {
                     top5.push(founderItem);
                 }

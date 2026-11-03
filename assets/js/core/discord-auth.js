@@ -1,0 +1,812 @@
+/**
+ * discord-auth.js — Sistema de Autenticación Discord OAuth 2.0 para Panter Studio
+ * Usa Client ID de la App de Discord (1484918737093005494 - Sincronizado con SoporteSaaS)
+ *
+ * Scopes solicitados:
+ *   identify              → perfil básico
+ *   email                 → correo
+ *   guilds                → lista de servidores + permisos del usuario
+ *   guilds.members.read   → roles del miembro dentro del servidor
+ *
+ * La detección de Administrator (bit 0x8) y de los roles mapeados se hace
+ * en cliente. La asignación visual es inmediata; la persistencia se replica
+ * en Firestore (conductores/{uid}) para el resto de la web.
+ */
+
+(function() {
+    'use strict';
+
+    const DISCORD_CLIENT_ID = '1484918737093005494';
+    // Redirección OAuth: vuelve a la raíz del sitio, donde el token se
+    // captura desde el hash sin depender de una página intermedia.
+    // Debe coincidir exactamente con una Redirect URI del Developer Portal.
+    const PRODUCTION_REDIRECT_URI = 'https://panterstudio.github.io/index.html';
+    const OFFICIAL_GUILD_ID = '1391998991108935772';
+    const OFFICIAL_GUILD_NAME = 'Panter Studio Game Dev';
+    const INVITE_URL = 'https://discord.gg/MukZeJmgky';
+    const STORAGE_KEY = 'discord_user_session';
+    const TOKEN_KEY = 'discord_access_token';
+    const TOKEN_STORE_KEY = 'discord_access_token_store';
+    const AUTH_ERROR_KEY = 'discord_auth_error';
+    const GUILD_CACHE_KEY = 'panterDiscordGuildContext';
+    const SCOPES = 'identify email guilds guilds.members.read';
+    const API_BASE = 'https://discord.com/api/v10';
+
+    const listeners = new Set();
+    let hashCallbackPromise = Promise.resolve(false);
+
+    function rolesLib() {
+        return window.PanterRoles || null;
+    }
+
+    function getPrimaryRedirectUri() {
+        const loc = window.location;
+        const host = String(loc.hostname || '');
+        const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0';
+
+        // En desarrollo local se mantiene el origen actual para no perder la sesión.
+        if (isLocal) {
+            return `${loc.origin}/index.html`;
+        }
+
+        // GitHub Pages (y cualquier otro dominio publicado) usa siempre la
+        // Redirect URI exacta registrada en el portal de Discord.
+        return PRODUCTION_REDIRECT_URI;
+    }
+
+    function getAvatarUrl(discordUser) {
+        if (!discordUser) return 'https://cdn.discordapp.com/embed/avatars/0.png';
+        if (discordUser.avatar) {
+            const ext = String(discordUser.avatar).startsWith('a_') ? 'gif' : 'png';
+            return `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.${ext}?size=256`;
+        }
+        try {
+            const index = (BigInt(discordUser.id) >> 22n) % 6n;
+            return `https://cdn.discordapp.com/embed/avatars/${index}.png`;
+        } catch (e) {
+            return 'https://cdn.discordapp.com/embed/avatars/0.png';
+        }
+    }
+
+    function isCeoIdentifier(str) {
+        if (!str) return false;
+        const clean = String(str).trim().toLowerCase();
+        return clean === 'pantergamey' ||
+               clean === 'pantergameyt' ||
+               clean === 'pantergamey@gmail.com' ||
+               clean === 'ceo@panterstudio.lat' ||
+               clean === 'admin@psgd.me';
+    }
+
+    function hasAdministratorPermission(permissions) {
+        if (permissions == null || permissions === '') return false;
+        try {
+            return (BigInt(permissions) & 8n) === 8n;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function saveAccessToken(token, expiresIn) {
+        if (!token) return;
+        try { sessionStorage.setItem(TOKEN_KEY, token); } catch (e) { /* ignore */ }
+
+        // La sesión "guardada" del requisito vive en localStorage. El token se
+        // conserva con su caducidad (implicit grant) para poder revalidar la
+        // membresía al volver a abrir la web.
+        try {
+            const seconds = Number(expiresIn);
+            const expiresAt = Number.isFinite(seconds) && seconds > 0
+                ? Date.now() + (seconds * 1000)
+                : 0;
+            localStorage.setItem(TOKEN_STORE_KEY, JSON.stringify({ token, expiresAt }));
+        } catch (e) { /* storage no disponible */ }
+    }
+
+    function readStoredToken() {
+        try {
+            const raw = localStorage.getItem(TOKEN_STORE_KEY);
+            if (!raw) return '';
+            const data = JSON.parse(raw);
+            if (!data || !data.token) return '';
+            if (data.expiresAt && Date.now() >= Number(data.expiresAt)) {
+                localStorage.removeItem(TOKEN_STORE_KEY);
+                return '';
+            }
+            return String(data.token);
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function getAccessToken() {
+        try {
+            const sessionToken = sessionStorage.getItem(TOKEN_KEY);
+            if (sessionToken) return sessionToken;
+        } catch (e) { /* ignore */ }
+
+        const stored = readStoredToken();
+        if (stored) {
+            try { sessionStorage.setItem(TOKEN_KEY, stored); } catch (e) { /* ignore */ }
+        }
+        return stored;
+    }
+
+    function clearAccessToken() {
+        try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) { /* ignore */ }
+        try { localStorage.removeItem(TOKEN_STORE_KEY); } catch (e) { /* ignore */ }
+    }
+
+    function isDiscordSession(user) {
+        if (!user) return false;
+        return user.providerId === 'discord.com' ||
+            Boolean(user.discordId) ||
+            String(user.uid || '').startsWith('discord_');
+    }
+
+    function formatDiscordUser(rawUser, extras) {
+        const extra = extras || {};
+        const avatarUrl = getAvatarUrl(rawUser);
+        const displayName = rawUser.global_name || rawUser.username;
+        const isCeo = isCeoIdentifier(rawUser.username) ||
+                      isCeoIdentifier(rawUser.global_name) ||
+                      isCeoIdentifier(rawUser.email) ||
+                      isCeoIdentifier(displayName);
+
+        const R = rolesLib();
+        const discordAdmin = Boolean(extra.discordAdmin) || hasAdministratorPermission(extra.permissions);
+        const mappedRole = extra.role ? extra.role : null;
+        const sessionRole = discordAdmin
+            ? 'founder_ceo'
+            : (mappedRole || (isCeo ? 'founder_ceo' : (rawUser.role || 'usuario')));
+
+        return {
+            uid: `discord_${rawUser.id}`,
+            id: rawUser.id,
+            discordId: rawUser.id,
+            username: rawUser.username,
+            displayName: displayName,
+            globalName: rawUser.global_name,
+            email: rawUser.email || `${rawUser.id}@discord.local`,
+            photoURL: avatarUrl,
+            avatarUrl: avatarUrl,
+            avatar: rawUser.avatar,
+            discriminator: rawUser.discriminator,
+            emailVerified: true,
+            providerId: 'discord.com',
+            role: R ? R.toLegacyRole(sessionRole) : sessionRole,
+            isAdmin: Boolean(discordAdmin || isCeo || rawUser.isAdmin),
+            discordAdmin: discordAdmin,
+            adminOwner: discordAdmin,
+            discordPermissions: extra.permissions || null,
+            discordRoleIds: Array.isArray(extra.roleIds) ? extra.roleIds : [],
+            discordRoleNames: Array.isArray(extra.roleNames) ? extra.roleNames : [],
+            discordRole: extra.role || null,
+            discordGuildId: extra.guildId || null,
+            discordGuildName: extra.guildName || null,
+            discordGuildMember: extra.isMember === true,
+            discordMembershipChecked: extra.membershipChecked === true,
+            raw: rawUser
+        };
+    }
+
+    function applySessionRole(user) {
+        if (!user) return user;
+        const R = rolesLib();
+        if (!R) return user;
+
+        const discordAdmin = Boolean(user.discordAdmin) || R.isDiscordAdmin(user);
+        if (discordAdmin) {
+            user.discordAdmin = true;
+            user.adminOwner = true;
+            user.role = 'founder_ceo';
+            user.isAdmin = true;
+        } else if (user.role) {
+            const normalized = R.normalize(user.role);
+            user.role = R.toLegacyRole(normalized);
+            user.isAdmin = R.canAccessAdminPanel(normalized) || Boolean(user.isAdmin);
+        }
+        return user;
+    }
+
+    function getCurrentSession() {
+        try {
+            const data = localStorage.getItem(STORAGE_KEY);
+            if (!data) return null;
+            let user = JSON.parse(data);
+            if (user && (isCeoIdentifier(user.username) || isCeoIdentifier(user.displayName) || isCeoIdentifier(user.globalName) || isCeoIdentifier(user.email))) {
+                user.role = 'founder_ceo';
+                user.isAdmin = true;
+            }
+            user = applySessionRole(user);
+            return user;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function saveSession(user) {
+        try {
+            user = applySessionRole(user);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+            notifyListeners(user);
+        } catch (e) {
+            console.error('[DiscordAuth] Error guardando sesión:', e);
+        }
+    }
+
+    function clearSession() {
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+            clearAccessToken();
+            sessionStorage.removeItem(GUILD_CACHE_KEY);
+            notifyListeners(null);
+        } catch (e) {
+            console.error('[DiscordAuth] Error borrando sesión:', e);
+        }
+    }
+
+    function notifyListeners(user) {
+        listeners.forEach(cb => {
+            try { cb(user); } catch (err) { console.error(err); }
+        });
+        document.dispatchEvent(new CustomEvent('discordAuthChanged', { detail: { user } }));
+        document.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user } }));
+    }
+
+    function discordFetch(endpoint, accessToken, options) {
+        const opts = options || {};
+        const controller = typeof AbortController === 'function' ? new AbortController() : null;
+        const timeoutMs = Number(opts.timeout) > 0 ? Number(opts.timeout) : 8000;
+        const timer = controller
+            ? setTimeout(() => { try { controller.abort(); } catch (e) { /* ignore */ } }, timeoutMs)
+            : null;
+
+        return fetch(`${API_BASE}${endpoint}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+            signal: controller ? controller.signal : undefined
+        }).then(async res => {
+            if (!res.ok) {
+                const text = await res.text().catch(() => '');
+                const err = new Error(`Discord API ${res.status} ${endpoint} ${text}`.trim());
+                err.status = res.status;
+                throw err;
+            }
+            return res.json();
+        }).finally(() => {
+            if (timer) clearTimeout(timer);
+        });
+    }
+
+    /**
+     * Consulta servidores, permisos y roles del usuario.
+     * `overrides.guildId` permite forzar un servidor concreto (por ejemplo el
+     * oficial en el gate de acceso).
+     * No lanza si el usuario no está en el guild o falta configuración.
+     */
+    async function fetchDiscordGuildContext(accessToken, overrides) {
+        const R = rolesLib();
+        const cfg = R ? R.getDiscordConfig() : { guildId: '', roles: [], adminRoleIds: [] };
+        const override = overrides || {};
+        const guildId = override.guildId || cfg.guildId || OFFICIAL_GUILD_ID;
+        const context = {
+            guildId: guildId || null,
+            guildName: override.guildName || cfg.guildName || OFFICIAL_GUILD_NAME,
+            permissions: null,
+            roleIds: [],
+            roleNames: [],
+            role: null,
+            discordAdmin: false,
+            guilds: [],
+            isMember: false,
+            membershipChecked: false,
+            configured: Boolean(guildId)
+        };
+
+        if (!accessToken) return context;
+        if (!guildId) {
+            // Sin guild configurado no se puede consultar el miembro, pero sí listar guilds.
+            try { context.guilds = await discordFetch('/users/@me/guilds', accessToken); } catch (e) {}
+            return context;
+        }
+
+        let guild = null;
+        try {
+            const guilds = await discordFetch('/users/@me/guilds', accessToken);
+            context.guilds = Array.isArray(guilds) ? guilds : [];
+            context.membershipChecked = true;
+            guild = context.guilds.find(g => String(g.id) === String(guildId)) || null;
+            context.isMember = Boolean(guild);
+        } catch (e) {
+            context.error = e.message;
+            context.tokenInvalid = e.status === 401;
+            console.warn('[DiscordAuth] No se pudieron leer los servidores:', e.message);
+        }
+
+        if (guild) {
+            context.guildName = guild.name || context.guildName;
+            context.permissions = guild.permissions != null ? String(guild.permissions) : null;
+            context.discordAdmin = hasAdministratorPermission(context.permissions);
+        }
+
+        let member = null;
+        try {
+            member = await discordFetch(`/users/@me/guilds/${guildId}/member`, accessToken);
+            if (member) {
+                context.isMember = true;
+                context.membershipChecked = true;
+            }
+        } catch (e) {
+            // El usuario no pertenece al guild o el scope no fue concedido.
+            if (e.status === 401) {
+                context.tokenInvalid = true;
+                context.error = e.message;
+            } else if (e.status !== 404 && e.status !== 403) {
+                context.error = context.error || e.message;
+                console.warn('[DiscordAuth] No se pudo leer el miembro del guild:', e.message);
+            }
+        }
+
+        if (member) {
+            context.roleIds = Array.isArray(member.roles) ? member.roles.map(String) : [];
+            if (member.nick) context.nick = member.nick;
+            if (member.avatar) context.memberAvatar = member.avatar;
+            if (member.joined_at) context.joinedAt = member.joined_at;
+        }
+
+        // Intentar completar nombres de roles (puede fallar sin token de bot).
+        if (context.roleIds.length) {
+            try {
+                const guildRoles = await discordFetch(`/guilds/${guildId}/roles`, accessToken);
+                if (Array.isArray(guildRoles)) {
+                    const byId = {};
+                    guildRoles.forEach(r => { byId[String(r.id)] = r.name; });
+                    context.roleNames = context.roleIds.map(id => byId[id]).filter(Boolean);
+                }
+            } catch (e) { /* OAuth de usuario no siempre puede listar roles del guild */ }
+        }
+
+        if (R) {
+            const matched = R.matchDiscordRoles(context.roleIds, context.roleNames, cfg);
+            context.role = matched.role;
+            context.discordAdmin = context.discordAdmin || matched.admin;
+            if (context.roleNames.length === 0 && matched.matched.length) {
+                context.roleNames = matched.matched.map(m => m.name).filter(Boolean);
+            }
+        }
+
+        try {
+            if (!context.tokenInvalid) {
+                sessionStorage.setItem(GUILD_CACHE_KEY, JSON.stringify(context));
+            }
+        } catch (e) { /* ignore */ }
+
+        return context;
+    }
+
+    async function fetchDiscordUserProfile(accessToken, guildContext) {
+        const rawUser = await discordFetch('/users/@me', accessToken);
+        let context = guildContext;
+        if (!context) {
+            context = await fetchDiscordGuildContext(accessToken);
+        }
+        return formatDiscordUser(rawUser, {
+            permissions: context.permissions,
+            roleIds: context.roleIds,
+            roleNames: context.roleNames,
+            role: context.role,
+            discordAdmin: context.discordAdmin,
+            guildId: context.guildId,
+            guildName: context.guildName,
+            isMember: context.isMember,
+            membershipChecked: context.membershipChecked
+        });
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       Sincronización con Firestore
+       ───────────────────────────────────────────────────────────── */
+    function waitForFirestore(timeout) {
+        return new Promise(resolve => {
+            const started = Date.now();
+            const ready = () => window.db && window.fsDoc && window.setDoc;
+            if (ready()) return resolve(true);
+            const timer = setInterval(() => {
+                if (ready()) {
+                    clearInterval(timer);
+                    resolve(true);
+                } else if (Date.now() - started >= (timeout || 8000)) {
+                    clearInterval(timer);
+                    resolve(false);
+                }
+            }, 200);
+        });
+    }
+
+    async function syncProfile(user) {
+        if (!user) return false;
+        const ok = await waitForFirestore();
+        if (!ok) return false;
+        const R = rolesLib();
+        const legacyRole = R ? R.toLegacyRole(user.role) : (user.role || 'usuario');
+        const payload = {
+            uid: user.uid,
+            discordId: user.discordId || user.id || null,
+            username: user.username || null,
+            displayName: user.displayName || user.username || null,
+            nombre_usuario: user.displayName || user.username || null,
+            email: user.email || null,
+            avatarUrl: user.avatarUrl || user.photoURL || null,
+            avatarImg: user.avatarImg || user.avatarUrl || user.photoURL || null,
+            photoURL: user.photoURL || user.avatarUrl || null,
+            role: legacyRole,
+            isAdmin: Boolean(user.isAdmin || user.discordAdmin),
+            discordAdmin: Boolean(user.discordAdmin),
+            discordPermissions: user.discordPermissions || null,
+            discordRoleIds: user.discordRoleIds || [],
+            discordRoleNames: user.discordRoleNames || [],
+            discordRole: user.discordRole || null,
+            discordGuildId: user.discordGuildId || null,
+            discordGuildName: user.discordGuildName || null,
+            lastLoginAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        try {
+            await window.setDoc(window.fsDoc(window.db, 'conductores', user.uid), payload, { merge: true });
+            // Mantener el equipo sincronizado sin sobrescribir textos editados por admins.
+            if (R && R.isTeamRole(user.role)) {
+                await window.setDoc(window.fsDoc(window.db, 'equipo', user.uid), {
+                    uid: user.uid,
+                    discordId: user.discordId || user.id || null,
+                    nombre: user.displayName || user.username || 'Miembro del equipo',
+                    username: user.username || null,
+                    avatarUrl: user.avatarUrl || user.photoURL || null,
+                    role: R.toLegacyRole(user.role),
+                    actualizadoEn: new Date().toISOString()
+                }, { merge: true });
+            }
+            return true;
+        } catch (e) {
+            // Las reglas actuales pueden bloquear role=founder_ceo desde web.
+            console.warn('[DiscordAuth] No se pudo sincronizar el perfil en Firestore:', e.message);
+            return false;
+        }
+    }
+
+    function enrichUserWithGuild(user, context) {
+        if (!user || !context) return user;
+        const R = rolesLib();
+        const role = context.role || user.role;
+        if (R && context.discordAdmin) {
+            user.discordAdmin = true;
+            user.adminOwner = true;
+            user.role = 'founder_ceo';
+            user.isAdmin = true;
+        } else if (R && role) {
+            user.role = R.toLegacyRole(role);
+            user.isAdmin = R.canAccessAdminPanel(role) || user.isAdmin;
+        }
+        user.discordPermissions = context.permissions || user.discordPermissions || null;
+        user.discordRoleIds = context.roleIds || user.discordRoleIds || [];
+        user.discordRoleNames = context.roleNames || user.discordRoleNames || [];
+        user.discordRole = context.role || user.discordRole || null;
+        user.discordGuildId = context.guildId || user.discordGuildId || null;
+        user.discordGuildName = context.guildName || user.discordGuildName || null;
+        user.discordGuildMember = context.membershipChecked
+            ? Boolean(context.isMember)
+            : Boolean(user.discordGuildMember);
+        user.discordMembershipChecked = Boolean(context.membershipChecked) || Boolean(user.discordMembershipChecked);
+        user.discordAdmin = Boolean(context.discordAdmin || user.discordAdmin);
+        return applySessionRole(user);
+    }
+
+    async function refreshDiscordRoles() {
+        const user = getCurrentSession();
+        if (!user) return null;
+        const token = getAccessToken();
+        if (!token) return user;
+        try {
+            const context = await fetchDiscordGuildContext(token);
+            if (context.tokenInvalid) {
+                clearAccessToken();
+                return user;
+            }
+            const updated = enrichUserWithGuild(Object.assign({}, user), context);
+            saveSession(updated);
+            syncProfile(updated).catch(() => {});
+            return updated;
+        } catch (e) {
+            console.warn('[DiscordAuth] No se pudieron refrescar los roles:', e.message);
+            return user;
+        }
+    }
+
+    // Discord puede devolver un error directamente en el hash (por ejemplo si
+    // el usuario cancela). Se limpia la URL y se guarda el motivo para el gate.
+    function handleAuthErrorHash() {
+        const hash = window.location.hash;
+        if (!hash || hash.indexOf('error=') === -1) return null;
+
+        const params = new URLSearchParams(hash.substring(1));
+        const error = params.get('error');
+        if (!error) return null;
+
+        const description = params.get('error_description') || '';
+        try {
+            sessionStorage.setItem(AUTH_ERROR_KEY, JSON.stringify({
+                error,
+                description,
+                at: Date.now()
+            }));
+        } catch (e) { /* ignore */ }
+
+        history.replaceState(null, document.title, window.location.pathname + window.location.search);
+        return { error, description };
+    }
+
+    function consumeAuthError() {
+        try {
+            const raw = sessionStorage.getItem(AUTH_ERROR_KEY);
+            sessionStorage.removeItem(AUTH_ERROR_KEY);
+            if (!raw) return null;
+            const data = JSON.parse(raw);
+            // Errores de hace más de 10 minutos ya no son relevantes.
+            if (!data || (data.at && Date.now() - data.at > 600000)) return null;
+            return data;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // Maneja callback en la misma página si hay token en el hash
+    async function handleHashCallback() {
+        const hash = window.location.hash;
+        if (!hash) return false;
+
+        if (hash.indexOf('error=') !== -1) {
+            handleAuthErrorHash();
+            return false;
+        }
+
+        if (hash.indexOf('access_token=') === -1) return false;
+
+        const params = new URLSearchParams(hash.substring(1));
+        const accessToken = params.get('access_token');
+        if (!accessToken) return false;
+
+        history.replaceState(null, document.title, window.location.pathname + window.location.search);
+        saveAccessToken(accessToken, params.get('expires_in'));
+
+        try {
+            const context = await fetchDiscordGuildContext(accessToken);
+            const user = await fetchDiscordUserProfile(accessToken, context);
+            saveSession(user);
+            syncProfile(user).catch(() => {});
+
+            if (window.opener && window.opener !== window) {
+                window.opener.postMessage({ type: 'DISCORD_AUTH_SUCCESS', user }, '*');
+                window.close();
+            }
+            return true;
+        } catch (err) {
+            console.error('[DiscordAuth] Callback error:', err);
+            if (window.opener && window.opener !== window) {
+                window.opener.postMessage({ type: 'DISCORD_AUTH_ERROR', error: err.message }, '*');
+                window.close();
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Valida la sesión guardada y la pertenencia al servidor oficial.
+     * Devuelve un resultado estable para que el gate de index.html decida.
+     *
+     * states: member | no-session | not-discord | not-member | expired | unverified | error
+     */
+    async function validateGuildAccess(options) {
+        const opts = options || {};
+        try { await hashCallbackPromise; } catch (e) { /* ignore */ }
+
+        const user = getCurrentSession();
+        const base = {
+            inviteUrl: INVITE_URL,
+            guildId: OFFICIAL_GUILD_ID,
+            guildName: OFFICIAL_GUILD_NAME,
+            checked: false,
+            isMember: false,
+            isAdmin: false,
+            user: user || null,
+            context: null
+        };
+
+        if (!user) {
+            return Object.assign(base, { allowed: false, state: 'no-session' });
+        }
+
+        if (!isDiscordSession(user)) {
+            return Object.assign(base, { allowed: false, state: 'not-discord' });
+        }
+
+        const token = getAccessToken();
+        if (!token) {
+            // No hay forma de revalidar sin token: no se bloquea para no dejar
+            // al usuario fuera de su propia cuenta.
+            return Object.assign(base, {
+                allowed: true,
+                state: 'unverified',
+                message: 'Sesión sin token de Discord; membresía no revalidada.'
+            });
+        }
+
+        let context;
+        try {
+            // El acceso web siempre se valida contra el servidor oficial.
+            context = await fetchDiscordGuildContext(token, {
+                guildId: OFFICIAL_GUILD_ID,
+                guildName: OFFICIAL_GUILD_NAME
+            });
+        } catch (e) {
+            return Object.assign(base, {
+                allowed: true,
+                state: 'error',
+                error: e.message
+            });
+        }
+
+        base.context = context;
+        base.checked = Boolean(context.membershipChecked);
+        base.isMember = Boolean(context.isMember);
+        base.isAdmin = Boolean(context.discordAdmin);
+        base.guildName = context.guildName || base.guildName;
+
+        if (context.tokenInvalid) {
+            clearAccessToken();
+            return Object.assign(base, { allowed: false, state: 'expired' });
+        }
+
+        if (context.membershipChecked && !context.isMember) {
+            return Object.assign(base, { allowed: false, state: 'not-member' });
+        }
+
+        if (!context.membershipChecked) {
+            return Object.assign(base, {
+                allowed: true,
+                state: 'error',
+                error: context.error || 'No se pudo verificar la membresía.'
+            });
+        }
+
+        const updated = enrichUserWithGuild(Object.assign({}, user), context);
+        if (!opts.skipPersist) {
+            saveSession(updated);
+            syncProfile(updated).catch(() => {});
+        }
+
+        return Object.assign(base, {
+            allowed: true,
+            state: 'member',
+            user: updated,
+            isMember: true,
+            isAdmin: Boolean(updated.discordAdmin)
+        });
+    }
+
+    async function login(customRedirectUri) {
+        try {
+            sessionStorage.setItem('auth_return_url', window.location.href);
+        } catch (e) {}
+        const redirectUri = customRedirectUri || getPrimaryRedirectUri();
+        const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(SCOPES)}`;
+        window.location.href = authUrl;
+    }
+
+    async function checkSession() {
+        try {
+            const backendBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                ? 'http://localhost:5000'
+                : '';
+            const res = await fetch(`${backendBase}/api/auth/me`, { credentials: 'include' });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.authenticated && data.user) {
+                    saveSession(data.user);
+                    return data.user;
+                }
+            }
+        } catch (e) {}
+        return getCurrentSession();
+    }
+
+    function logout() {
+        clearSession();
+        return Promise.resolve();
+    }
+
+    function onAuthStateChanged(callback) {
+        listeners.add(callback);
+        const current = getCurrentSession();
+        callback(current);
+
+        checkSession().then(user => {
+            if (user) {
+                callback(user);
+                // Refresca roles una vez por carga si existe token de sesión.
+                refreshDiscordRoles().catch(() => {});
+            }
+        });
+        return () => listeners.delete(callback);
+    }
+
+    function loginWithEmail(email, password) {
+        return new Promise((resolve) => {
+            const rawInput = String(email || '').trim();
+            const cleanEmail = rawInput.toLowerCase();
+            const R = rolesLib();
+            let role = 'usuario';
+            let name = rawInput.split('@')[0] || 'Usuario';
+            let finalEmail = cleanEmail.includes('@') ? cleanEmail : `${cleanEmail}@panterstudio.lat`;
+
+            if (isCeoIdentifier(cleanEmail)) {
+                role = 'founder_ceo';
+                name = 'PanterGameY (CEO)';
+                finalEmail = cleanEmail.includes('@') ? cleanEmail : 'pantergamey@gmail.com';
+            } else if (cleanEmail === 'soporte@psgd.me') {
+                role = 'soporte';
+                name = 'Agente de Soporte';
+            } else if (cleanEmail === 'mod@psgd.me') {
+                role = 'moderador';
+                name = 'Moderador PSGD';
+            } else if (cleanEmail === 'user@user.me') {
+                role = 'usuario';
+                name = 'Usuario Demo';
+            }
+
+            const isCeo = role === 'founder_ceo';
+            const user = {
+                uid: `email_${cleanEmail.replace(/[^a-z0-9]/gi, '_')}`,
+                id: cleanEmail,
+                username: isCeo ? 'PanterGameY' : (rawInput.split('@')[0] || 'Usuario'),
+                displayName: isCeo ? 'PanterGameY' : name,
+                email: finalEmail,
+                photoURL: 'https://cdn.discordapp.com/embed/avatars/1.png',
+                avatarUrl: 'https://cdn.discordapp.com/embed/avatars/1.png',
+                role: R ? R.toLegacyRole(role) : role,
+                isAdmin: isCeo,
+                providerId: 'password'
+            };
+
+            saveSession(user);
+            resolve(user);
+        });
+    }
+
+    hashCallbackPromise = handleHashCallback();
+
+    window.DiscordAuth = {
+        CLIENT_ID: DISCORD_CLIENT_ID,
+        SCOPES,
+        INVITE_URL,
+        OFFICIAL_GUILD_ID,
+        OFFICIAL_GUILD_NAME,
+        login,
+        loginWithEmail,
+        logout,
+        getUser: getCurrentSession,
+        onAuthStateChanged,
+        getAvatarUrl,
+        getPrimaryRedirectUri,
+        getAccessToken,
+        isDiscordSession,
+        isCeoIdentifier,
+        hasAdministratorPermission,
+        fetchDiscordGuildContext,
+        validateGuildAccess,
+        consumeAuthError,
+        whenReady: function() { return hashCallbackPromise; },
+        refreshRoles: refreshDiscordRoles,
+        syncProfile
+    };
+
+    console.log('[DiscordAuth] Motor nativo Discord OAuth 2.0 listo (Client ID:', DISCORD_CLIENT_ID, ')');
+})();

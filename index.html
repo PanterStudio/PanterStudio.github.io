@@ -13,208 +13,597 @@
     <title>Inicio — Panter Studio</title>
     <link rel="icon" href="recursos/PSGD.png" type="image/png">
     <link rel="apple-touch-icon" href="recursos/PSGD.png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/modules.css">
+    <script src="assets/js/core/roles.js"></script>
+    <script src="assets/js/core/discord-auth.js"></script>
+    <script src="assets/js/core/role-badges.js"></script>
+    <script src="assets/js/core/firebase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
     <style>
-        /* ===== INDEX-SPECIFIC STYLES ===== */
-        /* Premium Leaderboard Overrides */
-        .leaderboard-row {
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            background: rgba(255, 255, 255, 0.01);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .leaderboard-row:hover {
-            transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.08);
-            background: rgba(255, 255, 255, 0.03);
-        }
-        .leaderboard-row::after {
-            content: '';
-            position: absolute;
-            top: 0; left: -150%;
-            width: 50%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-            transform: skewX(-20deg);
-        }
-        .leaderboard-row:hover::after {
-            left: 150%;
-            transition: all 0.8s ease-in-out;
+        /* ===== INDEX SPECIFIC DYNAMIC STYLES ===== */
+        :root {
+            --bg-body: #0a0d14;
+            --color-primary: #00b0ff;
+            --color-primary-glow: rgba(0, 176, 255, 0.35);
+            --color-emerald: #10b981;
+            --color-purple: #a855f7;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
         }
 
-        .hub-hero-actions {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
+        body {
+            background-color: var(--bg-body) !important;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(0, 176, 255, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.05) 0%, transparent 60%) !important;
+            background-attachment: fixed !important;
+            color: var(--text-primary);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
         }
-        .btn-sm {
-            padding: 0.55rem 1.25rem;
-            font-size: 0.9rem;
-        }
-        /* Right column layout */
-        .hub-right-col {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-        /* Devlog section */
-        .home-devlogs-section {
-            margin-top: 1.5rem;
-        }
-        /* Studio info strip */
-        .studio-info-strip {
+
+        /* HERO SECTION 3D TILT WITH GLOW */
+        .index-hero-container {
+            position: relative;
+            background: linear-gradient(135deg, rgba(20, 26, 38, 0.75) 0%, rgba(15, 18, 26, 0.9) 100%);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 28px;
+            padding: 3rem 2.5rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.15);
+            overflow: hidden;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1rem;
-            padding: 1.25rem;
-            background: var(--bg-glass-card);
-            border: var(--border-glass);
-            border-radius: var(--border-radius-lg);
-        }
-        .info-strip-item {
-            display: flex;
-            flex-direction: column;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 2.5rem;
             align-items: center;
-            text-align: center;
-            gap: 4px;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
         }
-        .info-strip-item strong {
-            font-size: 1.6rem;
+        .index-hero-container:hover {
+            border-color: rgba(0, 176, 255, 0.4);
+            box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7), 0 0 40px rgba(0, 176, 255, 0.2);
+        }
+        .index-hero-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, #0070ba, #00b0ff, #10b981, #a855f7);
+            background-size: 300% 100%;
+            animation: gradientBorder 6s linear infinite;
+        }
+        @keyframes gradientBorder {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .hero-badge-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 14px;
+            background: rgba(0, 176, 255, 0.12);
+            border: 1px solid var(--color-primary-light);
+            border-radius: 100px;
+            font-size: 0.75rem;
             font-weight: 800;
             color: var(--color-primary-light);
-            font-family: var(--font-display);
-            line-height: 1;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+            box-shadow: 0 0 20px rgba(0, 176, 255, 0.25);
         }
-        .info-strip-item span {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            font-weight: 600;
+        .hero-badge-tag::before {
+            content: ''; width: 8px; height: 8px; background: #10b981; border-radius: 50%;
+            box-shadow: 0 0 10px #10b981; animation: pulseDot 1.8s infinite;
+        }
+        @keyframes pulseDot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.5; } }
+
+        .hero-main-title {
+            font-size: clamp(2.2rem, 4.5vw, 3.2rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin: 0 0 1.2rem 0;
+            background: linear-gradient(135deg, #ffffff 30%, #a5f3fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.8px;
+        }
+        .hero-main-desc {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            line-height: 1.65;
+            margin-bottom: 2rem;
+        }
+        .hero-actions-row {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .btn-hero-primary {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #0070ba 0%, #00b0ff 100%);
+            color: #ffffff !important;
+            font-weight: 800;
+            font-size: 0.95rem;
+            border-radius: 14px;
+            text-decoration: none;
+            box-shadow: 0 8px 30px rgba(0, 176, 255, 0.35);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        /* Minijuegos quick card */
-        .minijuego-quick {
-            background: linear-gradient(135deg, rgba(0, 176, 255,0.06), rgba(0, 176, 255,0.02));
-            border: 1px solid rgba(0, 176, 255,0.12);
-            border-radius: var(--border-radius-lg);
-            padding: 1.25rem;
+        .btn-hero-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 40px rgba(0, 176, 255, 0.55);
+            background: linear-gradient(135deg, #0080d0 0%, #40c4ff 100%);
         }
-        .minijuego-quick-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 0.75rem;
-        }
-        .minijuego-quick-header h3 {
-            font-size: 1rem;
-            margin: 0;
+        .btn-hero-secondary {
+            padding: 14px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ffffff !important;
             font-weight: 700;
+            font-size: 0.95rem;
+            border-radius: 14px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        .minijuego-quick p {
-            font-size: 0.82rem;
-            color: var(--text-secondary);
-            margin: 0 0 1rem 0;
-            line-height: 1.4;
+        .btn-hero-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #ffffff;
+            transform: translateY(-3px);
         }
-        /* Preregistro widget */
-        .prereg-widget {
-            background: linear-gradient(135deg, rgba(212,175,55,0.07), rgba(212,175,55,0.02));
-            border: 1px solid rgba(212,175,55,0.2);
-            border-radius: var(--border-radius-lg);
-            padding: 1.25rem;
+
+        /* Hero Preview Media Floating 3D */
+        .hero-media-wrapper {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .prereg-widget-header {
+        .index-hero-container:hover .hero-media-wrapper {
+            transform: scale(1.03) rotate(1deg);
+        }
+        .hero-media-wrapper::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        .hero-media-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            min-height: 240px;
+        }
+        .hero-media-overlay-badge {
+            position: absolute;
+            bottom: 14px;
+            left: 14px;
+            right: 14px;
+            padding: 10px 14px;
+            background: rgba(15, 20, 32, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 0.75rem;
+            z-index: 2;
         }
-        .prereg-widget-header h3 {
-            font-size: 1rem;
-            margin: 0;
-            color: var(--color-accent);
+
+        /* METRICS & STATS COUNTER STRIP */
+        .stats-counter-strip {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 3rem;
         }
-        .prereg-widget p {
-            font-size: 0.82rem;
-            color: var(--text-secondary);
-            margin: 0 0 1rem 0;
-            line-height: 1.4;
-        }
-        .prereg-bar-wrap {
-            background: rgba(0,0,0,0.3);
-            border-radius: 100px;
-            height: 6px;
+        .stat-card {
+            background: rgba(20, 26, 38, 0.65);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
             overflow: hidden;
-            margin-bottom: 0.5rem;
         }
-        .prereg-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #b8860b, var(--color-accent));
-            border-radius: 100px;
-            transition: width 1.5s var(--ease-smooth);
-            box-shadow: 0 0 8px rgba(212,175,55,0.4);
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--color-primary-light);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 25px rgba(0, 176, 255, 0.15);
+            background: rgba(24, 32, 48, 0.8);
         }
-        .prereg-bar-label {
-            font-size: 0.72rem;
+        .stat-card-number {
+            font-size: 2.4rem;
+            font-weight: 900;
+            color: #ffffff;
+            line-height: 1;
+            margin-bottom: 6px;
+            font-family: var(--font-display);
+            background: linear-gradient(135deg, #fff 40%, var(--color-primary-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .stat-card-label {
+            font-size: 0.78rem;
+            font-weight: 800;
             color: var(--text-muted);
-            font-weight: 600;
-            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
         }
-        /* No skeleton flash */
-        .loading-pulse {
-            background: linear-gradient(90deg, var(--bg-glass-card) 25%, var(--bg-glass-card-hover) 50%, var(--bg-glass-card) 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: 4px;
-            height: 1em;
+
+        /* BANNER NOVEDADES & ANUNCIOS LIVE */
+        .novedades-live-banner {
+            background: linear-gradient(135deg, rgba(114, 137, 218, 0.14) 0%, rgba(15, 23, 42, 0.95) 100%);
+            border: 1px solid rgba(114, 137, 218, 0.35);
+            border-radius: 24px;
+            padding: 2rem 2.5rem;
+            margin-bottom: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 30px rgba(114, 137, 218, 0.1);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .novedades-live-banner:hover {
+            border-color: #7289da;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 40px rgba(114, 137, 218, 0.25);
+            transform: translateY(-3px);
+        }
+        .novedades-live-left { max-width: 600px; }
+        .novedades-live-tag {
+            font-size: 0.72rem; font-weight: 800; color: #7289da; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 0.5rem; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .novedades-live-tag-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: #2dc770; animation: blink-dot 1.6s ease-in-out infinite;
+        }
+        .novedades-live-title {
+            font-size: 1.6rem; font-weight: 900; color: #fff; margin: 0 0 0.5rem 0; line-height: 1.2;
+        }
+        .novedades-live-desc {
+            font-size: 0.95rem; color: var(--text-secondary); margin: 0; line-height: 1.5;
+        }
+        .btn-novedades-action {
+            padding: 14px 26px;
+            background: linear-gradient(135deg, #5865f2 0%, #4752c4 100%);
+            color: #ffffff !important;
+            font-weight: 900;
+            font-size: 0.95rem;
+            border-radius: 14px;
+            text-decoration: none;
+            box-shadow: 0 8px 25px rgba(88, 101, 242, 0.35);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .btn-novedades-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(88, 101, 242, 0.55);
+        }
+
+        /* BANNER VIP BETA TESTER RECRUITMENT */
+        .beta-recruitment-banner {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            border-radius: 24px;
+            padding: 2rem 2.5rem;
+            margin-bottom: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 30px rgba(16, 185, 129, 0.1);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .beta-recruitment-banner:hover {
+            border-color: #10b981;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 40px rgba(16, 185, 129, 0.25);
+            transform: translateY(-3px);
+        }
+        .beta-banner-left { max-width: 580px; }
+        .beta-banner-tag {
+            font-size: 0.72rem; font-weight: 800; color: #10b981; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 0.5rem; display: inline-block;
+        }
+        .beta-banner-title {
+            font-size: 1.6rem; font-weight: 900; color: #fff; margin: 0 0 0.5rem 0; line-height: 1.2;
+        }
+        .beta-banner-desc {
+            font-size: 0.95rem; color: var(--text-secondary); margin: 0; line-height: 1.5;
+        }
+        .btn-beta-action {
+            padding: 14px 26px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff !important;
+            font-weight: 900;
+            font-size: 0.95rem;
+            border-radius: 14px;
+            text-decoration: none;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .btn-beta-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(16, 185, 129, 0.55);
+        }
+
+        /* FEATURES GRID (CARDS NEON EN 1 MISMA LÍNEA) */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 3.5rem;
+        }
+        @media (max-width: 1024px) {
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 640px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .feature-box-card {
+            background: rgba(20, 26, 38, 0.65);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 1.75rem;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .feature-box-card:hover {
+            transform: translateY(-6px);
+            background: rgba(24, 32, 48, 0.85);
+            border-color: rgba(0, 176, 255, 0.4);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 176, 255, 0.15);
+        }
+        .feature-box-icon {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
             display: inline-block;
-            width: 60px;
+            transition: transform 0.3s ease;
+        }
+        .feature-box-card:hover .feature-box-icon {
+            transform: scale(1.15) rotate(5deg);
+        }
+        .feature-box-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin: 0 0 0.5rem 0;
+        }
+        .feature-box-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+            margin: 0 0 1rem 0;
+        }
+        .feature-box-link {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--color-primary-light);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: gap 0.2s ease;
+        }
+        .feature-box-card:hover .feature-box-link {
+            gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .index-hero-container {
+                grid-template-columns: 1fr;
+                padding: 2rem 1.5rem;
+            }
         }
     </style>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 </head>
 <body data-site-root="." data-theme="dark" class="dark-mode">
+    <!-- ACCESO OBLIGATORIO · LOGIN CON DISCORD -->
+    <div id="psAuthGate" class="ps-auth-gate" role="dialog" aria-modal="true" aria-labelledby="psAuthGateTitle" aria-describedby="psAuthGateText">
+        <div class="ps-auth-gate-backdrop" aria-hidden="true"></div>
+        <div class="ps-auth-gate-card" data-gate-state="guest">
+            <div class="ps-auth-gate-glow" aria-hidden="true"></div>
+
+            <div class="ps-auth-gate-logo">
+                <img src="recursos/PSGD.png" alt="Panter Studio Game Dev" width="96" height="96">
+            </div>
+
+            <p class="ps-auth-gate-kicker">
+                <i class="fa-brands fa-discord" aria-hidden="true"></i>
+                Acceso de la comunidad
+            </p>
+
+            <h1 id="psAuthGateTitle">Bienvenido a Panter Studio</h1>
+            <p id="psAuthGateText" class="ps-auth-gate-text">
+                Para entrar al hub necesitas iniciar sesión con Discord y pertenecer al servidor oficial
+                <strong>Panter Studio Game Dev</strong>.
+            </p>
+
+            <div id="psAuthGateProfile" class="ps-auth-gate-profile" hidden>
+                <img id="psAuthGateAvatar" src="recursos/PSGD.png" alt="" width="44" height="44">
+                <div class="ps-auth-gate-profile-info">
+                    <strong id="psAuthGateName">—</strong>
+                    <span id="psAuthGateRole"></span>
+                </div>
+            </div>
+
+            <div id="psAuthGateSpinner" class="ps-auth-gate-spinner" aria-hidden="true" hidden>
+                <span></span><span></span><span></span>
+            </div>
+
+            <div class="ps-auth-gate-actions">
+                <button type="button" id="psAuthGateLogin" class="ps-auth-gate-btn ps-auth-gate-btn-discord">
+                    <i class="fa-brands fa-discord" aria-hidden="true"></i>
+                    <span id="psAuthGateLoginLabel">Iniciar sesión con Discord</span>
+                </button>
+
+                <button type="button" id="psAuthGateRetry" class="ps-auth-gate-btn ps-auth-gate-btn-ghost" hidden>
+                    <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                    Reintentar verificación
+                </button>
+
+                <a id="psAuthGateInvite" class="ps-auth-gate-btn ps-auth-gate-btn-ghost" href="https://discord.gg/MukZeJmgky" target="_blank" rel="noopener noreferrer" hidden>
+                    <i class="fa-brands fa-discord" aria-hidden="true"></i>
+                    Unirme al servidor
+                </a>
+
+                <button type="button" id="psAuthGateLogout" class="ps-auth-gate-link" hidden>
+                    Usar otra cuenta
+                </button>
+            </div>
+
+            <p id="psAuthGateStatus" class="ps-auth-gate-status" role="status" aria-live="polite"></p>
+            <p class="ps-auth-gate-foot">Al continuar aceptas las normas de la comunidad de Panter Studio.</p>
+            <noscript>
+                <p class="ps-auth-gate-status">Activa JavaScript para iniciar sesión con Discord.</p>
+            </noscript>
+        </div>
+    </div>
+    <script>
+        (function () {
+            var gate = document.getElementById('psAuthGate');
+            if (!gate) return;
+            var hasSession = false;
+            try { hasSession = Boolean(localStorage.getItem('discord_user_session')); } catch (e) {}
+            document.documentElement.classList.add('ps-auth-locked');
+
+            // Fallback: si index-auth-gate.js no llega a cargar, el botón de
+            // Discord sigue funcionando con la URL oficial de OAuth2.
+            var loginBtn = document.getElementById('psAuthGateLogin');
+            if (loginBtn) {
+                loginBtn.addEventListener('click', function () {
+                    if (window.__psAuthGateBound) return;
+                    if (window.DiscordAuth && typeof window.DiscordAuth.login === 'function') {
+                        window.DiscordAuth.login();
+                        return;
+                    }
+                    var isLocal = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/.test(window.location.hostname);
+                    var redirectUri = isLocal
+                        ? window.location.origin + '/index.html'
+                        : 'https://panterstudio.github.io/index.html';
+                    var url = 'https://discord.com/api/oauth2/authorize'
+                        + '?client_id=1484918737093005494'
+                        + '&redirect_uri=' + encodeURIComponent(redirectUri)
+                        + '&response_type=token'
+                        + '&scope=' + encodeURIComponent('identify email guilds guilds.members.read');
+                    window.location.href = url;
+                });
+            }
+
+            if (hasSession) {
+                gate.querySelector('.ps-auth-gate-card').setAttribute('data-gate-state', 'verifying');
+                var spinner = document.getElementById('psAuthGateSpinner');
+                if (spinner) spinner.hidden = false;
+                var status = document.getElementById('psAuthGateStatus');
+                if (status) status.textContent = 'Verificando tu acceso al servidor…';
+                window.setTimeout(function () {
+                    // Failsafe: si el motor de auth no llegó a cargar, no dejar
+                    // al usuario encerrado en el overlay. Nunca actúa si el
+                    // motor ya asumió el control (__psAuthGateReady) ni si el
+                    // overlay ya muestra un estado definitivo (no "verifying").
+                    var card = gate.querySelector('.ps-auth-gate-card');
+                    var stillVerifying = card && card.getAttribute('data-gate-state') === 'verifying';
+                    if (!stillVerifying) return;
+                    if (!window.__psAuthGateReady) {
+                        gate.hidden = true;
+                        document.documentElement.classList.remove('ps-auth-locked');
+                    }
+                }, 9000);
+            }
+        })();
+    </script>
     <div id="tsparticles"></div>
 
-    <!-- AUTH MODAL (Google-only) -->
+    <!-- AUTH MODAL -->
     <div id="authModal" class="auth-modal" hidden>
         <div class="auth-modal-overlay" data-auth-close="true"></div>
-        <div class="auth-modal-card" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
-            <button type="button" class="auth-modal-close" id="authModalCloseBtn" aria-label="Cerrar">✕</button>
-            <h3 id="authModalTitle">Mi Perfil</h3>
-            <p style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:2rem; text-align:center;">Conéctate con tu cuenta de Google para acceder a tu perfil, monedas y más.</p>
-            <!-- Hidden tabs and forms required by script.js (not shown to user) -->
+        <div class="auth-modal-card" role="dialog" aria-modal="true" aria-labelledby="authModalTitle" style="max-width:440px; border-radius:24px; background:rgba(13, 18, 31, 0.95); border:1px solid rgba(0, 210, 255, 0.2); box-shadow:0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 210, 255, 0.15); padding:2rem;">
+            <button type="button" class="auth-modal-close" id="authModalCloseBtn" aria-label="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            <div style="text-align:center; margin-bottom:1.25rem;">
+                <img src="recursos/PSGD.png" alt="PS Game Dev Logo" style="height: 75px; width: auto; filter: drop-shadow(0 0 16px rgba(0, 210, 255, 0.5)); margin-bottom: 10px;" />
+                <h3 style="font-size: 1.3rem; letter-spacing: 1px; color:#fff; font-weight:800; margin:0 0 4px;">SOPORTE PS GAME DEV</h3>
+                <p style="font-size:0.85rem; color:var(--text-secondary,#94a3b8); margin:0;">Plataforma de Tickets y Gestión de Servicios</p>
+            </div>
+            <p id="authModalMessage" class="auth-modal-message" style="margin-bottom:1rem; text-align:center;"></p>
+            <button type="button" id="discordAuthModalBtn" class="btn" style="width:100%; display:flex; align-items:center; justify-content:center; gap:10px; background:#5865F2; color:#ffffff; border:none; box-shadow:0 4px 16px rgba(88,101,242,0.35); font-weight:700; padding:12px 20px; border-radius:10px; font-size:0.95rem; cursor:pointer;">
+                <i class="fa-brands fa-discord" aria-hidden="true"></i>
+                Ingresar con Discord
+            </button>
+            <div style="display:flex; align-items:center; text-align:center; color:#64748b; font-size:0.75rem; font-weight:700; letter-spacing:1.5px; margin:1.25rem 0;">
+                <span style="flex:1; border-bottom:1px solid rgba(0, 210, 255, 0.15); margin-right:0.8em;"></span>O INGRESA CON CORREO<span style="flex:1; border-bottom:1px solid rgba(0, 210, 255, 0.15); margin-left:0.8em;"></span>
+            </div>
+            <form id="authLoginForm" style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label style="display:block; font-size:0.72rem; font-weight:700; color:#64748b; letter-spacing:1px; margin-bottom:4px;">CORREO ELECTRÓNICO</label>
+                    <input type="email" id="authLoginEmail" name="email" required placeholder="ejemplo@psgd.me" style="width:100%; padding:10px 12px; background:rgba(15, 23, 42, 0.8); border:1px solid rgba(0, 210, 255, 0.2); border-radius:8px; color:#fff; font-size:0.88rem; box-sizing:border-box;" />
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.72rem; font-weight:700; color:#64748b; letter-spacing:1px; margin-bottom:4px;">CONTRASEÑA</label>
+                    <input type="password" id="authLoginPassword" name="password" required placeholder="••••••••" style="width:100%; padding:10px 12px; background:rgba(15, 23, 42, 0.8); border:1px solid rgba(0, 210, 255, 0.2); border-radius:8px; color:#fff; font-size:0.88rem; box-sizing:border-box;" />
+                </div>
+                <button type="submit" id="authLoginSubmitBtn" style="width:100%; padding:12px; background:linear-gradient(135deg, #00f0ff, #0066ff); color:#fff; font-weight:800; border:none; border-radius:8px; font-size:0.9rem; letter-spacing:1px; cursor:pointer; margin-top:6px;">INICIAR SESIÓN <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+            </form>
             <button type="button" id="authTabRegister" class="auth-tab" hidden></button>
             <button type="button" id="authTabLogin" class="auth-tab active" hidden></button>
             <form id="authRegisterForm" class="auth-modal-form" hidden></form>
-            <form id="authLoginForm" class="auth-modal-form" hidden></form>
-            <button type="button" id="googleAuthModalBtn" class="btn" style="width:100%; display:flex; align-items:center; justify-content:center; gap:10px;">
-                <img src="recursos/google-logo.svg" alt="Google" style="width:20px; height:20px;">
-                Continuar con Google
-            </button>
-            <p id="authModalMessage" class="auth-modal-message"></p>
         </div>
     </div>
 
-    <!-- MODAL NOMBRE USUARIO (primer acceso Google) -->
+    <!-- MODAL USERNAME -->
     <div id="usernameModal" class="username-modal" hidden>
         <div class="username-modal-overlay"></div>
         <div class="username-modal-card">
-            <h3>🎮 Elige tu nombre de jugador</h3>
-            <p class="username-modal-desc">¡Bienvenido! Es tu primer acceso. Elige un nombre único que te identifique en la comunidad.</p>
+            <h3><i class="fa-solid fa-gamepad" aria-hidden="true"></i> Elige tu nombre de jugador</h3>
+            <p class="username-modal-desc">¡Bienvenido! Es tu primer acceso. Elige un nombre único.</p>
             <div class="username-input-row">
-                <input type="text" id="usernameInput" placeholder="TuNombreAqui" maxlength="24" autocomplete="off" spellcheck="false">
-                <button type="button" id="usernameRandomBtn" class="btn btn-ghost username-random-btn" title="Nombre al azar">🎲</button>
+                <input type="text" id="usernameInput" placeholder="TuNombreAqui" maxlength="24" autocomplete="off">
+                <button type="button" id="usernameRandomBtn" class="btn btn-ghost username-random-btn"><i class="fa-solid fa-dice" aria-hidden="true"></i></button>
             </div>
             <p id="usernameStatus" class="username-status" aria-live="polite"></p>
             <div id="usernameSuggestions" class="username-suggestions" hidden>
-                <p class="username-suggestions-label">Prueba uno de estos:</p>
                 <div id="usernameSuggestionsRow" class="username-suggestions-row"></div>
             </div>
             <button type="button" id="usernameConfirmBtn" class="btn username-confirm-btn" disabled>Confirmar nombre</button>
-            <p class="username-hint">3–24 caracteres · Solo letras, números y guión bajo (_)</p>
         </div>
     </div>
 
@@ -228,6 +617,7 @@
         </div>
         <div class="nav-middle">
             <a href="index.html" class="active">Inicio</a>
+            <a href="pages/nuestra-tierra.html">Nuestra Tierra</a>
             <div class="nav-dropdown">
                 <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">Novedades</button>
                 <div class="nav-dropdown-menu">
@@ -236,19 +626,16 @@
                     <a href="pages/videos.html">Videos</a>
                 </div>
             </div>
-            <a href="pages/minijuegos.html">Panter Core</a>
             <a href="pages/donaciones.html">Apoyanos</a>
             <a href="pages/personal.html">Personal</a>
             <a href="pages/perfil.html">Mi Perfil</a>
-            <a href="pages/meinteresa.html">Me Interesa</a>
-            <a href="pages/wiki.html">Wiki</a>
+            <a href="pages/soporte.html">Soporte</a>
             <a href="pages/admin/admin.html" id="adminNavLink" hidden>Panel Admin</a>
         </div>
         <div class="nav-right"></div>
         <button class="nav-hamburger" aria-label="Menú" aria-expanded="false">
             <span></span><span></span><span></span>
         </button>
-        <!-- Mobile menu -->
         <nav class="nav-mobile-menu">
             <a href="index.html" class="active">Inicio</a>
             <hr>
@@ -259,1018 +646,153 @@
                 <a href="pages/videos.html">Videos</a>
             </div>
             <hr>
-            <a href="pages/minijuegos.html">Panter Core</a>
             <a href="pages/donaciones.html">Apoyanos</a>
             <a href="pages/personal.html">Personal</a>
             <a href="pages/perfil.html">Mi Perfil</a>
-            <a href="pages/meinteresa.html">Me Interesa</a>
-            <a href="pages/wiki.html">Wiki</a>
+            <a href="pages/soporte.html">Soporte</a>
         </nav>
     </nav>
 
     <!-- MAIN CONTAINER -->
-    <div class="container" style="padding-top: 0.5rem;">
-
-
-        <!-- TABLÓN DE ANUNCIOS COMUNIDAD -->
-        <div id="comunidadAnnouncements" class="comunidad-announcements-banner" style="display: none;"></div>
-
-        <!-- HUB GRID: LEFT (main) / RIGHT (sidebar) -->
-        <div class="hub-grid">
-
-            <!-- ===== COLUMNA IZQUIERDA ===== -->
-            <div class="hub-left-col" style="display:flex; flex-direction:column; gap:1.5rem;">
-
-                <!-- FLAGSHIP HERO -->
-                <div class="hub-hero-premium">
-                    <img src="https://i.imgur.com/1IRRyFY.jpeg" alt="Nuestra Tierra Job Simulator" class="hub-hero-bg">
-                    <div class="hub-hero-overlay"></div>
-                    <div class="hub-hero-content">
-                        <span class="hub-hero-badge">★ NUESTRO JUEGO ESTRELLA</span>
-                        <h1 class="hub-hero-title" style="font-size:clamp(1.8rem,4vw,2.8rem);">Nuestra Tierra</h1>
-                        <p class="hub-hero-desc">
-                            El primer simulador móvil de trabajos tradicionales y modernos con toda la identidad de nuestra cultura. Recorre el campo, atiende tu tienda y sé parte del día uno.
-                        </p>
-                        <div class="hub-hero-actions">
-                            <a href="pages/meinteresa.html" class="btn btn-sm">💚 Me Interesa</a>
-                            <a href="pages/betatester.html" class="btn btn-ghost btn-sm" style="border-color:var(--color-primary); color:var(--color-primary-light);">⚙️ Conviertete en Beta Tester</a>
-                            <a href="pages/actualizaciones.html" class="btn btn-ghost btn-sm">Ver Novedades</a>
-                        </div>
-                    </div>
+    <main class="main-container" style="max-width: 1180px; margin: 0 auto; padding: 2rem 1.5rem 5rem; position: relative; z-index: 2;">
+        
+        <!-- SECTION 1: HERO DYNAMIC GLASS 3D -->
+        <section class="index-hero-container">
+            <div>
+                <span class="hero-badge-tag">Proyecto Destacado · En Desarrollo</span>
+                <h1 class="hero-main-title">Nuestra Tierra Job Simulator</h1>
+                <p class="hero-main-desc">
+                    Explora mapas realistas inspirados en Latinoamérica. Conduce camionetas, buses y camiones de carga pesada con físicas auténticas en tu smartphone.
+                </p>
+                <div class="hero-actions-row">
+                    <a href="pages/nuestra-tierra.html" class="btn-hero-primary"><i class="fa-solid fa-gamepad" aria-hidden="true"></i> Conocer Juego <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                    <a href="pages/betatester.html" class="btn-hero-secondary"><i class="fa-solid fa-flask" aria-hidden="true"></i> Ser Beta Tester</a>
                 </div>
-
-                <!-- STUDIO STATS STRIP -->
-                <div class="studio-info-strip">
-                    <div class="info-strip-item">
-                        <strong id="statRegistrados">—</strong>
-                        <span>Interesados</span>
-                    </div>
-                    <div class="info-strip-item">
-                        <strong id="statJugadores">—</strong>
-                        <span>Jugadores Activos</span>
-                    </div>
-                    <div class="info-strip-item">
-                        <strong>2025</strong>
-                        <span>Año de Fundación</span>
-                    </div>
-                </div>
-
-
-                <!-- HOW IT WORKS -->
-                <div class="home-steps-section">
-                    <div class="hub-section-title">
-                        <span style="color:var(--color-primary-light);">🚀</span> Cómo Empezar
-                    </div>
-                    <div class="hub-steps-grid">
-                        <div class="step-card">
-                            <span class="step-number">01</span>
-                            <h4>Crea tu Cuenta</h4>
-                            <p>Regístrate con Google en segundos y asegura tu identidad en la comunidad.</p>
-                        </div>
-                        <div class="step-card">
-                        <span class="step-number">02</span>
-                        <h4>Di «Me Interesa»</h4>
-                        <p>Marca tu interés en el juego con un solo clic. Sin datos personales, sin spam.</p>
-                    </div>
-                        <div class="step-card">
-                            <span class="step-number">03</span>
-                            <h4>Juega y Gana</h4>
-                            <p>Participa en minijuegos diarios para ganar monedas y subir en el ranking.</p>
-                        </div>
-                        <div class="step-card">
-                            <span class="step-number">04</span>
-                            <h4>Sigue el Dev</h4>
-                            <p>Recibe devlogs exclusivos y novedades antes de que salgan a redes sociales.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- DEVLOGS GRID IN HOME -->
-                <div class="home-devlogs-section">
-                    <div class="hub-section-title">
-                        <span>⚡</span> Últimas Novedades de Desarrollo
-                    </div>
-                    <div class="mini-devlogs-grid" id="homeDevlogsGrid">
-                        <!-- Injected by JS -->
-                        <div style="text-align:center; padding:2rem; width:100%;">
-                            <div class="loading-pulse" style="width:200px; height:20px;"></div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
 
-            <!-- ===== COLUMNA DERECHA ===== -->
-            <div class="hub-right-col">
-
-                <!-- CUENTA / WIDGET USUARIO -->
-                <div class="hub-account-widget">
-                    <div class="account-profile-header">
-                        <div class="account-avatar" id="hubAccountAvatar">👤</div>
-                        <div class="account-info">
-                            <h4 id="hubAccountName">Invitado</h4>
-                            <p id="hubAccountStatus">No has iniciado sesión</p>
-                        </div>
-                    </div>
-                    <div class="account-stats-row" id="hubAccountStats">
-                        <div class="account-stat-box">
-                            <span>Monedas</span>
-                            <strong class="coins-highlight" id="hubCoins">—</strong>
-                        </div>
-                        <div class="account-stat-box">
-                            <span><img src="recursos/iconos/esmeralda.png" alt="Esmeralda" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;">Esmeraldas</span>
-                            <strong class="emeralds-highlight" id="hubEmeralds">—</strong>
-                        </div>
-                        <div class="account-stat-box">
-                            <span>Partidas</span>
-                            <strong id="hubGamesPlayed">—</strong>
-                        </div>
-                        <div class="account-stat-box">
-                            <span>Rango</span>
-                            <strong id="hubRank">—</strong>
-                        </div>
-                    </div>
-                    <a href="pages/perfil.html" class="btn btn-sm" style="width:100%; justify-content:center; text-align:center;" id="hubProfileBtn">
-                        Ver Mi Perfil
-                    </a>
+            <div class="hero-media-wrapper">
+                <img src="recursos/imagenes/garage.png" alt="Nuestra Tierra Simulator Garage" class="hero-media-img">
+                <div class="hero-media-overlay-badge">
+                    <span style="font-size: 0.8rem; font-weight: 700; color: #ffffff;"><i class="fa-solid fa-truck" aria-hidden="true"></i> Simulación Móvil 3D</span>
+                    <span style="font-size: 0.75rem; font-weight: 800; color: #ff8c00; background: rgba(255,140,0,0.2); padding: 2px 8px; border-radius: 100px;">Lanzamiento Proximo</span>
                 </div>
-
-                <!-- TOP MILLONARIOS / LEADERBOARD -->
-                <div class="leaderboard-card">
-                    <div class="leaderboard-header">
-                        <h3><img src="recursos/iconos/trofeo.png" alt="Trofeo" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;">Top Millonarios</h3>
-                        <span>COMUNIDAD</span>
-                    </div>
-                    <div class="leaderboard-list" id="homeLeaderboard">
-                        <!-- Injected by JS -->
-                        <div class="leaderboard-row" style="opacity:0.4;">
-                            <div class="leaderboard-user-info">
-                                <div class="leaderboard-rank">—</div>
-                                <div class="loading-pulse" style="width:80px;"></div>
-                            </div>
-                            <div class="leaderboard-value">—</div>
-                        </div>
-                        <div class="leaderboard-row" style="opacity:0.3;">
-                            <div class="leaderboard-user-info">
-                                <div class="leaderboard-rank">—</div>
-                                <div class="loading-pulse" style="width:60px;"></div>
-                            </div>
-                            <div class="leaderboard-value">—</div>
-                        </div>
-                        <div class="leaderboard-row" style="opacity:0.2;">
-                            <div class="leaderboard-user-info">
-                                <div class="leaderboard-rank">—</div>
-                                <div class="loading-pulse" style="width:70px;"></div>
-                            </div>
-                            <div class="leaderboard-value">—</div>
-                        </div>
-                    </div>
-                    <div class="leaderboard-user-self" id="lbSelfRow">Inicia sesión para ver tu posición</div>
-                </div>
-
-                <!-- MINIJUEGO RÁPIDO -->
-                <div class="minijuego-quick" style="border-color: rgba(0, 176, 255, 0.2); background: linear-gradient(135deg, rgba(0, 176, 255, 0.06), rgba(0, 176, 255, 0.02));">
-                    <div class="minijuego-quick-header">
-                        <span style="font-size:1.5rem;">🤖</span>
-                        <h3>Módulo Panter Core AI</h3>
-                    </div>
-                    <p>Accede a la terminal interactiva. Realiza misiones de transporte, calcula el riesgo de básculas y gana monedas web para canjear por esmeraldas.</p>
-                    <a href="pages/minijuegos.html" class="btn btn-sm" style="width:100%; justify-content:center;">
-                        Acceder a la Terminal →
-                    </a>
-                </div>
-
-                <!-- ME INTERESA WIDGET -->
-                <div class="prereg-widget">
-                    <div class="prereg-widget-header">
-                        <h3>💚 Me Interesa</h3>
-                        <span style="font-size:0.7rem; color:var(--color-primary-light); font-weight:700; background:rgba(0, 176, 255,0.1); padding:2px 8px; border-radius:100px;">ABIERTO</span>
-                    </div>
-                    <p>Haz clic para que el equipo sepa que esperas <strong style="color:var(--text-primary);">Nuestra Tierra</strong>. Sin correo, sin spam.</p>
-                    <div style="text-align:center; margin-bottom:0.75rem;">
-                        <span style="font-family:var(--font-display); font-size:2rem; font-weight:800; color:var(--color-primary-light);" id="widgetInteresados">—</span>
-                        <span style="display:block; font-size:0.7rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">personas interesadas</span>
-                    </div>
-                    <a href="pages/meinteresa.html" class="btn btn-sm" style="width:100%; justify-content:center;">
-                        💚 ¡Me Interesa!
-                    </a>
-                </div>
-
-                <!-- SOBRE EL ESTUDIO -->
-                <div class="hub-card home-about-card" style="gap:1rem;">
-                    <div>
-                        <div class="hub-section-title" style="font-size:1rem; margin-bottom:0.5rem;">
-                            <span>🎮</span> Panter Studio
-                        </div>
-                        <p style="font-size:0.82rem; color:var(--text-secondary); margin:0; line-height:1.5;">
-                            Estudio indie independiente creando videojuegos con identidad colombiana. Nuestro enfoque: narrativa real, sistemas profundos y comunidad desde el día uno.
-                        </p>
-                    </div>
-                    <a href="pages/personal.html" class="btn btn-ghost btn-sm" style="width:100%; justify-content:center;">
-                        Conocer al Equipo
-                    </a>
-                </div>
-
             </div>
+        </section>
+
+        <!-- SECTION 2: METRICS COUNTER STRIP -->
+        <section class="stats-counter-strip">
+            <div class="stat-card">
+                <div class="stat-card-number" id="counterPlayers">10,000+</div>
+                <div class="stat-card-label">Esperando el Lanzamiento Oficial</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-number">100%</div>
+                <div class="stat-card-label">Físicas de Carga Realista</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-number">4.9<i class="fa-solid fa-star" aria-hidden="true"></i></div>
+                <div class="stat-card-label">Valoración de Beta Testers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-number">2026</div>
+                <div class="stat-card-label">Lanzamiento Mobile Oficial</div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: BANNER NOVEDADES Y ANUNCIOS EN VIVO -->
+        <section class="novedades-live-banner">
+            <div class="novedades-live-left">
+                <span class="novedades-live-tag"><span class="novedades-live-tag-dot"></span> Canal Oficial · Transmisión en Vivo</span>
+                <h2 class="novedades-live-title">Novedades y Actualizaciones del Servidor</h2>
+                <p class="novedades-live-desc">Recibe parches de desarrollo, avances semanales del mapa de Colombia y anuncios directamente conectados con Discord.</p>
+            </div>
+            <a href="pages/actualizaciones.html" class="btn-novedades-action"><i class="fa-solid fa-satellite-dish" aria-hidden="true"></i> Ver Novedades en Vivo <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+        </section>
+
+        <!-- SECTION 4: RECRUITMENT BANNER INTERACTIVO -->
+        <section class="beta-recruitment-banner">
+            <div class="beta-banner-left">
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+                    <span class="beta-banner-tag"><i class="fa-solid fa-gears" aria-hidden="true"></i> Convocatoria Abierta</span>
+                    <span id="indexBetaCountTag" style="font-size:0.75rem; font-weight:700; color:#10b981; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); padding:3px 12px; border-radius:100px; display:inline-flex; align-items:center; gap:6px;">
+                        <span style="width:6px; height:6px; border-radius:50%; background:#10b981; box-shadow:0 0 6px #10b981;"></span>
+                        <span><strong id="indexBetaCountNum" style="color:#00f0ff;">29</strong> Testers Inscritos</span>
+                    </span>
+                </div>
+                <h2 class="beta-banner-title">Conviértete en Beta Tester Oficial</h2>
+                <p class="beta-banner-desc">Accede a las versiones privadas de prueba, prueba nuevos vehículos antes que nadie y apoya el desarrollo.</p>
+            </div>
+            <a href="pages/betatester.html" class="btn-beta-action"><i class="fa-solid fa-fire" aria-hidden="true"></i> Solicitar Pase Tester <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+        </section>
+
+        <!-- SECTION 4: FEATURES & RECURSOS HUB -->
+        <section class="features-grid">
+            <div class="feature-box-card">
+                <div class="feature-box-icon"><i class="fa-solid fa-camera" aria-hidden="true"></i></div>
+                <h3 class="feature-box-title">Galería & Multimedia</h3>
+                <p class="feature-box-desc">Explora capturas exclusivas en alta definición, renders oficiales de vehículos y avances visuales de Nuestra Tierra.</p>
+                <a href="pages/imagenes.html" class="feature-box-link">Ver Galería <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+            </div>
+
+            <div class="feature-box-card">
+                <div class="feature-box-icon"><i class="fa-solid fa-book-open" aria-hidden="true"></i></div>
+                <h3 class="feature-box-title">Wiki & Guías Oficiales</h3>
+                <p class="feature-box-desc">Descubre todos los detalles de vehículos, mecánicas de trabajo, mapas y secretos de Nuestra Tierra.</p>
+                <a href="pages/wiki.html" class="feature-box-link">Explorar Wiki <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+            </div>
+
+            <div class="feature-box-card">
+                <div class="feature-box-icon"><i class="fa-solid fa-gem" aria-hidden="true"></i></div>
+                <h3 class="feature-box-title">Membresías & Donaciones</h3>
+                <p class="feature-box-desc">Apoya el desarrollo indie para acelerar las actualizaciones y obtén rangos y beneficios exclusivos.</p>
+                <a href="pages/donaciones.html" class="feature-box-link">Apoyar Proyecto <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+            </div>
+
+            <div class="feature-box-card">
+                <div class="feature-box-icon"><i class="fa-solid fa-headset" aria-hidden="true"></i></div>
+                <h3 class="feature-box-title">Soporte & Comunidad</h3>
+                <p class="feature-box-desc">¿Tienes dudas o sugerencias? Abre un ticket de atención técnica o únete a nuestro Discord oficial.</p>
+                <a href="pages/soporte.html" class="feature-box-link">Abrir Soporte <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+            </div>
+        </section>
+
+        <!-- SECTION 5: EQUIPO DE TRABAJO -->
+        <section id="equipo-seccion" style="text-align: center; padding: 2.5rem 0;">
+            <div style="font-size: 0.72rem; font-weight: 800; color: #00b0ff; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.6rem;">NUESTRO EQUIPO</div>
+            <h2 style="font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 900; color: #ffffff; margin: 0 0 1rem 0;">Conoce al Equipo de Panter Studio</h2>
+            <p style="font-size: 0.98rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto 2rem auto; line-height: 1.6;">
+                Desarrolladores, modeladores 3D y moderadores dedicados a crear la mejor experiencia de simulación.
+            </p>
+            <a href="pages/personal.html" class="btn-hero-secondary" style="border-color: rgba(0,176,255,0.4); color: var(--color-primary-light) !important;"><i class="fa-solid fa-users" aria-hidden="true"></i> Conocer al Personal <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+        </section>
+
+    </main>
+
+    <!-- HIDDEN JS DATA BRIDGES TO PREVENT SCRIPT ERRORS -->
+    <div style="display: none;" aria-hidden="true">
+        <div id="comunidadAnnouncements"></div>
+        <span id="statRegistrados"></span>
+        <span id="statJugadores"></span>
+        <div id="homeDevlogsGrid"></div>
+        <div id="hubAccountAvatar"></div>
+        <h4 id="hubAccountName"></h4>
+        <p id="hubAccountStatus"></p>
+        <div id="hubAccountStats">
+            <strong id="hubCoins"></strong>
+            <strong id="hubEmeralds"></strong>
+            <strong id="hubGamesPlayed"></strong>
+            <strong id="hubRank"></strong>
         </div>
+        <a id="hubProfileBtn"></a>
+        <div id="homeLeaderboard"></div>
+        <div id="lbSelfRow"></div>
     </div>
 
-        <!-- ★ Anuncio inferior -->
-        <div class="ad-slot-wrapper ad-horizontal" id="ad-bottom">
-            <span class="ad-slot-label">Publicidad</span>
-            <div class="ad-slot-inner">
-                <ins class="adsbygoogle"
-                     style="display:block"
-                     data-ad-client="ca-pub-8870488962578785"
-                     data-ad-slot="AUTO"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-            </div>
-        </div>
-
     <footer>
-        <p>© 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
-        <div class="footer-links">
-            <a href="pages/preregistro.html">Pre-registro</a>
-            <a href="pages/personal.html">Personal</a>
-            <a href="pages/donaciones.html">Apoyanos</a>
-        </div>
+        <p><i class="fa-regular fa-copyright" aria-hidden="true"></i> 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
     </footer>
 
-    <script src="assets/js/core/firebase-config.js"></script>
-    <script src="assets/js/minijuegos-enhancements.js"></script>
-    <script src="assets/js/ui-enhancements.js"></script>
-    <script src="assets/js/site-visibility.js"></script>
     <script src="assets/js/core/script.js"></script>
-
-    <script>
-    // ===== HOME HUB DYNAMIC CONTENT =====
-    (function() {
-        let currentUser = null;
-
-        function waitForFirebase(timeout = 8000) {
-            return new Promise((resolve) => {
-                if (window.auth && window.db && window.collection) return resolve(true);
-                const start = Date.now();
-                const t = setInterval(() => {
-                    if (window.auth && window.db && window.collection) {
-                        clearInterval(t); resolve(true);
-                    } else if (Date.now() - start > timeout) {
-                        clearInterval(t); resolve(false);
-                    }
-                }, 100);
-            });
-        }
-
-        // -- Leaderboard --
-        async function loadLeaderboard() {
-            const ok = await waitForFirebase();
-            if (!ok || !window.collection || !window.getDocs) return;
-            try {
-                const snap = await window.getDocs(window.collection(window.db, 'conductores'));
-                const lb = document.getElementById('homeLeaderboard');
-                if (!lb) return;
-                
-                const list = [];
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    const email = String(data.email || '').trim().toLowerCase();
-                    const isFounder = email === 'pantergamey@gmail.com';
-                    list.push({
-                        nombre_usuario: data.nombre_usuario,
-                        username: data.username,
-                        displayName: data.displayName,
-                        coins: Math.max(Number(data.coins || 0), Number(data.saldo || 0)),
-                        avatar: data.avatar || '😊',
-                        avatarImg: data.avatarImg || '',
-                        role: isFounder ? 'founder_ceo' : (data.role || 'viewer'),
-                        betaTesterStatus: data.betaTesterStatus || '',
-                        email: email,
-                        streak: Number(data.streak || 0),
-                        country: data.country || 'Colombia',
-                        favoriteProject: data.favoriteProject || 'Nuestra Tierra Job Simulator',
-                        bio: data.bio || '¡Hola! Soy un conductor orgulloso de Panter Studio.',
-                        createdAt: data.createdAt || ''
-                    });
-                });
-                
-                // Ordenar por monedas descendente
-                list.sort((a, b) => b.coins - a.coins);
-                
-                // Mostrar los mejores 5
-                let top5 = list.slice(0, 5);
-                const founderItem = list.find(u => String(u.email || '').toLowerCase() === 'pantergamey@gmail.com');
-                const hasFounder = top5.some(u => String(u.email || '').toLowerCase() === 'pantergamey@gmail.com');
-                if (founderItem && !hasFounder) {
-                    top5.push(founderItem);
-                }
-                
-                // Hacer la lista accesible para el click handler
-                window.leaderboardCachedList = top5;
-
-                lb.innerHTML = '';
-                const medals = [
-                    '<img src="recursos/iconos/1er-premio.png" alt="🥇" style="width:20px;height:20px;vertical-align:middle;">',
-                    '<img src="recursos/iconos/segundo-lugar.png" alt="🥈" style="width:20px;height:20px;vertical-align:middle;">',
-                    '<img src="recursos/iconos/3er-lugar.png" alt="🥉" style="width:20px;height:20px;vertical-align:middle;">'
-                ];
-                const topClasses = ['top-1','top-2','top-3'];
-                
-                 const ROLE_LABELS = {
-                    founder_ceo: 'Fundador',
-                    director: 'Director',
-                    administrador: 'Admin',
-                    programador: 'Dev',
-                    modelador: '3D Mod',
-                    usuario: 'Miembro',
-                    viewer: 'Miembro',
-                    vip: 'VIP',
-                    community_manager: 'CM',
-                    support_ops: 'Soporte',
-                    youtuber: 'Youtuber',
-                    streamer: 'Streamer'
-                };
-
-                const roleBadgeTones = {
-                    founder_ceo: 'color: #fde68a; border: 1px solid rgba(251,191,36,.4); background: linear-gradient(135deg, rgba(251,191,36,.25), rgba(28,33,46,.8)); text-shadow: 0 0 4px rgba(251,191,36,.5); box-shadow: 0 0 8px rgba(251,191,36,.25);',
-                    director: 'color: #fca5a5; border: 1px solid rgba(239,68,68,.3); background: rgba(239,68,68,.08);',
-                    administrador: 'color: #80f0ff; border: 1px solid rgba(0,240,255,.3); background: rgba(0,240,255,.08);',
-                    programador: 'color: #fda4af; border: 1px solid rgba(248,113,113,.2); background: rgba(248,113,113,.08);',
-                    modelador: 'color: #93c5fd; border: 1px solid rgba(96,165,250,.2); background: rgba(96,165,250,.08);',
-                    community_manager: 'color: #d8b4fe; border: 1px solid rgba(168,85,247,.2); background: rgba(168,85,247,.08);',
-                    vip: 'color: #fde68a; border: 1px solid rgba(251,191,36,.2); background: rgba(251,191,36,.08);',
-                    youtuber: 'color: #fda4af; border: 1px solid rgba(248,113,113,.2); background: rgba(248,113,113,.08);',
-                    streamer: 'color: #fda4af; border: 1px solid rgba(248,113,113,.2); background: rgba(248,113,113,.08);',
-                    support_ops: 'color: #86efac; border: 1px solid rgba(74,222,128,.2); background: rgba(74,222,128,.08);'
-                };
-
-                let idx = -1;
-                let rank = 0;
-                top5.forEach(d => {
-                    idx++;
-                    rank++;
-                    const username = d.nombre_usuario || d.username || d.displayName || 'Anónimo';
-                    const coins = d.coins;
-                    const cls = rank <= 3 ? topClasses[rank-1] : '';
-                    const medal = d.role === 'founder_ceo' ? '👑' : (rank <= 3 ? medals[rank-1] : rank);
-                    
-                    let avatarHtml = `<span class="leaderboard-avatar">👤</span>`;
-                    if (d.avatarImg) {
-                        avatarHtml = `<img src="${d.avatarImg}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.1);flex-shrink:0;margin-right:2px;">`;
-                    } else if (d.avatar) {
-                        avatarHtml = `<span class="leaderboard-avatar" style="font-size:1rem;margin-right:2px;">${d.avatar}</span>`;
-                    }
-
-                    const betaBadge = d.betaTesterStatus === 'approved' ? `<span style="font-size:0.55rem;padding:0px 4px;border-radius:3px;font-weight:700;letter-spacing:0.3px;color:#86efac; border:1px solid rgba(16,185,129,.2); background:rgba(16,185,129,.08);" title="Beta Tester Oficial">Beta</span>` : '';
-                    
-                    const role = String(d.role || 'viewer').toLowerCase();
-                    const roleLabel = ROLE_LABELS[role] || '';
-                    const roleBadge = (roleLabel && role !== 'viewer' && role !== 'usuario') ? `<span style="font-size:0.55rem;padding:0px 4px;border-radius:3px;font-weight:700;letter-spacing:0.3px;${roleBadgeTones[role] || 'color:var(--text-secondary);border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);'}">${roleLabel}</span>` : '';
-
-                    let rowStyle = 'padding: 0.5rem 0.75rem;';
-                    let nameStyle = 'font-size:0.8rem; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:90px;';
-                    
-                    const isBeta = d.betaTesterStatus === 'approved';
-
-                    if (role === 'founder_ceo') {
-                        // Golden effect
-                        rowStyle += ' background: linear-gradient(95deg, rgba(251,191,36,0.12), rgba(20,24,35,0.7)); border-color: rgba(251,191,36,0.45); box-shadow: 0 0 12px rgba(251,191,36,0.25);';
-                        nameStyle += ' color: #fbbf24; font-weight: 800; text-shadow: 0 0 8px rgba(251,191,36,0.4);';
-                    } else if (role === 'director') {
-                        rowStyle += ' background: linear-gradient(95deg, rgba(239,68,68,0.1), rgba(20,24,35,0.7)); border-color: rgba(239,68,68,0.4); box-shadow: 0 0 10px rgba(239,68,68,0.22);';
-                        nameStyle += ' color: #fca5a5; font-weight: 700; text-shadow: 0 0 8px rgba(239,68,68,0.3);';
-                    } else if (role === 'administrador') {
-                        rowStyle += ' background: linear-gradient(95deg, rgba(0,240,255,0.1), rgba(20,24,35,0.7)); border-color: rgba(0,240,255,0.45); box-shadow: 0 0 10px rgba(0,240,255,0.22);';
-                        nameStyle += ' color: #80f0ff; font-weight: 700; text-shadow: 0 0 8px rgba(0,240,255,0.3);';
-                    } else if (role === 'programador' || role === 'modelador') {
-                        rowStyle += ' background: linear-gradient(95deg, rgba(0,176,255,0.08), rgba(20,24,35,0.7)); border-color: rgba(0,176,255,0.4); box-shadow: 0 0 10px rgba(0,176,255,0.2);';
-                        nameStyle += ' color: #e0f7ff;';
-                    } else if (role === 'community_manager') {
-                        rowStyle += ' background: linear-gradient(95deg, rgba(168,85,247,0.1), rgba(20,24,35,0.7)); border-color: rgba(168,85,247,0.4); box-shadow: 0 0 10px rgba(168,85,247,0.2);';
-                        nameStyle += ' color: #f5d0fe;';
-                    } else if (role === 'support_ops') {
-                        rowStyle += ' background: linear-gradient(95deg, rgba(16,185,129,0.08), rgba(20,24,35,0.7)); border-color: rgba(16,185,129,0.4); box-shadow: 0 0 10px rgba(16,185,129,0.2);';
-                        nameStyle += ' color: #a7f3d0;';
-                    } else if (role === 'youtuber' || role === 'streamer') {
-                        rowStyle += ' background: linear-gradient(95deg, rgba(239,68,68,0.08), rgba(20,24,35,0.7)); border-color: rgba(239,68,68,0.35); box-shadow: 0 0 10px rgba(239,68,68,0.18);';
-                        nameStyle += ' color: #fda4af;';
-                    } else if (role === 'vip') {
-                        rowStyle += ' background: linear-gradient(95deg, rgba(168,85,247,0.08), rgba(20,24,35,0.7)); border-color: rgba(168,85,247,0.35); box-shadow: 0 0 8px rgba(168,85,247,0.18);';
-                        nameStyle += ' color: #f3e8ff;';
-                    } else if (isBeta) {
-                        rowStyle += ' background: linear-gradient(95deg, rgba(16,185,129,0.08), rgba(20,24,35,0.7)); border-color: rgba(16,185,129,0.4); box-shadow: 0 0 10px rgba(16,185,129,0.2);';
-                        nameStyle += ' color: #a7f3d0;';
-                    }
-
-                    lb.innerHTML += `
-                        <div class="leaderboard-row ${cls}" style="${rowStyle}" onclick="openQuickProfile(${idx})">
-                            <div class="leaderboard-user-info" style="gap: 8px;">
-                                <div class="leaderboard-rank" style="font-size:0.75rem; width:22px; height:22px; flex-shrink:0;">${medal}</div>
-                                ${avatarHtml}
-                                <div style="display:flex; flex-direction:column; gap:1px; min-width:0;">
-                                    <span class="leaderboard-name" style="${nameStyle}">${username}</span>
-                                    <div style="display:flex; align-items:center; gap:4px; margin-top:1px; flex-wrap:wrap;">
-                                        ${roleBadge}
-                                        ${betaBadge}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="leaderboard-value" style="font-size:0.78rem;"><img src="recursos/iconos/moneda.png" alt="Moneda" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;"> ${coins.toLocaleString()}</div>
-                        </div>`;
-                });
-                if (top5.length === 0) {
-                    lb.innerHTML = '<p style="text-align:center;font-size:0.8rem;color:var(--text-muted);padding:1rem;">¡Sé el primero en la tabla!</p>';
-                }
-            } catch(e) { console.warn('Leaderboard error:', e); }
-        }
-
-        window.openQuickProfile = function(index) {
-            const list = window.leaderboardCachedList;
-            if (!list || !list[index]) return;
-            const u = list[index];
-
-            const modal = document.getElementById('quickProfileModal');
-            const qpCard = document.getElementById('qpCard');
-            const avatarContainer = document.getElementById('qpAvatarContainer');
-            const usernameEl = document.getElementById('qpUsername');
-            const roleBadgeEl = document.getElementById('qpRoleBadge');
-            const betaBadgeEl = document.getElementById('qpBetaBadge');
-            const coinsEl = document.getElementById('qpCoins');
-            const streakEl = document.getElementById('qpStreak');
-            const countryEl = document.getElementById('qpCountry');
-            const favoriteEl = document.getElementById('qpFavorite');
-            const bioEl = document.getElementById('qpBio');
-            const joinedEl = document.getElementById('qpJoined');
-
-            if (!modal || !qpCard) return;
-
-            // Rango / Rol y Posición en Leaderboard para Estilos Épicos
-            const role = String(u.role || 'viewer').toLowerCase();
-            const isRank1 = (index === 0);
-
-            // Temas de colores y brillos
-            let cardBackground = 'rgba(18,22,33,0.92)';
-            let cardBorder = '1px solid rgba(255,255,255,0.1)';
-            let cardShadow = '0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)';
-            let nameGradient = 'linear-gradient(120deg, #fff, #b2c5d9)';
-
-            if (role === 'founder_ceo' || isRank1) {
-                // Tema Oro Legendario (CEO o Top #1 del servidor)
-                cardBackground = 'linear-gradient(135deg, rgba(20,24,35,0.96), rgba(28,24,15,0.96))';
-                cardBorder = '1px solid rgba(251,191,36,0.4)';
-                cardShadow = '0 20px 40px rgba(0,0,0,0.8), 0 0 25px rgba(251,191,36,0.25), inset 0 1px 0 rgba(251,191,36,0.1)';
-                nameGradient = 'linear-gradient(120deg, #ffd700, #fbbf24)';
-                avatarContainer.style.borderColor = 'rgba(251,191,36,0.6)';
-                avatarContainer.style.boxShadow = '0 8px 20px rgba(251,191,36,0.3)';
-            } else if (role === 'director') {
-                // Tema Rubí Místico (Director)
-                cardBackground = 'linear-gradient(135deg, rgba(20,24,35,0.96), rgba(35,18,18,0.96))';
-                cardBorder = '1px solid rgba(239,68,68,0.35)';
-                cardShadow = '0 20px 40px rgba(0,0,0,0.8), 0 0 20px rgba(239,68,68,0.2), inset 0 1px 0 rgba(239,68,68,0.1)';
-                nameGradient = 'linear-gradient(120deg, #fca5a5, #ef4444)';
-                avatarContainer.style.borderColor = 'rgba(239,68,68,0.5)';
-                avatarContainer.style.boxShadow = '0 8px 20px rgba(239,68,68,0.25)';
-            } else if (role === 'administrador') {
-                // Tema Diamante Cían (Admin)
-                cardBackground = 'linear-gradient(135deg, rgba(20,24,35,0.96), rgba(15,30,35,0.96))';
-                cardBorder = '1px solid rgba(0,240,255,0.35)';
-                cardShadow = '0 20px 40px rgba(0,0,0,0.8), 0 0 20px rgba(0,240,255,0.2), inset 0 1px 0 rgba(0,240,255,0.1)';
-                nameGradient = 'linear-gradient(120deg, #80f0ff, #00b0ff)';
-                avatarContainer.style.borderColor = 'rgba(0,240,255,0.5)';
-                avatarContainer.style.boxShadow = '0 8px 20px rgba(0,240,255,0.25)';
-            } else if (role === 'vip') {
-                // Tema Amatista (VIP)
-                cardBackground = 'linear-gradient(135deg, rgba(20,24,35,0.96), rgba(28,18,35,0.96))';
-                cardBorder = '1px solid rgba(168,85,247,0.3)';
-                cardShadow = '0 20px 40px rgba(0,0,0,0.7), 0 0 15px rgba(168,85,247,0.15), inset 0 1px 0 rgba(168,85,247,0.08)';
-                nameGradient = 'linear-gradient(120deg, #e9d5ff, #a855f7)';
-                avatarContainer.style.borderColor = 'rgba(168,85,247,0.4)';
-                avatarContainer.style.boxShadow = '0 8px 20px rgba(168,85,247,0.2)';
-            } else {
-                // Reset a estilo estándar
-                avatarContainer.style.borderColor = 'rgba(255,255,255,0.15)';
-                avatarContainer.style.boxShadow = '0 8px 16px rgba(0,0,0,0.3)';
-            }
-
-            // Aplicar estilos calculados a la tarjeta y al título
-            qpCard.style.background = cardBackground;
-            qpCard.style.border = cardBorder;
-            qpCard.style.boxShadow = cardShadow;
-            usernameEl.style.background = nameGradient;
-            usernameEl.style.webkitBackgroundClip = 'text';
-            usernameEl.style.webkitTextFillColor = 'transparent';
-
-            // Rellenar avatar
-            if (u.avatarImg) {
-                avatarContainer.innerHTML = `<img src="${u.avatarImg}" style="width:100%; height:100%; object-fit:cover;">`;
-            } else {
-                avatarContainer.textContent = u.avatar || '😊';
-            }
-
-            // Nombre
-            usernameEl.textContent = u.nombre_usuario || u.username || u.displayName || 'Conductor';
-
-            // Rango / Rol
-            const ROLE_LABELS_FULL = {
-                founder_ceo: 'Fundador / CEO 👑',
-                director: 'Director 🎭',
-                administrador: 'Administrador 🛡️',
-                programador: 'Programador 💻',
-                modelador: 'Modelador 3D 🎨',
-                community_manager: 'Community Manager 📢',
-                support_ops: 'Soporte Técnico 🔧',
-                vip: 'Miembro VIP ⭐',
-                youtuber: 'Creador Youtuber 🎥',
-                streamer: 'Creador Streamer 🎮',
-                viewer: 'Miembro Activo 👤',
-                usuario: 'Miembro Activo 👤'
-            };
-
-            roleBadgeEl.textContent = ROLE_LABELS_FULL[role] || 'Miembro Activo 👤';
-            roleBadgeEl.className = 'qp-role-badge';
-            
-            // Custom role styles
-            const badgeTones = {
-                founder_ceo: 'background: linear-gradient(135deg, rgba(251,191,36,.2), rgba(251,191,36,.05)); color:#fde68a; border:1px solid rgba(251,191,36,.45);',
-                director: 'background: rgba(239,68,68,.1); color:#fca5a5; border:1px solid rgba(239,68,68,.35);',
-                administrador: 'background: rgba(0,240,255,.1); color:#80f0ff; border:1px solid rgba(0,240,255,.45);',
-                programador: 'background: rgba(96,165,250,.1); color:#93c5fd; border:1px solid rgba(96,165,250,.35);',
-                modelador: 'background: rgba(96,165,250,.1); color:#93c5fd; border:1px solid rgba(96,165,250,.35);',
-                community_manager: 'background: rgba(168,85,247,.1); color:#d8b4fe; border:1px solid rgba(168,85,247,.35);',
-                vip: 'background: rgba(251,191,36,.1); color:#fde68a; border:1px solid rgba(251,191,36,.25);'
-            };
-            roleBadgeEl.setAttribute('style', `font-size:0.75rem; padding:3px 10px; border-radius:12px; font-weight:700; ${badgeTones[role] || 'background:rgba(255,255,255,0.05); color:#c4cfda; border:1px solid rgba(255,255,255,0.1);'}`);
-
-            // Beta tester status
-            if (u.betaTesterStatus === 'approved') {
-                betaBadgeEl.textContent = 'Beta Tester Oficial ✔';
-                betaBadgeEl.setAttribute('style', 'font-size:0.68rem; padding:2px 8px; border-radius:10px; background:rgba(16,185,129,0.1); color:#86efac; border:1px solid rgba(16,185,129,0.3); font-weight:bold; margin-top:4px; display:inline-block;');
-            } else {
-                betaBadgeEl.textContent = '';
-                betaBadgeEl.setAttribute('style', 'display:none;');
-            }
-
-            // Datos
-            coinsEl.textContent = Number(u.coins || 0).toLocaleString();
-            streakEl.innerHTML = `🔥 <span>${u.streak} ${u.streak === 1 ? 'día' : 'días'}</span>`;
-            
-            // Si el streak es alto presumir con color naranja encendido
-            if (u.streak >= 7) {
-                streakEl.setAttribute('style', 'font-size: 1.15rem; font-weight: bold; color: #ff9100; text-shadow: 0 0 8px rgba(255,145,0,0.5);');
-            } else {
-                streakEl.setAttribute('style', 'font-size: 1.15rem; font-weight: bold; color: #ff5252;');
-            }
-
-            countryEl.textContent = u.country || 'No definido';
-            favoriteEl.textContent = u.favoriteProject || 'No definido';
-            bioEl.textContent = `"${u.bio || '¡Hola! Soy un conductor orgulloso de Panter Studio.'}"`;
-
-            // Fecha
-            if (u.createdAt) {
-                const date = new Date(u.createdAt);
-                joinedEl.textContent = isNaN(date) ? '—' : date.toLocaleDateString('es-ES', { year:'numeric', month:'long', day:'numeric' });
-            } else {
-                joinedEl.textContent = '—';
-            }
-
-            modal.showModal();
-        };
-
-        // -- Devlogs --
-        async function loadDevlogs() {
-            const ok = await waitForFirebase();
-            if (!ok || !window.query || !window.orderBy || !window.limit || !window.getDocs) return;
-            try {
-                const q = window.query(
-                    window.collection(window.db, 'devlogs'),
-                    window.orderBy('createdAt', 'desc'),
-                    window.limit(3)
-                );
-                const snap = await window.getDocs(q);
-                const grid = document.getElementById('homeDevlogsGrid');
-                if (!grid) return;
-                if (snap.empty) {
-                    grid.innerHTML = '<p style="font-size:0.85rem;color:var(--text-muted);text-align:center;padding:1rem;">No hay novedades aún.</p>';
-                    return;
-                }
-                grid.innerHTML = '';
-                snap.forEach(doc => {
-                    const d = doc.data();
-                    const title = d.title || 'Sin título';
-                    const summary = d.summary || d.body?.substring(0,120) || '';
-                    const img = d.imageUrl || 'https://i.imgur.com/1IRRyFY.jpeg';
-                    const date = d.createdAt ? new Date(d.createdAt.toDate ? d.createdAt.toDate() : d.createdAt).toLocaleDateString('es-CO', {day:'numeric',month:'short'}) : '';
-                    const tag = d.tag || 'UPDATE';
-                    grid.innerHTML += `
-                        <a href="pages/actualizaciones.html" class="mini-devlog-card">
-                            <img class="mini-devlog-img" src="${img}" alt="${title}" onerror="this.src='https://i.imgur.com/1IRRyFY.jpeg'">
-                            <div class="mini-devlog-body">
-                                <h4>${title}</h4>
-                                <p>${summary}</p>
-                                <div class="mini-devlog-meta">
-                                    <span>${tag}</span>
-                                    ${date}
-                                </div>
-                            </div>
-                        </a>`;
-                });
-            } catch(e) {
-                console.warn('Devlogs error:', e);
-                const grid = document.getElementById('homeDevlogsGrid');
-                if (grid) grid.innerHTML = '<p style="font-size:0.85rem;color:var(--text-muted);">No se pudieron cargar las novedades.</p>';
-            }
-        }
-
-        async function loadPreregStats() {
-            // Load "Me Interesa" counter real-time
-            const ok = await waitForFirebase();
-            if (!ok || !window.query || !window.collection || !window.where || !window.onSnapshot) return;
-            try {
-                const q = window.query(window.collection(window.db, 'conductores'), window.where('interested', '==', true));
-                window.onSnapshot(q, (snap) => {
-                    const total = snap.size;
-                    const statEl = document.getElementById('statRegistrados');
-                    const widgetEl = document.getElementById('widgetInteresados');
-                    if (statEl) statEl.textContent = total.toLocaleString();
-                    if (widgetEl) widgetEl.textContent = total.toLocaleString();
-                }, (e) => {
-                    console.warn('Interesados listener error:', e);
-                });
-            } catch(e) { console.warn('Interesados counter error:', e); }
-        }
-
-        // -- User account widget --
-        async function loadAccountWidget() {
-            const ok = await waitForFirebase();
-            if (!ok) return;
-            window.auth.onAuthStateChanged(async (user) => {
-                currentUser = user;
-                const nameEl = document.getElementById('hubAccountName');
-                const statusEl = document.getElementById('hubAccountStatus');
-                const avatarEl = document.getElementById('hubAccountAvatar');
-                const coinsEl = document.getElementById('hubCoins');
-                const emeraldsEl = document.getElementById('hubEmeralds');
-                const gamesEl = document.getElementById('hubGamesPlayed');
-                const rankEl = document.getElementById('hubRank');
-                const lbSelf = document.getElementById('lbSelfRow');
-
-                if (user) {
-                    if (nameEl) nameEl.textContent = user.displayName || 'Jugador';
-                    if (statusEl) statusEl.textContent = 'Sesión activa';
-                    if (avatarEl && user.photoURL) {
-                        avatarEl.innerHTML = `<img src="${user.photoURL}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="Avatar">`;
-                    }
-                    // Load user data from Firestore
-                    try {
-                        const docSnap = await window.getDoc(window.fsDoc(window.db, 'conductores', user.uid));
-                        if (docSnap.exists()) {
-                            const d = docSnap.data();
-                            if (coinsEl) coinsEl.textContent = (d.coins || 0).toLocaleString();
-                            if (emeraldsEl) emeraldsEl.textContent = (d.esmeraldas !== undefined ? d.esmeraldas : 0).toLocaleString();
-                            if (gamesEl) {
-                                // load streak/game count
-                                gamesEl.textContent = (d.streak || 0) + ' días';
-                            }
-                            if (rankEl) rankEl.textContent = d.level ? (d.level.charAt(0).toUpperCase() + d.level.slice(1)) : 'Visitante';
-                            if (nameEl) nameEl.textContent = d.nombre_usuario || d.username || user.displayName || 'Jugador';
-                            // Show leaderboard self position
-                            if (lbSelf) lbSelf.textContent = `Tu posición: buscando... · ${(d.coins||0).toLocaleString()} 🪙`;
-                        }
-                    } catch(e) { console.warn('Load user widget details error:', e); }
-                } else {
-                    currentUser = null;
-                    if (nameEl) nameEl.textContent = 'Invitado';
-                    if (statusEl) statusEl.textContent = 'No has iniciado sesión';
-                    if (coinsEl) coinsEl.textContent = '—';
-                    if (emeraldsEl) emeraldsEl.textContent = '—';
-                    if (gamesEl) gamesEl.textContent = '—';
-                    if (rankEl) rankEl.textContent = '—';
-                    if (lbSelf) lbSelf.textContent = 'Inicia sesión para ver tu posición';
-                }
-            });
-        }
-
-        // -- Active players stats (rough estimate from users collection) --
-        async function loadPlayerStats() {
-            const ok = await waitForFirebase();
-            if (!ok) return;
-            try {
-                const snap = await window.getDoc(window.fsDoc(window.db, 'settings', 'stats'));
-                if (snap.exists()) {
-                    const d = snap.data();
-                    const el = document.getElementById('statJugadores');
-                    if (el && d.jugadores) el.textContent = Number(d.jugadores).toLocaleString();
-                }
-            } catch(e) { /* silent */ }
-        }
-
-        // -- Load Community Announcements --
-        // -- Toggle Announcement Like --
-        async function toggleAnnouncementLike(annId) {
-            if (!currentUser) {
-                const modal = document.getElementById('authModal');
-                if (modal) {
-                    modal.hidden = false;
-                    document.body.style.overflow = 'hidden';
-                } else {
-                    alert('Debes iniciar sesión para reaccionar a los anuncios.');
-                }
-                return;
-            }
-
-            const cacheKey = 'ps_announcements_cache';
-            let liveUpdated = false;
-            const uid = currentUser.uid;
-
-            // Online update via Firestore
-            const ok = await waitForFirebase();
-            if (ok && window.db && window.fsDoc && window.getDoc && window.updateDoc) {
-                try {
-                    const docRef = window.fsDoc(window.db, 'announcements', annId);
-                    const snap = await window.getDoc(docRef);
-                    if (snap.exists()) {
-                        const data = snap.data();
-                        let likes = Array.isArray(data.likes) ? data.likes : [];
-                        if (likes.includes(uid)) {
-                            likes = likes.filter(id => id !== uid);
-                        } else {
-                            likes.push(uid);
-                        }
-                        await window.updateDoc(docRef, { likes: likes });
-                        liveUpdated = true;
-                        
-                        // Update cache
-                        const cached = localStorage.getItem(cacheKey);
-                        if (cached) {
-                            try {
-                                const parsed = JSON.parse(cached);
-                                const idx = parsed.findIndex(a => a.id === annId);
-                                if (idx !== -1) {
-                                    parsed[idx].likes = likes;
-                                    localStorage.setItem(cacheKey, JSON.stringify(parsed));
-                                }
-                            } catch(e) {}
-                        }
-                    }
-                } catch(e) {
-                    console.warn('Firestore like toggle error:', e);
-                }
-            }
-
-            // Fallback / Offline local update
-            if (!liveUpdated) {
-                try {
-                    const cached = localStorage.getItem(cacheKey);
-                    if (cached) {
-                        const parsed = JSON.parse(cached);
-                        const idx = parsed.findIndex(a => a.id === annId);
-                        if (idx !== -1) {
-                            let likes = Array.isArray(parsed[idx].likes) ? parsed[idx].likes : [];
-                            if (likes.includes(uid)) {
-                                likes = likes.filter(id => id !== uid);
-                            } else {
-                                likes.push(uid);
-                            }
-                            parsed[idx].likes = likes;
-                            localStorage.setItem(cacheKey, JSON.stringify(parsed));
-                        }
-                    }
-                } catch(e) {}
-            }
-
-            // Re-render
-            loadComunidadAnnouncements();
-        }
-
-        // -- Load Community Announcements --
-        async function loadComunidadAnnouncements() {
-            const ok = await waitForFirebase();
-            const banner = document.getElementById('comunidadAnnouncements');
-            if (!banner) return;
-
-            // Load local cache first to render immediately
-            const cacheKey = 'ps_announcements_cache';
-            const local = [];
-            try {
-                const cached = localStorage.getItem(cacheKey);
-                if (cached) {
-                    const parsed = JSON.parse(cached);
-                    if (Array.isArray(parsed)) local.push(...parsed);
-                }
-            } catch(e) {}
-
-            function renderAnnouncements(items) {
-                if (!items || items.length === 0) {
-                    banner.style.display = 'none';
-                    return;
-                }
-                banner.style.display = 'block';
-
-                const icons = {
-                    general: '📢',
-                    update: '⚡',
-                    event: '🏆',
-                    alert: '⚠️',
-                    maintenance: '⚙️'
-                };
-                
-                // Sort by date descending, take top 2
-                const sorted = items.sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 2);
-
-                const uid = currentUser ? currentUser.uid : '';
-
-                banner.innerHTML = `
-                    <div class="ann-banner-header">
-                        <span>📢 Anuncios de la Comunidad</span>
-                        <a href="pages/actualizaciones.html" class="ann-banner-view-all">Ver todos →</a>
-                    </div>
-                    <div class="ann-banner-grid">
-                        ${sorted.map(d => {
-                            const icon = icons[d.type] || '📢';
-                            const date = d.createdAt ? new Date(d.createdAt).toLocaleDateString('es-CO', {day:'numeric', month:'short'}) : '';
-                            const likes = Array.isArray(d.likes) ? d.likes : [];
-                            const hasLiked = uid && likes.includes(uid);
-                            const likesCount = likes.length;
-
-                            return `
-                                <div class="ann-banner-item type-${d.type || 'general'}">
-                                    <div class="ann-banner-badge-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-                                        <div class="ann-banner-badge">
-                                            <span>${icon}</span> ${String(d.type || 'general').toUpperCase()}
-                                        </div>
-                                        <button class="ann-like-btn ${hasLiked ? 'liked' : ''}" data-id="${d.id}" title="${hasLiked ? 'Quitar Me gusta' : 'Dar Me gusta'}" style="background:none; border:none; color:inherit; cursor:pointer; display:flex; align-items:center; gap:4px; font-size:0.8rem; outline:none; transition:transform 0.15s ease;">
-                                            <span class="like-heart" style="transition: transform 0.2s ease; display:inline-block; font-size:0.9rem;">${hasLiked ? '❤️' : '🤍'}</span>
-                                            <span class="like-count" style="font-weight:700; color:var(--text-secondary);">${likesCount}</span>
-                                        </button>
-                                    </div>
-                                    <h4 class="ann-banner-title">${d.title}</h4>
-                                    <p class="ann-banner-body">${d.body}</p>
-                                    <div class="ann-banner-meta">Por ${d.createdBy || 'Admin'} · ${date}</div>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                `;
-
-                // Bind click delegation for likes only once
-                if (!banner.dataset.listenerBound) {
-                    banner.addEventListener('click', async (e) => {
-                        const likeBtn = e.target.closest('.ann-like-btn');
-                        if (!likeBtn) return;
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const annId = likeBtn.dataset.id;
-                        if (annId) {
-                            likeBtn.style.transform = 'scale(1.25)';
-                            setTimeout(() => { likeBtn.style.transform = 'scale(1)'; }, 150);
-                            await toggleAnnouncementLike(annId);
-                        }
-                    });
-                    banner.dataset.listenerBound = 'true';
-                }
-            }
-
-            // Render cached first
-            if (local.length > 0) {
-                renderAnnouncements(local);
-            }
-
-            if (!ok) return;
-
-            // Then fetch live from Firestore
-            try {
-                const snap = await window.getDocs(window.collection(window.db, 'announcements'));
-                const docs = [];
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    let created = data.createdAt;
-                    if (created && created.toDate) created = created.toDate().toISOString();
-                    docs.push({ id: doc.id, ...data, createdAt: created });
-                });
-
-                // Update cache
-                localStorage.setItem(cacheKey, JSON.stringify(docs));
-                renderAnnouncements(docs);
-            } catch(e) {
-                console.warn('Error loading live announcements:', e);
-            }
-        }
-
-        // Run all
-        let started = false;
-        function startAll() {
-            if (started) return;
-            started = true;
-            console.log('[PanterHub] Inicializando todos los modulos dinámicos con Firebase...');
-            loadLeaderboard();
-            loadPreregStats();
-            loadAccountWidget();
-            loadPlayerStats();
-            loadComunidadAnnouncements();
-            loadDevlogs();
-        }
-
-        // Registrar listeners de inicio
-        document.addEventListener('firebaseReady', startAll);
-        document.addEventListener('DOMContentLoaded', () => {
-            // Si Firebase ya cargó antes del DOMContentLoaded
-            if (window.auth && window.db && window.collection) {
-                startAll();
-            }
-        });
-
-        // Fallback de seguridad por si no se disparan eventos
-        setTimeout(() => {
-            if (window.auth && window.db && window.collection) {
-                startAll();
-            }
-        }, 1500);
-    })();
-    </script>
-
-    <!-- Modal Premium para ver Perfil Rápido -->
-    <dialog id="quickProfileModal" style="border:none; padding:0; background:none; outline:none; max-width:420px; width:90%; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); margin:0;">
-        <div id="qpCard" style="background: rgba(18,22,33,0.92); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05); color: #fff; font-family: 'Inter', sans-serif; position: relative; transition: all 0.3s ease;">
-            
-            <button onclick="document.getElementById('quickProfileModal').close()" style="position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.05); border: none; color: #fff; font-size: 0.9rem; cursor: pointer; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">✕</button>
-
-            <!-- Encabezado de Perfil (Avatar + Rango) -->
-            <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 20px; margin-top: 10px;">
-                <div id="qpAvatarContainer" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)); border: 2px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); overflow: hidden;">👤</div>
-                <h3 id="qpUsername" style="font-size: 1.35rem; margin: 0 0 4px 0; font-weight: 700; background: linear-gradient(120deg, #fff, #b2c5d9); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">—</h3>
-                <div id="qpRoleBadge" style="margin-bottom: 6px;"></div>
-                <div id="qpBetaBadge"></div>
-            </div>
-
-            <!-- Datos Económicos / Estadísticas para presumir -->
-            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-                <div style="text-align: center;">
-                    <div style="font-size: 0.72rem; color: #8f9ca6; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Monedas Web</div>
-                    <div style="font-size: 1.15rem; font-weight: bold; color: #ffd54f; display: flex; align-items: center; justify-content: center; gap: 4px;">
-                        <img src="recursos/iconos/moneda.png" alt="🪙" style="width:16px; height:16px;">
-                        <span id="qpCoins">—</span>
-                    </div>
-                </div>
-                <div style="text-align: center; border-left: 1px solid rgba(255,255,255,0.08);">
-                    <div style="font-size: 0.72rem; color: #8f9ca6; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Racha Diaria</div>
-                    <div id="qpStreak" style="font-size: 1.15rem; font-weight: bold; color: #ff5252; display: flex; align-items: center; justify-content: center; gap: 4px;">
-                        🔥 <span>0 días</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Detalles extra (País, Biografía, etc.) -->
-            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.82rem; background: rgba(0,0,0,0.15); padding: 12px 16px; border-radius: 10px; margin-bottom: 12px;">
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="color: #8f9ca6;">Origen:</span>
-                    <strong id="qpCountry">—</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="color: #8f9ca6;">Proyecto favorito:</span>
-                    <strong id="qpFavorite">—</strong>
-                </div>
-                <div style="display: flex; flex-direction: column; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; margin-top: 4px;">
-                    <span style="color: #8f9ca6; margin-bottom: 4px;">Biografía:</span>
-                    <p id="qpBio" style="margin: 0; color: #d0d8e0; font-style: italic; line-height: 1.3; font-size: 0.8rem; word-break: break-word;">"—"</p>
-                </div>
-            </div>
-
-            <!-- Fecha de Ingreso -->
-            <div style="text-align: center; font-size: 0.72rem; color: #627280; margin-top: 12px;">
-                Conductor desde: <span id="qpJoined">—</span>
-            </div>
-        </div>
-    </dialog>
-
-    <style>
-        .leaderboard-row {
-            cursor: pointer;
-            transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s, background-color 0.2s;
-        }
-        .leaderboard-row:hover {
-            transform: translateY(-2px) scale(1.01);
-            background-color: rgba(255, 255, 255, 0.05) !important;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.4), 0 0 10px rgba(255,255,255,0.02) !important;
-        }
-        dialog::backdrop {
-            background: rgba(0, 0, 0, 0.65);
-            backdrop-filter: blur(5px);
-        }
-        /* Garantizar centrado y transicion limpia */
-        #quickProfileModal[open] {
-            animation: qpScaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
-        @keyframes qpScaleIn {
-            from {
-                transform: translate(-50%, -46%) scale(0.95);
-                opacity: 0;
-            }
-            to {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 1;
-            }
-        }
-    </style>
+    <script src="assets/js/pages/index-auth-gate.js"></script>
 </body>
 </html>

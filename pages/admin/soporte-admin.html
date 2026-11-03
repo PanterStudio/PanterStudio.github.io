@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Soporte — Admin | Panter Studio</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" href="../../recursos/PSGD.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Orbitron:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="../../assets/css/modules.css">
+    <style>
+    :root {
+        --adm-bg: #070913;
+        --adm-panel: #0d1117;
+        --adm-card: rgba(20,26,40,0.95);
+        --adm-border: rgba(0,176,255,0.15);
+        --adm-cyan: #00b0ff;
+        --adm-green: #22c55e;
+        --adm-gold: #f59e0b;
+        --adm-red: #ef4444;
+        --adm-purple: #a855f7;
+    }
+
+    body { background: var(--adm-bg) !important; min-height: 100vh; }
+
+    /* ---- LAYOUT ---- */
+    .sadm-root { display: flex; min-height: 100vh; }
+
+    .sadm-sidebar {
+        width: 240px;
+        background: var(--adm-panel);
+        border-right: 1px solid var(--adm-border);
+        padding: 1.5rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+    }
+
+    .sadm-sidebar-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0.5rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid var(--adm-border);
+        padding-bottom: 1rem;
+    }
+
+    .sadm-sidebar-logo img { width: 32px; height: 32px; }
+    .sadm-sidebar-logo span {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: 0.5px;
+    }
+
+    .sadm-nav-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 12px;
+        border-radius: 8px;
+        color: rgba(176,188,206,0.8);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        text-decoration: none;
+    }
+
+    .sadm-nav-item:hover {
+        background: rgba(0,176,255,0.06);
+        color: var(--adm-cyan);
+        border-color: rgba(0,176,255,0.15);
+    }
+
+    .sadm-nav-item.active {
+        background: rgba(0,176,255,0.1);
+        color: var(--adm-cyan);
+        border-color: rgba(0,176,255,0.25);
+    }
+
+    .sadm-badge {
+        margin-left: auto;
+        background: rgba(239,68,68,0.15);
+        color: #f87171;
+        border: 1px solid rgba(239,68,68,0.3);
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 1px 7px;
+        border-radius: 100px;
+    }
+
+    /* ---- MAIN ---- */
+    .sadm-main { flex: 1; padding: 1.5rem; overflow-x: hidden; }
+
+    .sadm-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .sadm-title {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #fff;
+        margin: 0;
+        letter-spacing: 0.5px;
+    }
+
+    .sadm-subtitle { font-size: 0.8rem; color: rgba(176,188,206,0.6); margin: 2px 0 0; }
+
+    /* ---- KPI CARDS ---- */
+    .sadm-kpis {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+        margin-bottom: 1.5rem;
+    }
+
+    .sadm-kpi {
+        background: var(--adm-card);
+        border: 1px solid var(--adm-border);
+        border-radius: 14px;
+        padding: 1rem 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .sadm-kpi-icon {
+        width: 40px; height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .sadm-kpi-val {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #fff;
+        line-height: 1;
+        margin-bottom: 2px;
+    }
+
+    .sadm-kpi-label { font-size: 0.72rem; color: rgba(176,188,206,0.6); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ---- FILTERS BAR ---- */
+    .sadm-filters {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+        padding: 10px;
+        background: var(--adm-card);
+        border: 1px solid var(--adm-border);
+        border-radius: 12px;
+    }
+
+    .sadm-filter-btn {
+        padding: 6px 14px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.03);
+        color: rgba(176,188,206,0.7);
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+    }
+
+    .sadm-filter-btn:hover { background: rgba(0,176,255,0.08); color: var(--adm-cyan); border-color: rgba(0,176,255,0.2); }
+    .sadm-filter-btn.active { background: rgba(0,176,255,0.12); color: var(--adm-cyan); border-color: rgba(0,176,255,0.35); }
+
+    .sadm-search {
+        flex: 1;
+        min-width: 200px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 8px;
+        color: #f0f4ff;
+        padding: 7px 12px;
+        font-size: 0.83rem;
+        font-family: inherit;
+        outline: none;
+    }
+
+    .sadm-search:focus { border-color: var(--adm-cyan); }
+
+    /* ---- TABLE ---- */
+    .sadm-table-wrap {
+        background: var(--adm-card);
+        border: 1px solid var(--adm-border);
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .sadm-table { width: 100%; border-collapse: collapse; }
+    .sadm-table thead { background: rgba(0,176,255,0.05); border-bottom: 1px solid var(--adm-border); }
+    .sadm-table th {
+        padding: 12px 14px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: rgba(176,188,206,0.6);
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    .sadm-table tbody tr {
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        transition: background 0.15s;
+        cursor: pointer;
+    }
+
+    .sadm-table tbody tr:last-child { border-bottom: none; }
+    .sadm-table tbody tr:hover { background: rgba(0,176,255,0.04); }
+
+    .sadm-table td {
+        padding: 12px 14px;
+        font-size: 0.83rem;
+        color: rgba(176,188,206,0.9);
+        vertical-align: middle;
+        max-width: 220px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .sadm-table td strong { color: #fff; font-weight: 700; display: block; }
+    .sadm-table td small { font-size: 0.72rem; color: rgba(176,188,206,0.5); }
+    .sadm-code { font-family: monospace; color: var(--adm-cyan) !important; font-weight: 700; font-size: 0.82rem; }
+
+    /* ---- DETAIL DRAWER ---- */
+    .sadm-drawer {
+        position: fixed;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 480px;
+        max-width: 95vw;
+        background: #0d1117;
+        border-left: 1px solid var(--adm-border);
+        z-index: 500;
+        display: flex;
+        flex-direction: column;
+        transform: translateX(110%);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: -10px 0 40px rgba(0,0,0,0.5);
+    }
+
+    .sadm-drawer.open { transform: translateX(0); }
+
+    .sadm-drawer-header {
+        padding: 1.2rem 1.5rem;
+        border-bottom: 1px solid var(--adm-border);
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        background: rgba(0,176,255,0.03);
+    }
+
+    .sadm-drawer-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.2rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+    }
+
+    .sadm-drawer-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--adm-border);
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .sadm-drawer-close {
+        width: 30px; height: 30px;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: rgba(176,188,206,0.7);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .sadm-drawer-close:hover { background: rgba(239,68,68,0.1); border-color: #ef4444; color: #f87171; }
+
+    /* Drawer sections */
+    .sadm-section-label { font-size: 0.65rem; font-weight: 700; color: rgba(176,188,206,0.4); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+
+    .sadm-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .sadm-info-cell {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 8px;
+        padding: 10px 12px;
+    }
+
+    .sadm-info-cell-label { font-size: 0.65rem; color: rgba(176,188,206,0.5); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .sadm-info-cell-val { font-size: 0.88rem; color: #fff; font-weight: 700; }
+
+    /* Action buttons */
+    .sadm-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.04);
+        color: rgba(176,188,206,0.8);
+        font-size: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+        white-space: nowrap;
+    }
+
+    .sadm-btn:hover { background: rgba(0,176,255,0.1); border-color: rgba(0,176,255,0.3); color: var(--adm-cyan); }
+    .sadm-btn.danger:hover { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: #f87171; }
+    .sadm-btn.success:hover { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: #4ade80; }
+
+    .sadm-select {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 8px;
+        color: #f0f4ff;
+        padding: 8px 12px;
+        font-size: 0.83rem;
+        font-family: inherit;
+        outline: none;
+        cursor: pointer;
+    }
+
+    .sadm-select:focus { border-color: var(--adm-cyan); }
+
+    /* Comentarios */
+    .sadm-comment-form { display: flex; flex-direction: column; gap: 8px; }
+    .sadm-textarea {
+        width: 100%;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 8px;
+        color: #f0f4ff;
+        padding: 10px 12px;
+        font-size: 0.85rem;
+        font-family: inherit;
+        outline: none;
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .sadm-textarea:focus { border-color: var(--adm-cyan); }
+
+    /* Badges */
+    .sp-estado-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 100px; font-size: 0.72rem; font-weight: 700; }
+    .sp-prio-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 100px; font-size: 0.72rem; font-weight: 700; }
+
+    /* Auth gate */
+    .sadm-auth-gate {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 60vh;
+        text-align: center;
+        padding: 2rem;
+        gap: 1rem;
+    }
+
+    .sadm-auth-gate h2 { color: #fff; font-size: 1.3rem; margin: 0; }
+    .sadm-auth-gate p { color: rgba(176,188,206,0.7); font-size: 0.9rem; margin: 0; }
+
+    /* Empty state */
+    .sadm-empty { text-align: center; padding: 3rem; color: rgba(176,188,206,0.5); font-size: 0.9rem; }
+    .sadm-empty-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4; }
+
+    /* Scrollbar */
+    .sadm-sidebar::-webkit-scrollbar,
+    .sadm-drawer-body::-webkit-scrollbar { width: 4px; }
+    .sadm-sidebar::-webkit-scrollbar-track,
+    .sadm-drawer-body::-webkit-scrollbar-track { background: transparent; }
+    .sadm-sidebar::-webkit-scrollbar-thumb,
+    .sadm-drawer-body::-webkit-scrollbar-thumb { background: rgba(0,176,255,0.2); border-radius: 2px; }
+
+    @media (max-width: 768px) {
+        .sadm-root { flex-direction: column; }
+        .sadm-sidebar { width: 100%; height: auto; position: relative; flex-direction: row; flex-wrap: wrap; overflow-x: auto; }
+        .sadm-sidebar-logo { display: none; }
+        .sadm-drawer { width: 100%; border-left: none; border-top: 1px solid var(--adm-border); top: auto; }
+    }
+    </style>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+</head>
+<body data-site-root="../.." data-theme="dark" class="dark-mode">
+
+<div id="accessGate" class="sadm-auth-gate">
+    <div style="font-size:4rem; margin-bottom:0.5rem;"><i class="fa-solid fa-user-lock" aria-hidden="true"></i></div>
+    <h2>Acceso Restringido</h2>
+    <p>Verificando permisos...</p>
+</div>
+
+<div id="adminRoot" class="sadm-root" style="display:none;">
+
+    <!-- SIDEBAR -->
+    <aside class="sadm-sidebar">
+        <div class="sadm-sidebar-logo">
+            <img src="../../recursos/PSGD.png" alt="Logo">
+            <span>SOPORTE ADMIN</span>
+        </div>
+
+        <a href="admin.html" class="sadm-nav-item"><i class="fa-solid fa-house" aria-hidden="true"></i> Dashboard</a>
+        <div class="sadm-nav-item active"><i class="fa-solid fa-headset" aria-hidden="true"></i> Tickets Soporte <span class="sadm-badge" id="sidebarBadge">0</span></div>
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:8px 0;">
+        <a href="../../pages/soporte.html" class="sadm-nav-item" target="_blank"><i class="fa-solid fa-globe" aria-hidden="true"></i> Ver Portal Público</a>
+        <a href="../../index.html" class="sadm-nav-item">← Volver al Sitio</a>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="sadm-main">
+        <div class="sadm-header">
+            <div>
+                <h1 class="sadm-title"><i class="fa-solid fa-headset" aria-hidden="true"></i> Centro de Soporte</h1>
+                <p class="sadm-subtitle">Gestión de tickets de soporte — Panter Studio</p>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <span id="staffName" style="font-size:0.8rem;color:rgba(176,188,206,0.6);"></span>
+                <button class="sadm-btn" id="refreshBtn"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Actualizar</button>
+            </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="sadm-kpis">
+            <div class="sadm-kpi">
+                <div class="sadm-kpi-icon" style="background:rgba(239,68,68,0.12); color:#f87171;"><i class="fa-solid fa-circle" style="color:#ef4444" aria-hidden="true"></i></div>
+                <div>
+                    <div class="sadm-kpi-val" id="kpiAbiertos">—</div>
+                    <div class="sadm-kpi-label">Abiertos</div>
+                </div>
+            </div>
+            <div class="sadm-kpi">
+                <div class="sadm-kpi-icon" style="background:rgba(245,158,11,0.12); color:#fbbf24;"><i class="fa-solid fa-circle" style="color:#facc15" aria-hidden="true"></i></div>
+                <div>
+                    <div class="sadm-kpi-val" id="kpiEnProceso">—</div>
+                    <div class="sadm-kpi-label">En Proceso</div>
+                </div>
+            </div>
+            <div class="sadm-kpi">
+                <div class="sadm-kpi-icon" style="background:rgba(34,197,94,0.12); color:#4ade80;"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></div>
+                <div>
+                    <div class="sadm-kpi-val" id="kpiResueltos">—</div>
+                    <div class="sadm-kpi-label">Resueltos</div>
+                </div>
+            </div>
+            <div class="sadm-kpi">
+                <div class="sadm-kpi-icon" style="background:rgba(0,176,255,0.12); color:#38bdf8;"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i></div>
+                <div>
+                    <div class="sadm-kpi-val" id="kpiTotal">—</div>
+                    <div class="sadm-kpi-label">Total</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FILTERS -->
+        <div class="sadm-filters">
+            <button class="sadm-filter-btn active" data-estado="Todos">Todos</button>
+            <button class="sadm-filter-btn" data-estado="Abierto"><i class="fa-solid fa-circle" style="color:#ef4444" aria-hidden="true"></i> Abiertos</button>
+            <button class="sadm-filter-btn" data-estado="En Proceso"><i class="fa-solid fa-circle" style="color:#facc15" aria-hidden="true"></i> En Proceso</button>
+            <button class="sadm-filter-btn" data-estado="Resuelto"><i class="fa-solid fa-circle" style="color:#22c55e" aria-hidden="true"></i> Resueltos</button>
+            <button class="sadm-filter-btn" data-estado="Cerrado"><i class="fa-solid fa-circle" style="color:#6b7280" aria-hidden="true"></i> Cerrados</button>
+            <input type="text" id="searchInput" class="sadm-search" placeholder="Buscar ticket, usuario o código...">
+        </div>
+
+        <!-- TABLE -->
+        <div class="sadm-table-wrap">
+            <table class="sadm-table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Título</th>
+                        <th>Usuario</th>
+                        <th>Categoría</th>
+                        <th>Estado</th>
+                        <th>Prioridad</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody id="ticketsTableBody">
+                    <tr><td colspan="7" class="sadm-empty"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Cargando tickets...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<!-- DETAIL DRAWER -->
+<aside class="sadm-drawer" id="ticketDrawer">
+    <div class="sadm-drawer-header">
+        <div>
+            <span id="drawerCodigo" style="font-family:monospace;font-size:0.78rem;color:var(--adm-cyan);font-weight:700;"></span>
+            <h3 id="drawerTitulo" style="color:#fff;font-size:0.95rem;font-weight:800;margin:4px 0;"></h3>
+            <div id="drawerBadges" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+        </div>
+        <button class="sadm-drawer-close" id="closeDrawer"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    </div>
+
+    <div class="sadm-drawer-body">
+        <!-- Info grid -->
+        <div>
+            <div class="sadm-section-label">Información</div>
+            <div class="sadm-info-grid" id="drawerInfoGrid"></div>
+        </div>
+
+        <!-- Descripción -->
+        <div>
+            <div class="sadm-section-label">Descripción del Problema</div>
+            <div id="drawerDesc" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:12px 14px;font-size:0.85rem;color:rgba(176,188,206,0.9);line-height:1.6;white-space:pre-wrap;word-break:break-word;"></div>
+        </div>
+
+        <!-- Cambiar Estado -->
+        <div>
+            <div class="sadm-section-label">Cambiar Estado</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <select id="drawerEstadoSelect" class="sadm-select">
+                    <option value="Abierto"> Abierto</option>
+                    <option value="En Proceso"> En Proceso</option>
+                    <option value="Resuelto"> Resuelto</option>
+                    <option value="Cerrado"> Cerrado</option>
+                </select>
+                <button class="sadm-btn success" id="cambiarEstadoBtn"><i class="fa-solid fa-check" aria-hidden="true"></i> Aplicar</button>
+            </div>
+        </div>
+
+        <!-- Asignar Staff -->
+        <div>
+            <div class="sadm-section-label">Asignado A</div>
+            <div id="drawerStaffInfo" style="font-size:0.85rem;color:rgba(176,188,206,0.7);"></div>
+            <button class="sadm-btn" id="asignarmeBtn" style="margin-top:8px;"><i class="fa-solid fa-bullseye" aria-hidden="true"></i> Asignarme este ticket</button>
+        </div>
+
+        <!-- Comentarios -->
+        <div>
+            <div class="sadm-section-label">Comentarios</div>
+            <div id="drawerComentarios" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;max-height:200px;overflow-y:auto;"></div>
+            <div class="sadm-comment-form">
+                <textarea id="staffComentario" class="sadm-textarea" placeholder="Escribe una respuesta pública visible para el usuario..."></textarea>
+                <button class="sadm-btn success" id="enviarRespuestaBtn"><i class="fa-solid fa-comment-dots" aria-hidden="true"></i> Enviar Respuesta</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="sadm-drawer-footer">
+        <button class="sadm-btn danger" id="cerrarTicketBtn"><i class="fa-solid fa-lock" aria-hidden="true"></i> Cerrar Ticket</button>
+        <button class="sadm-btn" id="closeDrawerFooter">← Volver</button>
+    </div>
+</aside>
+
+<!-- SCRIPTS -->
+<script src="../../assets/js/core/roles.js"></script>
+<script src="../../assets/js/core/discord-auth.js"></script>
+<script src="../../assets/js/core/role-badges.js"></script>
+<script src="../../assets/js/core/firebase-config.js"></script>
+<script src="../../assets/js/soporte.js"></script>
+<script src="../../assets/js/core/script.js"></script>
+
+<script>
+(function() {
+    const ADMIN_ROLES = new Set(['admin_owner', 'founder_ceo', 'director', 'administrador', 'soporte', 'support_ops', 'moderador', 'programador']);
+    let allTickets = [];
+    let currentFilter = 'Todos';
+    let currentTicket = null;
+    let currentStaff = null;
+    let ticketsUnsub = null;
+    let drawerTicketUnsub = null;
+    let comentariosUnsub = null;
+    let comentariosRolesUnsub = null;
+    let comentariosActuales = [];
+
+    function escHtml(str) {
+        const d = document.createElement('div');
+        d.appendChild(document.createTextNode(String(str || '')));
+        return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'info') {
+        let t = document.getElementById('sadmToast');
+        if (!t) {
+            t = document.createElement('div');
+            t.id = 'sadmToast';
+            t.style.cssText = 'position:fixed;bottom:20px;right:20px;padding:12px 20px;border-radius:10px;font-size:0.85rem;font-weight:600;z-index:9999;display:none;';
+            document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        t.style.display = 'block';
+        t.style.background = type === 'success' ? 'rgba(34,197,94,0.15)' : type === 'error' ? 'rgba(239,68,68,0.15)' : 'rgba(0,176,255,0.15)';
+        t.style.border = `1px solid ${type === 'success' ? 'rgba(34,197,94,0.4)' : type === 'error' ? 'rgba(239,68,68,0.4)' : 'rgba(0,176,255,0.4)'}`;
+        t.style.color = type === 'success' ? '#4ade80' : type === 'error' ? '#f87171' : '#38bdf8';
+        clearTimeout(t._t);
+        t._t = setTimeout(() => { t.style.display = 'none'; }, 3000);
+    }
+
+    function isCeoIdentifier(str) {
+        if (!str) return false;
+        const clean = String(str).trim().toLowerCase();
+        return clean === 'pantergamey' || clean === 'pantergameyt' || clean === 'pantergamey@gmail.com' || clean === 'ceo@panterstudio.lat' || clean === 'admin@psgd.me';
+    }
+
+    // ---- AUTH CHECK ----
+    async function checkAccess(user) {
+        if (!user) return false;
+        const R = window.PanterRoles;
+        const discordAdmin = Boolean(user.discordAdmin) || (R ? R.isDiscordAdmin(user) : false);
+        const sessionRole = R ? R.resolveRole(user) : String(user.role || '').toLowerCase();
+        if (discordAdmin || sessionRole === 'admin_owner') {
+            currentStaff = { uid: user.uid, nombre: user.displayName || user.username || 'ADMIN / OWNER', role: 'founder_ceo', email: user.email || '' };
+            return true;
+        }
+        const isCeo = isCeoIdentifier(user.username) || isCeoIdentifier(user.displayName) || isCeoIdentifier(user.email) || sessionRole === 'founder_ceo';
+        if (isCeo) {
+            currentStaff = { uid: user.uid, nombre: user.displayName || user.username || 'PanterGameY', role: 'founder_ceo', email: user.email || 'pantergamey@gmail.com' };
+            return true;
+        }
+        try {
+            const snap = await window.getDoc(window.fsDoc(window.db, 'conductores', user.uid));
+            if (!snap.exists()) return false;
+            const data = snap.data();
+            const resolvedRole = R ? R.resolveRole(user, data) : String(data.role || '').toLowerCase();
+            const isDocCeo = isCeoIdentifier(data.username) || isCeoIdentifier(data.nombre_usuario) || isCeoIdentifier(data.displayName) || resolvedRole === 'founder_ceo' || resolvedRole === 'admin_owner';
+            if (isDocCeo) {
+                currentStaff = { uid: user.uid, nombre: data.displayName || data.username || 'PanterGameY', role: 'founder_ceo', email: user.email || data.email, ...data };
+                return true;
+            }
+            if (!ADMIN_ROLES.has(resolvedRole)) return false;
+            currentStaff = { uid: user.uid, nombre: user.displayName || user.email, role: resolvedRole, email: user.email, ...data };
+            return true;
+        } catch { return false; }
+    }
+
+    // ---- LOAD TICKETS ----
+    function stopTicketsListener() {
+        if (ticketsUnsub) {
+            try { ticketsUnsub(); } catch (e) {}
+            ticketsUnsub = null;
+        }
+    }
+
+    async function loadTickets() {
+        const tbody = document.getElementById('ticketsTableBody');
+        tbody.innerHTML = '<tr><td colspan="7" class="sadm-empty"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Cargando...</td></tr>';
+        stopTicketsListener();
+        try {
+            ticketsUnsub = await window.SoporteJS.suscribirTickets(
+                tickets => {
+                    allTickets = tickets;
+                    updateKPIs();
+                    renderTable();
+                    syncDrawerFromList();
+                },
+                err => {
+                    console.error(err);
+                    tbody.innerHTML = '<tr><td colspan="7" class="sadm-empty"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Error al cargar tickets.</td></tr>';
+                    showToast(err.message || 'Error al cargar tickets', 'error');
+                }
+            );
+        } catch (err) {
+            console.error(err);
+            tbody.innerHTML = '<tr><td colspan="7" class="sadm-empty"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Error al cargar tickets.</td></tr>';
+            showToast(err.message || 'Error al cargar tickets', 'error');
+        }
+    }
+
+    function updateKPIs() {
+        document.getElementById('kpiAbiertos').textContent = allTickets.filter(t => t.estado === 'Abierto').length;
+        document.getElementById('kpiEnProceso').textContent = allTickets.filter(t => t.estado === 'En Proceso').length;
+        document.getElementById('kpiResueltos').textContent = allTickets.filter(t => t.estado === 'Resuelto').length;
+        document.getElementById('kpiTotal').textContent = allTickets.length;
+        const abiertos = allTickets.filter(t => t.estado === 'Abierto' || t.estado === 'En Proceso').length;
+        document.getElementById('sidebarBadge').textContent = abiertos;
+    }
+
+    function getFilteredTickets() {
+        const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+        return allTickets.filter(t => {
+            const matchEstado = currentFilter === 'Todos' || t.estado === currentFilter;
+            const matchSearch = !search || [t.titulo, t.codigo, t.usuarioNombre, t.usuarioEmail, t.categoria]
+                .some(v => String(v || '').toLowerCase().includes(search));
+            return matchEstado && matchSearch;
+        });
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('ticketsTableBody');
+        const tickets = getFilteredTickets();
+        if (!tickets.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="sadm-empty"><div class="sadm-empty-icon"><i class="fa-solid fa-inbox" aria-hidden="true"></i></div><p>No hay tickets que coincidan.</p></td></tr>';
+            return;
+        }
+        tbody.innerHTML = '';
+        tickets.forEach(t => {
+            const cat = window.SoporteJS.getCategoria(t.categoria);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="sadm-code">${escHtml(t.codigo)}</td>
+                <td><strong>${escHtml(t.titulo)}</strong><small>${window.SoporteJS.formatDate(t.creadoEn)}</small></td>
+                <td><strong>${escHtml(t.usuarioNombre || '—')}</strong><small>${escHtml(t.usuarioEmail || '')}</small></td>
+                <td>${cat.icon} ${cat.label}</td>
+                <td>${window.SoporteJS.estadoBadge(t.estado)}</td>
+                <td>${window.SoporteJS.prioridadBadge(t.prioridad)}</td>
+                <td><small>${window.SoporteJS.formatDate(t.actualizadoEn)}</small></td>`;
+            tr.addEventListener('click', () => openDrawer(t));
+            tbody.appendChild(tr);
+        });
+    }
+
+    // ---- DRAWER ----
+    function applyTicketToDrawer(ticket) {
+        if (!ticket) return;
+        document.getElementById('drawerCodigo').textContent = ticket.codigo || '';
+        document.getElementById('drawerTitulo').textContent = ticket.titulo || '';
+        document.getElementById('drawerBadges').innerHTML = window.SoporteJS.estadoBadge(ticket.estado) + ' ' + window.SoporteJS.prioridadBadge(ticket.prioridad);
+        document.getElementById('drawerDesc').textContent = ticket.descripcion || '';
+
+        const select = document.getElementById('drawerEstadoSelect');
+        if (document.activeElement !== select) select.value = ticket.estado || 'Abierto';
+
+        document.getElementById('drawerStaffInfo').innerHTML = ticket.staffNombre
+            ? `<strong style="color:#fff;">${escHtml(ticket.staffNombre)}</strong>`
+            : '<em>Sin asignar</em>';
+
+        const cat = window.SoporteJS.getCategoria(ticket.categoria);
+        document.getElementById('drawerInfoGrid').innerHTML = `
+            <div class="sadm-info-cell"><div class="sadm-info-cell-label">Usuario</div><div class="sadm-info-cell-val">${escHtml(ticket.usuarioNombre || '—')}</div></div>
+            <div class="sadm-info-cell"><div class="sadm-info-cell-label">Categoría</div><div class="sadm-info-cell-val">${cat.icon} ${cat.label}</div></div>
+            <div class="sadm-info-cell"><div class="sadm-info-cell-label">Creado</div><div class="sadm-info-cell-val" style="font-size:0.78rem;">${window.SoporteJS.formatDate(ticket.creadoEn)}</div></div>
+            <div class="sadm-info-cell"><div class="sadm-info-cell-label">Actualizado</div><div class="sadm-info-cell-val" style="font-size:0.78rem;">${window.SoporteJS.formatDate(ticket.actualizadoEn)}</div></div>`;
+    }
+
+    function syncDrawerFromList() {
+        if (!currentTicket) return;
+        const fresh = allTickets.find(t => t.id === currentTicket.id);
+        if (!fresh) return;
+        currentTicket = { ...currentTicket, ...fresh };
+        applyTicketToDrawer(currentTicket);
+    }
+
+    function stopDrawerListeners() {
+        [drawerTicketUnsub, comentariosUnsub, comentariosRolesUnsub].forEach(unsub => {
+            if (!unsub) return;
+            try { unsub(); } catch (e) {}
+        });
+        drawerTicketUnsub = null;
+        comentariosUnsub = null;
+        comentariosRolesUnsub = null;
+        comentariosActuales = [];
+    }
+
+    async function openDrawer(ticket) {
+        stopDrawerListeners();
+        currentTicket = ticket;
+        applyTicketToDrawer(ticket);
+
+        // El rol del autor pudo cambiar: invalidamos la cache de insignias.
+        if (typeof window.SoporteJS.limpiarCacheRoles === 'function') {
+            window.SoporteJS.limpiarCacheRoles();
+        }
+
+        document.getElementById('ticketDrawer').classList.add('open');
+        document.getElementById('drawerComentarios').innerHTML = '<em style="font-size:0.8rem;color:rgba(176,188,206,0.4);">Cargando...</em>';
+
+        try {
+            drawerTicketUnsub = await window.SoporteJS.suscribirTicket(ticket.id, fresh => {
+                if (!fresh || !currentTicket || currentTicket.id !== ticket.id) return;
+                currentTicket = { ...currentTicket, ...fresh };
+                applyTicketToDrawer(currentTicket);
+            }, err => console.warn('[Soporte] onSnapshot ticket:', err));
+
+            const unsubscribeComments = await window.SoporteJS.suscribirComentarios(ticket.id, comentarios => {
+                if (!currentTicket || currentTicket.id !== ticket.id) return;
+                comentariosActuales = comentarios;
+                if (comentariosRolesUnsub) comentariosRolesUnsub.update(comentarios);
+                renderComentarios(comentarios);
+            }, err => {
+                console.warn('[Soporte] onSnapshot comentarios:', err);
+                document.getElementById('drawerComentarios').innerHTML = '<em style="font-size:0.8rem;color:#f87171;">Error al cargar en tiempo real.</em>';
+            });
+            if (!currentTicket || currentTicket.id !== ticket.id) {
+                unsubscribeComments();
+                return;
+            }
+            comentariosUnsub = unsubscribeComments;
+            const unsubscribeRoles = await window.SoporteJS.suscribirCambiosRoles([], () => {
+                if (currentTicket && currentTicket.id === ticket.id && comentariosActuales.length) {
+                    renderComentarios(comentariosActuales);
+                }
+            }, error => console.error('[Soporte admin] No se pudieron observar cambios de rol:', error));
+            if (!currentTicket || currentTicket.id !== ticket.id) {
+                unsubscribeRoles();
+                return;
+            }
+            comentariosRolesUnsub = unsubscribeRoles;
+        } catch (err) {
+            console.error(err);
+            showToast(err.message || 'No se pudo abrir el ticket en tiempo real', 'error');
+            await loadDrawerComentarios(ticket.id);
+        }
+    }
+
+    let comentariosRenderSeq = 0;
+
+    async function renderComentarios(comentarios) {
+        const cont = document.getElementById('drawerComentarios');
+        if (!comentarios || !comentarios.length) {
+            cont.innerHTML = '<em style="font-size:0.8rem;color:rgba(176,188,206,0.4);">Sin comentarios.</em>';
+            return;
+        }
+
+        const seq = ++comentariosRenderSeq;
+        const roles = await window.SoporteJS.resolverRolesComentarios(comentarios);
+        // Evita pintar una respuesta antigua si llegó otra snapshot mientras resolvíamos roles.
+        if (seq !== comentariosRenderSeq) return;
+
+        cont.innerHTML = '';
+        comentarios.forEach(c => {
+            const rol = roles.get(window.SoporteJS.claveAutorComentario(c)) || (c.esStaff ? 'soporte' : 'usuario');
+            const badge = window.SoporteJS.rolBadgeHtml(rol);
+            const banda = window.SoporteJS.obtenerRolBadge(rol).color || '#00a715';
+            const div = document.createElement('div');
+            div.style.cssText = 'padding:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:8px;';
+            if (c.esStaff) div.style.borderColor = `${banda}33`;
+            div.innerHTML = `
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap;">
+                    <strong style="font-size:0.8rem;color:#fff;">${escHtml(c.autor)}</strong>
+                    ${badge}
+                    <span style="font-size:0.7rem;color:rgba(176,188,206,0.4);margin-left:auto;">${window.SoporteJS.formatDate(c.creadoEn)}</span>
+                </div>
+                <div style="font-size:0.82rem;color:rgba(176,188,206,0.8);line-height:1.5;white-space:pre-wrap;">${escHtml(c.texto)}</div>`;
+            cont.appendChild(div);
+        });
+        cont.scrollTop = cont.scrollHeight;
+    }
+
+    // Respaldo puntual si onSnapshot no está disponible.
+    async function loadDrawerComentarios(ticketId) {
+        const cont = document.getElementById('drawerComentarios');
+        cont.innerHTML = '<em style="font-size:0.8rem;color:rgba(176,188,206,0.4);">Cargando...</em>';
+        try {
+            const comentarios = await window.SoporteJS.getComentarios(ticketId);
+            if (currentTicket && currentTicket.id === ticketId) await renderComentarios(comentarios);
+        } catch (err) {
+            cont.innerHTML = '<em style="font-size:0.8rem;color:#f87171;">Error al cargar.</em>';
+        }
+    }
+
+    function closeDrawer() {
+        stopDrawerListeners();
+        document.getElementById('ticketDrawer').classList.remove('open');
+        currentTicket = null;
+    }
+
+    document.getElementById('closeDrawer')?.addEventListener('click', closeDrawer);
+    document.getElementById('closeDrawerFooter')?.addEventListener('click', closeDrawer);
+
+    // ---- CAMBIAR ESTADO ----
+    document.getElementById('cambiarEstadoBtn')?.addEventListener('click', async () => {
+        if (!currentTicket) return;
+        const btn = document.getElementById('cambiarEstadoBtn');
+        const nuevoEstado = document.getElementById('drawerEstadoSelect').value;
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> Aplicando...';
+        try {
+            const updated = await window.SoporteJS.actualizarTicket(currentTicket.id, { estado: nuevoEstado });
+            currentTicket = { ...currentTicket, ...updated };
+            applyTicketToDrawer(currentTicket);
+
+            const idx = allTickets.findIndex(t => t.id === currentTicket.id);
+            if (idx !== -1) allTickets[idx] = { ...allTickets[idx], ...updated };
+            updateKPIs();
+            renderTable();
+            showToast(`Estado cambiado a "${nuevoEstado}"`, 'success');
+        } catch (err) {
+            console.error('[Soporte admin] Error al cambiar estado:', err);
+            showToast(err.message || 'Error al cambiar estado', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    });
+
+    // ---- CERRAR TICKET ----
+    document.getElementById('cerrarTicketBtn')?.addEventListener('click', async () => {
+        if (!currentTicket) return;
+        if (!confirm(`¿Cerrar el ticket ${currentTicket.codigo}?`)) return;
+        const btn = document.getElementById('cerrarTicketBtn');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> Cerrando...';
+        try {
+            const staffName = currentStaff?.nombre || 'Staff';
+            await window.SoporteJS.cerrarTicket(currentTicket.id, staffName);
+            const updated = {
+                estado: 'Cerrado',
+                status: 'Cerrado',
+                cerradoPor: staffName,
+                actualizadoEn: new Date().toISOString()
+            };
+            currentTicket = { ...currentTicket, ...updated };
+            applyTicketToDrawer(currentTicket);
+
+            const idx = allTickets.findIndex(t => t.id === currentTicket.id);
+            if (idx !== -1) allTickets[idx] = { ...allTickets[idx], ...updated };
+            updateKPIs();
+            renderTable();
+            showToast('Ticket cerrado', 'success');
+        } catch (err) {
+            console.error('[Soporte admin] Error al cerrar ticket:', err);
+            showToast(err.message || 'Error al cerrar el ticket', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    });
+
+    // ---- ASIGNARME ----
+    document.getElementById('asignarmeBtn')?.addEventListener('click', async () => {
+        if (!currentTicket || !currentStaff) return;
+        const btn = document.getElementById('asignarmeBtn');
+        btn.disabled = true;
+        try {
+            const nuevoEstado = currentTicket.estado === 'Abierto' ? 'En Proceso' : currentTicket.estado;
+            const updated = await window.SoporteJS.actualizarTicket(currentTicket.id, {
+                staffAsignadoId: currentStaff.uid,
+                staffNombre: currentStaff.nombre,
+                estado: nuevoEstado
+            });
+            currentTicket = { ...currentTicket, ...updated };
+            applyTicketToDrawer(currentTicket);
+            const idx = allTickets.findIndex(t => t.id === currentTicket.id);
+            if (idx !== -1) allTickets[idx] = { ...allTickets[idx], ...updated };
+            updateKPIs();
+            renderTable();
+            showToast('Ticket asignado a ti', 'success');
+        } catch (err) {
+            console.error('[Soporte admin] Error al asignar:', err);
+            showToast(err.message || 'Error al asignar', 'error');
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    // ---- RESPONDER ----
+    document.getElementById('enviarRespuestaBtn')?.addEventListener('click', async () => {
+        if (!currentTicket || !currentStaff) return;
+        const txt = document.getElementById('staffComentario').value.trim();
+        if (!txt) return;
+        const btn = document.getElementById('enviarRespuestaBtn');
+        btn.disabled = true;
+        try {
+            await window.SoporteJS.agregarComentario(currentTicket.id, txt, currentStaff.nombre, currentStaff.uid, true, currentStaff.role);
+            document.getElementById('staffComentario').value = '';
+            // onSnapshot refresca la lista; este respaldo cubre el caso sin listener.
+            if (!comentariosUnsub) await loadDrawerComentarios(currentTicket.id);
+            showToast('Respuesta enviada', 'success');
+        } catch (err) {
+            console.error('[Soporte admin] Error al enviar respuesta:', err);
+            showToast(err.message || 'Error al enviar', 'error');
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    // ---- FILTERS ----
+    document.querySelectorAll('.sadm-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.sadm-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = btn.dataset.estado;
+            renderTable();
+        });
+    });
+
+    document.getElementById('searchInput')?.addEventListener('input', renderTable);
+    document.getElementById('refreshBtn')?.addEventListener('click', loadTickets);
+
+    // ---- INIT ----
+    document.addEventListener('firebaseReady', async () => {
+        const checkActiveUser = async (user) => {
+            const gate = document.getElementById('accessGate');
+            const root = document.getElementById('adminRoot');
+            if (!user) {
+                try {
+                    const rawDiscord = localStorage.getItem('discord_user_session');
+                    if (rawDiscord) {
+                        const dUser = JSON.parse(rawDiscord);
+                        if (dUser && isCeoIdentifier(dUser.username || dUser.displayName || dUser.email)) {
+                            user = dUser;
+                        }
+                    }
+                } catch(e) {}
+            }
+            if (!user) {
+                gate.querySelector('p').textContent = 'Debes iniciar sesión para acceder.';
+                gate.querySelector('h2').textContent = 'Acceso Denegado';
+                return;
+            }
+            const ok = await checkAccess(user);
+            if (!ok) {
+                gate.querySelector('p').textContent = 'No tienes permisos de staff para acceder a este panel.';
+                gate.querySelector('h2').textContent = 'Sin Permiso';
+                return;
+            }
+            gate.style.display = 'none';
+            root.style.display = 'flex';
+            document.getElementById('staffName').textContent = `${currentStaff?.nombre} (${currentStaff?.role})`;
+            await loadTickets();
+        };
+
+        // `window.onAuthStateChanged` es el adaptador de DiscordAuth:
+        // se suscribe incluso si la sesión aún no se hidrató.
+        if (typeof window.onAuthStateChanged === 'function') {
+            window.onAuthStateChanged(window.auth, checkActiveUser);
+        } else {
+            checkActiveUser(null);
+        }
+    });
+})();
+</script>
+</body>
+</html>

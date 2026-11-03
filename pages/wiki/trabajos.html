@@ -9,6 +9,11 @@
     <link rel="icon" href="../../recursos/PSGD.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="../../assets/css/modules.css">
+    <script src="../../assets/js/core/roles.js"></script>
+    <script src="../../assets/js/core/discord-auth.js"></script>
+    <script src="../../assets/js/core/role-badges.js"></script>
+    <script src="../../assets/js/core/firebase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
     <style>
         .wiki-section {
@@ -96,7 +101,9 @@
             box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
         }
         .wiki-search-box::before {
-            content: '🔍';
+            content: '\f002';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
             position: absolute;
             left: 12px;
             top: 50%;
@@ -254,6 +261,8 @@
             color: #cbd5e1;
         }
     </style>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 </head>
 <body data-site-root="../.." data-theme="dark" class="dark-mode">
     <div id="tsparticles"></div>
@@ -276,13 +285,14 @@
                     <a href="../videos.html">Videos</a>
                 </div>
             </div>
-            <a href="../minijuegos.html">Panter Core</a>
+            <a href="../nuestra-tierra.html">Nuestra Tierra</a>
             <a href="../donaciones.html">Apoyanos</a>
             <a href="../personal.html">Personal</a>
-            <a href="../perfil.html">Mi Perfil</a>
-            <a href="../meinteresa.html">Me Interesa</a>
+            <a href="../soporte.html">Soporte</a>
+            <a href="../admin/admin.html" id="adminNavLink" hidden>Panel Admin</a>
             <a href="como-comenzar.html" class="active">Wiki</a>
         </div>
+        <div class="nav-right"></div>
         <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
             <span></span><span></span><span></span>
         </button>
@@ -297,11 +307,11 @@
                 <a href="../videos.html">Videos</a>
             </div>
             <hr>
-            <a href="../minijuegos.html">Panter Core</a>
+            <a href="../nuestra-tierra.html">Nuestra Tierra</a>
             <a href="../donaciones.html">Apoyanos</a>
             <a href="../personal.html">Personal</a>
-            <a href="../perfil.html">Mi Perfil</a>
-            <a href="../meinteresa.html">Me Interesa</a>
+            <a href="../soporte.html">Soporte</a>
+            <a href="../admin/admin.html" id="adminNavLink" hidden>Panel Admin</a>
             <a href="como-comenzar.html" class="active">Wiki</a>
         </nav>
     </nav>
@@ -311,7 +321,7 @@
         <section class="wiki-section">
             
             <div class="wiki-header">
-                <div class="wiki-header-tag">📖 Centro de Soporte</div>
+                <div class="wiki-header-tag"><i class="fa-solid fa-book-open" aria-hidden="true"></i> Centro de Soporte</div>
                 <h1>Wiki del Juego</h1>
                 <p>Resuelve todas tus dudas sobre el simulador <strong>Nuestra Tierra Job Simulator</strong>. Aprende mecanicas, domina trabajos y maximiza tus ganancias.</p>
             </div>
@@ -327,24 +337,24 @@
                     <div class="wiki-menu">
                         <div class="wiki-menu-group">
                             <div class="wiki-menu-header">Introduccion</div>
-                            <a href="como-comenzar.html" class="wiki-nav-btn">🚀 Como Comenzar</a>
-                            <a href="mecanicas.html" class="wiki-nav-btn">🎮 Mecanicas de Juego</a>
-                            <a href="dispositivo-movil.html" class="wiki-nav-btn">📱 Dispositivo Movil</a>
-                            <a href="vehiculos.html" class="wiki-nav-btn">🚗 Vehiculos</a>
-                            <a href="mapas.html" class="wiki-nav-btn">🗺️ Mapas</a>
+                            <a href="como-comenzar.html" class="wiki-nav-btn"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Como Comenzar</a>
+                            <a href="mecanicas.html" class="wiki-nav-btn"><i class="fa-solid fa-gamepad" aria-hidden="true"></i> Mecanicas de Juego</a>
+                            <a href="dispositivo-movil.html" class="wiki-nav-btn"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> Dispositivo Movil</a>
+                            <a href="vehiculos.html" class="wiki-nav-btn"><i class="fa-solid fa-car" aria-hidden="true"></i> Vehiculos</a>
+                            <a href="mapas.html" class="wiki-nav-btn"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> Mapas</a>
                         </div>
 
                         <div class="wiki-menu-group">
                             <div class="wiki-menu-header">Profesiones</div>
-                            <a href="trabajos.html" class="wiki-nav-btn active">💼 Lista de Trabajos</a>
+                            <a href="trabajos.html" class="wiki-nav-btn active"><i class="fa-solid fa-briefcase" aria-hidden="true"></i> Lista de Trabajos</a>
                             <div class="wiki-nested-menu">
-                                <a href="mensajero.html" class="wiki-nested-btn">🚴 Mensajero</a>
+                                <a href="mensajero.html" class="wiki-nested-btn"><i class="fa-solid fa-person-biking" aria-hidden="true"></i> Mensajero</a>
                             </div>
                         </div>
 
                         <div class="wiki-menu-group">
                             <div class="wiki-menu-header">Soporte</div>
-                            <a href="faq.html" class="wiki-nav-btn">❓ Preguntas Frecuentes</a>
+                            <a href="faq.html" class="wiki-nav-btn"><i class="fa-solid fa-circle-question" aria-hidden="true"></i> Preguntas Frecuentes</a>
                         </div>
                     </div>
                 </aside>
@@ -352,7 +362,7 @@
                 <!-- MAIN WIKI CONTENT -->
                 <div class="wiki-content-card">
                     <div class="wiki-tab-panel" id="trabajo-intro">
-                        <h2>💼 Lista de Trabajos en el Simulador</h2>
+                        <h2><i class="fa-solid fa-briefcase" aria-hidden="true"></i> Lista de Trabajos en el Simulador</h2>
                         <p>En Nuestra Tierra, tu nivel de ingresos depende enteramente de tu desempeño en los distintos roles urbanos. Puedes alternar entre trabajos en cualquier momento:</p>
                         
                         <table class="job-stat-table">
@@ -366,22 +376,22 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>🚴 Mensajero / Repartidor</td>
+                                    <td><i class="fa-solid fa-person-biking" aria-hidden="true"></i> Mensajero / Repartidor</td>
                                     <td>Ninguno (Bicicleta de Inicio)</td>
                                     <td>Scooter Electrica o Moto</td>
-                                    <td>⭐ Fuerte (Bajo a Medio)</td>
+                                    <td><i class="fa-solid fa-star" aria-hidden="true"></i> Fuerte (Bajo a Medio)</td>
                                 </tr>
                                 <tr>
-                                    <td>🚕 Taxista / Conductor</td>
+                                    <td><i class="fa-solid fa-taxi" aria-hidden="true"></i> Taxista / Conductor</td>
                                     <td>Licencia Clase A + Auto Propio</td>
                                     <td>Sedan Urbano</td>
-                                    <td>⭐⭐ Medio</td>
+                                    <td><i class="fa-solid fa-star" aria-hidden="true"></i><i class="fa-solid fa-star" aria-hidden="true"></i> Medio</td>
                                 </tr>
                                 <tr>
-                                    <td>🚛 Camionero de Carga</td>
+                                    <td><i class="fa-solid fa-truck" aria-hidden="true"></i> Camionero de Carga</td>
                                     <td>Reputacion Nivel 5 + Camion</td>
                                     <td>Remolque Pesado</td>
-                                    <td>⭐⭐⭐ Alto</td>
+                                    <td><i class="fa-solid fa-star" aria-hidden="true"></i><i class="fa-solid fa-star" aria-hidden="true"></i><i class="fa-solid fa-star" aria-hidden="true"></i> Alto</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -394,7 +404,7 @@
 
         </section>
 
-        <!-- ★ Anuncio inferior -->
+        <!-- Anuncio inferior -->
         <div class="ad-slot-wrapper ad-horizontal" id="ad-bottom" style="margin-top:2rem;">
             <span class="ad-slot-label">Publicidad</span>
             <div class="ad-slot-inner">

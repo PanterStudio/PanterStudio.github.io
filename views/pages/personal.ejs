@@ -2,312 +2,316 @@
     title: 'Equipo & Rangos — Panter Studio', 
     currentPage: 'personal',
     description: undefined,
-    extraHead: `<style>
-        /* ===== EPIC TEAM STYLES ===== */
-        .team-section {
-            padding: 3rem 1rem;
+    extraHead: `<link rel="stylesheet" href="/assets/css/modules.css"><style>
+        /* ===== ULTRA MODERN TEAM & STAFF STYLES ===== */
+        :root {
+            --bg-body: #13161d;
+            --bg-card: rgba(22, 27, 40, 0.75);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-accent: #00b0ff;
+        }
+
+        body {
+            background-color: #13161d !important;
+            background-image: radial-gradient(ellipse at 30% 20%, rgba(0, 176, 255, 0.08) 0%, transparent 60%),
+                              radial-gradient(ellipse at 75% 80%, rgba(88, 101, 242, 0.06) 0%, transparent 55%) !important;
+            background-attachment: fixed !important;
+            color: #f0f4ff;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .team-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1.5rem 1rem 4rem 1rem;
+        }
+
+        /* Clean Header without big boxes */
+        .team-simple-header {
             text-align: center;
+            margin-bottom: 2.5rem;
+            padding-top: 1rem;
         }
 
-        .team-header {
-            margin-bottom: 3.5rem;
-        }
-
-        .team-header-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 5px 16px;
-            background: rgba(0, 176, 255, 0.1);
-            border: 1px solid rgba(0, 176, 255, 0.3);
-            border-radius: 100px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--color-secondary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 1.25rem;
-        }
-
-        .team-header h1 {
-            font-size: clamp(2.2rem, 6vw, 3.5rem);
+        .team-simple-header h1 {
+            font-size: clamp(2rem, 4.5vw, 3rem);
             font-weight: 800;
-            margin-bottom: 0.85rem;
-            background: linear-gradient(135deg, #fff 30%, #94a3b8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            margin: 0 0 0.5rem 0;
+            color: #ffffff;
             letter-spacing: -0.5px;
         }
 
-        .team-header p {
-            font-size: 1.05rem;
-            color: var(--text-secondary);
-            max-width: 580px;
+        .team-simple-header p {
+            font-size: 1rem;
+            color: #94a3b8;
             margin: 0 auto;
-            line-height: 1.5;
+            max-width: 500px;
+        }
+
+        /* Quick Stat Highlights */
+        .team-stats-strip {
+            display: flex;
+            justify-content: center;
+            gap: 2.5rem;
+            flex-wrap: wrap;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #ffffff;
+            display: block;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 700;
         }
 
         /* Staff Grid */
         .staff-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 2rem;
-            max-width: 1000px;
-            margin: 0 auto;
             justify-content: center;
         }
 
-        /* Glass Card */
+        /* Premium Glass Card */
         .staff-card {
-            background: rgba(28, 33, 46, 0.45);
+            background: rgba(22, 27, 40, 0.85);
             backdrop-filter: blur(20px);
             border-radius: 24px;
             padding: 2.5rem 2rem;
             text-align: center;
             position: relative;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 1.25rem;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+
+        .staff-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            transition: opacity 0.3s;
         }
 
         .staff-card:hover {
             transform: translateY(-8px);
         }
 
-        /* Card Glowing Overrides */
+        /* Theme Overrides for Cards */
         .card-gold {
-            border-color: rgba(251, 191, 36, 0.3);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4), 0 0 20px rgba(251, 191, 36, 0.05);
+            border-color: rgba(251, 191, 36, 0.25);
+        }
+        .card-gold::before {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
         }
         .card-gold:hover {
-            border-color: rgba(251, 191, 36, 0.6);
-            box-shadow: 0 15px 50px rgba(251, 191, 36, 0.12), 0 10px 40px rgba(0,0,0,0.4);
+            border-color: rgba(251, 191, 36, 0.55);
+            box-shadow: 0 16px 45px rgba(251, 191, 36, 0.12), 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         .card-red {
-            border-color: rgba(239, 68, 68, 0.3);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4), 0 0 20px rgba(239, 68, 68, 0.05);
+            border-color: rgba(239, 68, 68, 0.25);
+        }
+        .card-red::before {
+            background: linear-gradient(90deg, #dc2626, #ef4444);
         }
         .card-red:hover {
-            border-color: rgba(239, 68, 68, 0.6);
-            box-shadow: 0 15px 50px rgba(239, 68, 68, 0.12), 0 10px 40px rgba(0,0,0,0.4);
+            border-color: rgba(239, 68, 68, 0.55);
+            box-shadow: 0 16px 45px rgba(239, 68, 68, 0.12), 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         .card-aqua {
-            border-color: rgba(0, 240, 255, 0.3);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4), 0 0 20px rgba(0, 240, 255, 0.05);
+            border-color: rgba(0, 240, 255, 0.25);
+        }
+        .card-aqua::before {
+            background: linear-gradient(90deg, #00b0ff, #00f0ff);
         }
         .card-aqua:hover {
-            border-color: rgba(0, 240, 255, 0.6);
-            box-shadow: 0 15px 50px rgba(0, 240, 255, 0.12), 0 10px 40px rgba(0,0,0,0.4);
+            border-color: rgba(0, 240, 255, 0.55);
+            box-shadow: 0 16px 45px rgba(0, 240, 255, 0.12), 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
-        /* Stylized Avatar Frame */
+        /* Avatar Frame */
         .avatar-frame {
-            width: 100px;
-            height: 100px;
+            width: 96px;
+            height: 96px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            background: rgba(0,0,0,0.3);
-            font-size: 3.2rem;
-            box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
-            transition: all 0.3s;
+            background: rgba(15, 23, 42, 0.8);
+            font-size: 3rem;
+            margin-bottom: 1.25rem;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .staff-card:hover .avatar-frame {
+            transform: scale(1.08);
         }
 
         .frame-gold {
             border: 3px solid #fbbf24;
-            box-shadow: 0 0 20px rgba(251, 191, 36, 0.3), inset 0 2px 8px rgba(0,0,0,0.5);
+            box-shadow: 0 0 24px rgba(251, 191, 36, 0.35);
         }
         .frame-red {
             border: 3px solid #ef4444;
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.3), inset 0 2px 8px rgba(0,0,0,0.5);
+            box-shadow: 0 0 24px rgba(239, 68, 68, 0.35);
         }
         .frame-aqua {
             border: 3px solid #00f0ff;
-            box-shadow: 0 0 20px rgba(0, 240, 255, 0.3), inset 0 2px 8px rgba(0,0,0,0.5);
+            box-shadow: 0 0 24px rgba(0, 240, 255, 0.35);
         }
 
         /* Badges */
+        .staff-badge-group {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
         .staff-badge {
             font-size: 0.72rem;
             font-weight: 800;
             padding: 4px 14px;
             border-radius: 100px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: -0.5rem;
+            letter-spacing: 0.6px;
         }
 
         .badge-gold {
-            background: rgba(251, 191, 36, 0.15);
-            border: 1px solid rgba(251, 191, 36, 0.3);
+            background: rgba(251, 191, 36, 0.12);
+            border: 1px solid rgba(251, 191, 36, 0.35);
             color: #fbbf24;
-            text-shadow: 0 0 4px rgba(251, 191, 36, 0.3);
         }
         .badge-red {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #ef4444;
-            text-shadow: 0 0 4px rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #f87171;
         }
         .badge-aqua {
-            background: rgba(0, 240, 255, 0.15);
-            border: 1px solid rgba(0, 240, 255, 0.3);
-            color: #00f0ff;
-            text-shadow: 0 0 4px rgba(0, 240, 255, 0.3);
+            background: rgba(0, 240, 255, 0.12);
+            border: 1px solid rgba(0, 240, 255, 0.35);
+            color: #38bdf8;
+        }
+        .badge-purple {
+            background: rgba(168, 85, 247, 0.12);
+            border: 1px solid rgba(168, 85, 247, 0.35);
+            color: #c084fc;
         }
 
         .staff-name {
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             font-weight: 800;
-            color: #fff;
-            margin: 0;
+            color: #f8fafc;
+            margin: 0 0 0.35rem 0;
+            letter-spacing: -0.3px;
         }
 
         .staff-title {
-            font-size: 0.82rem;
-            color: var(--color-secondary);
+            font-size: 0.85rem;
+            color: #38bdf8;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            margin-top: -0.75rem;
+            margin-bottom: 1rem;
         }
 
         .staff-desc {
-            font-size: 0.88rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            margin: 0;
+            font-size: 0.9rem;
+            color: #94a3b8;
+            line-height: 1.55;
+            margin: 0 0 1.5rem 0;
             flex-grow: 1;
         }
 
+        /* Staff Meta Table */
         .staff-meta {
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(255,255,255,0.04);
-            margin-top: 0.5rem;
+            gap: 10px;
+            padding-top: 1.25rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 14px;
+            padding: 1rem;
         }
 
         .meta-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.8rem;
+            font-size: 0.82rem;
         }
 
         .meta-label {
-            color: var(--text-muted);
+            color: #64748b;
             font-weight: 600;
         }
 
         .meta-value {
-            color: var(--text-secondary);
+            color: #cbd5e1;
             font-weight: 700;
         }
-    </style>`
-  }) %>
 
-</nav>
+        .status-online {
+            color: #4ade80;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
 
-    <!-- MAIN CONTENT -->
-    <div class="container" style="padding-top: 0.5rem;">
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: #4ade80;
+            box-shadow: 0 0 8px #4ade80;
+        }
+    </style><link rel="stylesheet" href="/assets/css/personal.css">` }) %>
+    <div class="team-container" style="padding-top: 2rem;">
 
-        <!-- ★ Anuncio superior -->
-        <div class="ad-slot-wrapper ad-horizontal" id="ad-top">
-            <span class="ad-slot-label">Publicidad</span>
-            <div class="ad-slot-inner">
-                <ins class="adsbygoogle"
-                     style="display:block"
-                     data-ad-client="ca-pub-8870488962578785"
-                     data-ad-slot="AUTO"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-            </div>
-        </div>
+        <header class="ps-team-intro">
+            <span class="ps-team-eyebrow"><i class="fa-solid fa-sitemap" aria-hidden="true"></i> Panter Studio · Organización</span>
+            <h1>Nuestro equipo</h1>
+            <p>Conoce a las personas que hacen crecer nuestros proyectos. Los rangos y la disponibilidad se actualizan en tiempo real.</p>
+            <span class="ps-team-live"><span class="ps-team-live-dot" aria-hidden="true"></span> Sincronizado con Firestore</span>
+        </header>
 
-        <section class="team-section">
-            <div class="team-header">
-                <div class="team-header-tag">👥 Staff Oficial</div>
-                <h1>Equipo Panter Studio</h1>
-                <p>El núcleo de desarrollo y administración detrás de <strong>Nuestra Tierra Job Simulator</strong> y toda la infraestructura comunitaria.</p>
-            </div>
-
-            <div class="staff-grid">
-                <!-- PANTERGAMEYT (CEO) -->
-                <div class="staff-card card-gold">
-                    <div class="avatar-frame frame-gold">👑</div>
-                    <span class="staff-badge badge-gold">Fundador / CEO</span>
-                    <h3 class="staff-name">PanterGameYT</h3>
-                    <span class="staff-title">Director del Estudio</span>
-                    <p class="staff-desc">Fundador de Panter Studio y líder general. Responsable de la visión creativa, el diseño y la dirección general de todos los proyectos y el simulador.</p>
-                    <div class="staff-meta">
-                        <div class="meta-row"><span class="meta-label">Rango</span><span class="meta-value" style="color:#fbbf24;">Fundador / CEO</span></div>
-                        <div class="meta-row"><span class="meta-label">Especialidad</span><span class="meta-value">Dirección Creativa</span></div>
-                        <div class="meta-row"><span class="meta-label">Estado</span><span class="meta-value" style="color:var(--color-green);">Activo ⚡</span></div>
-                    </div>
-                </div>
-
-                <!-- DAYJHO (DIRECTOR) -->
-                <div class="staff-card card-red">
-                    <div class="avatar-frame frame-red">🛡️</div>
-                    <span class="staff-badge badge-red">Director</span>
-                    <h3 class="staff-name">Dayjho</h3>
-                    <span class="staff-title">Director de Nuestra Tierra & Admin General</span>
-                    <p class="staff-desc">Director principal del proyecto "Nuestra Tierra Job Simulator" y Administrador General. Encargado de la jugabilidad, mecánicas y la supervisión del staff.</p>
-                    <div class="staff-meta">
-                        <div class="meta-row"><span class="meta-label">Rango</span><span class="meta-value" style="color:#ef4444;">Director de NT</span></div>
-                        <div class="meta-row"><span class="meta-label">Especialidad</span><span class="meta-value">Supervisión Técnica</span></div>
-                        <div class="meta-row"><span class="meta-label">Estado</span><span class="meta-value" style="color:var(--color-green);">Activo ⚡</span></div>
-                    </div>
-                </div>
-
-                <!-- FENIX (ADMIN GENERAL + DISCORD DEV) -->
-                <div class="staff-card card-aqua">
-                    <div class="avatar-frame frame-aqua">⚡</div>
-                    <div style="display:flex; flex-direction:column; align-items:center; gap:6px; margin-top:-0.25rem;">
-                        <span class="staff-badge badge-aqua">Administrador</span>
-                        <span style="font-size:0.65rem; font-weight:800; padding:3px 10px; border-radius:100px; text-transform:uppercase; letter-spacing:0.5px; background:rgba(168,85,247,0.12); border:1px solid rgba(168,85,247,0.3); color:#d8b4fe;">Desarrollador Discord</span>
-                    </div>
-                    <h3 class="staff-name">Fenix</h3>
-                    <span class="staff-title">Administrador General & Dev del Discord</span>
-                    <p class="staff-desc">Administrador General de Panter Studio. Responsable de toda la estructura del servidor de Discord: estilos, roles, bots, sistemas automáticos, canales y la experiencia comunitaria.</p>
-                    <div class="staff-meta">
-                        <div class="meta-row"><span class="meta-label">Rango</span><span class="meta-value" style="color:#00f0ff;">Administrador General</span></div>
-                        <div class="meta-row"><span class="meta-label">Discord</span><span class="meta-value" style="color:#d8b4fe;">Programador & Dev 💬</span></div>
-                        <div class="meta-row"><span class="meta-label">Especialidad</span><span class="meta-value">Roles, Bots & Estilos</span></div>
-                        <div class="meta-row"><span class="meta-label">Estado</span><span class="meta-value" style="color:var(--color-green);">Activo ⚡</span></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ★ Anuncio inferior -->
-        <div class="ad-slot-wrapper ad-horizontal" id="ad-bottom" style="margin-top:2rem;">
-            <span class="ad-slot-label">Publicidad</span>
-            <div class="ad-slot-inner">
-                <ins class="adsbygoogle"
-                     style="display:block"
-                     data-ad-client="ca-pub-8870488962578785"
-                     data-ad-slot="AUTO"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+        <div class="ps-team-toolbar" id="teamFilters" aria-label="Filtrar personal por rango"></div>
+        <div class="ps-team-tree" id="staffGrid">
+            <div class="ps-team-empty">
+                <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+                <strong>Cargando equipo…</strong>
+                <p>Sincronizando miembros, rangos y colores desde Firestore.</p>
             </div>
         </div>
 
     </div>
 
-
-
+<script src="/assets/js/core/discord-auth.js"></script>
+<script src="/assets/js/core/firebase-config.js"></script>
+<script src="/assets/js/pages/personal.js"></script>
 <%- include('partials/footer') %>

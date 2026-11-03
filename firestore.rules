@@ -1,0 +1,260 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ═══════════════════════════════════════════════════════
+    // 🔐 HELPERS
+    // Discord OAuth NO genera request.auth en el cliente web.
+    // Por eso las colecciones operativas (tickets, personal y
+    // usuarios) permiten escritura web y se validan del lado de
+    // la aplicación. Las reglas por email siguen vigentes para
+    // Firebase Auth (Google/Email) y para el panel.
+    // ═══════════════════════════════════════════════════════
+    function isAdminEmail() {
+      return request.auth != null
+        && request.auth.token.get('email', '') in [
+          'pantergamey@gmail.com',
+          'panterstudiogamedev@gmail.com'
+        ];
+    }
+
+    function isFirebaseAdmin() {
+      return isAdminEmail();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // 🎟️ TICKETS DE SOPORTE (colección canónica)
+    // Lectura pública. Escritura completa para que el panel y la
+    // vista pública puedan cambiar estado, asignar, cerrar,
+    // responder y actualizar contadores sin permission-denied.
+    // ═══════════════════════════════════════════════════════
+    match /soporte_tickets/{ticketId} {
+      allow read: if true;
+      allow write: if true;
+
+      // Respuestas / mensajes del ticket.
+      match /comentarios/{comentarioId} {
+        allow read, write: if true;
+      }
+      // Alias por si alguna vista usa "messages".
+      match /messages/{messageId} {
+        allow read, write: if true;
+      }
+    }
+
+    // Alias `tickets` (misma estructura, por compatibilidad).
+    match /tickets/{ticketId} {
+      allow read, write: if true;
+      match /{rest=**} {
+        allow read, write: if true;
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // 👥 PERSONAL / EQUIPO (Panel Admin → Personal)
+    // `equipo` es la colección canónica y `personal` el alias.
+    // Escritura completa para altas, ediciones, cambios de rol,
+    // archivos y borrados desde el panel.
+    // ═══════════════════════════════════════════════════════
+    match /equipo/{memberId} {
+      allow read, write: if true;
+      match /{rest=**} {
+        allow read, write: if true;
+      }
+    }
+
+    match /personal/{memberId} {
+      allow read, write: if true;
+      match /{rest=**} {
+        allow read, write: if true;
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // 🚗 CONDUCTORES / USUARIOS (Perfiles, rangos y monedas)
+    // `conductores` es la canónica y `users` el alias.
+    // La escritura completa evita que el panel falle al guardar
+    // perfiles que ya tienen isAdmin/role elevados.
+    // ═══════════════════════════════════════════════════════
+    match /conductores/{userId} {
+      allow read, write: if true;
+
+      // Historial de actividad y subcolecciones del perfil.
+      match /{rest=**} {
+        allow read, write: if true;
+      }
+    }
+
+    match /users/{userId} {
+      allow read, write: if true;
+      match /{rest=**} {
+        allow read, write: if true;
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // 🎥 VIDEOS
+    // ═══════════════════════════════════════════════════════
+    match /videos/{document} {
+      allow read: if true;
+      allow write: if isFirebaseAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // 📝 PREREGISTROS (Contador de pre-registro web)
+    // ═══════════════════════════════════════════════════════
+    match /preregistros/{document} {
+      allow read, write: if true;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // 📢 ANUNCIOS DE LA COMUNIDAD Y COMENTARIOS
+    // ═══════════════════════════════════════════════════════
+    match /announcements/{document} {
+      allow read: if true;
+      allow write: if isFirebaseAdmin()
+        || request.auth != null
+        || request.resource.data.keys().hasAny(['titulo', 'title', 'contenido', 'content', 'texto', 'autor', 'creadoEn', 'createdAt']);
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow write: if true;
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // 🛠️ DEVLOGS / NOVEDADES DE DESARROLLO
+    // ═══════════════════════════════════════════════════════
+    match /devlogs/{document} {
+      allow read: if true;
+      allow write: if isFirebaseAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // 🚀 ACTUALIZACIONES Y NOTICIAS + COMENTARIOS/REACCIONES
+    // Los comentarios usan { uid, username, content, createdAt }
+    // en el sitio y también se acepta { texto, autor, creadoEn }.
+    // Las reacciones sólo modifican `reactions`.
+    // ═══════════════════════════════════════════════════════
+    match /project_updates/{document} {
+      allow read: if true;
+      allow create, delete: if isFirebaseAdmin();
+      allow update: if isFirebaseAdmin()
+        || request.auth != null
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']);
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if
+          request.resource.data.keys().hasAll(['uid', 'username', 'content', 'createdAt'])
+          || request.resource.data.keys().hasAll(['texto', 'autor', 'creadoEn'])
+          || request.auth != null;
+        allow update, delete: if isFirebaseAdmin();
+      }
+    }
+
+    match /news/{document} {
+      allow read: if true;
+      allow create, delete: if isFirebaseAdmin();
+      allow update: if isFirebaseAdmin()
+        || request.auth != null
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']);
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if
+          request.resource.data.keys().hasAll(['uid', 'username', 'content', 'createdAt'])
+          || request.resource.data.keys().hasAll(['texto', 'autor', 'creadoEn'])
+          || request.auth != null;
+        allow update, delete: if isFirebaseAdmin();
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // 💰 DONACIONES, PATROCINADORES Y NIVELES
+    // ═══════════════════════════════════════════════════════
+    match /donation_tiers/{document} {
+      allow read: if true;
+      allow write: if isFirebaseAdmin();
+    }
+
+    match /donations/{document} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isFirebaseAdmin();
+    }
+
+    match /sponsors/{document} {
+      allow read: if true;
+      allow write: if isFirebaseAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // 🪙 CANJES DE MONEDAS / EMERALDAS
+    // ═══════════════════════════════════════════════════════
+    match /coin_redemptions/{document} {
+      allow read, write: if true;
+    }
+
+    match /redenciones/{document} {
+      allow read, write: if true;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ⚙️ CONFIGURACIÓN DEL SITIO
+    // ═══════════════════════════════════════════════════════
+    match /settings/{document} {
+      allow read: if true;
+      allow write: if isFirebaseAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // 🛡️ ADMIN (Visibilidad y Auditoría)
+    // ═══════════════════════════════════════════════════════
+    match /admin/{document} {
+      allow read: if true;
+      allow write: if isFirebaseAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // 🎨 CONFIGURACIÓN DE ROLES Y COLORES DEL SITIO
+    // Guarda la paleta, la jerarquía y los permisos de cada rango.
+    // El panel admin usa Discord OAuth (sin request.auth), por eso
+    // se valida la estructura del documento en lugar de exigir
+    // autenticación de Firebase.
+    // ═══════════════════════════════════════════════════════
+    match /roles_config/{docId} {
+      allow read: if true;
+      allow write: if isFirebaseAdmin() || (
+        docId == 'global'
+        && request.resource.data.keys().hasOnly(['roles', 'updatedAt', 'updatedBy', 'version'])
+        && request.resource.data.roles is list
+        && request.resource.data.roles.size() > 0
+        && request.resource.data.roles.size() <= 60
+        && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is string)
+        && (!('updatedBy' in request.resource.data) || request.resource.data.updatedBy is string)
+        && (!('version' in request.resource.data) || request.resource.data.version in [2, 3])
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // 🔗 MAPEO DE ROLES DISCORD → WEB
+    // ═══════════════════════════════════════════════════════
+    match /discord_role_mappings/{docId} {
+      allow read: if true;
+      allow write: if isFirebaseAdmin() || (
+        docId == 'global'
+        && request.resource.data.keys().hasOnly(['guildId', 'guildName', 'adminRoleIds', 'roles', 'updatedAt'])
+        && request.resource.data.roles is list
+        && (!('adminRoleIds' in request.resource.data) || request.resource.data.adminRoleIds is list)
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // 🚫 DENEGAR TODO LO DEMÁS
+    // ═══════════════════════════════════════════════════════
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

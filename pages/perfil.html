@@ -3,41 +3,45 @@
 <head>
   <meta charset="UTF-8">
   
-  <!-- 📱 Viewport Optimizado para Móviles -->
+  <!-- Viewport Optimizado para Móviles -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
   
-  <!-- 🔍 SEO -->
+  <!-- SEO -->
   <title>Mi Perfil — Panter Studio</title>
   <meta name="description" content="Gestiona tu cuenta, monedas, recompensas y actividad en Panter Studio.">
   
-  <!-- 🌐 PWA & Theme -->
+  <!-- PWA & Theme -->
   <meta name="theme-color" content="#1e70c8">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
-  <!-- ⚡ Performance: Preconnect -->
+  <!-- Performance: Preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://pagead2.googlesyndication.com">
   
-  <!-- 🔖 Iconos -->
+  <!-- Iconos -->
   <link rel="icon" href="../recursos/PSGD.png" type="image/png">
   <link rel="apple-touch-icon" href="../recursos/PSGD.png">
   
-  <!-- 🎨 Fuentes & Estilos -->
+  <!-- Fuentes & Estilos -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/modules.css">
   
-  <!-- 📊 Scripts Externos (Async/Defer) -->
+  <!-- Scripts Externos (Async/Defer) -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
   <meta name="google-adsense-account" content="ca-pub-8870488962578785">
   <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js" defer></script>
   
-  <!-- 🧠 Config Firebase -->
+  <!-- Config Firebase -->
+  <script src="../assets/js/core/roles.js"></script>
+  <script src="../assets/js/core/discord-auth.js"></script>
+  <script src="../assets/js/core/role-badges.js"></script>
   <script src="../assets/js/core/firebase-config.js" defer></script>
   <script src="../assets/js/site-visibility.js" defer></script>
   
-  <!-- 🎨 CSS Inline Optimizado (Mobile-First) -->
+  <!-- CSS Inline Optimizado (Mobile-First) -->
   <style>
   /* ========================================
      BASE & RESET (Mobile-First)
@@ -266,97 +270,312 @@
   }
   
   /* ========================================
-     HERO CARD (Perfil Principal - Banner)
+     HERO CARD (Perfil Principal Ultra Moderno)
      ======================================== */
   .ph {
     position: relative;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    align-items: flex-end;
-    min-height: 250px;
-    padding: 2rem;
-    background: linear-gradient(to top, rgba(11, 15, 25, 0.98) 0%, rgba(11, 15, 25, 0.2) 100%), 
-                url('https://media.discordapp.net/attachments/1475940325280321556/1500515683736223744/Nuestra_Tierra_Job_Simulator.png?ex=6a1da1a1&is=6a1c5021&hm=4b631211f8be9a6f6d14c6af439ddab1f3745a986980ed10f4d103fe59beeeb9&=&format=webp&quality=lossless&width=1730&height=508') no-repeat center center;
+    align-items: center;
+    min-height: 220px;
+    padding: 2.2rem;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 41, 59, 0.85) 100%), 
+                url('https://media.discordapp.net/attachments/1475940325280321556/1500515683736223744/Nuestra_Tierra_Job_Simulator.png?format=webp&quality=lossless&width=1730&height=508') no-repeat center center;
     background-size: cover;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-lg);
-    margin-bottom: var(--space-md);
-    box-shadow: var(--shadow-card);
+    border: 1px solid rgba(88, 101, 242, 0.35);
+    border-radius: 24px;
+    margin-bottom: 1.8rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 35px rgba(88, 101, 242, 0.15);
+    backdrop-filter: blur(12px);
     flex-wrap: wrap;
-    gap: 1.5rem;
+    gap: 1.8rem;
+    overflow: hidden;
+  }
+
+  .ph::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, #5865F2, #00f2fe, #38ef7d, #5865F2);
+    background-size: 300% 100%;
+    animation: gradientMove 6s linear infinite;
+  }
+
+  @keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
   
   .ph-main-row {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1.8rem;
     flex-wrap: wrap;
   }
   
   .ph-avatar-wrap {
     position: relative;
+    padding: 4px;
+    background: linear-gradient(135deg, #5865F2 0%, #00f2fe 50%, #4facfe 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 25px rgba(88, 101, 242, 0.45);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .ph-avatar-wrap:hover {
+    transform: scale(1.06) rotate(2deg);
+    box-shadow: 0 0 35px rgba(0, 242, 254, 0.6);
   }
   
   .ph-avatar {
-    width: 90px;
-    height: 90px;
+    width: 105px;
+    height: 105px;
     border-radius: 50%;
-    background: rgba(11, 15, 25, 0.9);
-    border: 3px solid #00b0ff;
+    background: #0d0e12;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2.5rem;
-    flex-shrink: 0;
+    font-size: 2.8rem;
     overflow: hidden;
-    box-shadow: 0 0 20px rgba(0, 176, 255, 0.5);
-    transition: transform var(--transition-fast);
-  }
-  
-  .ph-avatar:hover {
-    transform: scale(1.05);
   }
   
   .ph-avatar img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 50%;
+  }
+
+  .ph-status-dot {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    background: #23a55a;
+    border: 3.5px solid #0f172a;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #23a55a;
   }
   
   .ph-info h2 {
     margin: 0;
-    color: #fff;
-    font-size: 1.6rem;
+    font-size: 1.85rem;
     font-weight: 800;
-    line-height: 1.2;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #ffffff 40%, #a5f3fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
     word-break: break-word;
   }
-  
+
+  .ph-name-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .discord-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: rgba(88, 101, 242, 0.2);
+    border: 1px solid rgba(88, 101, 242, 0.45);
+    border-radius: 20px;
+    color: #5865F2;
+    font-size: 0.76rem;
+    font-weight: 700;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 0 12px rgba(88, 101, 242, 0.2);
+  }
+
+  .ph-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+
+  .role-pill {
+    padding: 3px 12px;
+    background: linear-gradient(135deg, rgba(88, 101, 242, 0.25), rgba(0, 242, 254, 0.15));
+    border: 1px solid rgba(88, 101, 242, 0.5);
+    border-radius: 8px;
+    color: #a5f3fc;
+    font-weight: 800;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .ph-divider {
+    color: rgba(255, 255, 255, 0.2);
+  }
+
+  .uid-chip {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.78rem;
+    color: #94a3b8;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .ph-level-bar-wrap {
+    margin-top: 12px;
+    width: 260px;
+  }
+
+  .ph-level-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.76rem;
+    font-weight: 800;
+    margin-bottom: 5px;
+  }
+
+  .level-tag {
+    color: #38bdf8;
+  }
+
+  .streak-tag {
+    color: #fbbf24;
+  }
+
+  .ph-level-bar-track {
+    height: 8px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    overflow: hidden;
+    padding: 1px;
+  }
+
+  .ph-level-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #06b6d4, #34d399);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.7);
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
   .ph-badges {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin-top: var(--space-xs);
+    margin-top: 8px;
   }
-  
+
+  .ph-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-logout-premium {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 14px;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1.5px solid rgba(239, 68, 68, 0.4);
+    color: #f87171;
+    font-weight: 800;
+    font-size: 0.85rem;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.15);
+  }
+
+  .btn-logout-premium:hover {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #ffffff;
+    border-color: #ef4444;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.45);
+  }
+
+  .discord-role-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  }
+
+  .discord-role-pill.role-ceo {
+    background: rgba(245, 158, 11, 0.2);
+    border: 1px solid rgba(245, 158, 11, 0.5);
+    color: #fbbf24;
+  }
+
+  .discord-role-pill.role-admin {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    color: #f87171;
+  }
+
+  .discord-role-pill.role-support {
+    background: rgba(14, 165, 233, 0.2);
+    border: 1px solid rgba(14, 165, 233, 0.5);
+    color: #38bdf8;
+  }
+
+  .discord-role-pill.role-mod {
+    background: rgba(168, 85, 247, 0.2);
+    border: 1px solid rgba(168, 85, 247, 0.5);
+    color: #c084fc;
+  }
+
+  .discord-role-pill.role-member {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: #60a5fa;
+  }
+
+  .discord-role-pill.role-discord {
+    background: rgba(88, 101, 242, 0.2);
+    border: 1px solid rgba(88, 101, 242, 0.5);
+    color: #818cf8;
+  }
+
+  .discord-role-pill.role-discord-server {
+    background: linear-gradient(135deg, rgba(88, 101, 242, 0.25), rgba(168, 85, 247, 0.2));
+    border: 1px solid rgba(168, 85, 247, 0.5);
+    color: #e9d5ff;
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.25);
+  }
+
+  .discord-role-pill.role-gamer {
+    background: rgba(34, 197, 94, 0.2);
+    border: 1px solid rgba(34, 197, 94, 0.5);
+    color: #4ade80;
+  }
+
   .ph-right {
     display: flex;
-    gap: var(--space-sm);
+    gap: 14px;
     align-items: center;
     flex-wrap: wrap;
     justify-content: flex-end;
   }
-  
+
   .coins-chip {
-    background: rgba(251,191,36,.12);
-    border: 1px solid rgba(251,191,36,.25);
-    border-radius: 12px;
-    padding: 8px 16px;
-    text-align: center;
-    white-space: nowrap;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   }
   
   .coins-chip b {
@@ -371,6 +590,196 @@
     font-size: .75rem;
     color: #fbbf24;
     display: block;
+  }
+
+  /* NAVEGACIÓN POR PESTAÑAS DEL PERFIL */
+  .profile-nav-container {
+    margin-top: 24px;
+    margin-bottom: 24px;
+  }
+
+  .profile-nav-tabs {
+    display: flex;
+    gap: 10px;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(12px);
+    padding: 8px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    overflow-x: auto;
+  }
+
+  .profile-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 22px;
+    border-radius: 12px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-family: inherit;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+  }
+
+  .profile-tab-btn:hover {
+    color: #f8fafc;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .profile-tab-btn.active {
+    color: #ffffff;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.8), rgba(99, 102, 241, 0.8));
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.35);
+  }
+
+  .profile-tab-content {
+    display: none;
+    animation: fadeIn 0.35s ease;
+  }
+
+  .profile-tab-content.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SECCIÓN DE TICKETS */
+  .tickets-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .tickets-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-create-ticket {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.88rem;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .btn-create-ticket:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+  }
+
+  .tickets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+
+  .ticket-card {
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 20px;
+    transition: all 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .ticket-card:hover {
+    border-color: rgba(59, 130, 246, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  .ticket-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .ticket-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #38bdf8;
+    background: rgba(14, 165, 233, 0.15);
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(14, 165, 233, 0.3);
+  }
+
+  .ticket-status {
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .ticket-status.abierto {
+    background: rgba(34, 197, 94, 0.18);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+  }
+
+  .ticket-status.cerrado {
+    background: rgba(239, 68, 68, 0.18);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+  }
+
+  .ticket-card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 8px;
+  }
+
+  .ticket-card-desc {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    line-height: 1.4;
+    margin-bottom: 14px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .ticket-card-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #64748b;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 12px;
   }
 
   /* Game Library Grid */
@@ -1489,22 +1898,21 @@
   }
   .pb.sec {
     background: transparent;
-    border-color: rgba(255,255,255,0.08);
-    color: var(--text-primary);
-  }
-  .pb.sec:hover {
+    .pb.sec:hover {
     background: rgba(255,255,255,0.05);
     border-color: var(--text-primary);
   }
   </style>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 </head>
 
 <body data-site-root=".." data-theme="dark" class="dark-mode">
   
-  <!-- 🎆 Background Particles -->
+  <!-- Background Particles -->
   <div id="tsparticles" aria-hidden="true"></div>
   
-  <!-- 🧭 Navegación -->
+  <!-- Navegación -->
   <nav role="navigation" aria-label="Menú principal">
     <div class="nav-left">
       <a href="../index.html" class="nav-logo">
@@ -1514,566 +1922,516 @@
     </div>
     <div class="nav-middle">
       <a href="../index.html">Inicio</a>
+      <a href="nuestra-tierra.html">Nuestra Tierra</a>
       <div class="nav-dropdown">
         <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">Novedades</button>
         <div class="nav-dropdown-menu">
           <a href="actualizaciones.html">Actualizaciones</a>
-          <a href="imagenes.html">Galeria</a>
+          <a href="imagenes.html">Galería</a>
+          <a href="videos.html">Videos</a>
         </div>
       </div>
-      <a href="minijuegos.html">Minijuegos</a>
-      <a href="donaciones.html">Apoyanos</a>
+      <a href="donaciones.html">Apóyanos</a>
       <a href="personal.html">Personal</a>
-      <a href="perfil.html" class="active">Mi Perfil</a>
-      <a href="meinteresa.html">Me Interesa</a>
-            <a href="wiki.html">Wiki</a>
+      <a href="soporte.html">Soporte</a>
+      <a href="admin/admin.html" id="adminNavLink" hidden>Panel Admin</a>
     </div>
-        <button class="nav-hamburger" aria-label="Menú" aria-expanded="false">
-            <span></span><span></span><span></span>
-        </button>
-        <!-- Mobile menu -->
-        <nav class="nav-mobile-menu">
-            <a href="../index.html">Inicio</a>
-            <hr>
-            <span style="font-size:0.75rem;color:var(--text-muted);padding:0.5rem 1rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Novedades</span>
-            <div class="nav-mobile-sub">
-                <a href="actualizaciones.html">Actualizaciones</a>
-                <a href="imagenes.html">Galeria</a>
-                <a href="videos.html">Videos</a>
-            </div>
-            <hr>
-            <a href="minijuegos.html">Minijuegos</a>
-            <a href="donaciones.html">Apoyanos</a>
-            <a href="personal.html">Personal</a>
-            <a href="perfil.html" class="active">Mi Perfil</a>
-            <a href="meinteresa.html">Me Interesa</a>
-            <a href="wiki.html">Wiki</a>
-        </nav>
-  </nav>
-  
-  <!-- 🔐 AUTH GATE (Login/Register) -->
-  <main id="profileAuthSection" class="auth-gate" role="main">
-    <div class="auth-card" role="dialog" aria-labelledby="authTitle">
-      <img src="../recursos/PSGD.png" alt="Panter Studio" class="auth-logo" width="64" height="64">
-      <h1 id="authTitle">Mi Perfil</h1>
-      <p>Conéctate con tu cuenta de Google para ver tu progreso, monedas y recompensas.</p>
-      
-      <button type="button" id="googleAuthBtn" class="pb sec pb-full" style="display: flex; gap: 10px; align-items: center; justify-content: center; width: 100%;">
-          <img src="../recursos/google-logo.svg" alt="Google" width="18" height="18" onerror="this.style.display='none'">
-          Continuar con Google
-      </button>
-      
-      <!-- Mensajes de estado -->
-      <div id="authMessage" class="auth-msg" role="status" aria-live="polite"></div>
-
-      <!-- Hidden compatibility elements for perfil.js -->
-      <div style="display: none !important;">
-        <!-- Tabs de autenticación -->
-        <div class="auth-tabs" role="tablist">
-          <button class="auth-tab active" data-tab="login" role="tab" aria-selected="true" aria-controls="loginForm">
-            Iniciar sesión
-          </button>
-          <button class="auth-tab" data-tab="register" role="tab" aria-selected="false" aria-controls="registerForm">
-            Crear cuenta
-          </button>
+    <div class="nav-right"></div>
+    <button class="nav-hamburger" aria-label="Menú" aria-expanded="false">
+        <span></span><span></span><span></span>
+    </button>
+    <!-- Mobile menu -->
+    <nav class="nav-mobile-menu">
+        <a href="../index.html">Inicio</a>
+        <a href="nuestra-tierra.html">Nuestra Tierra</a>
+        <hr>
+        <span style="font-size:0.75rem;color:var(--text-muted);padding:0.5rem 1rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Novedades</span>
+        <div class="nav-mobile-sub">
+            <a href="actualizaciones.html">Actualizaciones</a>
+            <a href="imagenes.html">Galería</a>
+            <a href="videos.html">Videos</a>
         </div>
-        
-        <!-- Form Login -->
-        <form id="loginForm" class="auth-form active" autocomplete="off" novalidate role="tabpanel" aria-labelledby="loginTab">
-          <label for="loginEmail" class="sr-only">Correo electrónico</label>
-          <input type="email" id="loginEmail" class="p-inp" placeholder="Correo electrónico" autocomplete="email" required value="a@a.com">
-          
-          <label for="loginPassword" class="sr-only">Contraseña</label>
-          <input type="password" id="loginPassword" class="p-inp" placeholder="Contraseña" autocomplete="current-password" required value="123456">
-          
-          <button type="submit" class="pb prim pb-full">Entrar</button>
-          <a class="auth-forgot" id="forgotPasswordLink" href="#">Olvidé mi contraseña</a>
-        </form>
-        
-        <!-- Form Registro -->
-        <form id="registerForm" class="auth-form" autocomplete="off" novalidate role="tabpanel" aria-labelledby="registerTab" hidden>
-          <label for="registerEmail" class="sr-only">Correo electrónico</label>
-          <input type="email" id="registerEmail" class="p-inp" placeholder="Correo electrónico" autocomplete="email" required value="a@a.com">
-          
-          <label for="registerPassword" class="sr-only">Contraseña</label>
-          <input type="password" id="registerPassword" class="p-inp" placeholder="Contraseña (mín. 6 caracteres)" minlength="6" autocomplete="new-password" required value="123456">
-          
-          <label for="registerReferral" class="sr-only">Código de referido</label>
-          <input type="text" id="registerReferral" class="p-inp" placeholder="Código de referido (opcional)" autocomplete="off">
-          
-          <button type="submit" class="pb prim pb-full">Crear cuenta</button>
-        </form>
-        
-        <div class="auth-sep"><span>o</span></div>
+        <hr>
+        <a href="donaciones.html">Apóyanos</a>
+        <a href="personal.html">Personal</a>
+        <a href="perfil.html" class="active">Mi Perfil</a>
+        <a href="soporte.html">Soporte</a>
+    </nav>
+  </nav>
+
+  <!-- AUTH GATE (Login con Discord & Correo - Diseño SoporteSaaS) -->
+  <main id="profileAuthSection" class="auth-gate" role="main">
+    <div class="auth-card" role="dialog" aria-labelledby="authTitle" style="max-width:440px; border-radius:24px; background:rgba(13, 18, 31, 0.95); border:1px solid rgba(0, 210, 255, 0.2); box-shadow:0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 210, 255, 0.15); padding:2rem;">
+      <div style="text-align:center; margin-bottom:1.25rem;">
+          <img src="../recursos/PSGD.png" alt="Panter Studio" class="auth-logo" style="height: 75px; width: auto; filter: drop-shadow(0 0 16px rgba(0, 210, 255, 0.5)); margin-bottom: 10px;">
+          <h1 id="authTitle" style="font-size: 1.3rem; letter-spacing: 1px; color:#fff; font-weight:800; margin:0 0 4px;">SOPORTE PS GAME DEV</h1>
+          <p style="font-size:0.85rem; color:var(--text-secondary,#94a3b8); margin:0;">Plataforma de Tickets y Gestión de Servicios</p>
+      </div>
+
+      <div id="authMessage" class="auth-msg" role="status" aria-live="polite" style="margin-bottom:1rem; text-align:center;"></div>
+      
+      <button type="button" id="discordAuthBtn" class="pb sec pb-full" style="display: flex; gap: 10px; align-items: center; justify-content: center; width: 100%; background:#5865F2; color:#ffffff; border:none; box-shadow:0 4px 16px rgba(88,101,242,0.35); font-weight:700; padding:12px 20px; border-radius:10px; font-size:0.95rem; cursor:pointer;">
+          <i class="fa-brands fa-discord" aria-hidden="true"></i>
+          Ingresar con Discord
+      </button>
+
+      <div style="display:flex; align-items:center; text-align:center; color:#64748b; font-size:0.75rem; font-weight:700; letter-spacing:1.5px; margin:1.25rem 0;">
+          <span style="flex:1; border-bottom:1px solid rgba(0, 210, 255, 0.15); margin-right:0.8em;"></span>
+          O INGRESA CON CORREO
+          <span style="flex:1; border-bottom:1px solid rgba(0, 210, 255, 0.15); margin-left:0.8em;"></span>
+      </div>
+
+      <form id="perfilLoginForm" style="display:flex; flex-direction:column; gap:12px;">
+          <div>
+              <label style="display:block; font-size:0.72rem; font-weight:700; color:#64748b; letter-spacing:1px; margin-bottom:4px;">CORREO ELECTRÓNICO</label>
+              <div style="position:relative;">
+                  <input type="email" id="perfilLoginEmail" required placeholder="ejemplo@psgd.me" style="width:100%; padding:10px 12px 10px 38px; background:rgba(15, 23, 42, 0.8); border:1px solid rgba(0, 210, 255, 0.2); border-radius:8px; color:#fff; font-size:0.88rem; box-sizing:border-box;">
+                  <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#64748b;"><i class="fa-solid fa-envelope" aria-hidden="true"></i></span>
+              </div>
+          </div>
+
+          <div>
+              <label style="display:block; font-size:0.72rem; font-weight:700; color:#64748b; letter-spacing:1px; margin-bottom:4px;">CONTRASEÑA</label>
+              <div style="position:relative;">
+                  <input type="password" id="perfilLoginPassword" required placeholder="••••••••" style="width:100%; padding:10px 12px 10px 38px; background:rgba(15, 23, 42, 0.8); border:1px solid rgba(0, 210, 255, 0.2); border-radius:8px; color:#fff; font-size:0.88rem; box-sizing:border-box;">
+                  <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#64748b;"><i class="fa-solid fa-lock" aria-hidden="true"></i></span>
+              </div>
+          </div>
+
+          <button type="submit" style="width:100%; padding:12px; background:linear-gradient(135deg, #00f0ff, #0066ff); color:#fff; font-weight:800; border:none; border-radius:8px; font-size:0.9rem; letter-spacing:1px; cursor:pointer; margin-top:6px; box-shadow:0 4px 16px rgba(0,102,255,0.3);">
+              INICIAR SESIÓN <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+          </button>
+      </form>
+
+      <div style="margin-top:1.25rem; padding-top:10px; border-top:1px solid rgba(255, 255, 255, 0.08); text-align:center;">
+          <p style="font-size:0.72rem; color:#64748b; letter-spacing:0.5px; margin:0 0 8px;">CUENTAS RÁPIDAS DE PRUEBA:</p>
+          <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:6px;">
+              <button type="button" class="quick-account-btn" onclick="fillLoginCredentials('user@user.me', 'user123')" style="background:rgba(15, 23, 42, 0.6); border:1px solid rgba(255, 255, 255, 0.08); border-radius:8px; color:#94a3b8; font-size:0.75rem; padding:5px 10px; cursor:pointer;">
+                  <i class="fa-solid fa-user" aria-hidden="true"></i> Usuario
+              </button>
+              <button type="button" class="quick-account-btn" onclick="fillLoginCredentials('soporte@psgd.me', 'soporte123')" style="background:rgba(15, 23, 42, 0.6); border:1px solid rgba(255, 255, 255, 0.08); border-radius:8px; color:#94a3b8; font-size:0.75rem; padding:5px 10px; cursor:pointer;">
+                  <i class="fa-solid fa-headset" aria-hidden="true"></i> Soporte
+              </button>
+              <button type="button" class="quick-account-btn" onclick="fillLoginCredentials('mod@psgd.me', 'mod123')" style="background:rgba(15, 23, 42, 0.6); border:1px solid rgba(255, 255, 255, 0.08); border-radius:8px; color:#94a3b8; font-size:0.75rem; padding:5px 10px; cursor:pointer;">
+                  <i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Moderador
+              </button>
+              <button type="button" class="quick-account-btn" onclick="fillLoginCredentials('admin@psgd.me', 'admin123')" style="background:rgba(15, 23, 42, 0.6); border:1px solid rgba(255, 255, 255, 0.08); border-radius:8px; color:#94a3b8; font-size:0.75rem; padding:5px 10px; cursor:pointer;">
+                  <i class="fa-solid fa-crown" aria-hidden="true"></i> Admin
+              </button>
+          </div>
       </div>
     </div>
   </main>
-  
-  <!-- 📊 DASHBOARD (Perfil del usuario) -->
+
+  <!-- DASHBOARD (Perfil del usuario) -->
   <section id="profileDashboard" class="ps" role="region" aria-label="Panel de usuario">
     
-    <!-- 🎯 HERO: Perfil Principal con Banner -->
+    <!-- HERO: Perfil Principal con Banner -->
     <div class="ph" role="group" aria-label="Información del perfil">
       <div class="ph-main-row">
         <div class="ph-avatar-wrap">
-          <div class="ph-avatar" id="profileAvatarLetter" aria-hidden="true">😊</div>
+          <div class="ph-avatar" id="profileAvatarLetter" aria-hidden="true"><i class="fa-solid fa-face-smile" aria-hidden="true"></i></div>
+          <div class="ph-status-dot" title="Discord Conectado"></div>
         </div>
         <div class="ph-info">
-          <h2 id="profileDisplayName">Usuario</h2>
-          <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-            <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 700;">Rol: <span id="profileRoleText" style="color: var(--color-blue);">Miembro</span></span>
-            <span style="font-size: 0.8rem; color: var(--text-muted);">|</span>
-            <span id="profileUid" aria-label="ID de usuario" style="font-size: 0.8rem; font-family: monospace; color: var(--text-secondary);"></span>
+          <div class="ph-name-row">
+            <h2 id="profileDisplayName">Usuario</h2>
+            <span class="discord-badge-pill" title="Cuenta Autenticada con Discord">
+              <i class="fa-brands fa-discord" aria-hidden="true"></i>
+              Discord Conectado
+            </span>
           </div>
-          <div class="ph-level-bar-wrap" style="margin-top: 10px; width: 240px;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 700; color: var(--text-primary); margin-bottom: 3px;">
-              <span id="profileLevelText">Nivel 1</span>
-              <span style="color: var(--text-muted);">Racha: <span id="profileStreakText" style="color: var(--color-gold);">0</span>d</span>
+          <div class="ph-meta-row">
+            <span class="role-pill" id="profileRoleText">Miembro</span>
+            <span class="ph-divider">•</span>
+            <span id="profileUid" class="uid-chip" aria-label="ID de usuario"></span>
+          </div>
+          <div class="ph-level-bar-wrap">
+            <div class="ph-level-header">
+              <span id="profileLevelText" class="level-tag"><span id="profileLevel">Nivel 1</span></span>
             </div>
-            <div class="ph-level-bar-track" style="height: 6px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden;">
-              <div id="profileLevelBarFill" style="height: 100%; background: linear-gradient(90deg, var(--color-blue), #a5f3fc); width: 40%; border-radius: 10px; box-shadow: 0 0 8px var(--color-blue);"></div>
+            <div class="ph-level-bar-track">
+              <div id="profileLevelBarFill" class="ph-level-bar-fill"></div>
             </div>
           </div>
-          <div class="ph-badges" id="profileBadges" role="list" aria-label="Insignias" style="margin-top: 8px;"></div>
+          <div class="ph-badges" id="profileBadges" role="list" aria-label="Insignias"></div>
         </div>
       </div>
       <div class="ph-right">
-        <!-- Coins chip -->
-        <div class="coins-chip" aria-label="Saldo de monedas" style="flex-shrink:0;">
-          <b id="profileCoins">0</b>
-          <small>🪙 monedas web</small>
-        </div>
         <!-- Action buttons -->
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <div class="ph-actions">
+          <button class="pb prim sm" id="editProfileBtn" style="display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:12px; font-weight:700; cursor:pointer;" title="Editar Perfil">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <span>Editar Perfil</span>
+          </button>
           <!-- Admin button — visible solo si el usuario tiene rol -->
           <div id="profileAdminTools" hidden>
-            <a href="admin/admin.html"
-               style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;
-                      padding:8px 14px; border-radius:10px; font-weight:800; font-size:0.82rem;
-                      background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.08));
-                      border:1.5px solid rgba(212,175,55,0.6); color:#ffd966;
-                      box-shadow:0 0 16px rgba(212,175,55,0.25); white-space:nowrap;
-                      min-height:40px; transition:all 0.2s;"
-               onmouseover="this.style.boxShadow='0 0 28px rgba(212,175,55,0.5)';this.style.background='linear-gradient(135deg,rgba(212,175,55,0.35),rgba(212,175,55,0.15))';"
-               onmouseout="this.style.boxShadow='0 0 16px rgba(212,175,55,0.25)';this.style.background='linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.08))';">
-              🛡️ Panel Admin
+            <a href="admin/admin.html" class="btn-admin-panel" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:14px; font-weight:800; font-size:0.85rem; background:linear-gradient(135deg, rgba(0, 176, 255, 0.25), rgba(0, 240, 255, 0.12)); border:1.5px solid rgba(0, 240, 255, 0.6); color:#00f0ff; box-shadow:0 0 20px rgba(0, 240, 255, 0.25); white-space:nowrap; transition:all 0.25s cubic-bezier(0.16, 1, 0.3, 1);" onmouseover="this.style.boxShadow='0 0 30px rgba(0, 240, 255, 0.55)';this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 0 20px rgba(0, 240, 255, 0.25)';this.style.transform='none';">
+              <i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Panel de Administración
             </a>
           </div>
-          <button class="pb prim sm" id="editProfileBtn" style="min-height:40px;">✏️ Editar</button>
-          <button class="pb dng sm" id="logoutBtn" style="min-height:40px;">🚪 Salir</button>
+          <button class="btn-logout-premium" id="logoutBtn" title="Cerrar Sesión">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <span>Cerrar Sesión</span>
+          </button>
         </div>
       </div>
     </div>
-    
-    <!-- 🧱 GRID 3 COLUMNAS -->
-    <div class="pg">
-      
-      <!-- ── IZQUIERDA: Logros + Bio + Información general ── -->
-      <div class="pg-left">
-        
-        <!-- Logros / Insignias -->
-        <article class="pc" aria-labelledby="achievementsTitle">
-          <div class="pc-h">
-            <h3 id="achievementsTitle">🏆 Logros & Rangos</h3>
-          </div>
-          <div class="ph-badges" id="profileBadgesSidebar" role="list" aria-label="Insignias de la comunidad" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
-          <div class="bio-box" id="profileBio" aria-label="Biografía" style="margin-top:12px;padding:12px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.03);border-radius:10px;font-size:0.85rem;color:var(--text-secondary);line-height:1.4;">Sin descripción aún.</div>
-        </article>
-
-        <!-- Información general de la Cuenta -->
-        <article class="pc" aria-labelledby="infoTitle">
-          <div class="pc-h">
-            <h3 id="infoTitle">👤 Información de Cuenta</h3>
-          </div>
-          <table class="it" role="table">
-            <tr><td scope="row">Email</td><td id="profileEmail">—</td></tr>
-            <tr><td scope="row">Verificado</td><td id="profileVerificationStatusSide">—</td></tr>
-            <tr><td scope="row">Proveedor</td><td id="profileProviderSide">—</td></tr>
-            <tr><td scope="row">Miembro Desde</td><td id="profileJoinDate">—</td></tr>
-            <tr><td scope="row">País</td><td id="profileCountry">—</td></tr>
-            <tr><td scope="row">Proyecto Fav.</td><td id="profileFavoriteProject">—</td></tr>
-          </table>
-        </article>
-        
-        <!-- Patrocinador -->
-        <article class="pc" aria-labelledby="sponsorTitle">
-          <div class="pc-h">
-            <h3 id="sponsorTitle">👑 Rango Patrocinador</h3>
-          </div>
-          <div class="sp-row" style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-            <div class="sp-ico" id="sponsorBadge" aria-hidden="true" style="font-size:2rem;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;">👤</div>
-            <div>
-              <p class="sp-name" id="sponsorLevelName" style="font-weight:800;color:var(--text-primary);margin:0;">Visitante</p>
-              <p class="sp-desc" id="sponsorLevelDesc" style="font-size:0.75rem;color:var(--text-muted);margin:0;">Haz una donación.</p>
-            </div>
-          </div>
-          <div class="sp-sum" id="profileSponsorSummary" style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:12px;"></div>
-          <a href="donaciones.html" class="pb gold sm pb-full" style="margin-top:var(--space-md);text-align:center;text-decoration:none;" aria-label="Apoyar el proyecto">💖 Apoyar</a>
-        </article>
-
+    <!-- BARRA DE NAVEGACIÓN DE SECCIONES -->
+    <div class="profile-nav-container">
+      <div class="profile-nav-tabs" role="tablist">
+        <button class="profile-tab-btn active" data-target="tab-info" role="tab" aria-selected="true">
+          <span><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Información de Cuenta</span>
+        </button>
+        <button class="profile-tab-btn" data-target="tab-tickets" role="tab" aria-selected="false">
+          <span><i class="fa-solid fa-ticket" aria-hidden="true"></i> Mis Tickets</span>
+        </button>
+        <button class="profile-tab-btn" data-target="tab-games" role="tab" aria-selected="false">
+          <span><i class="fa-solid fa-gamepad" aria-hidden="true"></i> Juegos & Servicios</span>
+        </button>
       </div>
-      
-      <!-- ── CENTRO: Estado de Juego + Biblioteca de Juegos ── -->
-      <div class="pg-mid">
+    </div>
+
+    <!-- SECCIÓN: INFORMACIÓN DE CUENTA (Activa por Defecto) -->
+    <div id="tab-info" class="profile-tab-content active" role="tabpanel">
+      <div class="pg">
         
-        <!-- 🧪 BETA TESTER CARD -->
-        <article class="pc" id="profileBetaTesterCard" hidden style="background: linear-gradient(135deg, rgba(0, 176, 255, 0.1), rgba(28, 33, 46, 0.95)); border: 1.5px solid rgba(0, 176, 255, 0.4); box-shadow: 0 8px 32px rgba(0, 176, 255, 0.15); margin-bottom: 1.25rem;">
-          <div style="display:flex; align-items:center; gap:16px;">
-            <div style="font-size:2.5rem; background:rgba(0, 176, 255, 0.15); border: 1px solid rgba(0, 176, 255, 0.3); border-radius:50%; width:64px; height:64px; display:flex; align-items:center; justify-content:center; flex-shrink:0; animation: pulse-glow 2s infinite alternate;">🧪</div>
-            <div>
-              <h3 style="color:#00b0ff; margin:0 0 4px 0; font-size:1.1rem; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">Beta Tester Oficial</h3>
-              <p style="color:var(--text-primary); font-size:0.85rem; margin:0; font-weight:600;">¡Eres parte del equipo de pruebas de Panter Studio!</p>
-              <p style="color:var(--text-muted); font-size:0.75rem; margin:4px 0 0 0;">Gracias por ayudarnos a probar y mejorar el simulador.</p>
-            </div>
-          </div>
-        </article>
-
-        <!-- 🎮 ESTADO DEL JUEGO (Nuestra Tierra) -->
-        <article class="pc" aria-labelledby="gameStatsTitle" style="border-color:#00b0ff;box-shadow:0 0 15px rgba(0, 176, 255, 0.1);">
-          <div class="pc-h">
-            <h3 id="gameStatsTitle" style="color:#00b0ff;">🎮 Estado en el Juego</h3>
-            <span style="color:#00b0ff;font-weight:800">NUESTRA TIERRA</span>
-          </div>
-          <table class="it" role="table">
-            <tr><td scope="row">Nombre en el Juego</td><td id="gameUsername">—</td></tr>
-            <tr><td scope="row">ID del Conductor</td><td id="gameConductorId">—</td></tr>
-            <tr><td scope="row">Monedas del Juego</td><td id="gameCoins">—</td></tr>
-            <tr><td scope="row"><img src="../recursos/iconos/esmeralda.png" alt="Esmeralda" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;">Esmeraldas (Juego)</td><td id="gameEmeralds">—</td></tr>
-            <tr><td scope="row">Última Sincronización</td><td id="gameLastSync">—</td></tr>
-          </table>
-          <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 12px; margin-bottom: 0; line-height:1.3">
-            * Sincronizado automáticamente con tu cuenta en el juego.
-          </p>
-        </article>
-
-        <!-- 🐾 MASCOTA PANTER WIDGET -->
-        <article class="pc" id="profilePetWidget" style="display: none;" hidden>
-          <div class="pc-h">
-            <h3 id="petWidgetTitle" style="color:#00e676;">🐾 Mascota Virtual</h3>
-            <span style="color:#00e676;font-weight:800">PANTER PET</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 15px; padding: 10px 0;">
-            <div id="profilePetAvatar" style="font-size: 3rem; background: rgba(0, 230, 118, 0.08); width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 1.5px solid rgba(0, 230, 118, 0.3); animation: petBreath 3s ease-in-out infinite;">🐈‍⬛</div>
-            <div style="flex: 1;">
-              <h4 id="profilePetName" style="margin: 0; color: #fff; font-size: 1.1rem; font-weight: bold;">Cargando...</h4>
-              <p style="margin: 2px 0 0 0; color: var(--text-muted); font-size: 0.8rem;">Nivel Mascota: <span id="profilePetLevel">—</span></p>
-              <div style="display: flex; gap: 10px; margin-top: 6px; font-size: 0.72rem; color: var(--text-secondary);">
-                <span id="profilePetHunger">🥩 —</span>
-                <span id="profilePetHappiness">🧶 —</span>
-                <span id="profilePetEnergy">⚡ —</span>
-              </div>
-            </div>
-          </div>
+        <!-- ── COLUMNA IZQUIERDA: Datos de Cuenta, Discord y Perfil ── -->
+        <div class="pg-left">
           
-          <!-- Inventario de Mascota Consumibles -->
-          <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-sm); padding: 8px 12px; margin-top: 5px; font-size: 0.8rem;">
-            <div style="font-weight: bold; margin-bottom: 6px; color: var(--text-secondary);">Inventario de Mascota:</div>
-            <div style="display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
-              <button class="pb sm" id="feedSteakBtn" onclick="usePetItem('steak')" style="flex: 1; border-color: rgba(255,255,255,0.08); font-size: 0.75rem; padding: 4px 8px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 32px; background: rgba(0, 230, 118, 0.05); color: #00e676;">🥩 Filetes: <strong id="invSteakCount">0</strong></button>
-              <button class="pb sm" id="playYarnBtn" onclick="usePetItem('yarn')" style="flex: 1; border-color: rgba(255,255,255,0.08); font-size: 0.75rem; padding: 4px 8px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 32px; background: rgba(224, 64, 251, 0.05); color: #e040fb;">🧶 Lanas: <strong id="invYarnCount">0</strong></button>
+          <!-- Tarjeta: Datos de Cuenta y Discord -->
+          <article class="pc" aria-labelledby="accountDetailsTitle">
+            <div class="pc-h">
+              <h3 id="accountDetailsTitle"><i class="fa-solid fa-user" aria-hidden="true"></i> Datos de Cuenta</h3>
+              <span style="color:#00b0ff; font-weight:700;">DISCORD OAUTH</span>
             </div>
-            <div id="petItemMessage" style="font-size: 0.72rem; text-align: center; margin-top: 6px; min-height: 15px;" role="status"></div>
-          </div>
+            <table class="it" role="table">
+              <tr>
+                <td>Apodo en Servidor</td>
+                <td id="tabInfoServerNick">—</td>
+              </tr>
+              <tr>
+                <td>Servidor Conectado</td>
+                <td id="tabInfoServerName" style="color:#818cf8;">PanterStudio Game Dev</td>
+              </tr>
+              <tr>
+                <td>ID Discord</td>
+                <td id="tabInfoDiscordId" style="font-family:monospace; color:#38bdf8;">—</td>
+              </tr>
+              <tr>
+                <td>Correo Vinculado</td>
+                <td id="profileEmail" style="word-break:break-all;">—</td>
+              </tr>
+              <tr>
+                <td>Email Verificado</td>
+                <td id="profileVerificationStatusSide">—</td>
+              </tr>
+              <tr>
+                <td>Método de Acceso</td>
+                <td id="profileProviderSide" style="color:#4ade80;">Discord OAuth 2.0</td>
+              </tr>
+              <tr>
+                <td>Rol en Panter Studio</td>
+                <td id="profileRole">Miembro</td>
+              </tr>
+              <tr>
+                <td>Nivel de Acceso</td>
+                <td id="profileAccessLevel">Miembro</td>
+              </tr>
+              <tr>
+                <td>Miembro Desde</td>
+                <td id="profileJoinDate">—</td>
+              </tr>
+              <tr>
+                <td>País</td>
+                <td id="profileCountry">—</td>
+              </tr>
+              <tr>
+                <td>Proyecto Favorito</td>
+                <td id="profileFavoriteProject">—</td>
+              </tr>
+            </table>
 
-          <div style="display: flex; gap: 8px; margin-top: 10px;">
-            <a href="minijuegos.html" class="pb prim sm" style="text-align: center; text-decoration: none; border-color: rgba(0, 230, 118, 0.3); color: #00e676; flex: 1; min-height: 36px; line-height: 1.8;">Jugar con Mascota</a>
-            <button class="pb sm" id="changePetAvatarBtn" style="border-color: rgba(255,255,255,0.08); flex: 1;" onclick="openPetAvatarSelectorModal()">Cambiar Aspecto</button>
-          </div>
-        </article>
-
-        <!-- 💸 TRANSFERENCIA DE FONDOS (PanterPay) -->
-        <article class="pc" aria-labelledby="transferTitle" style="border-color:var(--color-gold);box-shadow:0 0 15px rgba(212, 175, 55, 0.1);">
-          <div class="pc-h">
-            <h3 id="transferTitle" style="color:var(--color-gold);">💸 Transferir Fondos</h3>
-            <span style="color:var(--color-gold);font-weight:800">PANTERPAY</span>
-          </div>
-          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
-            Envía monedas de la web a otro conductor de forma inmediata.
-          </p>
-          <div style="display:flex; flex-direction:column; gap: 10px;">
-            <div>
-              <label for="transferDest" style="font-size:0.75rem; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:4px;">Destinatario (UID completo o Código Corto de 6 letras)</label>
-              <input type="text" id="transferDest" placeholder="Ej: F53A81 o UID completo" style="width:100%; padding:10px; border-radius:var(--radius-sm); background:var(--bg-input); border:1px solid var(--border-color); color:#fff; font-family:monospace; text-transform: uppercase;">
+            <div style="margin-top: 16px;">
+              <span style="font-size: 0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">Biografía:</span>
+              <p id="profileBio" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 10px 12px; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4; margin: 0; min-height: 48px;">
+                Sin descripción aún.
+              </p>
             </div>
-            <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap: 10px;">
+
+            <div style="margin-top: 16px;">
+              <span style="font-size: 0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:8px;">Roles & Insignias:</span>
+              <div class="ph-badges" id="profileBadgesSidebar" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+            </div>
+
+            <button type="button" class="pb prim pb-full btn-edit-profile-trigger" id="editProfileBtnCard" style="margin-top: 18px; display:flex; align-items:center; justify-content:center; gap:8px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <span>Editar Información de Cuenta</span>
+            </button>
+          </article>
+
+          <!-- Tarjeta: Membresía & Apoyo -->
+          <article class="pc" aria-labelledby="sponsorTitle">
+            <div class="pc-h">
+              <h3 id="sponsorTitle"><i class="fa-solid fa-crown" aria-hidden="true"></i> Rango Patrocinador</h3>
+            </div>
+            <div class="sp-row" style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+              <div class="sp-ico" id="sponsorBadge" aria-hidden="true" style="font-size:2rem;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-user" aria-hidden="true"></i></div>
               <div>
-                <label for="transferCurrency" style="font-size:0.75rem; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:4px;">Moneda</label>
-                <select id="transferCurrency" disabled style="width:100%; padding:10px; border-radius:var(--radius-sm); background:var(--bg-input); border:1px solid var(--border-color); color:#fff; opacity: 0.8; cursor: not-allowed;">
-                  <option value="coins" selected>🪙 Monedas Web</option>
-                </select>
-              </div>
-              <div>
-                <label for="transferAmount" style="font-size:0.75rem; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:4px;">Cantidad</label>
-                <input type="number" id="transferAmount" placeholder="Monto" min="1" style="width:100%; padding:10px; border-radius:var(--radius-sm); background:var(--bg-input); border:1px solid var(--border-color); color:#fff;">
+                <p class="sp-name" id="sponsorLevelName" style="font-weight:800;color:var(--text-primary);margin:0;">Visitante</p>
+                <p class="sp-desc" id="sponsorLevelDesc" style="font-size:0.75rem;color:var(--text-muted);margin:0;">Haz una donación para subir de nivel.</p>
               </div>
             </div>
-            <button class="pb gold pb-full" id="transferBtn" style="margin-top: 5px; text-align:center;">Realizar Transferencia</button>
-            <div id="transferMessage" role="status" aria-live="polite" style="font-size: 0.85rem; font-weight: 700; min-height: 20px; margin-top: 5px; text-align:center;"></div>
-          </div>
-        </article>
+            <div class="sp-sum" id="profileSponsorSummary" style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:12px;">Sin aportes registrados.</div>
+            <a href="donaciones.html" class="pb gold sm pb-full" style="margin-top:var(--space-md);text-align:center;text-decoration:none;" aria-label="Apoyar el proyecto"><i class="fa-solid fa-heart" style="color:#f472b6" aria-hidden="true"></i> Apoyar Panter Studio</a>
+          </article>
 
-        <!-- Biblioteca de Juegos (Game Library) -->
-        <article class="pc" aria-labelledby="libraryTitle">
-          <div class="pc-h">
-            <h3 id="libraryTitle">🎮 Catálogo de Juegos</h3>
-          </div>
-          <div class="game-library">
-            <a href="../index.html" class="game-card">
-              <img src="https://media.discordapp.net/attachments/1475940325280321556/1500515682960412772/NT.png?ex=6a1da1a1&is=6a1c5021&hm=055e22d6f75d5cb1bf4bc8041bdebfae0a3b18b40d11885ef87bb971ba5b17a0&=&format=webp&quality=lossless&width=915&height=800" alt="Nuestra Tierra" class="game-card-img">
-              <div class="game-card-body">
-                <span class="game-card-title">Nuestra Tierra</span>
-                <span class="game-card-info">Simulador 3D</span>
+        </div>
+
+        <!-- ── COLUMNA CENTRAL: Beta Tester + Estado de Juego + PanterPay + Actividad ── -->
+        <div class="pg-mid">
+          
+          <!-- Beta Tester Card -->
+          <article class="pc" id="profileBetaTesterCard" style="background: linear-gradient(135deg, rgba(0, 176, 255, 0.12), rgba(28, 33, 46, 0.95)); border: 1.5px solid rgba(0, 176, 255, 0.5); box-shadow: 0 8px 32px rgba(0, 176, 255, 0.18);">
+            <div style="display:flex; align-items:center; gap:16px;">
+              <div style="font-size:2.4rem; background:rgba(0, 176, 255, 0.15); border: 1px solid rgba(0, 176, 255, 0.35); border-radius:50%; width:60px; height:60px; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fa-solid fa-flask" aria-hidden="true"></i></div>
+              <div style="flex:1;">
+                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px;">
+                  <h3 style="color:#00b0ff; margin:0; font-size:1.05rem; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">Beta Tester Oficial</h3>
+                  <span class="bp aqua" id="profilePreregisterStatusSide">Inscrito</span>
+                </div>
+                <p style="color:var(--text-primary); font-size:0.82rem; margin:3px 0 0 0; font-weight:600;">Pase activo para las pruebas de Nuestra Tierra</p>
+                <div style="margin-top:8px;">
+                  <a href="betatester.html" class="pb sm" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; font-size:0.75rem; padding:4px 12px; background:rgba(0,176,255,0.15); border:1px solid rgba(0,176,255,0.4); color:#38bdf8; border-radius:8px;">
+                    <i class="fa-solid fa-gears" aria-hidden="true"></i> Gestionar Pase de Tester →
+                  </a>
+                </div>
               </div>
-            </a>
-            <a href="minijuegos.html" class="game-card">
-              <img src="https://i.imgur.com/1IRRyFY.jpeg" alt="2048 Esteroides" class="game-card-img">
-              <div class="game-card-body">
-                <span class="game-card-title">Minijuegos</span>
-                <span class="game-card-info">Jugar en Web</span>
-              </div>
-            </a>
-            <a href="#" class="game-card" style="opacity:0.6;pointer-events:none;">
-              <div style="background:#111;aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;font-size:1.5rem;border-bottom:1px solid rgba(255,255,255,0.05);">🛸</div>
-              <div class="game-card-body">
-                <span class="game-card-title">Próximamente</span>
-                <span class="game-card-info">Nuevo Proyecto</span>
-              </div>
-            </a>
-          </div>
-        </article>
+            </div>
+          </article>
 
-        <!-- 📋 Actividad Reciente -->
-        <article class="pc" aria-labelledby="activityTitle">
-          <div class="pc-h">
-            <h3 id="activityTitle">📋 Actividad reciente</h3>
-          </div>
-          <ul class="act-list" id="activityList" role="list" aria-label="Actividad reciente">
-            <li class="act-item">
-              <div class="act-txt">
-                <div class="act-title" style="color:var(--text-muted)">Cargando...</div>
-              </div>
-            </li>
-          </ul>
-        </article>
-        
-      </div>
-      
-      <!-- ── DERECHA: Bonus + Canjes + Referidos + Novedades ── -->
-      <div class="pg-right">
-        
-        <!-- 📅 Bonus Diario -->
-        <article class="pc" aria-labelledby="bonusTitle">
-          <div class="pc-h">
-            <h3 id="bonusTitle">📅 Bonus diario</h3>
-            <span>+<span id="dailyBonusAmount">10</span> 🪙 / día</span>
-          </div>
-          <div class="streak-row" role="list" aria-label="Racha semanal">
-            <button class="streak-day" data-day="1" role="listitem" aria-label="Lunes">L</button>
-            <button class="streak-day" data-day="2" role="listitem" aria-label="Martes">M</button>
-            <button class="streak-day" data-day="3" role="listitem" aria-label="Miércoles">X</button>
-            <button class="streak-day" data-day="4" role="listitem" aria-label="Jueves">J</button>
-            <button class="streak-day" data-day="5" role="listitem" aria-label="Viernes">V</button>
-            <button class="streak-day" data-day="6" role="listitem" aria-label="Sábado">S</button>
-            <button class="streak-day" data-day="7" role="listitem" aria-label="Domingo">D</button>
-          </div>
-          <button class="pb prim pb-full" id="claimDailyBtn" aria-label="Reclamar bonus diario">Reclamar bonus</button>
-          <div id="dailyBonusMessage" role="status" aria-live="polite"></div>
-        </article>
+          <!-- Estado del Juego (Nuestra Tierra) -->
+          <article class="pc" aria-labelledby="gameStatsTitle" style="border-color: rgba(0, 176, 255, 0.3); box-shadow: 0 0 20px rgba(0, 176, 255, 0.08);">
+            <div class="pc-h">
+              <h3 id="gameStatsTitle" style="color:#00b0ff; display:flex; align-items:center; gap:8px;">
+                <span><i class="fa-solid fa-gamepad" aria-hidden="true"></i></span> Estado en el Juego
+              </h3>
+              <span style="color:#00b0ff; font-weight:800;">NUESTRA TIERRA</span>
+            </div>
+            <table class="it" role="table">
+              <tr>
+                <td>Nombre en el Juego</td>
+                <td id="gameUsername">—</td>
+              </tr>
+              <tr>
+                <td>ID del Conductor</td>
+                <td id="gameConductorId" style="font-family:monospace; color:#38bdf8;">—</td>
+              </tr>
+              <tr>
+                <td>Monedas del Juego</td>
+                <td id="gameCoins" style="color:#ffd966; font-weight:800;">—</td>
+              </tr>
+              <tr>
+                <td>Esmeraldas (Juego)</td>
+                <td id="gameEmeralds" style="color:#34d399; font-weight:800;">—</td>
+              </tr>
+              <tr>
+                <td>Última Sincronización</td>
+                <td id="gameLastSync">—</td>
+              </tr>
+            </table>
+            <div style="margin-top:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <p style="font-size: 0.72rem; color: var(--text-muted); margin:0;">* Sincronizado en tiempo real con Firestore.</p>
+              <a href="https://nuestratierra-2bb4a.web.app" target="_blank" rel="noopener" class="pb sm prim" style="text-decoration:none; font-size:0.75rem; padding:6px 14px;"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Jugar en Web</a>
+            </div>
+          </article>
 
-        <!-- 💎 Canjear Monedas -->
-        <article class="pc" aria-labelledby="redeemTitle">
-          <div class="pc-h">
-            <h3 id="redeemTitle">💎 Canjear monedas</h3>
-            <span>50,000 🪙 = 50 Esmeraldas (Juego)</span>
-          </div>
-          <div class="rdm-stats" aria-label="Estadísticas de canje">
-            <span class="rdm-stat">Disponibles: <b id="redeemCoinsAvailable">0</b> 🪙</span>
-            <span class="rdm-stat">Equiv.: <b id="redeemDollars">0 Esmeraldas</b></span>
-            <span class="rdm-stat">Canjeado: <b id="redeemTotalPaid">0 Esmeraldas</b></span>
-            <span class="rdm-stat">Canjes: <b id="redeemTotalCount">0</b></span>
-          </div>
-          <div class="rdm-row">
-            <label for="redeemAmount" class="sr-only">Cantidad a canjear</label>
-            <input type="number" id="redeemAmount" placeholder="50000" min="50000" step="100" inputmode="numeric">
-            <button class="pb prim" id="redeemBtn">Canjear</button>
-          </div>
-          <div id="redeemMessage" role="status" aria-live="polite"></div>
-        </article>
+          <!-- Actividad Reciente -->
+          <article class="pc" aria-labelledby="activityTitle">
+            <div class="pc-h">
+              <h3 id="activityTitle"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Actividad Reciente</h3>
+            </div>
+            <ul class="act-list" id="activityList" role="list" aria-label="Actividad reciente">
+              <li class="act-item">
+                <div class="act-txt">
+                  <div class="act-title" style="color:var(--text-muted)">Cargando actividad...</div>
+                </div>
+              </li>
+            </ul>
+          </article>
 
-        <!-- 👥 Referidos -->
-        <article class="pc" aria-labelledby="referralTitle">
-          <div class="pc-h">
-            <h3 id="referralTitle">👥 Sistema de Referidos</h3>
-          </div>
-          <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:var(--space-sm)">
-            Comparte tu código y gana monedas gratis.
-          </p>
-          <div class="ref-box">
-            <code id="referralCode" aria-label="Tu código de referido">——</code>
-            <button class="pb sm" id="copyReferralBtn" aria-label="Copiar código">📋</button>
-          </div>
-          <div class="ref-stats">
-            <span class="ref-stat">Total: <strong id="referralCount">0</strong></span>
-            <span class="ref-stat">Ganados: <strong id="referralCoins">0</strong> 🪙</span>
-          </div>
+        </div>
 
-          <!-- Manual Referral Code entry box for users who registered without one -->
-          <div id="manualReferralBox" style="margin-top: var(--space-md); border-top: 1px solid rgba(255,255,255,0.08); padding-top: var(--space-md); display: none;">
-            <p style="font-size: .8rem; color: var(--text-muted); margin-bottom: var(--space-xs)">
-              ¿Tienes un código de referido? Ingrésalo aquí:
+        <!-- ── COLUMNA DERECHA: Sistema de Invitaciones ── -->
+        <div class="pg-right">
+          
+          <!-- Sistema de Invitaciones -->
+          <article class="pc" aria-labelledby="referralTitle">
+            <div class="pc-h">
+              <h3 id="referralTitle"><i class="fa-solid fa-users" aria-hidden="true"></i> Sistema de Invitaciones</h3>
+              <span style="color:#00b0ff; font-weight:700;">INVITACIONES</span>
+            </div>
+            <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:var(--space-sm);line-height:1.4;">
+              Comparte tu código con amigos. Cada amigo que se registre usando tu código se acumulará en tus invitaciones para desbloquear recompensas futuras en Nuestra Tierra.
             </p>
-            <div style="display: flex; gap: var(--space-xs);">
-              <input type="text" id="manualReferralInput" class="p-inp" placeholder="Código (ej. AB12CD)" style="text-transform: uppercase; font-size: 0.85rem;" autocomplete="off">
-              <button class="pb prim sm" id="manualReferralBtn">Reclamar</button>
+            <div class="ref-box">
+              <code id="referralCode" aria-label="Tu código de referido">——</code>
+              <button class="pb sm" id="copyReferralBtn" aria-label="Copiar código">Copiar</button>
             </div>
-            <div id="manualReferralMessage" style="font-size: 0.75rem; margin-top: 4px;" role="status" aria-live="polite"></div>
-          </div>
-        </article>
-        
-        <!-- Novedades -->
-        <article class="pc" aria-labelledby="newsTitle">
-          <div class="pc-h">
-            <h3 id="newsTitle">🎮 Novedades</h3>
-            <a href="actualizaciones.html" class="pb sm" aria-label="Ver todas las actualizaciones" style="text-decoration:none;">Ver →</a>
-          </div>
-          <div class="feed" id="projectUpdateFeed" role="feed" aria-label="Últimas novedades">
-            <p style="color:var(--text-muted);font-size:.85rem">Cargando...</p>
-          </div>
-        </article>
-        
+            <div class="ref-stats">
+              <span class="ref-stat" style="font-size:0.95rem;">Invitaciones Acumuladas: <strong id="referralCount" style="color:#38bdf8;font-size:1.15rem;">0</strong></span>
+            </div>
+
+            <!-- Caja manual de referido -->
+            <div id="manualReferralBox" style="margin-top: var(--space-md); border-top: 1px solid rgba(255,255,255,0.08); padding-top: var(--space-md); display: none;">
+              <p style="font-size: .8rem; color: var(--text-muted); margin-bottom: var(--space-xs)">
+                ¿Fuiste invitado por un amigo? Registra su código aquí:
+              </p>
+              <div style="display: flex; gap: var(--space-xs);">
+                <input type="text" id="manualReferralInput" class="p-inp" placeholder="Código (ej. AB12CD)" style="text-transform: uppercase; font-size: 0.85rem;" autocomplete="off">
+                <button class="pb prim sm" id="manualReferralBtn">Registrar</button>
+              </div>
+              <div id="manualReferralMessage" style="font-size: 0.75rem; margin-top: 4px;" role="status" aria-live="polite"></div>
+            </div>
+          </article>
+
+        </div>
+
       </div>
-      
-    </div> <!-- /pg -->
-    
+    </div>
+
+    <!-- SECCIÓN: MIS TICKETS DE SOPORTE -->
+    <div id="tab-tickets" class="profile-tab-content" role="tabpanel">
+      <div class="tickets-header-row">
+        <h3 class="tickets-title">
+          <span><i class="fa-solid fa-ticket" aria-hidden="true"></i> Mis Tickets de Soporte</span>
+        </h3>
+        <button class="btn-create-ticket" id="btnOpenCreateTicketModal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>Crear Nuevo Ticket</span>
+        </button>
+      </div>
+
+      <!-- Lista de Tickets -->
+      <div class="tickets-grid" id="profileTicketsList">
+        <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: #94a3b8; background: rgba(15, 23, 42, 0.4); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.1);">
+          <div style="font-size: 2.5rem; margin-bottom: 10px;"><i class="fa-solid fa-ticket" aria-hidden="true"></i></div>
+          <p style="font-weight: 700; font-size: 1.1rem; color: #f1f5f9; margin-bottom: 6px;">No tienes tickets de soporte creados</p>
+          <p style="font-size: 0.85rem; margin-bottom: 16px;">¿Necesitas ayuda con algún juego o problema técnico? Presiona "Crear Nuevo Ticket".</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN: JUEGOS Y SERVICIOS -->
+    <div id="tab-games" class="profile-tab-content" role="tabpanel">
+      <div class="game-library" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+        <a href="https://nuestratierra-2bb4a.web.app" target="_blank" rel="noopener" class="game-card">
+          <img src="https://media.discordapp.net/attachments/1475940325280321556/1500515683736223744/Nuestra_Tierra_Job_Simulator.png?ex=6a1da1a1&is=6a1c5021&hm=4b631211f8be9a6f6d14c6af439ddab1f3745a986980ed10f4d103fe59beeeb9&=&format=webp&quality=lossless&width=1730&height=508" alt="Nuestra Tierra" class="game-card-img">
+          <div class="game-card-body">
+            <span class="game-card-title">Nuestra Tierra</span>
+            <span class="game-card-info">Simulador Job 3D</span>
+          </div>
+        </a>
+      </div>
+    </div>
   </section>
-  
-  <!-- ✏️ MODAL: Editar Perfil -->
-  <dialog class="pm" id="editProfileModal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
-    <div class="pm-h">
-      <h3 id="editModalTitle">Editar perfil</h3>
-      <button class="pb sm dng" data-close-modal="editProfileModal" aria-label="Cerrar">✕</button>
+
+  <!-- MODAL: EDITAR PERFIL -->
+  <dialog class="pm" id="editProfileModal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle" style="max-width: 520px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 20px; color: #f8fafc; padding: 0;">
+    <div class="pm-h" style="padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center;">
+      <h3 id="editModalTitle" style="font-size: 1.2rem; font-weight: 800; margin: 0; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
+        <span><i class="fa-solid fa-pen" aria-hidden="true"></i> Editar Perfil de Cuenta</span>
+      </h3>
+      <button class="pb sm dng" data-close-modal="editProfileModal" aria-label="Cerrar" style="border-radius: 50%; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; cursor: pointer;"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
     </div>
     
-    <form id="editProfileForm" method="dialog">
-      <div class="pm-b">
+    <form id="editProfileForm" method="dialog" style="padding: 24px;">
+      <div class="pm-b" style="display: flex; flex-direction: column; gap: 16px;">
         
-        <!-- Nombre -->
-        <div class="pm-grp">
-          <label for="editDisplayName">Nombre de usuario</label>
-          <input type="text" id="editDisplayName" class="pm-inp" placeholder="Tu nombre visible" maxlength="40">
+        <!-- Identidad Discord (Bloqueada / Solo Lectura) -->
+        <div class="pm-grp" style="background: rgba(88, 101, 242, 0.12); border: 1.5px solid rgba(88, 101, 242, 0.35); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 14px;">
+          <img id="editDiscordAvatarPreview" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="Avatar Discord" style="width: 52px; height: 52px; border-radius: 50%; border: 2px solid #5865F2; object-fit: cover; flex-shrink: 0; box-shadow: 0 0 12px rgba(88,101,242,0.4);">
+          <div style="flex: 1; min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span id="editDiscordNamePreview" style="font-weight: 800; font-size: 1.05rem; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Usuario Discord</span>
+              <span style="font-size: 0.7rem; background: #5865F2; color: #fff; padding: 2px 8px; border-radius: 20px; font-weight: 700;">Discord</span>
+            </div>
+            <p style="font-size: 0.76rem; color: #94a3b8; margin: 3px 0 0 0; line-height: 1.3;">
+              <i class="fa-solid fa-lock" aria-hidden="true"></i> Nombre y fotografía sincronizados directamente desde tu cuenta de Discord.
+            </p>
+          </div>
         </div>
-
-        <!-- Nombre Mascota -->
-        <div class="pm-grp" id="editPetNameGroup" style="display:none;">
-          <label for="editPetName">Nombre de tu Mascota</label>
-          <input type="text" id="editPetName" class="pm-inp" placeholder="Nombre de tu pantera" maxlength="15">
-        </div>
+        <input type="hidden" id="editDisplayName" value="">
+        <input type="hidden" id="editAvatarValue" value="">
         
         <!-- País y Proyecto -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
           <div class="pm-grp">
-            <label for="editCountry">País</label>
-            <input type="text" id="editCountry" class="pm-inp" placeholder="Colombia...">
+            <label for="editCountry" style="display: block; font-size: 0.85rem; font-weight: 700; color: #94a3b8; margin-bottom: 6px;">País</label>
+            <input type="text" id="editCountry" class="p-inp" placeholder="Colombia..." style="width: 100%; padding: 10px 12px; border-radius: 10px; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); color: #f8fafc; font-family: inherit;">
           </div>
           <div class="pm-grp">
-            <label for="editFavoriteProject">Proyecto favorito</label>
-            <input type="text" id="editFavoriteProject" class="pm-inp" placeholder="Nuestra Tierra...">
+            <label for="editFavoriteProject" style="display: block; font-size: 0.85rem; font-weight: 700; color: #94a3b8; margin-bottom: 6px;">Proyecto Favorito</label>
+            <input type="text" id="editFavoriteProject" class="p-inp" placeholder="Nuestra Tierra..." style="width: 100%; padding: 10px 12px; border-radius: 10px; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); color: #f8fafc; font-family: inherit;">
           </div>
         </div>
         
         <!-- Bio -->
         <div class="pm-grp">
-          <label for="editBio">Sobre mí</label>
-          <textarea id="editBio" class="pm-inp" placeholder="Cuéntanos algo sobre ti..."></textarea>
+          <label for="editBio" style="display: block; font-size: 0.85rem; font-weight: 700; color: #94a3b8; margin-bottom: 6px;">Sobre mí (Biografía)</label>
+          <textarea id="editBio" class="p-inp" rows="3" placeholder="Cuéntanos algo sobre ti..." style="width: 100%; padding: 10px 12px; border-radius: 10px; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); color: #f8fafc; font-family: inherit; resize: vertical;"></textarea>
         </div>
-        
-        <!-- Avatar -->
-        <div class="pm-grp">
-          <label>Avatar</label>
-          <input type="hidden" id="editAvatarValue" value="😊">
-          
-          <div style="display:flex;gap:var(--space-lg);align-items:flex-start;flex-wrap:wrap">
-            
-            <!-- Preview -->
-            <div style="display:flex;flex-direction:column;align-items:center;gap:var(--space-sm)">
-              <div id="editProfileImagePreview" class="ph-avatar" style="width:56px;height:56px;" aria-hidden="true"></div>
-              <label for="editProfileImage" class="sr-only">URL de imagen</label>
-              <input type="url" id="editProfileImage" placeholder="URL (opcional)" class="pm-inp" style="max-width:160px;font-size:.9em">
-              <button type="button" id="removeProfileImageBtn" style="display:none;font-size:.75em;color:var(--color-red);background:none;border:none;cursor:pointer">
-                Quitar imagen
-              </button>
-            </div>
-            
-            <!-- Selector de emojis -->
-            <div class="av-grid" role="radiogroup" aria-label="Seleccionar avatar">
-              <button type="button" class="av-opt selected" data-avatar="😊" role="radio" aria-checked="true" aria-label="Cara sonriente">😊</button>
-              <button type="button" class="av-opt" data-avatar="😎" role="radio" aria-label="Cara con gafas">😎</button>
-              <button type="button" class="av-opt" data-avatar="🦊" role="radio" aria-label="Zorro">🦊</button>
-              <button type="button" class="av-opt" data-avatar="🐱" role="radio" aria-label="Gato">🐱</button>
-              <button type="button" class="av-opt" data-avatar="🐺" role="radio" aria-label="Lobo">🐺</button>
-              <button type="button" class="av-opt" data-avatar="🦁" role="radio" aria-label="León">🦁</button>
-              <button type="button" class="av-opt" data-avatar="🐼" role="radio" aria-label="Panda">🐼</button>
-              <button type="button" class="av-opt" data-avatar="🐸" role="radio" aria-label="Rana">🐸</button>
-              <button type="button" class="av-opt" data-avatar="👾" role="radio" aria-label="Alien">👾</button>
-              <button type="button" class="av-opt" data-avatar="🤖" role="radio" aria-label="Robot">🤖</button>
-              <button type="button" class="av-opt" data-avatar="🎮" role="radio" aria-label="Control">🎮</button>
-              <button type="button" class="av-opt" data-avatar="🏆" role="radio" aria-label="Trofeo">🏆</button>
-              <button type="button" class="av-opt" data-avatar="⚡" role="radio" aria-label="Rayo">⚡</button>
-              <button type="button" class="av-opt" data-avatar="🔥" role="radio" aria-label="Fuego">🔥</button>
-              <button type="button" class="av-opt" data-avatar="💎" role="radio" aria-label="Diamante">💎</button>
-              <button type="button" class="av-opt" data-avatar="🌙" role="radio" aria-label="Luna">🌙</button>
-            </div>
-            
-          </div>
-        </div>
-
-        <!-- Avatares de Mascota Unlocked -->
-        <div class="pm-grp" id="petAvatarsSelectionGroup" style="display:none; margin-top: 15px;">
-          <label>Avatares Exclusivos de Mascota (Desbloqueados)</label>
-          <div class="av-grid" id="unlockedPetAvatarsGrid" role="radiogroup" aria-label="Seleccionar avatar de mascota">
-            <!-- Populated dynamically by JS -->
-          </div>
-        </div>
-        
       </div>
       
-      <div class="pm-f">
-        <button type="button" class="pb" data-close-modal="editProfileModal">Cancelar</button>
-        <button type="submit" class="pb prim">Guardar cambios</button>
+      <div class="pm-f" style="margin-top: 20px; display:flex; justify-content:flex-end; gap:12px;">
+        <button type="button" class="pb" data-close-modal="editProfileModal" style="padding: 10px 18px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; cursor: pointer;">Cancelar</button>
+        <button type="submit" class="pb prim" style="padding: 10px 22px; border-radius: 12px; font-weight:700; cursor: pointer;">Guardar Cambios</button>
+      </div>
+    </form>
+  </dialog>
+  
+  <!-- MODAL: CREAR TICKET DE SOPORTE -->
+  <dialog class="pm" id="createTicketModal" style="max-width: 540px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 20px; color: #f8fafc; padding: 0;">
+    <div class="pm-h" style="padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="font-size: 1.2rem; font-weight: 800; margin: 0; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
+        <span><i class="fa-solid fa-ticket" aria-hidden="true"></i> Crear Ticket de Soporte</span>
+      </h3>
+      <button class="pb sm dng" id="btnCloseCreateTicketModal" style="border-radius: 50%; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; cursor: pointer;"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    </div>
+    
+    <form id="createTicketForm" style="padding: 24px;">
+      <div style="margin-bottom: 16px;">
+        <label for="ticketCategorySelect" style="display: block; font-size: 0.85rem; font-weight: 700; color: #94a3b8; margin-bottom: 6px;">Categoría del Ticket</label>
+        <select id="ticketCategorySelect" style="width: 100%; padding: 12px; border-radius: 12px; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); color: #f8fafc; font-family: inherit; font-size: 0.9rem;">
+          <option value="1">SOPORTE TÉCNICO / Problemas con mi cuenta</option>
+          <option value="2">Problemas con vehículos / No logro localizar mi vehículo</option>
+          <option value="3">Reporte de bug</option>
+          <option value="4">Otros Problemas / Solicitar ayuda</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <label for="ticketTitleInput" style="display: block; font-size: 0.85rem; font-weight: 700; color: #94a3b8; margin-bottom: 6px;">Título del Ticket</label>
+        <input type="text" id="ticketTitleInput" placeholder="Ej: No puedo ingresar al servidor..." required style="width: 100%; padding: 12px; border-radius: 12px; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); color: #f8fafc; font-family: inherit; font-size: 0.9rem;">
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label for="ticketDescInput" style="display: block; font-size: 0.85rem; font-weight: 700; color: #94a3b8; margin-bottom: 6px;">Descripción del Problema</label>
+        <textarea id="ticketDescInput" rows="4" placeholder="Explica detalladamente lo que sucede..." required style="width: 100%; padding: 12px; border-radius: 12px; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); color: #f8fafc; font-family: inherit; font-size: 0.9rem; resize: vertical;"></textarea>
+      </div>
+
+      <div id="createTicketMessage" style="font-size: 0.85rem; font-weight: 700; margin-bottom: 16px; text-align: center;"></div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 12px;">
+        <button type="button" class="pb" id="btnCancelCreateTicket" style="padding: 10px 18px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; cursor: pointer;">Cancelar</button>
+        <button type="submit" class="btn-create-ticket" id="btnSubmitTicket" style="padding: 10px 22px;">
+          <i class="fa-solid fa-rocket" aria-hidden="true"></i> Enviar Ticket a Discord
+        </button>
       </div>
     </form>
   </dialog>
 
-  <!-- 🐾 MODAL: Aspecto Mascota -->
-  <dialog class="pm" id="petAvatarModal" role="dialog" aria-modal="true" aria-labelledby="petModalTitle">
-    <div class="pm-h">
-      <h3 id="petModalTitle">Aspecto de Mascota</h3>
-      <button class="pb sm dng" data-close-modal="petAvatarModal" aria-label="Cerrar">✕</button>
-    </div>
-    <div class="pm-b">
-      <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 15px;">Elige el aspecto que lucirá tu cachorro de pantera en tu terminal y perfil:</p>
-      <div class="av-grid" id="petAvatarsSelectorGrid" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
-        <!-- Populated dynamically -->
-      </div>
-    </div>
-    <div class="pm-f">
-      <button type="button" class="pb" data-close-modal="petAvatarModal">Cerrar</button>
-    </div>
-  </dialog>
-  
-  <!-- 🦶 Footer -->
-  <footer role="contentinfo">
-    <p>&copy; <time datetime="2026">2026</time> Panter Studio Game Dev. Todos los derechos reservados.</p>
-  </footer>
-  
-  <!-- 🧠 Scripts -->
-  <script src="../assets/js/core/script.js" defer></script>
-  <script src="../assets/js/pages/perfil.js" defer></script>
-  
-  <!-- 🎯 Script Inline para UX Móvil -->
-  <script>
-  // ========================================
-  // PERFIL: UX Mobile Enhancements
+    <script>
   // ========================================
   document.addEventListener('DOMContentLoaded', () => {
     
@@ -2108,47 +2466,32 @@
       });
     });
     
-    // Selector de avatar
-    const avatarOpts = document.querySelectorAll('.av-opt');
-    const avatarInput = document.getElementById('editAvatarValue');
-    const avatarPreview = document.getElementById('editProfileImagePreview');
-    
-    avatarOpts.forEach(opt => {
-      opt.addEventListener('click', () => {
-        avatarOpts.forEach(o => {
-          o.classList.remove('selected');
-          o.setAttribute('aria-checked', 'false');
+    // Navegación de pestañas del Perfil
+    const profileTabBtns = document.querySelectorAll('.profile-tab-btn');
+    const profileTabContents = document.querySelectorAll('.profile-tab-content');
+    profileTabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.target;
+        profileTabBtns.forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
         });
-        opt.classList.add('selected');
-        opt.setAttribute('aria-checked', 'true');
-        
-        const emoji = opt.dataset.avatar;
-        avatarInput.value = emoji;
-        avatarPreview.textContent = emoji;
-        avatarPreview.style.background = 'rgba(30,112,200,.2)';
+        profileTabContents.forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        const targetEl = document.getElementById(target);
+        if (targetEl) targetEl.classList.add('active');
       });
     });
-    
-    // Input de imagen de perfil
-    const imageInput = document.getElementById('editProfileImage');
-    const removeImageBtn = document.getElementById('removeProfileImageBtn');
-    
-    imageInput?.addEventListener('input', (e) => {
-      const url = e.target.value.trim();
-      if (url) {
-        avatarPreview.innerHTML = `<img src="${url}" alt="Vista previa" onerror="this.parentElement.textContent='${avatarInput.value || '😊'}'">`;
-        avatarOpts.forEach(o => o.classList.remove('selected'));
-        removeImageBtn.style.display = 'block';
-      }
+
+    // Abrir modal de editar perfil
+    document.querySelectorAll('#editProfileBtn, #editProfileBtnCard, .btn-edit-profile-trigger').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const modal = document.getElementById('editProfileModal');
+        if (modal && typeof modal.showModal === 'function') modal.showModal();
+      });
     });
-    
-    removeImageBtn?.addEventListener('click', () => {
-      imageInput.value = '';
-      avatarPreview.textContent = avatarInput.value || '😊';
-      avatarPreview.style.background = 'rgba(30,112,200,.2)';
-      removeImageBtn.style.display = 'none';
-    });
-    
+
     // Cerrar modal con backdrop click
     const modal = document.getElementById('editProfileModal');
     modal?.addEventListener('click', (e) => {
@@ -2173,7 +2516,7 @@
         try {
           await navigator.clipboard.writeText(code);
           const original = copyRefBtn.textContent;
-          copyRefBtn.textContent = '✅';
+          copyRefBtn.textContent = '';
           setTimeout(() => copyRefBtn.textContent = original, 2000);
         } catch (err) {
           console.warn('Clipboard no disponible:', err);
@@ -2206,6 +2549,15 @@
     
   });
   </script>
+
+  <!-- Footer -->
+  <footer role="contentinfo">
+    <p>&copy; <time datetime="2026">2026</time> Panter Studio Game Dev. Todos los derechos reservados.</p>
+  </footer>
   
+  <!-- Scripts -->
+  <script src="../assets/js/soporte.js" defer></script>
+  <script src="../assets/js/core/script.js" defer></script>
+  <script src="../assets/js/pages/perfil.js" defer></script>
 </body>
 </html>

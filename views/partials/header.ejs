@@ -14,7 +14,10 @@
     <link rel="icon" href="/recursos/PSGD.png" type="image/png">
     <link rel="apple-touch-icon" href="/recursos/PSGD.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/assets/css/style.css">
+    <script src="/assets/js/core/roles.js"></script>
+    <script src="/assets/js/core/role-badges.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
     <%- typeof extraHead !== 'undefined' ? extraHead : '' %>
 </head>
@@ -43,8 +46,7 @@
             <a href="/donaciones" class="<%= currentPage === 'donaciones' ? 'active' : '' %>">Apoyanos</a>
             <a href="/personal" class="<%= currentPage === 'personal' ? 'active' : '' %>">Personal</a>
             <a href="/perfil" class="<%= currentPage === 'perfil' ? 'active' : '' %>">Mi Perfil</a>
-            <a href="/meinteresa" class="<%= currentPage === 'meinteresa' ? 'active' : '' %>">Me Interesa</a>
-            <a href="/wiki/como-comenzar" class="<%= currentPage === 'wiki' ? 'active' : '' %>">Wiki</a>
+            <a href="/soporte" class="<%= currentPage === 'soporte' ? 'active' : '' %>">Soporte</a>
         </div>
         <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
             <span></span><span></span><span></span>
@@ -60,11 +62,9 @@
                 <a href="/videos" class="<%= currentPage === 'videos' ? 'active' : '' %>">Videos</a>
             </div>
             <hr>
-            <a href="/minijuegos" class="<%= currentPage === 'minijuegos' ? 'active' : '' %>">Panter Core</a>
             <a href="/donaciones" class="<%= currentPage === 'donaciones' ? 'active' : '' %>">Apoyanos</a>
             <a href="/personal" class="<%= currentPage === 'personal' ? 'active' : '' %>">Personal</a>
             <a href="/perfil" class="<%= currentPage === 'perfil' ? 'active' : '' %>">Mi Perfil</a>
-            <a href="/meinteresa" class="<%= currentPage === 'meinteresa' ? 'active' : '' %>">Me Interesa</a>
-            <a href="/wiki/como-comenzar" class="<%= currentPage === 'wiki' ? 'active' : '' %>">Wiki</a>
+            <a href="/soporte" class="<%= currentPage === 'soporte' ? 'active' : '' %>">Soporte</a>
         </nav>
     </nav>

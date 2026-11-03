@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procesando Inicio de Sesión Discord...</title>
+    <style>
+        body {
+            background: #0f1322;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .loading-box {
+            text-align: center;
+            background: rgba(30, 36, 56, 0.8);
+            border: 1px solid rgba(88, 101, 242, 0.4);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(88, 101, 242, 0.2);
+            border-top-color: #5865f2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="../assets/css/modules.css">
+</head>
+<body>
+    <div class="loading-box">
+        <div class="spinner"></div>
+        <h2>Conectando con Discord...</h2>
+        <p style="color: #94a3b8; font-size: 0.9rem;">Por favor espera un momento mientras validamos tu sesión.</p>
+    </div>
+    <script src="../assets/js/core/roles.js"></script>
+    <script src="../assets/js/core/discord-auth.js"></script>
+    <script src="../assets/js/core/role-badges.js"></script>
+    <script>
+        setTimeout(() => {
+            const returnUrl = sessionStorage.getItem('auth_return_url');
+            if (returnUrl) {
+                sessionStorage.removeItem('auth_return_url');
+                window.location.href = returnUrl;
+            } else {
+                window.location.href = "../index.html";
+            }
+        }, 1200);
+    </script>
+</body>
+</html>

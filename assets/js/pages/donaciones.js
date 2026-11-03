@@ -93,7 +93,7 @@
         if (!tiers.length) {
             tiersGrid.innerHTML = `
                 <div class="donation-tier-card tier-default">
-                    <div class="tier-badge">💝</div>
+                    <div class="tier-badge"><i class="fa-solid fa-heart" style="color:#f472b6" aria-hidden="true"></i></div>
                     <h3>Apoyo Libre</h3>
                     <p class="tier-amount">Cualquier monto</p>
                     <p>Tu aporte, sin importar el tamaño, impulsa el desarrollo.</p>
@@ -123,12 +123,12 @@
 
                 return `
                     <div class="donation-tier-card ${featuredClass}">
-                        <div class="tier-badge" style="${badgeStyle}">${esc(tier.badge || '⭐')}</div>
+                        <div class="tier-badge" style="${badgeStyle}">${tier.badge ? esc(tier.badge) : '<i class="fa-solid fa-star" aria-hidden="true"></i>'}</div>
                         ${tier.featured ? '<span class="tier-featured-tag">Recomendado</span>' : ''}
                         <h3>${esc(tier.name)}</h3>
                         <p class="tier-amount">$${Number(tier.amount || 0).toFixed(2)} USD</p>
                         <ul class="tier-benefits">${benefits}</ul>
-                        <p class="tier-coins">+${tier.coins || 0} 🪙 monedas</p>
+                        <p class="tier-coins">+${tier.coins || 0} <i class="fa-solid fa-coins" aria-hidden="true"></i> monedas</p>
                     </div>
                 `;
             })
@@ -151,7 +151,7 @@
                 const badgeStyle = s.color ? `border-color: ${s.color};` : '';
                 return `
                     <div class="sponsor-card" style="${badgeStyle}">
-                        <span class="sponsor-badge">${esc(s.badge || '💖')}</span>
+                        <span class="sponsor-badge">${s.badge ? esc(s.badge) : '<i class="fa-solid fa-heart" style="color:#f472b6" aria-hidden="true"></i>'}</span>
                         <span class="sponsor-name">${esc(s.displayName || 'Anonimo')}</span>
                         ${s.tierName ? `<span class="sponsor-tier">${esc(s.tierName)}</span>` : ''}
                     </div>

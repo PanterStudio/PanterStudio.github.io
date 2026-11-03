@@ -9,6 +9,11 @@
     <link rel="icon" href="../../recursos/PSGD.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="../../assets/css/modules.css">
+    <script src="../../assets/js/core/roles.js"></script>
+    <script src="../../assets/js/core/discord-auth.js"></script>
+    <script src="../../assets/js/core/role-badges.js"></script>
+    <script src="../../assets/js/core/firebase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
     <style>
         .wiki-section {
@@ -96,7 +101,9 @@
             box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
         }
         .wiki-search-box::before {
-            content: '🔍';
+            content: '\f002';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
             position: absolute;
             left: 12px;
             top: 50%;
@@ -261,6 +268,8 @@
             line-height: 1.4;
         }
     </style>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 </head>
 <body data-site-root="../.." data-theme="dark" class="dark-mode">
     <div id="tsparticles"></div>
@@ -283,13 +292,14 @@
                     <a href="../videos.html">Videos</a>
                 </div>
             </div>
-            <a href="../minijuegos.html">Panter Core</a>
+            <a href="../nuestra-tierra.html">Nuestra Tierra</a>
             <a href="../donaciones.html">Apoyanos</a>
             <a href="../personal.html">Personal</a>
-            <a href="../perfil.html">Mi Perfil</a>
-            <a href="../meinteresa.html">Me Interesa</a>
+            <a href="../soporte.html">Soporte</a>
+            <a href="../admin/admin.html" id="adminNavLink" hidden>Panel Admin</a>
             <a href="como-comenzar.html" class="active">Wiki</a>
         </div>
+        <div class="nav-right"></div>
         <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
             <span></span><span></span><span></span>
         </button>
@@ -304,11 +314,11 @@
                 <a href="../videos.html">Videos</a>
             </div>
             <hr>
-            <a href="../minijuegos.html">Panter Core</a>
+            <a href="../nuestra-tierra.html">Nuestra Tierra</a>
             <a href="../donaciones.html">Apoyanos</a>
             <a href="../personal.html">Personal</a>
-            <a href="../perfil.html">Mi Perfil</a>
-            <a href="../meinteresa.html">Me Interesa</a>
+            <a href="../soporte.html">Soporte</a>
+            <a href="../admin/admin.html" id="adminNavLink" hidden>Panel Admin</a>
             <a href="como-comenzar.html" class="active">Wiki</a>
         </nav>
     </nav>
@@ -318,7 +328,7 @@
         <section class="wiki-section">
             
             <div class="wiki-header">
-                <div class="wiki-header-tag">📖 Centro de Soporte</div>
+                <div class="wiki-header-tag"><i class="fa-solid fa-book-open" aria-hidden="true"></i> Centro de Soporte</div>
                 <h1>Wiki del Juego</h1>
                 <p>Resuelve todas tus dudas sobre el simulador <strong>Nuestra Tierra Job Simulator</strong>. Aprende mecanicas, domina trabajos y maximiza tus ganancias.</p>
             </div>
@@ -334,24 +344,24 @@
                     <div class="wiki-menu">
                         <div class="wiki-menu-group">
                             <div class="wiki-menu-header">Introduccion</div>
-                            <a href="como-comenzar.html" class="wiki-nav-btn">🚀 Como Comenzar</a>
-                            <a href="mecanicas.html" class="wiki-nav-btn active">🎮 Mecanicas de Juego</a>
-                            <a href="dispositivo-movil.html" class="wiki-nav-btn">📱 Dispositivo Movil</a>
-                            <a href="vehiculos.html" class="wiki-nav-btn">🚗 Vehiculos</a>
-                            <a href="mapas.html" class="wiki-nav-btn">🗺️ Mapas</a>
+                            <a href="como-comenzar.html" class="wiki-nav-btn"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Como Comenzar</a>
+                            <a href="mecanicas.html" class="wiki-nav-btn active"><i class="fa-solid fa-gamepad" aria-hidden="true"></i> Mecanicas de Juego</a>
+                            <a href="dispositivo-movil.html" class="wiki-nav-btn"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> Dispositivo Movil</a>
+                            <a href="vehiculos.html" class="wiki-nav-btn"><i class="fa-solid fa-car" aria-hidden="true"></i> Vehiculos</a>
+                            <a href="mapas.html" class="wiki-nav-btn"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> Mapas</a>
                         </div>
 
                         <div class="wiki-menu-group">
                             <div class="wiki-menu-header">Profesiones</div>
-                            <a href="trabajos.html" class="wiki-nav-btn">💼 Lista de Trabajos</a>
+                            <a href="trabajos.html" class="wiki-nav-btn"><i class="fa-solid fa-briefcase" aria-hidden="true"></i> Lista de Trabajos</a>
                             <div class="wiki-nested-menu">
-                                <a href="mensajero.html" class="wiki-nested-btn">🚴 Mensajero</a>
+                                <a href="mensajero.html" class="wiki-nested-btn"><i class="fa-solid fa-person-biking" aria-hidden="true"></i> Mensajero</a>
                             </div>
                         </div>
 
                         <div class="wiki-menu-group">
                             <div class="wiki-menu-header">Soporte</div>
-                            <a href="faq.html" class="wiki-nav-btn">❓ Preguntas Frecuentes</a>
+                            <a href="faq.html" class="wiki-nav-btn"><i class="fa-solid fa-circle-question" aria-hidden="true"></i> Preguntas Frecuentes</a>
                         </div>
                     </div>
                 </aside>
@@ -359,27 +369,27 @@
                 <!-- MAIN WIKI CONTENT -->
                 <div class="wiki-content-card">
                     <div class="wiki-tab-panel" id="mecanicas">
-                        <h2>🎮 Mecanicas de Juego</h2>
+                        <h2><i class="fa-solid fa-gamepad" aria-hidden="true"></i> Mecanicas de Juego</h2>
                         <p>Nuestra Tierra Job Simulator cuenta con un set de fisicas y mecanicas realistas para hacer la experiencia inmersiva. Conoce las reglas del mapa:</p>
                         
-                        <h3>⛽ Sistema de Combustible y Daño</h3>
+                        <h3><i class="fa-solid fa-gas-pump" aria-hidden="true"></i> Sistema de Combustible y Daño</h3>
                         <p>Cada vehiculo de motor consume gasolina a medida que aceleras. Si tu tanque se vacia, deberas empujar tu vehiculo o llamar a una grua pagando una penalizacion en monedas. Ademas, chocar de forma violenta dañara tu chasis, reduciendo la velocidad maxima de viaje.</p>
 
-                        <h3>👮 Multas de Transito y Policia</h3>
+                        <h3><i class="fa-solid fa-user-shield" aria-hidden="true"></i> Multas de Transito y Policia</h3>
                         <p>La ciudad cuenta con patrullas inteligentes y radares de velocidad. Infringir las leyes tiene consecuencias:</p>
                         <ul>
-                            <li><strong>Pasar semaforos en rojo:</strong> Multa instantanea de 🪙 15.</li>
-                            <li><strong>Exceso de velocidad:</strong> Multa detectada por radar de 🪙 25.</li>
+                            <li><strong>Pasar semaforos en rojo:</strong> Multa instantanea de <i class="fa-solid fa-coins" aria-hidden="true"></i> 15.</li>
+                            <li><strong>Exceso de velocidad:</strong> Multa detectada por radar de <i class="fa-solid fa-coins" aria-hidden="true"></i> 25.</li>
                             <li><strong>Choque frontal contra civiles:</strong> Atencion policial de nivel 1. Si te atrapan, te confiscaran parte de las mercancias de tu trabajo activo.</li>
                         </ul>
 
-                        <h3>⭐ Reputacion de Conductor</h3>
+                        <h3><i class="fa-solid fa-star" aria-hidden="true"></i> Reputacion de Conductor</h3>
                         <p>Cada vez que completas un encargo laboral exitosamente, tu reputacion como conductor profesional sube. Esto desbloquea misiones de mayor nivel que pagan mejores tarifas por hora.</p>
 
-                        <h3>🧼 Sistema de Suciedad</h3>
+                        <h3><i class="fa-solid fa-soap" aria-hidden="true"></i> Sistema de Suciedad</h3>
                         <p>Al pasar por lugares con demasiada tierra como lo son las carreteras de trocha (terraceria), el vehiculo comenzara a ensuciarse. Para poder volver a tener limpio el auto, deberemos ir a un lavadero de vehiculos cercano.</p>
 
-                        <h3>🛠️ Sistema de Daño de Parabrisas</h3>
+                        <h3><i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i> Sistema de Daño de Parabrisas</h3>
                         <p>Al conducir de forma muy brusca, siempre existira la posibilidad de accidentarnos. En caso de que esto pase, y dependiendo de la gravedad del choque, el parabrisas se comenzara a dañar (romper). Para repararlo, debemos ir a un taller mecanico cercano.</p>
                     </div>
                 </div>
@@ -388,7 +398,7 @@
 
         </section>
 
-        <!-- ★ Anuncio inferior -->
+        <!-- Anuncio inferior -->
         <div class="ad-slot-wrapper ad-horizontal" id="ad-bottom" style="margin-top:2rem;">
             <span class="ad-slot-label">Publicidad</span>
             <div class="ad-slot-inner">

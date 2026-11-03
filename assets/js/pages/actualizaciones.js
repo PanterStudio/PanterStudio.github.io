@@ -275,13 +275,13 @@
                     <!-- ══ REACCIONES ══ -->
                     <div style="display:flex; gap:10px; margin-top:15px; border-top:1px solid rgba(255,255,255,0.05); padding-top:12px;">
                         <button class="pb sm" onclick="toggleReaction('${collectionName}', '${item.id}', '👍', 'count_up_${safeId}')" style="background:${isThumbsUp ? 'rgba(0,176,255,0.15)' : 'rgba(255,255,255,0.03)'}; border:1px solid ${isThumbsUp ? '#00b0ff' : 'rgba(255,255,255,0.05)'}; padding:4px 10px; border-radius:20px; cursor:pointer; font-size:0.8rem; display:inline-flex; align-items:center; gap:6px; color:#fff;">
-                            👍 <span id="count_up_${safeId}">${thumbsUpList.length}</span>
+                            <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i> <span id="count_up_${safeId}">${thumbsUpList.length}</span>
                         </button>
                         <button class="pb sm" onclick="toggleReaction('${collectionName}', '${item.id}', '❤️', 'count_heart_${safeId}')" style="background:${isHeart ? 'rgba(0,176,255,0.15)' : 'rgba(255,255,255,0.03)'}; border:1px solid ${isHeart ? '#00b0ff' : 'rgba(255,255,255,0.05)'}; padding:4px 10px; border-radius:20px; cursor:pointer; font-size:0.8rem; display:inline-flex; align-items:center; gap:6px; color:#fff;">
-                            ❤️ <span id="count_heart_${safeId}">${heartList.length}</span>
+                            <i class="fa-solid fa-heart" style="color:#ef4444" aria-hidden="true"></i> <span id="count_heart_${safeId}">${heartList.length}</span>
                         </button>
                         <button class="pb sm" onclick="toggleReaction('${collectionName}', '${item.id}', '🔥', 'count_fire_${safeId}')" style="background:${isFire ? 'rgba(0,176,255,0.15)' : 'rgba(255,255,255,0.03)'}; border:1px solid ${isFire ? '#00b0ff' : 'rgba(255,255,255,0.05)'}; padding:4px 10px; border-radius:20px; cursor:pointer; font-size:0.8rem; display:inline-flex; align-items:center; gap:6px; color:#fff;">
-                            🔥 <span id="count_fire_${safeId}">${fireList.length}</span>
+                            <i class="fa-solid fa-fire" aria-hidden="true"></i> <span id="count_fire_${safeId}">${fireList.length}</span>
                         </button>
                     </div>
 

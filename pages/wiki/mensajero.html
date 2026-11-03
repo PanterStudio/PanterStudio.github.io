@@ -9,6 +9,11 @@
     <link rel="icon" href="../../recursos/PSGD.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="../../assets/css/modules.css">
+    <script src="../../assets/js/core/roles.js"></script>
+    <script src="../../assets/js/core/discord-auth.js"></script>
+    <script src="../../assets/js/core/role-badges.js"></script>
+    <script src="../../assets/js/core/firebase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
     <style>
         .wiki-section {
@@ -96,7 +101,9 @@
             box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
         }
         .wiki-search-box::before {
-            content: '🔍';
+            content: '\f002';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
             position: absolute;
             left: 12px;
             top: 50%;
@@ -261,6 +268,8 @@
             line-height: 1.4;
         }
     </style>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 </head>
 <body data-site-root="../.." data-theme="dark" class="dark-mode">
     <div id="tsparticles"></div>
@@ -283,13 +292,14 @@
                     <a href="../videos.html">Videos</a>
                 </div>
             </div>
-            <a href="../minijuegos.html">Panter Core</a>
+            <a href="../nuestra-tierra.html">Nuestra Tierra</a>
             <a href="../donaciones.html">Apoyanos</a>
             <a href="../personal.html">Personal</a>
-            <a href="../perfil.html">Mi Perfil</a>
-            <a href="../meinteresa.html">Me Interesa</a>
+            <a href="../soporte.html">Soporte</a>
+            <a href="../admin/admin.html" id="adminNavLink" hidden>Panel Admin</a>
             <a href="como-comenzar.html" class="active">Wiki</a>
         </div>
+        <div class="nav-right"></div>
         <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
             <span></span><span></span><span></span>
         </button>
@@ -304,11 +314,11 @@
                 <a href="../videos.html">Videos</a>
             </div>
             <hr>
-            <a href="../minijuegos.html">Panter Core</a>
+            <a href="../nuestra-tierra.html">Nuestra Tierra</a>
             <a href="../donaciones.html">Apoyanos</a>
             <a href="../personal.html">Personal</a>
-            <a href="../perfil.html">Mi Perfil</a>
-            <a href="../meinteresa.html">Me Interesa</a>
+            <a href="../soporte.html">Soporte</a>
+            <a href="../admin/admin.html" id="adminNavLink" hidden>Panel Admin</a>
             <a href="como-comenzar.html" class="active">Wiki</a>
         </nav>
     </nav>
@@ -318,7 +328,7 @@
         <section class="wiki-section">
             
             <div class="wiki-header">
-                <div class="wiki-header-tag">📖 Centro de Soporte</div>
+                <div class="wiki-header-tag"><i class="fa-solid fa-book-open" aria-hidden="true"></i> Centro de Soporte</div>
                 <h1>Wiki del Juego</h1>
                 <p>Resuelve todas tus dudas sobre el simulador <strong>Nuestra Tierra Job Simulator</strong>. Aprende mecanicas, domina trabajos y maximiza tus ganancias.</p>
             </div>
@@ -334,24 +344,24 @@
                     <div class="wiki-menu">
                         <div class="wiki-menu-group">
                             <div class="wiki-menu-header">Introduccion</div>
-                            <a href="como-comenzar.html" class="wiki-nav-btn">🚀 Como Comenzar</a>
-                            <a href="mecanicas.html" class="wiki-nav-btn">🎮 Mecanicas de Juego</a>
-                            <a href="dispositivo-movil.html" class="wiki-nav-btn">📱 Dispositivo Movil</a>
-                            <a href="vehiculos.html" class="wiki-nav-btn">🚗 Vehiculos</a>
-                            <a href="mapas.html" class="wiki-nav-btn">🗺️ Mapas</a>
+                            <a href="como-comenzar.html" class="wiki-nav-btn"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Como Comenzar</a>
+                            <a href="mecanicas.html" class="wiki-nav-btn"><i class="fa-solid fa-gamepad" aria-hidden="true"></i> Mecanicas de Juego</a>
+                            <a href="dispositivo-movil.html" class="wiki-nav-btn"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> Dispositivo Movil</a>
+                            <a href="vehiculos.html" class="wiki-nav-btn"><i class="fa-solid fa-car" aria-hidden="true"></i> Vehiculos</a>
+                            <a href="mapas.html" class="wiki-nav-btn"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> Mapas</a>
                         </div>
 
                         <div class="wiki-menu-group">
                             <div class="wiki-menu-header">Profesiones</div>
-                            <a href="trabajos.html" class="wiki-nav-btn active">💼 Lista de Trabajos</a>
+                            <a href="trabajos.html" class="wiki-nav-btn active"><i class="fa-solid fa-briefcase" aria-hidden="true"></i> Lista de Trabajos</a>
                             <div class="wiki-nested-menu">
-                                <a href="mensajero.html" class="wiki-nested-btn active">🚴 Mensajero</a>
+                                <a href="mensajero.html" class="wiki-nested-btn active"><i class="fa-solid fa-person-biking" aria-hidden="true"></i> Mensajero</a>
                             </div>
                         </div>
 
                         <div class="wiki-menu-group">
                             <div class="wiki-menu-header">Soporte</div>
-                            <a href="faq.html" class="wiki-nav-btn">❓ Preguntas Frecuentes</a>
+                            <a href="faq.html" class="wiki-nav-btn"><i class="fa-solid fa-circle-question" aria-hidden="true"></i> Preguntas Frecuentes</a>
                         </div>
                     </div>
                 </aside>
@@ -359,7 +369,7 @@
                 <!-- MAIN WIKI CONTENT -->
                 <div class="wiki-content-card">
                     <div class="wiki-tab-panel" id="trabajo-mensajero">
-                        <h2>🚴 Profesion: Mensajero / Repartidor</h2>
+                        <h2><i class="fa-solid fa-person-biking" aria-hidden="true"></i> Profesion: Mensajero / Repartidor</h2>
                         <p>El trabajo de mensajero es la primera profesion con la que los ciudadanos pueden comenzar a ganar dinero en el simulador. Lo mejor de todo es que <strong>no se requiere experiencia previa</strong> alguna para empezar a trabajar de inmediato.</p>
 
                         <h3>¿Como Iniciar la Jornada?</h3>
@@ -431,7 +441,7 @@
                         <p>Recuerda que <strong>podemos hacer este trabajo las veces que queramos</strong>, por lo que es la fuente ideal para acumular tu capital inicial.</p>
 
                         <div class="wiki-info-box" style="border-color: rgba(239, 68, 68, 0.3); background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.025));">
-                            <div class="wiki-info-icon">⚠️</div>
+                            <div class="wiki-info-icon"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></div>
                             <div class="wiki-info-content">
                                 <h5>Mecanica Critica de Entrega</h5>
                                 <p>Al llegar al punto indicado, ve a la parte trasera de tu vehiculo, busca el paquete del cliente y llevalo caminando hasta la puerta o punto de entrega. Si el cliente se encuentra en casa y recibe el pedido, la entrega sera exitosa y cobraras tu paga. <strong>Si el cliente NO esta en el domicilio, el pedido no se te pagara.</strong></p>
@@ -441,9 +451,9 @@
                         <h3>Fases de Tiempo para Devolucion de Vehiculo</h3>
                         <p>Una vez terminemos de entregar los paquetes, contaremos con un tiempo para devolver el vehiculo a la central logistica. Este proceso cuenta con 3 fases de tiempo:</p>
                         <ul>
-                            <li><strong>🟢 Primera Fase (Normal):</strong> Podemos devolver el vehiculo dentro del tiempo limite establecido y no pasara nada. Nos pagaran la ruta completa de forma normal.</li>
-                            <li><strong>🟡 Segunda Fase (Critica):</strong> Entramos en un periodo de retraso. Contamos con un tiempo limite para entregar si o si el vehiculo, pero se nos comenzara a descontar dinero progresivamente del pago final de la ruta por cada segundo de demora.</li>
-                            <li><strong>🔴 Tercera Fase (Inminente):</strong> Si el tiempo de retraso expira, se activara un temporizador inminente de <strong>10 segundos</strong> en pantalla. Cuando este temporizador finalice, el vehiculo desaparecera y se anulara toda la paga de la ruta completa.</li>
+                            <li><strong><i class="fa-solid fa-circle" style="color:#22c55e" aria-hidden="true"></i> Primera Fase (Normal):</strong> Podemos devolver el vehiculo dentro del tiempo limite establecido y no pasara nada. Nos pagaran la ruta completa de forma normal.</li>
+                            <li><strong><i class="fa-solid fa-circle" style="color:#facc15" aria-hidden="true"></i> Segunda Fase (Critica):</strong> Entramos en un periodo de retraso. Contamos con un tiempo limite para entregar si o si el vehiculo, pero se nos comenzara a descontar dinero progresivamente del pago final de la ruta por cada segundo de demora.</li>
+                            <li><strong><i class="fa-solid fa-circle" style="color:#ef4444" aria-hidden="true"></i> Tercera Fase (Inminente):</strong> Si el tiempo de retraso expira, se activara un temporizador inminente de <strong>10 segundos</strong> en pantalla. Cuando este temporizador finalice, el vehiculo desaparecera y se anulara toda la paga de la ruta completa.</li>
                         </ul>
                     </div>
                 </div>
@@ -452,7 +462,7 @@
 
         </section>
 
-        <!-- ★ Anuncio inferior -->
+        <!-- Anuncio inferior -->
         <div class="ad-slot-wrapper ad-horizontal" id="ad-bottom" style="margin-top:2rem;">
             <span class="ad-slot-label">Publicidad</span>
             <div class="ad-slot-inner">

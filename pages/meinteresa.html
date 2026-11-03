@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -10,7 +10,10 @@
     <link rel="icon" href="../recursos/PSGD.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    <link rel="stylesheet" href="../assets/css/modules.css">
+    <script src="../assets/js/core/roles.js"></script>
+    <script src="../assets/js/core/discord-auth.js"></script>
+    <script src="../assets/js/core/role-badges.js"></script>
     <script src="../assets/js/core/firebase-config.js"></script>
     <style>
         /* ===== ME INTERESA PAGE STYLES ===== */
@@ -244,6 +247,8 @@
             animation: celebrate 0.5s var(--ease-elastic);
         }
     </style>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 </head>
 <body data-site-root=".." data-theme="dark" class="dark-mode">
     <div id="tsparticles"></div>
@@ -258,47 +263,46 @@
         </div>
         <div class="nav-middle">
             <a href="../index.html">Inicio</a>
+            <a href="nuestra-tierra.html">Nuestra Tierra</a>
             <div class="nav-dropdown">
                 <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">Novedades</button>
                 <div class="nav-dropdown-menu">
                     <a href="actualizaciones.html">Actualizaciones</a>
-                    <a href="imagenes.html">Galeria</a>
+                    <a href="imagenes.html">Galería</a>
                     <a href="videos.html">Videos</a>
                 </div>
             </div>
-            <a href="minijuegos.html">Minijuegos</a>
-            <a href="donaciones.html">Apoyanos</a>
+            <a href="donaciones.html">Apóyanos</a>
             <a href="personal.html">Personal</a>
-            <a href="perfil.html">Mi Perfil</a>
-            <a href="meinteresa.html" class="active">Me Interesa</a>
-            <a href="wiki.html">Wiki</a>
+            <a href="soporte.html">Soporte</a>
+            <a href="admin/admin.html" id="adminNavLink" hidden>Panel Admin</a>
         </div>
+        <div class="nav-right"></div>
         <button class="nav-hamburger" aria-label="Menú" aria-expanded="false">
             <span></span><span></span><span></span>
         </button>
         <!-- Mobile menu -->
         <nav class="nav-mobile-menu">
             <a href="../index.html">Inicio</a>
+            <a href="nuestra-tierra.html">Nuestra Tierra</a>
             <hr>
             <span style="font-size:0.75rem;color:var(--text-muted);padding:0.5rem 1rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Novedades</span>
             <div class="nav-mobile-sub">
                 <a href="actualizaciones.html">Actualizaciones</a>
-                <a href="imagenes.html">Galeria</a>
+                <a href="imagenes.html">Galería</a>
                 <a href="videos.html">Videos</a>
             </div>
             <hr>
-            <a href="minijuegos.html">Minijuegos</a>
-            <a href="donaciones.html">Apoyanos</a>
+            <a href="donaciones.html">Apóyanos</a>
             <a href="personal.html">Personal</a>
             <a href="perfil.html">Mi Perfil</a>
-            <a href="meinteresa.html" class="active">Me Interesa</a>
-            <a href="wiki.html">Wiki</a>
+            <a href="soporte.html">Soporte</a>
         </nav>
     </nav>
 
     <div class="container" style="padding-top: 1rem;">
 
-        <!-- ★ Anuncio superior -->
+        <!-- Anuncio superior -->
         <div class="ad-slot-wrapper ad-horizontal" id="ad-top">
             <span class="ad-slot-label">Publicidad</span>
             <div class="ad-slot-inner">
@@ -319,7 +323,7 @@
                  class="mi-hero-bg">
             <div class="mi-hero-overlay"></div>
             <div class="mi-hero-content">
-                <div class="mi-hero-tag">🎮 En Desarrollo</div>
+                <div class="mi-hero-tag"><i class="fa-solid fa-gamepad" aria-hidden="true"></i> En Desarrollo</div>
                 <h1 class="mi-hero-title">Nuestra Tierra<br>Job Simulator</h1>
                 <p class="mi-hero-sub">
                     El primer simulador de trabajos con identidad colombiana. Recorre el campo, atiende tu tienda y vive la cultura desde adentro.
@@ -337,7 +341,7 @@
                 <p class="mi-counter-sub">personas ya dijeron <strong style="color:var(--color-primary-light);">¡Me Interesa!</strong></p>
 
                 <button id="miInteresaBtn" class="mi-btn-main not-voted" onclick="registrarInteres()">
-                    <span class="mi-btn-icon">💚</span>
+                    <span class="mi-btn-icon"><i class="fa-solid fa-heart" style="color:#22c55e" aria-hidden="true"></i></span>
                     <span id="miBtnText">¡Me Interesa el Juego!</span>
                 </button>
 
@@ -348,28 +352,28 @@
             <!-- INFO CARDS -->
             <div class="mi-info-grid">
                 <div class="mi-info-card">
-                    <span class="mi-info-icon">🎮</span>
+                    <span class="mi-info-icon"><i class="fa-solid fa-gamepad" aria-hidden="true"></i></span>
                     <div>
                         <h4>¿Qué es este juego?</h4>
                         <p>Un simulador móvil de trabajos y la vida cotidiana colombiana. Cultiva, atiende tu negocio y explora el mundo.</p>
                     </div>
                 </div>
                 <div class="mi-info-card">
-                    <span class="mi-info-icon">🛠️</span>
+                    <span class="mi-info-icon"><i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i></span>
                     <div>
                         <h4>¿En qué etapa está?</h4>
                         <p>Desarrollo activo. El estudio construye la base del juego y comparte avances semanales en las novedades.</p>
                     </div>
                 </div>
                 <div class="mi-info-card">
-                    <span class="mi-info-icon">💡</span>
+                    <span class="mi-info-icon"><i class="fa-solid fa-lightbulb" aria-hidden="true"></i></span>
                     <div>
                         <h4>¿Por qué marcar interés?</h4>
                         <p>Cada clic le muestra al equipo cuántas personas esperan el juego. Ayuda a priorizar el desarrollo.</p>
                     </div>
                 </div>
                 <div class="mi-info-card">
-                    <span class="mi-info-icon">📢</span>
+                    <span class="mi-info-icon"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i></span>
                     <div>
                         <h4>¿Cómo me entero del lanzamiento?</h4>
                         <p>Sigue las <a href="actualizaciones.html" style="color:var(--color-primary-light);">novedades</a> del estudio o únete al Discord para actualizaciones en tiempo real.</p>
@@ -387,7 +391,7 @@
         </div>
     </div>
 
-        <!-- ★ Anuncio inferior -->
+        <!-- Anuncio inferior -->
         <div class="ad-slot-wrapper ad-horizontal" id="ad-bottom">
             <span class="ad-slot-label">Publicidad</span>
             <div class="ad-slot-inner">
@@ -402,7 +406,7 @@
         </div>
 
     <footer>
-        <p>© 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
+        <p><i class="fa-regular fa-copyright" aria-hidden="true"></i> 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
     </footer>
 
     <script src="../assets/js/core/script.js"></script>
@@ -447,7 +451,7 @@
                 btn.classList.add('voted');
             }
             if (txt) txt.textContent = '¡Ya marcaste tu interés! (Quitar)';
-            setStatus('✅ ¡Gracias! Has marcado que te interesa el juego.', 'success');
+            setStatus('<i class="fa-solid fa-circle-check" aria-hidden="true"></i> ¡Gracias! Has marcado que te interesa el juego.', 'success');
         } else {
             if (btn) {
                 btn.classList.add('not-voted');
@@ -518,7 +522,7 @@
         }
 
         if (!currentUser) {
-            setStatus('⚠️ Debes iniciar sesión en la pestaña "Mi Perfil" primero.', 'error');
+            setStatus('<i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Debes iniciar sesión en la pestaña "Mi Perfil" primero.', 'error');
             return;
         }
 

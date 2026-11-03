@@ -1169,6 +1169,65 @@ body.admin-page {
   box-shadow: 0 0 14px rgba(0,176,255,0.2);
   transform: translateY(-1px);
 }
+.account-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  margin-top: 2px;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.32);
+  border-radius: 9px;
+  color: #fca5a5;
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.account-delete-btn:hover {
+  background: rgba(239,68,68,0.22);
+  border-color: rgba(239,68,68,0.55);
+  box-shadow: 0 0 14px rgba(239,68,68,0.18);
+  transform: translateY(-1px);
+}
+.account-delete-btn:focus-visible {
+  outline: 2px solid rgba(239,68,68,0.6);
+  outline-offset: 2px;
+}
+.account-manage-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  background: rgba(0,176,255,0.1);
+  border: 1px solid rgba(0,176,255,0.32);
+  border-radius: 9px;
+  color: var(--color-primary-light);
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.account-manage-btn:hover:not(:disabled) {
+  background: rgba(0,176,255,0.22);
+  border-color: rgba(0,176,255,0.55);
+  box-shadow: 0 0 14px rgba(0,176,255,0.18);
+  transform: translateY(-1px);
+}
+.account-manage-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.account-card-actions {
+  display: grid;
+  gap: 6px;
+}
 
 /* ── Mobile responsive ── */
 @media (max-width: 992px) {

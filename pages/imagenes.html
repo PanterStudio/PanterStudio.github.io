@@ -1,18 +1,82 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Imágenes - Panter Studio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <title>Galería de Imágenes — Panter Studio</title>
+    <meta name="description" content="Explora las capturas oficiales, modelos 3D y carreteras de Nuestra Tierra Job Simulator en smartphones.">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
     <meta name="google-adsense-account" content="ca-pub-8870488962578785">
     <link rel="icon" href="../recursos/PSGD.png" type="image/png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="apple-touch-icon" href="../recursos/PSGD.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/modules.css">
+    <script src="../assets/js/core/roles.js"></script>
+    <script src="../assets/js/core/discord-auth.js"></script>
+    <script src="../assets/js/core/role-badges.js"></script>
+    <script src="../assets/js/core/firebase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    <style>
+        :root {
+            --color-primary: #00b0ff;
+            --color-primary-light: #40c4ff;
+        }
+        body {
+            background-color: #0a0d14 !important;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(0, 176, 255, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.06) 0%, transparent 50%) !important;
+            background-attachment: fixed !important;
+            color: #ffffff;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        .gallery-hero-header {
+            text-align: center;
+            padding: 2.5rem 1rem 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .gallery-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 16px;
+            background: rgba(0, 176, 255, 0.12);
+            border: 1px solid var(--color-primary-light);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--color-primary-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1.2rem;
+            box-shadow: 0 0 20px rgba(0, 176, 255, 0.25);
+        }
+        .gallery-title {
+            font-size: clamp(2rem, 4.5vw, 3.2rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin: 0 0 1rem 0;
+            background: linear-gradient(135deg, #ffffff 30%, #a5f3fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.8px;
+        }
+        .gallery-desc {
+            font-size: 1.05rem;
+            color: var(--text-secondary, #94a3b8);
+            line-height: 1.6;
+            margin: 0;
+        }
+    </style>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 </head>
 <body data-site-root=".." data-theme="dark" class="dark-mode">
     <div id="tsparticles"></div>
+
+    <!-- NAV -->
     <nav>
         <div class="nav-left">
             <a href="../index.html" class="nav-logo">
@@ -22,100 +86,232 @@
         </div>
         <div class="nav-middle">
             <a href="../index.html">Inicio</a>
+            <a href="nuestra-tierra.html">Nuestra Tierra</a>
             <div class="nav-dropdown">
                 <button type="button" class="nav-dropdown-toggle active" aria-haspopup="true" aria-expanded="false">Novedades</button>
                 <div class="nav-dropdown-menu">
                     <a href="actualizaciones.html">Actualizaciones</a>
-                    <a href="imagenes.html" class="active">Galeria</a>
+                    <a href="imagenes.html" class="active">Galería</a>
                     <a href="videos.html">Videos</a>
                 </div>
             </div>
-            <a href="minijuegos.html">Minijuegos</a>
-            <a href="donaciones.html">Apoyanos</a>
+            <a href="donaciones.html">Apóyanos</a>
             <a href="personal.html">Personal</a>
-            <a href="perfil.html">Mi Perfil</a>
-            <a href="meinteresa.html">Me Interesa</a>
-            <a href="wiki.html">Wiki</a>
+            <a href="soporte.html">Soporte</a>
+            <a href="admin/admin.html" id="adminNavLink" hidden>Panel Admin</a>
         </div>
+        <div class="nav-right"></div>
         <button class="nav-hamburger" aria-label="Menú" aria-expanded="false">
             <span></span><span></span><span></span>
         </button>
-        <!-- Mobile menu -->
         <nav class="nav-mobile-menu">
             <a href="../index.html">Inicio</a>
+            <a href="nuestra-tierra.html">Nuestra Tierra</a>
             <hr>
             <span style="font-size:0.75rem;color:var(--text-muted);padding:0.5rem 1rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Novedades</span>
             <div class="nav-mobile-sub">
                 <a href="actualizaciones.html">Actualizaciones</a>
-                <a href="imagenes.html" class="active">Galeria</a>
+                <a href="imagenes.html" class="active">Galería</a>
                 <a href="videos.html">Videos</a>
             </div>
             <hr>
-            <a href="minijuegos.html">Minijuegos</a>
-            <a href="donaciones.html">Apoyanos</a>
+            <a href="donaciones.html">Apóyanos</a>
             <a href="personal.html">Personal</a>
             <a href="perfil.html">Mi Perfil</a>
-            <a href="meinteresa.html">Me Interesa</a>
-            <a href="wiki.html">Wiki</a>
+            <a href="soporte.html">Soporte</a>
         </nav>
     </nav>
 
-    <div class="container">
+    <main class="container" style="max-width: 1200px; padding: 1rem 1.5rem 4rem;">
+        
+        <!-- HEADER -->
+        <header class="gallery-hero-header">
+            <span class="gallery-badge"><i class="fa-solid fa-camera" aria-hidden="true"></i> Capturas Oficiales · En Desarrollo</span>
+            <h1 class="gallery-title">Galería de Nuestra Tierra</h1>
+            <p class="gallery-desc">
+                Conoce el mundo abierto, vehículos detallados, escenarios inspirados en Latinoamérica y mecánicas en desarrollo para smartphones.
+            </p>
+        </header>
 
-        <!-- ★ Anuncio superior -->
-        <div class="ad-slot-wrapper ad-horizontal" id="ad-top">
-            <span class="ad-slot-label">Publicidad</span>
-            <div class="ad-slot-inner">
-                <ins class="adsbygoogle"
-                     style="display:block"
-                     data-ad-client="ca-pub-8870488962578785"
-                     data-ad-slot="AUTO"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-            </div>
+        <!-- FILTERS -->
+        <div class="gallery-filters" role="tablist">
+            <button class="gallery-filter-btn active" data-filter="all">Todas las Imágenes</button>
+            <button class="gallery-filter-btn" data-filter="vehiculos">Vehículos</button>
+            <button class="gallery-filter-btn" data-filter="mapas">Mapas & Carreteras</button>
+            <button class="gallery-filter-btn" data-filter="garaje">Garaje & 3D</button>
         </div>
 
-        <section>
-            <h2>Galeria de Arte</h2>
-            <p>Explora el arte conceptual, capturas de pantalla y diseños de personajes de nuestros mundos.</p>
-            <div class="grid-container">
-                <div class="card">
-                    <div style="height: 150px; background: #ddd; display: flex; align-items: center; justify-content: center;">[Arte Conceptual]</div>
-                    <h4>Bocetos Iniciales</h4>
+        <!-- GRID -->
+        <section class="gallery-grid" id="galleryGrid">
+            
+            <!-- Item 1: Garage -->
+            <article class="gallery-card" data-category="garaje" tabindex="0" role="button" aria-label="Ver Garaje de Personalización">
+                <div class="gallery-thumb-wrap">
+                    <img src="../recursos/imagenes/garage.png" alt="Taller y Garaje de Personalización" class="gallery-thumb-img">
+                    <span class="gallery-category-badge">Garaje & Taller</span>
                 </div>
-                <div class="card">
-                     <div style="height: 150px; background: #ddd; display: flex; align-items: center; justify-content: center;">[Captura Gameplay]</div>
-                    <h4>Gameplay Beta</h4>
+                <div class="gallery-card-body">
+                    <h3 class="gallery-card-title">Taller de Personalización</h3>
+                    <p class="gallery-card-desc">Personaliza suspensión, pintura, luces exploradoras, llantas y motores para rutas de montaña.</p>
                 </div>
-                <div class="card">
-                     <div style="height: 150px; background: #ddd; display: flex; align-items: center; justify-content: center;">[Diseño 3D]</div>
-                    <h4>Modelado 3D</h4>
+            </article>
+
+            <!-- Item 2: Sprinter 3D -->
+            <article class="gallery-card" data-category="vehiculos" tabindex="0" role="button" aria-label="Ver Van Sprinter de Envíos Express">
+                <div class="gallery-thumb-wrap">
+                    <img src="../recursos/vehiculos/sprinter.png" alt="Van Sprinter 3D para Reparto" class="gallery-thumb-img">
+                    <span class="gallery-category-badge">Vehículo Express</span>
                 </div>
-            </div>
+                <div class="gallery-card-body">
+                    <h3 class="gallery-card-title">Van Sprinter de Carga</h3>
+                    <p class="gallery-card-desc">Modelo de alta fidelidad diseñado para misiones de mensajería urgente y paquetería urbana.</p>
+                </div>
+            </article>
+
+            <!-- Item 3: Mapa y Vía -->
+            <article class="gallery-card" data-category="mapas" tabindex="0" role="button" aria-label="Ver Vías y Paisajes">
+                <div class="gallery-thumb-wrap">
+                    <img src="../recursos/imagenes/mapa1.png" alt="Rutas Colombianas y Carreteras" class="gallery-thumb-img">
+                    <span class="gallery-category-badge">Rutas & Mapas</span>
+                </div>
+                <div class="gallery-card-body">
+                    <h3 class="gallery-card-title">Carreteras de Montaña</h3>
+                    <p class="gallery-card-desc">Curvas cerradas, peajes, vegetación tropical y desniveles con físicas auténticas de suspensión.</p>
+                </div>
+            </article>
+
+            <!-- Item 4: Físicas y Gameplay -->
+            <article class="gallery-card" data-category="vehiculos" tabindex="0" role="button" aria-label="Ver Físicas de Conducción">
+                <div class="gallery-thumb-wrap">
+                    <img src="../recursos/imagenes/1.png" alt="Simulación de Conducción y Carga" class="gallery-thumb-img">
+                    <span class="gallery-category-badge">Gameplay 3D</span>
+                </div>
+                <div class="gallery-card-body">
+                    <h3 class="gallery-card-title">Físicas de Carga Pesada</h3>
+                    <p class="gallery-card-desc">Control de inercia y tracción según el peso de la mercancía transportada en cada entrega.</p>
+                </div>
+            </article>
+
+            <!-- Item 5: Atardecer en Ruta -->
+            <article class="gallery-card" data-category="mapas" tabindex="0" role="button" aria-label="Ver Ciclo Día y Noche">
+                <div class="gallery-thumb-wrap">
+                    <img src="../recursos/imagenes/fondo.jpg" alt="Ciclo de Luz y Clima Dinámico" class="gallery-thumb-img">
+                    <span class="gallery-category-badge">Clima Dinámico</span>
+                </div>
+                <div class="gallery-card-body">
+                    <h3 class="gallery-card-title">Ciclo Día / Noche y Lluvia</h3>
+                    <p class="gallery-card-desc">Iluminación realista con niebla matutina, atardeceres y asfalto mojado en tiempo real.</p>
+                </div>
+            </article>
+
+            <!-- Item 6: Cabina y Render 3D -->
+            <article class="gallery-card" data-category="garaje" tabindex="0" role="button" aria-label="Ver Cabina de Conducción">
+                <div class="gallery-thumb-wrap">
+                    <img src="../recursos/imagenes/hero_banner.png" alt="Cabina e Interior Realista" class="gallery-thumb-img">
+                    <span class="gallery-category-badge">Interior & Cabina</span>
+                </div>
+                <div class="gallery-card-body">
+                    <h3 class="gallery-card-title">Cabina y Tacómetro Activo</h3>
+                    <p class="gallery-card-desc">Cámaras en primera persona con tacómetros funcionales, espejos retrovisores y volante interactivo.</p>
+                </div>
+            </article>
+
         </section>
 
-        <!-- ★ Anuncio inferior -->
-        <div class="ad-slot-wrapper ad-horizontal" id="ad-bottom">
-            <span class="ad-slot-label">Publicidad</span>
-            <div class="ad-slot-inner">
-                <ins class="adsbygoogle"
-                     style="display:block"
-                     data-ad-client="ca-pub-8870488962578785"
-                     data-ad-slot="AUTO"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </main>
+
+    <!-- LIGHTBOX MODAL -->
+    <div class="lightbox-modal" id="lightboxModal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="lightbox-content">
+            <button type="button" class="lightbox-close-btn" id="lightboxCloseBtn" aria-label="Cerrar imagen"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            <img src="" alt="" class="lightbox-media" id="lightboxImg">
+            <div class="lightbox-info">
+                <span class="gallery-category-badge" id="lightboxBadge" style="position:static; margin-bottom:0.5rem; display:inline-block;"></span>
+                <h3 id="lightboxTitle"></h3>
+                <p id="lightboxDesc"></p>
             </div>
         </div>
-
     </div>
 
     <footer>
-        <p>&copy; 2025 Panter Studio Game Dev.</p>
+        <p><i class="fa-regular fa-copyright" aria-hidden="true"></i> 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
     </footer>
+
     <script src="../assets/js/core/script.js"></script>
+    <script>
+        // Gallery Filter Logic & Lightbox Interactive Engine
+        (function() {
+            const filterBtns = document.querySelectorAll('.gallery-filter-btn');
+            const cards = document.querySelectorAll('.gallery-card');
+            const modal = document.getElementById('lightboxModal');
+            const modalImg = document.getElementById('lightboxImg');
+            const modalTitle = document.getElementById('lightboxTitle');
+            const modalDesc = document.getElementById('lightboxDesc');
+            const modalBadge = document.getElementById('lightboxBadge');
+            const closeBtn = document.getElementById('lightboxCloseBtn');
+
+            // Filtering
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const filter = btn.dataset.filter;
+
+                    cards.forEach(card => {
+                        if (filter === 'all' || card.dataset.category === filter) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+            });
+
+            // Lightbox opening
+            cards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const img = card.querySelector('.gallery-thumb-img');
+                    const title = card.querySelector('.gallery-card-title');
+                    const desc = card.querySelector('.gallery-card-desc');
+                    const badge = card.querySelector('.gallery-category-badge');
+
+                    modalImg.src = img.src;
+                    modalImg.alt = img.alt;
+                    modalTitle.textContent = title.textContent;
+                    modalDesc.textContent = desc.textContent;
+                    modalBadge.textContent = badge.textContent;
+
+                    modal.classList.add('active');
+                    modal.setAttribute('aria-hidden', 'false');
+                    document.body.style.overflow = 'hidden';
+                });
+
+                card.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        card.click();
+                    }
+                });
+            });
+
+            function closeModal() {
+                modal.classList.remove('active');
+                modal.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = 'auto';
+            }
+
+            if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.classList.contains('active')) {
+                    closeModal();
+                }
+            });
+        })();
+    </script>
 </body>
 </html>
-
-

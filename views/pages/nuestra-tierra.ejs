@@ -1,0 +1,458 @@
+<%- include('partials/header', { 
+    title: 'Nuestra Tierra Job Simulator — Panter Studio', 
+    currentPage: 'nuestra-tierra',
+    description: 'Pagina oficial de Nuestra Tierra Job Simulator. Explora el mapa, descubre los trabajos, vehiculos y unete a las pruebas de beta tester.',
+    extraHead: `<style>
+        :root {
+            --nt-blue: #00b0ff;
+            --nt-green: #38ef7d;
+            --bg-dark: #13161d;
+        }
+
+        body {
+            background-color: var(--bg-dark) !important;
+            background-image: radial-gradient(ellipse at 50% 0%, rgba(0, 176, 255, 0.08) 0%, transparent 60%) !important;
+            background-attachment: fixed !important;
+            color: #f0f4ff;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .nt-wrap {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 1.5rem 1.5rem 5rem 1.5rem;
+        }
+
+        /* Hero Banner Clean */
+        .nt-hero-main {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 2.5rem;
+            align-items: center;
+            padding: 1.5rem 0 3rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 3rem;
+        }
+
+        @media (max-width: 900px) {
+            .nt-hero-main {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+
+        .nt-tag {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--nt-blue);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nt-hero-title {
+            font-size: clamp(2.2rem, 5vw, 3.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin: 0 0 1rem 0;
+            color: #ffffff;
+            letter-spacing: -1px;
+        }
+
+        .nt-hero-title span {
+            color: var(--nt-blue);
+        }
+
+        .nt-hero-desc {
+            font-size: 1.05rem;
+            color: #94a3b8;
+            line-height: 1.65;
+            margin-bottom: 2rem;
+            max-width: 600px;
+        }
+
+        /* Action Buttons */
+        .nt-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn-nt-primary {
+            padding: 12px 24px;
+            background: var(--nt-blue);
+            color: #0b0f19;
+            font-weight: 800;
+            font-size: 0.9rem;
+            border-radius: 12px;
+            text-decoration: none;
+            box-shadow: 0 4px 20px rgba(0, 176, 255, 0.3);
+            transition: all 0.2s;
+        }
+
+        .btn-nt-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(0, 176, 255, 0.45);
+        }
+
+        .btn-nt-secondary {
+            padding: 11px 22px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.88rem;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-nt-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .nt-hero-img-box {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+        }
+
+        .nt-hero-img-box img {
+            width: 100%;
+            height: 100%;
+            max-height: 320px;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Section Titles */
+        .nt-sec-head {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin: 0 0 1.75rem 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nt-sec-head::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Clean Grid for Features */
+        .nt-features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2.5rem;
+            margin-bottom: 3.5rem;
+        }
+
+        .nt-feat-card {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .nt-feat-icon {
+            font-size: 1.8rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .nt-feat-card h3 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin: 0;
+        }
+
+        .nt-feat-card p {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* Wiki Spotlight Bar */
+        .nt-wiki-spotlight {
+            margin-top: 2rem;
+            padding: 2rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .nt-wiki-spotlight-text h3 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin: 0 0 0.4rem 0;
+        }
+
+        .nt-wiki-spotlight-text p {
+            font-size: 0.92rem;
+            color: #94a3b8;
+            margin: 0;
+        }
+
+        .btn-wiki-green {
+            padding: 12px 26px;
+            background: linear-gradient(135deg, #38ef7d, #059669);
+            color: #0b0f19;
+            font-weight: 800;
+            font-size: 0.9rem;
+            border-radius: 12px;
+            text-decoration: none;
+            box-shadow: 0 4px 20px rgba(56, 239, 125, 0.25);
+            transition: all 0.2s;
+        }
+
+        .btn-wiki-green:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(56, 239, 125, 0.4);
+        }
+    </style>`
+  }) %>
+
+    <!-- MAIN CONTENT -->
+    <main class="nt-wrap">
+
+        <!-- HERO PRINCIPAL DEL JUEGO -->
+        <section class="nt-hero-main">
+            <div>
+                <div class="nt-tag">🚜 SIMULADOR DE TRABAJO & VIDA</div>
+                <h1 class="nt-hero-title">Nuestra Tierra<br><span>Job Simulator</span></h1>
+                <p class="nt-hero-desc">
+                    Experimenta el simulador de conducción y logística en mundo abierto para móviles. Conduce vehículos realistas, realiza entregas y explora rutas inspiradas en paisajes latinoamericanos.
+                </p>
+
+                <div class="nt-actions">
+                    <a href="wiki.html" class="btn-nt-primary">📖 Explorar Wiki Oficial ➔</a>
+                    <a href="betatester.html" class="btn-nt-secondary">🧪 Ser Beta Tester</a>
+                    <a href="preregistro.html" class="btn-nt-secondary">📝 Pre-Registro</a>
+                </div>
+            </div>
+
+            <div class="nt-hero-img-box">
+                <img src="../recursos/imagenes/mapa1.png" alt="Nuestra Tierra Job Simulator">
+            </div>
+        </section>
+
+        <!-- CONTENIDO INTERACTIVO CON PESTAÑAS (JS DYNAMIC TABS) -->
+        <h2 class="nt-sec-head">🔍 Explora el Universo del Juego</h2>
+
+        <!-- Tab Selector Buttons -->
+        <div class="nt-tabs-nav">
+            <button class="nt-tab-btn active" onclick="switchNTTab(event, 'tab-mapa')">🗺️ El Mapa</button>
+            <button class="nt-tab-btn" onclick="switchNTTab(event, 'tab-vehiculos')">🚚 Vehiculos</button>
+            <button class="nt-tab-btn" onclick="switchNTTab(event, 'tab-empresas')">🏢 Empresas</button>
+            <button class="nt-tab-btn" onclick="switchNTTab(event, 'tab-trabajos')">💼 Contratos & Trabajos</button>
+        </div>
+
+        <!-- TAB CONTENT: EL MAPA -->
+        <div id="tab-mapa" class="nt-tab-panel active">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2.5rem; align-items: center;">
+                <div>
+                    <span style="font-size: 0.75rem; font-weight: 800; color: var(--nt-green); letter-spacing: 2px; text-transform: uppercase;">Mapa Principal del Juego</span>
+                    <h3 style="font-size: 1.8rem; font-weight: 900; color: #fff; margin: 0.4rem 0 1rem 0;">Inspirado en la Ciudad de Fusagasuga</h3>
+                    <p style="color: #94a3b8; line-height: 1.65; margin-bottom: 1.5rem;">
+                        El mapa principal del juego y el punto de partida donde comenzara toda tu aventura sobre ruedas. Un entorno rico y variado diseñado para ofrecer la maxima comodidad y diversion al conducir.
+                    </p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                        <div style="padding: 0.8rem 1rem; border-left: 3px solid var(--nt-blue); background: rgba(255,255,255,0.02); border-radius: 0 10px 10px 0;">
+                            <strong style="color: #fff; display: block; margin-bottom: 0.2rem;">🏢 Gran Variedad de Empresas</strong>
+                            <span style="font-size: 0.85rem; color: #94a3b8;">Decenas de sedes de flete, centros logisticos y empresas de transporte para tomar contratos.</span>
+                        </div>
+                        <div style="padding: 0.8rem 1rem; border-left: 3px solid var(--nt-green); background: rgba(255,255,255,0.02); border-radius: 0 10px 10px 0;">
+                            <strong style="color: #fff; display: block; margin-bottom: 0.2rem;">🏙️ Entornos y Sitios Variados</strong>
+                            <span style="font-size: 0.85rem; color: #94a3b8;">Barrios urbanos, terminales, avenidas principales y zonas rurales para jugar a tu ritmo.</span>
+                        </div>
+                        <div style="padding: 0.8rem 1rem; border-left: 3px solid #ffc107; background: rgba(255,255,255,0.02); border-radius: 0 10px 10px 0;">
+                            <strong style="color: #fff; display: block; margin-bottom: 0.2rem;">⛽ Puntos de Servicio Completo</strong>
+                            <span style="font-size: 0.85rem; color: #94a3b8;">Estaciones de gasolina, talleres de reparacion y paraderos de descanso en rutas clave.</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1);">
+                    <img src="../recursos/imagenes/mapa1.png" alt="Mapa de Fusagasuga - Nuestra Tierra" style="width: 100%; height: 320px; object-fit: cover; display: block;">
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB CONTENT: VEHÍCULOS -->
+        <div id="tab-vehiculos" class="nt-tab-panel">
+            <p style="color: #94a3b8; margin-bottom: 1.5rem;">Descubre los tipos de vehiculos disponibles en el simulador:</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem;">
+                <div class="nt-interactive-card">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🚛</div>
+                    <h3 style="color: #fff; font-size: 1.2rem; font-weight: 800; margin: 0 0 0.5rem 0;">Camiones Pesados</h3>
+                    <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.5; margin-bottom: 1rem;">Mula de carga de 2 y 3 ejes para trayectos intermunicipales y contenedores.</p>
+                    <a href="wiki.html#vehiculos" style="font-size: 0.82rem; color: var(--nt-blue); font-weight: 700; text-decoration: none;">Ver ficha tecnica en Wiki ➔</a>
+                </div>
+
+                <div class="nt-interactive-card">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🚌</div>
+                    <h3 style="color: #fff; font-size: 1.2rem; font-weight: 800; margin: 0 0 0.5rem 0;">Autobuses Intermunicipales</h3>
+                    <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.5; margin-bottom: 1rem;">Buses de pasajeros para cubrir rutas interurbanas cumpliendo itinerarios.</p>
+                    <a href="wiki.html#vehiculos" style="font-size: 0.82rem; color: var(--nt-green); font-weight: 700; text-decoration: none;">Ver ruta de buses ➔</a>
+                </div>
+
+                <div class="nt-interactive-card">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🚐</div>
+                    <h3 style="color: #fff; font-size: 1.2rem; font-weight: 800; margin: 0 0 0.5rem 0;">Furgonetas & Vans</h3>
+                    <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.5; margin-bottom: 1rem;">Vehiculos ligeros ideales para iniciarte en el mundo de la logistica urbana.</p>
+                    <a href="wiki.html#vehiculos" style="font-size: 0.82rem; color: #ffc107; font-weight: 700; text-decoration: none;">Ver furgonetas ➔</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB CONTENT: EMPRESAS -->
+        <div id="tab-empresas" class="nt-tab-panel">
+            <p style="color: #94a3b8; margin-bottom: 1.5rem;">Empresas contratantes donde podras firmar contratos de flete:</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem;">
+                <div class="nt-interactive-card">
+                    <div style="font-weight: 800; color: #fff; font-size: 1.05rem; margin-bottom: 0.3rem;">❄️ TransAndina Express</div>
+                    <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">Fletes refrigerados, carne y alimentos perecederos.</p>
+                </div>
+                <div class="nt-interactive-card">
+                    <div style="font-weight: 800; color: #fff; font-size: 1.05rem; margin-bottom: 0.3rem;">🏗️ Construcciones del Valle</div>
+                    <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">Material de obra, grava, cemento y maquinaria.</p>
+                </div>
+                <div class="nt-interactive-card">
+                    <div style="font-weight: 800; color: #fff; font-size: 1.05rem; margin-bottom: 0.3rem;">🚍 RutaSur Pasajeros</div>
+                    <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">Lineas de transporte publico y terminales de bus.</p>
+                </div>
+                <div class="nt-interactive-card">
+                    <div style="font-weight: 800; color: #fff; font-size: 1.05rem; margin-bottom: 0.3rem;">📦 EcoCarga Urbana</div>
+                    <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">Servicios de encomiendas y paqueteria express.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB CONTENT: TRABAJOS -->
+        <div id="tab-trabajos" class="nt-tab-panel">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                <div class="nt-interactive-card">
+                    <span style="font-size: 0.75rem; color: var(--nt-blue); font-weight: 800; text-transform: uppercase;">Nivel 1</span>
+                    <h4 style="color: #fff; font-size: 1.1rem; font-weight: 800; margin: 0.3rem 0 0.5rem 0;">Repartidor Urbano</h4>
+                    <p style="color: #94a3b8; font-size: 0.88rem; margin: 0;">Entregas de paqueteria pequeña usando furgonetas. Ideal para acumular capital inicial.</p>
+                </div>
+                <div class="nt-interactive-card">
+                    <span style="font-size: 0.75rem; color: var(--nt-green); font-weight: 800; text-transform: uppercase;">Nivel 5</span>
+                    <h4 style="color: #fff; font-size: 1.1rem; font-weight: 800; margin: 0.3rem 0 0.5rem 0;">Conductor de Ruta Intermunicipal</h4>
+                    <p style="color: #94a3b8; font-size: 0.88rem; margin: 0;">Maneja buses de pasajeros respetando paradas en pueblos y terminales regionales.</p>
+                </div>
+                <div class="nt-interactive-card">
+                    <span style="font-size: 0.75rem; color: #ffc107; font-weight: 800; text-transform: uppercase;">Nivel 10+</span>
+                    <h4 style="color: #fff; font-size: 1.1rem; font-weight: 800; margin: 0.3rem 0 0.5rem 0;">Operador de Carga Pesada</h4>
+                    <p style="color: #94a3b8; font-size: 0.88rem; margin: 0;">Transporta remolques y maquinaria a traves de trochas y montañas de alta exigencia.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- WIKI SPOTLIGHT BAR -->
+        <section class="nt-wiki-spotlight">
+            <div class="nt-wiki-spotlight-text">
+                <h3>📖 Wiki Oficial de Nuestra Tierra</h3>
+                <p>Encuentra guias paso a paso, trucos de conduccion y detalles completos del juego.</p>
+            </div>
+            <a href="wiki.html" class="btn-wiki-green">Entrar a la Wiki Completa ➔</a>
+        </section>
+
+    </main>
+
+    <style>
+        /* Interactive Tab System Styles */
+        .nt-tabs-nav {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .nt-tab-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #94a3b8;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .nt-tab-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .nt-tab-btn.active {
+            background: var(--nt-blue);
+            color: #0b0f19;
+            border-color: var(--nt-blue);
+            box-shadow: 0 4px 15px rgba(0, 176, 255, 0.25);
+        }
+
+        .nt-tab-panel {
+            display: none;
+            animation: fadeInNT 0.3s ease;
+            margin-bottom: 3.5rem;
+        }
+
+        .nt-tab-panel.active {
+            display: block;
+        }
+
+        .nt-interactive-card {
+            padding: 1.5rem;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.25s ease;
+        }
+
+        .nt-interactive-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 176, 255, 0.3);
+            background: rgba(255, 255, 255, 0.04);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+
+        @keyframes fadeInNT {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+
+    <script>
+        function switchNTTab(evt, tabId) {
+            const panels = document.querySelectorAll('.nt-tab-panel');
+            const btns = document.querySelectorAll('.nt-tab-btn');
+
+            panels.forEach(panel => panel.classList.remove('active'));
+            btns.forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }
+    </script>
+
+<%- include('partials/footer') %>

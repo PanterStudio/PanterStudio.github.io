@@ -10,6 +10,11 @@
     <link rel="icon" href="../recursos/PSGD.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/modules.css">
+    <script src="../assets/js/core/roles.js"></script>
+    <script src="../assets/js/core/discord-auth.js"></script>
+    <script src="../assets/js/core/role-badges.js"></script>
+    <script src="../assets/js/core/firebase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
     <style>
         /* ===== VIDEOS PAGE ===== */
@@ -459,6 +464,8 @@
             }
         }
     </style>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 </head>
 <body data-site-root=".." data-theme="dark" class="dark-mode">
     <div id="tsparticles"></div>
@@ -473,48 +480,47 @@
         </div>
         <div class="nav-middle">
             <a href="../index.html">Inicio</a>
+            <a href="nuestra-tierra.html">Nuestra Tierra</a>
             <div class="nav-dropdown">
                 <button type="button" class="nav-dropdown-toggle active" aria-haspopup="true" aria-expanded="false">Novedades</button>
                 <div class="nav-dropdown-menu">
                     <a href="actualizaciones.html">Actualizaciones</a>
-                    <a href="imagenes.html">Galeria</a>
+                    <a href="imagenes.html">Galería</a>
                     <a href="videos.html" class="active">Videos</a>
                 </div>
             </div>
-            <a href="minijuegos.html">Minijuegos</a>
-            <a href="donaciones.html">Apoyanos</a>
+            <a href="donaciones.html">Apóyanos</a>
             <a href="personal.html">Personal</a>
-            <a href="perfil.html">Mi Perfil</a>
-            <a href="meinteresa.html">Me Interesa</a>
-            <a href="wiki.html">Wiki</a>
+            <a href="soporte.html">Soporte</a>
+            <a href="admin/admin.html" id="adminNavLink" hidden>Panel Admin</a>
         </div>
+        <div class="nav-right"></div>
         <button class="nav-hamburger" aria-label="Menú" aria-expanded="false">
             <span></span><span></span><span></span>
         </button>
         <!-- Mobile menu -->
         <nav class="nav-mobile-menu">
             <a href="../index.html">Inicio</a>
+            <a href="nuestra-tierra.html">Nuestra Tierra</a>
             <hr>
             <span style="font-size:0.75rem;color:var(--text-muted);padding:0.5rem 1rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Novedades</span>
             <div class="nav-mobile-sub">
                 <a href="actualizaciones.html">Actualizaciones</a>
-                <a href="imagenes.html">Galeria</a>
+                <a href="imagenes.html">Galería</a>
                 <a href="videos.html" class="active">Videos</a>
             </div>
             <hr>
-            <a href="minijuegos.html">Minijuegos</a>
-            <a href="donaciones.html">Apoyanos</a>
+            <a href="donaciones.html">Apóyanos</a>
             <a href="personal.html">Personal</a>
             <a href="perfil.html">Mi Perfil</a>
-            <a href="meinteresa.html">Me Interesa</a>
-            <a href="wiki.html">Wiki</a>
+            <a href="soporte.html">Soporte</a>
         </nav>
     </nav>
 
     <!-- MAIN CONTENT -->
     <div class="container" style="padding-top: 0.5rem;">
 
-        <!-- ★ Anuncio superior -->
+        <!-- Anuncio superior -->
         <div class="ad-slot-wrapper ad-horizontal" id="ad-top">
             <span class="ad-slot-label">Publicidad</span>
             <div class="ad-slot-inner">
@@ -530,7 +536,7 @@
 
         <!-- HEADER -->
         <div class="vid-header">
-            <div class="vid-header-tag">▶ Creadores de Contenido</div>
+            <div class="vid-header-tag"><i class="fa-solid fa-play" aria-hidden="true"></i> Creadores de Contenido</div>
             <h1>Videos del Juego</h1>
             <p>Mira lo que creadores y la comunidad están diciendo sobre <strong style="color: var(--text-primary);">Nuestra Tierra Job Simulator</strong>.</p>
         </div>
@@ -543,7 +549,7 @@
                 <div class="featured-player-wrap" id="featuredPlayerWrap">
                     <!-- Iframe se inyecta aquí -->
                     <div class="player-placeholder" id="playerPlaceholder" onclick="playFirst()">
-                        <div class="player-placeholder-icon">▶</div>
+                        <div class="player-placeholder-icon"><i class="fa-solid fa-play" aria-hidden="true"></i></div>
                         <p>Selecciona un video para reproducirlo</p>
                     </div>
                 </div>
@@ -557,7 +563,7 @@
             <!-- SIDEBAR: VIDEO LIST -->
             <div class="vid-sidebar">
                 <div class="vid-section-title">
-                    📋 Lista de Videos
+                    <i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Lista de Videos
                     <span class="vid-count-badge" id="vidCountBadge">0</span>
                 </div>
                 <div class="vid-list" id="vidList">
@@ -584,17 +590,17 @@
 
         <!-- EMPTY STATE (se muestra si no hay videos) -->
         <div id="vidEmptyState" style="display:none; text-align:center; padding: 4rem 2rem;">
-            <div class="vid-empty-icon">🎬</div>
+            <div class="vid-empty-icon"><i class="fa-solid fa-film" aria-hidden="true"></i></div>
             <h3 style="color:var(--text-secondary); font-size:1.2rem; margin-bottom:0.5rem;">Próximamente</h3>
             <p style="color:var(--text-muted); max-width:420px; margin:0 auto 2rem;">
                 Todavía no hay videos publicados. En cuanto creadores y la comunidad suban contenido del juego, aparecerán aquí.
             </p>
-            <a href="meinteresa.html" class="btn">💚 Marcar Mi Interés</a>
+            <a href="meinteresa.html" class="btn"><i class="fa-solid fa-heart" style="color:#22c55e" aria-hidden="true"></i> Marcar Mi Interés</a>
         </div>
 
     </div>
 
-        <!-- ★ Anuncio inferior -->
+        <!-- Anuncio inferior -->
         <div class="ad-slot-wrapper ad-horizontal" id="ad-bottom" style="margin-top:0;">
             <span class="ad-slot-label">Publicidad</span>
             <div class="ad-slot-inner">
@@ -609,10 +615,9 @@
         </div>
 
     <footer>
-        <p>© 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
+        <p><i class="fa-regular fa-copyright" aria-hidden="true"></i> 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
     </footer>
 
-    <script src="../assets/js/core/firebase-config.js"></script>
     <script src="../assets/js/core/script.js"></script>
     <script>
     // ===== VIDEOS PAGE =====
@@ -680,7 +685,7 @@
                 <div class="now-playing-title">${v.title}</div>
                 <div class="now-playing-channel">${v.channel}</div>
             </div>
-            ${v.url ? `<a href="${v.url}" target="_blank" rel="noopener" style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;flex-shrink:0;" title="Abrir en YouTube">↗ Abrir</a>` : ''}
+            ${v.url ? `<a href="${v.url}" target="_blank" rel="noopener" style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;flex-shrink:0;" title="Abrir en YouTube"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Abrir</a>` : ''}
         `;
 
         // Update active state in list

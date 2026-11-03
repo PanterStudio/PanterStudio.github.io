@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuestra Tierra Job Simulator — Panter Studio</title>
+    <meta name="description" content="Pagina oficial de Nuestra Tierra Job Simulator. Descubre el mundo abierto de conduccion, logistica y trabajo en moviles.">
+    <link rel="icon" href="../recursos/PSGD.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/modules.css">
+    <script src="../assets/js/core/roles.js"></script>
+    <script src="../assets/js/core/discord-auth.js"></script>
+    <script src="../assets/js/core/role-badges.js"></script>
+    <script src="../assets/js/core/firebase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    <style>
+        :root {
+            --nt-blue: #00b0ff;
+            --nt-green: #10b981;
+            --bg-dark: #0a0d14;
+        }
+
+        body {
+            background-color: var(--bg-dark) !important;
+            background-image: 
+                radial-gradient(circle at 20% 10%, rgba(0, 176, 255, 0.09) 0%, transparent 50%),
+                radial-gradient(circle at 80% 90%, rgba(16, 185, 129, 0.07) 0%, transparent 55%) !important;
+            background-attachment: fixed !important;
+            color: #f0f4ff;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
+        }
+
+        .nt-wrap {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 1.5rem 1.5rem 5rem 1.5rem;
+        }
+
+        /* HERO SHOWCASE IMPACTANTE */
+        .nt-showcase-hero {
+            position: relative;
+            background: linear-gradient(135deg, rgba(20, 26, 38, 0.8) 0%, rgba(15, 18, 26, 0.95) 100%);
+            backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(0, 176, 255, 0.25);
+            border-radius: 28px;
+            padding: 3.5rem 2.5rem;
+            margin-bottom: 3.5rem;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 50px rgba(0, 176, 255, 0.15);
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 3rem;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .nt-showcase-hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, #0070ba, #00b0ff, #10b981);
+        }
+
+        .nt-badge-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 14px;
+            background: rgba(0, 176, 255, 0.12);
+            border: 1px solid var(--nt-blue);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--nt-blue);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-bottom: 1rem;
+            box-shadow: 0 0 15px rgba(0, 176, 255, 0.25);
+        }
+
+        .nt-hero-h1 {
+            font-size: clamp(2.3rem, 5vw, 3.5rem);
+            font-weight: 900;
+            line-height: 1.08;
+            margin: 0 0 1.2rem 0;
+            background: linear-gradient(135deg, #ffffff 30%, #a5f3fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .nt-hero-h1 span {
+            color: var(--nt-blue);
+            -webkit-text-fill-color: var(--nt-blue);
+        }
+
+        .nt-hero-p {
+            font-size: 1.08rem;
+            color: #cbd5e1;
+            line-height: 1.65;
+            margin-bottom: 2rem;
+        }
+
+        .nt-actions-row {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .btn-nt-glow {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #0070ba 0%, #00b0ff 100%);
+            color: #ffffff !important;
+            font-weight: 900;
+            font-size: 0.95rem;
+            border-radius: 14px;
+            text-decoration: none;
+            box-shadow: 0 8px 30px rgba(0, 176, 255, 0.35);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-nt-glow:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 40px rgba(0, 176, 255, 0.55);
+        }
+
+        .btn-nt-ghost {
+            padding: 14px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ffffff !important;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border-radius: 14px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-nt-ghost:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #ffffff;
+            transform: translateY(-3px);
+        }
+
+        /* Video Showcase Box */
+        .showcase-video-box {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            aspect-ratio: 16/9;
+        }
+
+        .showcase-video-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .video-play-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 13, 20, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .showcase-video-box:hover .video-play-overlay {
+            background: rgba(10, 13, 20, 0.2);
+        }
+
+        .play-btn-circle {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--nt-blue);
+            color: #050507;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            box-shadow: 0 0 30px rgba(0, 176, 255, 0.6);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .showcase-video-box:hover .play-btn-circle {
+            transform: scale(1.15);
+        }
+
+        /* Section Title */
+        .showcase-sec-title {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #ffffff;
+            margin: 0 0 1.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .showcase-sec-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* FEATURE CARDS TEASER (COMERCIAL) */
+        .showcase-features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.75rem;
+            margin-bottom: 4rem;
+        }
+
+        .showcase-card {
+            background: rgba(20, 26, 38, 0.65);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            padding: 2rem;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .showcase-card:hover {
+            transform: translateY(-6px);
+            background: rgba(24, 32, 48, 0.85);
+            border-color: rgba(0, 176, 255, 0.4);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 176, 255, 0.15);
+        }
+
+        .showcase-card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .showcase-card h3 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin: 0 0 0.6rem 0;
+        }
+
+        .showcase-card p {
+            font-size: 0.95rem;
+            color: #94a3b8;
+            line-height: 1.6;
+            margin: 0 0 1.5rem 0;
+            flex: 1;
+        }
+
+        .btn-wiki-link {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: var(--nt-blue);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: gap 0.2s ease;
+        }
+
+        .showcase-card:hover .btn-wiki-link {
+            gap: 10px;
+        }
+
+        /* WIKI EXPLORER HUB DIRECTO */
+        .wiki-hub-section {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(15, 23, 42, 0.9) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+            margin-bottom: 4rem;
+        }
+
+        .wiki-hub-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .wiki-hub-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .wiki-mini-item {
+            background: rgba(10, 13, 20, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .wiki-mini-item:hover {
+            background: rgba(20, 26, 38, 0.85);
+            border-color: #10b981;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .wiki-mini-icon { font-size: 1.8rem; }
+        .wiki-mini-title { font-size: 0.95rem; font-weight: 800; color: #ffffff; }
+        .wiki-mini-sub { font-size: 0.75rem; color: #94a3b8; }
+
+        @media (max-width: 900px) {
+            .nt-showcase-hero {
+                grid-template-columns: 1fr;
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+</head>
+<body data-site-root=".." data-theme="dark" class="dark-mode">
+    <div id="tsparticles"></div>
+    
+    <!-- NAV -->
+    <nav>
+        <div class="nav-left">
+            <a href="../index.html" class="nav-logo">
+                <img src="../recursos/PSGD.png" alt="Panter Studio">
+                <span>Panter Studio</span>
+            </a>
+        </div>
+        <div class="nav-middle">
+            <a href="../index.html">Inicio</a>
+            <a href="nuestra-tierra.html" class="active">Nuestra Tierra</a>
+            <div class="nav-dropdown">
+                <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">Novedades</button>
+                <div class="nav-dropdown-menu">
+                    <a href="actualizaciones.html">Actualizaciones</a>
+                    <a href="imagenes.html">Galería</a>
+                    <a href="videos.html">Videos</a>
+                </div>
+            </div>
+            <a href="donaciones.html">Apóyanos</a>
+            <a href="personal.html">Personal</a>
+            <a href="soporte.html">Soporte</a>
+            <a href="admin/admin.html" id="adminNavLink" hidden>Panel Admin</a>
+        </div>
+        <div class="nav-right"></div>
+        <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+        </button>
+        <nav class="nav-mobile-menu">
+            <a href="../index.html">Inicio</a>
+            <a href="nuestra-tierra.html" class="active">Nuestra Tierra</a>
+            <hr>
+            <span style="font-size:0.75rem;color:var(--text-muted);padding:0.5rem 1rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Novedades</span>
+            <div class="nav-mobile-sub">
+                <a href="actualizaciones.html">Actualizaciones</a>
+                <a href="imagenes.html">Galería</a>
+                <a href="videos.html">Videos</a>
+            </div>
+            <hr>
+            <a href="donaciones.html">Apóyanos</a>
+            <a href="personal.html">Personal</a>
+            <a href="perfil.html">Mi Perfil</a>
+            <a href="soporte.html">Soporte</a>
+        </nav>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="nt-wrap">
+
+        <!-- HERO SHOWCASE DEL JUEGO -->
+        <section class="nt-showcase-hero">
+            <div>
+                <span class="nt-badge-tag"><i class="fa-solid fa-tractor" aria-hidden="true"></i> Simulador de Trabajos & Conduccion Mobile</span>
+                <h1 class="nt-hero-h1">Nuestra Tierra <span>Job Simulator</span></h1>
+                <p class="nt-hero-p">
+                    El simulador de trabajos enfocado en la conduccion en mundo abierto disenado para moviles. Cumple contratos de transporte, maneja buses y camiones pesados en un mapa inspirado en Colombia.
+                </p>
+
+                <div class="nt-actions-row">
+                    <a href="betatester.html" class="btn-nt-glow"><i class="fa-solid fa-fire" aria-hidden="true"></i> Solicitar Pase Beta <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                    <a href="actualizaciones.html" class="btn-nt-ghost"><i class="fa-solid fa-satellite-dish" aria-hidden="true"></i> Ver Novedades en Vivo</a>
+                    <a href="wiki/como-comenzar.html" class="btn-nt-ghost"><i class="fa-solid fa-book-open" aria-hidden="true"></i> Wiki del Juego</a>
+                </div>
+            </div>
+
+            <!-- TEASER MEDIA -->
+            <div class="showcase-video-box">
+                <img src="../recursos/imagenes/1.png" alt="Nuestra Tierra Teaser">
+                <div class="video-play-overlay">
+                    <a href="videos.html" class="play-btn-circle" title="Ver Gameplay y Trailers"><i class="fa-solid fa-play" aria-hidden="true"></i></a>
+                </div>
+            </div>
+        </section>
+
+        <!-- PILARES DEL JUEGO (TEASERS COMERCIALES CONECTADOS A LA WIKI) -->
+        <h2 class="showcase-sec-title"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Caracteristicas Destacadas del Simulador</h2>
+
+        <div class="showcase-features-grid">
+            <div class="showcase-card">
+                <div class="showcase-card-icon"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i></div>
+                <h3>Mapa Inspirado en Colombia</h3>
+                <p>Recorre un mundo abierto lleno de detalles colombianos con terminales intermunicipales, avenidas urbanas, zonas de trabajo y carreteras de montaña.</p>
+                <a href="wiki/mapas.html" class="btn-wiki-link">Ver Guia de Rutas en la Wiki <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+            </div>
+
+            <div class="showcase-card">
+                <div class="showcase-card-icon"><i class="fa-solid fa-truck" aria-hidden="true"></i></div>
+                <h3>Vehiculos Realistas & Fisicas</h3>
+                <p>Camiones mulas de 2 y 3 ejes, autobuses intermunicipales y furgonetas de reparto con fisicas de conduccion y maniobrabilidad avanzadas.</p>
+                <a href="wiki/vehiculos.html" class="btn-wiki-link">Ver Catalogo de Vehiculos <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+            </div>
+
+            <div class="showcase-card">
+                <div class="showcase-card-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></div>
+                <h3>Trabajos Enfocados en Conduccion</h3>
+                <p>Completa empleos de conduccion, traslada pasajeros y realiza repartos de carga para progresar y desbloquear nuevos vehiculos.</p>
+                <a href="wiki/trabajos.html" class="btn-wiki-link">Ver Guia de Empleos <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+            </div>
+        </div>
+
+        <!-- WIKI EXPLORER HUB DIRECTO -->
+        <section class="wiki-hub-section">
+            <div class="wiki-hub-header">
+                <div>
+                    <span style="font-size: 0.72rem; font-weight: 800; color: #10b981; text-transform: uppercase; letter-spacing: 1.2px;">Enciclopedia Oficial</span>
+                    <h2 style="font-size: 1.6rem; font-weight: 900; color: #ffffff; margin: 0.2rem 0 0 0;">Explorador Directo de la Wiki</h2>
+                </div>
+                <a href="wiki/como-comenzar.html" style="padding: 12px 24px; background: #10b981; color: #050507; font-weight: 900; border-radius: 12px; text-decoration: none; font-size: 0.88rem; text-transform: uppercase;">
+                    Ver Wiki Completa <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </a>
+            </div>
+
+            <div class="wiki-hub-grid">
+                <a href="wiki/como-comenzar.html" class="wiki-mini-item">
+                    <span class="wiki-mini-icon"><i class="fa-solid fa-rocket" aria-hidden="true"></i></span>
+                    <div>
+                        <div class="wiki-mini-title">Como Comenzar</div>
+                        <div class="wiki-mini-sub">Guia de inicio rapido</div>
+                    </div>
+                </a>
+
+                <a href="wiki/vehiculos.html" class="wiki-mini-item">
+                    <span class="wiki-mini-icon"><i class="fa-solid fa-truck" aria-hidden="true"></i></span>
+                    <div>
+                        <div class="wiki-mini-title">Vehiculos</div>
+                        <div class="wiki-mini-sub">Fichas tecnicas</div>
+                    </div>
+                </a>
+
+                <a href="wiki/mapas.html" class="wiki-mini-item">
+                    <span class="wiki-mini-icon"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i></span>
+                    <div>
+                        <div class="wiki-mini-title">Mapas & Rutas</div>
+                        <div class="wiki-mini-sub">Estaciones y zonas</div>
+                    </div>
+                </a>
+
+                <a href="wiki/mecanicas.html" class="wiki-mini-item">
+                    <span class="wiki-mini-icon"><i class="fa-solid fa-gears" aria-hidden="true"></i></span>
+                    <div>
+                        <div class="wiki-mini-title">Mecanicas</div>
+                        <div class="wiki-mini-sub">Fisicas e interfaz</div>
+                    </div>
+                </a>
+
+                <a href="wiki/trabajos.html" class="wiki-mini-item">
+                    <span class="wiki-mini-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
+                    <div>
+                        <div class="wiki-mini-title">Trabajos</div>
+                        <div class="wiki-mini-sub">Empresas y salarios</div>
+                    </div>
+                </a>
+
+                <a href="wiki/dispositivo-movil.html" class="wiki-mini-item">
+                    <span class="wiki-mini-icon"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i></span>
+                    <div>
+                        <div class="wiki-mini-title">Requisitos Movil</div>
+                        <div class="wiki-mini-sub">RAM y optimizacion</div>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
+    </footer>
+    <script src="../assets/js/site-visibility.js"></script>
+    <script src="../assets/js/core/script.js"></script>
+</body>
+</html>

@@ -3,24 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Inscribete para ser Beta Tester de Nuestra Tierra. Participa en las primeras pruebas de juego de forma segura.">
+    <meta name="description" content="Inscríbete para ser Beta Tester de Nuestra Tierra. Participa en las primeras pruebas de juego de forma segura.">
     <title>Beta Tester — Panter Studio</title>
     <link rel="icon" href="../recursos/PSGD.png" type="image/png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/modules.css">
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    <script src="../assets/js/core/roles.js"></script>
+    <script src="../assets/js/core/discord-auth.js"></script>
+    <script src="../assets/js/core/role-badges.js"></script>
     <script src="../assets/js/core/firebase-config.js"></script>
     <style>
+        /* Hero Section Épico */
         .bt-hero {
             position: relative;
-            border-radius: 16px;
+            border-radius: 24px;
             overflow: hidden;
-            margin-bottom: 2rem;
-            min-height: 250px;
+            margin-bottom: 1.5rem;
+            min-height: 180px;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 50px rgba(0, 176, 255, 0.25);
+            border: 1px solid rgba(0, 176, 255, 0.25);
         }
         .bt-hero-bg {
             position: absolute;
@@ -28,269 +34,486 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            filter: brightness(0.45);
+            filter: brightness(0.3) saturate(1.4);
+            transform: scale(1.02);
+            transition: transform 0.8s ease;
         }
+        .bt-hero:hover .bt-hero-bg { transform: scale(1.06); }
         .bt-hero-overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(0deg, rgba(5,5,7,0.95) 0%, rgba(5,5,7,0.4) 60%, transparent 100%);
+            background: linear-gradient(180deg, rgba(5,5,7,0.2) 0%, rgba(5,5,7,0.95) 100%);
         }
         .bt-hero-content {
             position: relative;
             z-index: 2;
-            padding: 2.5rem;
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
         }
         .bt-hero-tag {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 5px 14px;
-            background: rgba(16,185,129,0.15);
-            border: 1px solid var(--color-primary);
+            gap: 8px;
+            padding: 4px 14px;
+            background: rgba(0, 176, 255, 0.15);
+            border: 1px solid var(--color-primary-light);
             border-radius: 100px;
-            font-size: 0.75rem;
-            font-weight: 700;
+            font-size: 0.72rem;
+            font-weight: 800;
             color: var(--color-primary-light);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 1rem;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(0, 176, 255, 0.3);
         }
         .bt-hero-title {
             font-family: var(--font-display);
-            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-size: clamp(1.8rem, 4.5vw, 2.5rem);
             line-height: 1.05;
-            margin-bottom: 0.75rem;
-            background: linear-gradient(135deg, #fff 30%, #94a3b8 100%);
+            margin: 0;
+            background: linear-gradient(135deg, #ffffff 20%, #40c4ff 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-        }
-        .bt-hero-sub {
-            font-size: 1.05rem;
-            color: var(--text-secondary);
-            margin: 0;
-            max-width: 560px;
-            line-height: 1.5;
+            text-shadow: 0 0 30px rgba(0, 176, 255, 0.4);
         }
 
-        /* Form Card */
-        .bt-form-card {
-            background: var(--bg-glass-card);
-            border: var(--border-glass);
-            border-radius: 16px;
-            padding: 2.5rem;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-            position: relative;
-            overflow: hidden;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        .bt-form-card::before {
-            content: '';
-            position: absolute;
-            top: -1px; left: 0; right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--color-primary-dark), var(--color-primary), var(--color-primary-light));
-            border-radius: 16px 16px 0 0;
-        }
-        .form-group {
-            margin-bottom: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            text-align: left;
-        }
-        .form-label {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .form-input, .form-select, .form-textarea {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 12px;
-            color: #ffffff;
-            font-size: 0.95rem;
-            font-family: inherit;
-            transition: all 0.2s;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
-            outline: none;
-            border-color: var(--color-primary-light);
-            background: rgba(255, 255, 255, 0.06);
-            box-shadow: 0 0 10px rgba(0, 176, 255, 0.2);
-        }
-        .form-select {
-            appearance: none;
-            background: rgba(255, 255, 255, 0.03) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23ffffff' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") no-repeat right 16px center;
-            padding-right: 40px;
-            cursor: pointer;
-        }
-        .form-select option {
-            background-color: #1a1e2a;
-            color: #ffffff;
-        }
-        .form-textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-        .form-checkbox-group {
+        /* Rank Badge Flotante en Hero */
+        .rank-badge-hero {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(0, 0, 0, 0.6));
+            border: 1px solid var(--color-accent);
+            border-radius: 14px;
+            padding: 8px 16px;
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-top: 1rem;
-            margin-bottom: 1.5rem;
-            cursor: pointer;
-            user-select: none;
+            box-shadow: 0 0 20px var(--color-accent-glow);
         }
-        .form-checkbox {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--color-primary);
-            cursor: pointer;
-        }
+        .rank-icon { font-size: 1.5rem; }
+        .rank-text { display: flex; flex-direction: column; }
+        .rank-title { font-size: 0.65rem; color: var(--color-accent); font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; }
+        .rank-name { font-size: 0.95rem; color: #fff; font-weight: 900; }
 
-        .bt-btn-submit {
+        /* Contador de Testers Inscritos */
+        .beta-count-pill {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            gap: 12px;
-            width: 100%;
-            padding: 1.1rem 2rem;
-            font-size: 1.1rem;
-            font-weight: 800;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
-            letter-spacing: 0.3px;
-            background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
-            color: #fff;
-            box-shadow: 0 8px 30px rgba(0, 176, 255,0.25);
+            gap: 8px;
+            padding: 5px 14px;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #10b981;
+            letter-spacing: 0.5px;
+            box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
+            backdrop-filter: blur(8px);
         }
-        .bt-btn-submit:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 14px 40px rgba(0, 176, 255,0.35);
+        .beta-count-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #10b981;
+            animation: pulseDot 1.8s infinite ease-in-out;
         }
-        .bt-btn-submit:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        @keyframes pulseDot {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.35); opacity: 0.5; }
         }
 
+        /* WIZARD CONTAINER GAMIFICADO */
+        .bt-wizard-card {
+            background: rgba(18, 22, 32, 0.88);
+            backdrop-filter: blur(28px) saturate(200%);
+            -webkit-backdrop-filter: blur(28px) saturate(200%);
+            border: 1px solid rgba(0, 176, 255, 0.25);
+            border-radius: 24px;
+            padding: 2.25rem 2rem;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 50px rgba(0, 176, 255, 0.12), inset 0 1px 1px rgba(255,255,255,0.15);
+            position: relative;
+            max-width: 640px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        /* Progress Bar Futuristic */
+        .stepper-header { margin-bottom: 2rem; }
+        .stepper-top-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 8px;
+        }
+        .stepper-top-info span strong { color: var(--color-primary-light); }
+        .stepper-bar-bg {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 100px;
+            overflow: hidden;
+        }
+        .stepper-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0070ba 0%, #00b0ff 50%, #10b981 100%);
+            width: 16.66%;
+            transition: width 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 0 16px rgba(0, 176, 255, 0.8);
+            border-radius: 100px;
+        }
+
+        /* Micro-Step Panels */
+        .step-panel {
+            display: none;
+            animation: holoFade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .step-panel.active { display: block; }
+        @keyframes holoFade {
+            from { opacity: 0; transform: translateY(16px) scale(0.96); filter: blur(4px); }
+            to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        }
+
+        .micro-step-tag {
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: var(--color-primary-light);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-bottom: 0.3rem;
+            display: inline-block;
+        }
+        .step-title {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #ffffff;
+            margin-bottom: 0.3rem;
+            line-height: 1.2;
+        }
+        .step-desc {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin-bottom: 1.75rem;
+            line-height: 1.4;
+        }
+
+        .epic-input-wrapper { position: relative; }
+        .epic-input {
+            background: rgba(10, 13, 20, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 16px 20px;
+            color: #ffffff;
+            font-size: 1.05rem;
+            font-weight: 700;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .epic-input:focus {
+            outline: none;
+            border-color: var(--color-primary-light);
+            background: rgba(15, 20, 32, 0.9);
+            box-shadow: 0 0 25px rgba(0, 176, 255, 0.35);
+        }
+        .epic-textarea { resize: vertical; min-height: 110px; }
+
+        /* CONTROLES STEPPER CON BOTONES (+) Y (-) */
+        .stepper-plusminus-card {
+            background: rgba(10, 13, 20, 0.7);
+            border: 2px solid rgba(0, 176, 255, 0.3);
+            border-radius: 20px;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(0, 176, 255, 0.1);
+            position: relative;
+        }
+
+        .stepper-control-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            width: 100%;
+            margin-bottom: 1.25rem;
+        }
+
+        .btn-stepper-pm {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(20, 26, 38, 0.9), rgba(15, 20, 32, 0.9));
+            border: 2px solid var(--color-primary-light);
+            color: #ffffff;
+            font-size: 1.8rem;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 18px rgba(0, 176, 255, 0.3);
+            user-select: none;
+        }
+        .btn-stepper-pm:hover:not(:disabled) {
+            transform: scale(1.1);
+            background: var(--color-primary);
+            box-shadow: 0 0 25px rgba(0, 176, 255, 0.6);
+        }
+        .btn-stepper-pm:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+        .btn-stepper-pm:disabled {
+            opacity: 0.25;
+            border-color: rgba(255, 255, 255, 0.1);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .stepper-display-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 180px;
+        }
+        .stepper-display-icon { font-size: 2.5rem; margin-bottom: 4px; animation: floatIcon 3s infinite ease-in-out; }
+        @keyframes floatIcon { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        .stepper-display-value {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #ffffff;
+            line-height: 1;
+            background: linear-gradient(135deg, #fff 40%, var(--color-primary-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .stepper-display-badge {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 4px 12px;
+            border-radius: 100px;
+            margin-top: 8px;
+            background: rgba(0, 176, 255, 0.2);
+            border: 1px solid var(--color-primary-light);
+            color: var(--color-primary-light);
+        }
+
+        /* PASO 5: SKILLS */
+        .skills-stack { display: flex; flex-direction: column; gap: 10px; }
+        .skill-tile {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 14px 18px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            user-select: none;
+        }
+        .skill-tile:hover { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.25); }
+        .skill-tile.active {
+            background: rgba(0, 176, 255, 0.12);
+            border-color: var(--color-primary-light);
+            box-shadow: 0 4px 20px rgba(0, 176, 255, 0.2);
+        }
+        .skill-tile-left { display: flex; align-items: center; gap: 14px; }
+        .skill-tile-icon { font-size: 1.5rem; }
+        .skill-tile-text { display: flex; flex-direction: column; }
+        .skill-tile-title { font-size: 0.92rem; font-weight: 800; color: #fff; }
+        .skill-tile-desc { font-size: 0.75rem; color: var(--text-muted); }
+        .skill-tile-status {
+            font-size: 0.72rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 100px;
+            background: rgba(255,255,255,0.06);
+            color: var(--text-muted);
+        }
+        .skill-tile.active .skill-tile-status {
+            background: var(--color-primary);
+            color: #fff;
+            box-shadow: 0 0 10px var(--color-primary-glow);
+        }
+
+        /* PASO 6: DOSSIER */
+        .dossier-card {
+            background: linear-gradient(135deg, rgba(15, 20, 32, 0.95), rgba(10, 13, 20, 0.98));
+            border: 1px solid rgba(0, 176, 255, 0.35);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5), inset 0 0 25px rgba(0, 176, 255, 0.08);
+        }
+        .dossier-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
+        }
+        .dossier-tag { font-size: 0.75rem; font-weight: 900; color: var(--color-primary-light); letter-spacing: 1px; }
+        .dossier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.85rem; }
+        .dossier-label { color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; }
+        .dossier-value { color: #fff; font-weight: 800; }
+
+        /* NDA Block */
+        .nda-card {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(0, 0, 0, 0.4));
+            border: 1px solid rgba(212, 175, 55, 0.35);
+            border-radius: 14px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            margin-top: 1.25rem;
+            transition: all 0.25s ease;
+        }
+        .nda-card:hover { border-color: var(--color-accent); box-shadow: 0 0 20px var(--color-accent-glow); }
+        .nda-checkbox { width: 22px; height: 22px; accent-color: var(--color-accent); cursor: pointer; }
+
+        /* Controles de Navegación */
+        .controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 2rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            gap: 12px;
+        }
+        .btn-prev {
+            padding: 0.85rem 1.6rem;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            color: var(--text-secondary);
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-prev:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+        .btn-next, .btn-submit {
+            padding: 0.95rem 2.2rem;
+            background: linear-gradient(135deg, #0070ba 0%, #00b0ff 100%);
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            font-weight: 900;
+            font-size: 0.98rem;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 8px 30px rgba(0, 176, 255, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-next:hover, .btn-submit:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(0, 176, 255, 0.6);
+        }
+        .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* MODAL ÉPICO DE ESCANEO LÁSER Y APROBACIÓN HOLOGRÁFICA */
+        .scan-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(5, 7, 12, 0.92);
+            backdrop-filter: blur(20px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 2rem;
+            animation: modalEnter 0.4s ease;
+        }
+        .scan-box {
+            position: relative;
+            width: 100%;
+            max-width: 480px;
+            background: rgba(18, 22, 32, 0.95);
+            border: 2px solid var(--color-primary-light);
+            border-radius: 24px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            box-shadow: 0 0 60px rgba(0, 176, 255, 0.5);
+            overflow: hidden;
+        }
+        .laser-line {
+            position: absolute;
+            left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #10b981, #00b0ff, transparent);
+            box-shadow: 0 0 20px #10b981, 0 0 30px #00b0ff;
+            top: 0;
+            animation: laserScan 2s infinite ease-in-out;
+        }
+        @keyframes laserScan {
+            0% { top: 0%; opacity: 0.8; }
+            50% { top: 98%; opacity: 1; }
+            100% { top: 0%; opacity: 0.8; }
+        }
+        .scan-icon { font-size: 3.5rem; margin-bottom: 1rem; animation: pulseIcon 1.5s infinite; }
+        @keyframes pulseIcon { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        .scan-title { font-family: var(--font-display); font-size: 1.8rem; color: #fff; margin-bottom: 0.5rem; }
+        .scan-sub { font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1.5rem; }
+
+        .stamp-approved {
+            display: inline-block;
+            padding: 8px 24px;
+            border: 3px solid #10b981;
+            border-radius: 12px;
+            color: #10b981;
+            font-weight: 900;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transform: rotate(-6deg) scale(0);
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
+            animation: stampPop 0.5s 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes stampPop { to { transform: rotate(-6deg) scale(1); } }
+
         #btStatus {
-            margin-top: 1rem;
-            padding: 12px;
-            border-radius: 8px;
+            margin-top: 1.25rem;
+            padding: 14px 16px;
+            border-radius: 14px;
             font-size: 0.9rem;
             font-weight: 600;
             display: none;
             text-align: center;
         }
-        #btStatus.info {
-            display: block;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: var(--text-secondary);
-        }
-        #btStatus.success {
-            display: block;
-            background: rgba(0, 176, 255,0.1);
-            border: 1px solid rgba(0, 176, 255,0.3);
-            color: var(--color-primary-light);
-        }
-        #btStatus.error {
-            display: block;
-            background: rgba(239,68,68,0.1);
-            border: 1px solid rgba(239,68,68,0.3);
-            color: #f87171;
-        }
-
-        /* Option Selector Cards */
-        .option-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 10px;
-            margin-top: 6px;
-        }
-        .option-card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
-            padding: 14px 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
-            user-select: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-        }
-        .option-card:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
-        .option-card.active {
-            background: rgba(0, 176, 255, 0.08);
-            border-color: var(--color-primary-light);
-            box-shadow: 0 0 12px rgba(0, 176, 255, 0.25);
-        }
-        .option-card-title {
-            font-weight: 700;
-            font-size: 0.85rem;
-            color: #ffffff;
-        }
-        .option-card-sub {
-            font-size: 0.72rem;
-            color: var(--text-secondary);
-        }
-
-        /* Checkbox lists */
-        .checkbox-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: 6px;
-        }
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 8px;
-            padding: 12px 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-            user-select: none;
-        }
-        .checkbox-item:hover {
-            background: rgba(255, 255, 255, 0.04);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-        .checkbox-item input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--color-primary);
-            cursor: pointer;
-            margin: 0;
-        }
-        .checkbox-item span {
-            font-size: 0.88rem;
-            color: var(--text-secondary);
-            transition: color 0.2s;
-        }
-        .checkbox-item input[type="checkbox"]:checked + span {
-            color: #ffffff;
-            font-weight: 600;
-        }
+        #btStatus.info { display: block; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); }
+        #btStatus.success { display: block; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.35); color: #6ee7b7; }
+        #btStatus.error { display: block; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.35); color: #fca5a5; }
     </style>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <!-- BACKGROUND PARTICLES -->
@@ -306,20 +529,18 @@
         </div>
         <div class="nav-middle">
             <a href="../index.html">Inicio</a>
+            <a href="nuestra-tierra.html">Nuestra Tierra</a>
             <div class="nav-dropdown">
                 <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">Novedades</button>
                 <div class="nav-dropdown-menu">
                     <a href="actualizaciones.html">Actualizaciones</a>
-                    <a href="imagenes.html">Galeria</a>
+                    <a href="imagenes.html">Galería</a>
                     <a href="videos.html">Videos</a>
                 </div>
             </div>
-            <a href="minijuegos.html">Minijuegos</a>
-            <a href="donaciones.html">Apoyanos</a>
+            <a href="donaciones.html">Apóyanos</a>
             <a href="personal.html">Personal</a>
-            <a href="perfil.html">Mi Perfil</a>
-            <a href="meinteresa.html">Me Interesa</a>
-            <a href="wiki.html">Wiki</a>
+            <a href="soporte.html">Soporte</a>
             <a href="admin/admin.html" id="adminNavLink" hidden>Panel Admin</a>
         </div>
         <div class="nav-right"></div>
@@ -328,132 +549,537 @@
         </button>
         <nav class="nav-mobile-menu">
             <a href="../index.html">Inicio</a>
+            <a href="nuestra-tierra.html">Nuestra Tierra</a>
             <hr>
             <span style="font-size:0.75rem;color:var(--text-muted);padding:0.5rem 1rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Novedades</span>
             <div class="nav-mobile-sub">
                 <a href="actualizaciones.html">Actualizaciones</a>
-                <a href="imagenes.html">Galeria</a>
+                <a href="imagenes.html">Galería</a>
                 <a href="videos.html">Videos</a>
             </div>
             <hr>
-            <a href="minijuegos.html">Minijuegos</a>
-            <a href="donaciones.html">Apoyanos</a>
+            <a href="donaciones.html">Apóyanos</a>
             <a href="personal.html">Personal</a>
             <a href="perfil.html">Mi Perfil</a>
-            <a href="meinteresa.html">Me Interesa</a>
-            <a href="wiki.html">Wiki</a>
+            <a href="soporte.html">Soporte</a>
         </nav>
     </nav>
 
     <!-- MAIN CONTAINER -->
-    <div class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
+    <div class="container" style="padding-top: 1.5rem; padding-bottom: 4rem;">
         
+        <!-- HERO BANNER ÉPICO -->
         <div class="bt-hero">
             <img src="https://i.imgur.com/1IRRyFY.jpeg" alt="Beta Tester" class="bt-hero-bg">
             <div class="bt-hero-overlay"></div>
             <div class="bt-hero-content">
-                <span class="bt-hero-tag">⚙️ Postulacion Abierta</span>
-                <h1 class="bt-hero-title">Conviertete en Beta Tester</h1>
-                <p class="bt-hero-sub">Inscribete para tener la oportunidad de probar las versiones alpha/beta de Nuestra Tierra antes que nadie.</p>
+                <div>
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+                        <span class="bt-hero-tag"><i class="fa-solid fa-crosshairs" aria-hidden="true"></i> Reclutamiento de Élite</span>
+                        <div class="beta-count-pill" id="betaCountPill">
+                            <span class="beta-count-dot"></span>
+                            <span>Testers Inscritos: <strong id="betaTestersCount" style="color:#00f0ff; font-size:0.9rem;">29</strong></span>
+                        </div>
+                    </div>
+                    <h1 class="bt-hero-title">Pase Beta Tester</h1>
+                </div>
+                <!-- RANK BADGE DINÁMICO -->
+                <div class="rank-badge-hero" id="rankBadgeHero">
+                    <span class="rank-icon" id="heroRankIcon"><i class="fa-solid fa-medal" aria-hidden="true"></i></span>
+                    <div class="rank-text">
+                        <span class="rank-title">Rango de Tester</span>
+                        <span class="rank-name" id="heroRankName">Recluta C</span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="bt-form-card">
+        <!-- TARJETA DE PASE ACTIVO (SI YA TIENE INSCRIPCIÓN) -->
+        <div id="btActiveBanner" style="display:none; max-width:640px; margin: 0 auto 1.75rem; background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(18, 22, 32, 0.95) 100%); border: 1.5px solid rgba(16, 185, 129, 0.5); border-radius: 20px; padding: 22px 24px; box-shadow: 0 15px 50px rgba(0,0,0,0.6), 0 0 30px rgba(16,185,129,0.2); backdrop-filter: blur(20px);">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+                <div style="display:flex; align-items:flex-start; gap:16px;">
+                    <div style="width:52px; height:52px; border-radius:16px; background:rgba(16,185,129,0.25); border:1px solid rgba(16,185,129,0.6); display:flex; align-items:center; justify-content:center; font-size:1.8rem; box-shadow:0 0 20px rgba(16,185,129,0.4); flex-shrink:0;">
+                        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <h3 style="margin:0; font-size:1.25rem; font-weight:800; color:#fff;">¡Tu Pase de Tester está Activo!</h3>
+                            <span style="font-size:0.7rem; font-weight:900; text-transform:uppercase; background:#10b981; color:#050507; padding:3px 10px; border-radius:100px; letter-spacing:0.8px;">Inscrito</span>
+                        </div>
+                        <p style="margin:6px 0 0; font-size:0.88rem; color:#cbd5e1;" id="btActiveSummary">
+                            Ya tienes tu postulación registrada oficialmente en el programa Beta Tester de Nuestra Tierra.
+                        </p>
+                        <div style="margin-top:12px; display:flex; gap:14px; flex-wrap:wrap; font-size:0.8rem; color:#94a3b8;" id="btActiveMeta">
+                            <span><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> Dispositivo: <strong id="btMetaDevice" style="color:#00f0ff;">--</strong></span>
+                            <span><i class="fa-solid fa-bolt" aria-hidden="true"></i> RAM: <strong id="btMetaRam" style="color:#00f0ff;">--</strong></span>
+                            <span><i class="fa-solid fa-robot" aria-hidden="true"></i> Android: <strong id="btMetaAndroid" style="color:#00f0ff;">--</strong></span>
+                            <span><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Registrado: <strong id="btMetaDate" style="color:#fff;">--</strong></span>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" id="btToggleEditBtn" onclick="toggleEditPassForm()" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.25); color:#fff; padding:10px 18px; border-radius:12px; font-weight:800; font-size:0.85rem; cursor:pointer; transition:all 0.2s; white-space:nowrap; margin-left:auto;">
+                    <i class="fa-solid fa-pen" aria-hidden="true"></i> Modificar Pase
+                </button>
+            </div>
+        </div>
+
+        <!-- WIZARD CARD GAMIFICADA (6 MICRO-PASOS) -->
+        <div class="bt-wizard-card">
+            
+            <!-- PROMPT PARA INICIAR SESIÓN CON DISCORD SI NO ESTÁ LOGUEADO -->
+            <div id="btLoginPrompt" style="display:none; background:rgba(88,101,242,0.12); border:1px solid rgba(88,101,242,0.35); border-radius:16px; padding:16px 20px; margin-bottom:1.75rem; text-align:center;">
+                <p style="margin:0 0 12px; font-size:0.9rem; color:#e2e8f0;">Para vincular tu Pase de Tester a tu cuenta, inicia sesión con Discord:</p>
+                <button type="button" onclick="if(window.DiscordAuth) window.DiscordAuth.login();" class="btn-discord-login" style="background:#5865F2; color:#fff; border:none; padding:10px 24px; border-radius:12px; font-weight:800; cursor:pointer; font-size:0.9rem; display:inline-flex; align-items:center; gap:8px; box-shadow:0 0 20px rgba(88,101,242,0.4);">
+                    <i class="fa-brands fa-discord" aria-hidden="true"></i>
+                    Iniciar Sesión con Discord
+                </button>
+            </div>
+
+            <!-- BARRA DE PROGRESO FUTURISTA -->
+            <div class="stepper-header">
+                <div class="stepper-top-info">
+                    <span>Fase <strong id="stepNumberText">1 de 6</strong></span>
+                    <span id="stepTitleTag">Identificación</span>
+                </div>
+                <div class="stepper-bar-bg">
+                    <div class="stepper-bar-fill" id="stepperBarFill"></div>
+                </div>
+            </div>
+
+            <!-- FORMULARIO -->
             <form id="betatesterForm" onsubmit="submitForm(event)">
-                <div class="form-group">
-                    <label class="form-label" for="discordInput">Usuario de Discord</label>
-                    <input class="form-input" id="discordInput" type="text" placeholder="Ej: panter_player#1234 o panter_player" required>
-                </div>
+                
+                <!-- MICRO-PASO 1: DISCORD -->
+                <div class="step-panel active" id="stepPanel1">
+                    <span class="micro-step-tag">Micro-Paso 01 / 06</span>
+                    <div class="step-title"><i class="fa-solid fa-user" aria-hidden="true"></i> Ingresa tu Usuario de Discord</div>
+                    <div class="step-desc">Lo utilizaremos para agregarte al canal privado de desarrolladores.</div>
 
-                <div class="form-group">
-                    <label class="form-label" for="deviceInput">Dispositivo Android (Modelo y Marca)</label>
-                    <input class="form-input" id="deviceInput" type="text" placeholder="Ej: Samsung Galaxy S23, Xiaomi Redmi Note 12" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="ramSelect">Memoria RAM Fisica</label>
-                    <select class="form-select" id="ramSelect" required>
-                        <option value="" disabled selected>Selecciona tu cantidad de RAM</option>
-                        <option value="2gb">2 GB o menos</option>
-                        <option value="3gb">3 GB</option>
-                        <option value="4gb">4 GB</option>
-                        <option value="6gb">6 GB</option>
-                        <option value="8gb">8 GB</option>
-                        <option value="12gb">12 GB</option>
-                        <option value="16gb">16 GB o mas</option>
-                    </select>
-                    <span style="font-size: 0.8rem; color: #ef4444; font-weight: 700; margin-top: 4px; display: inline-block;">
-                        ⚠️ IMPORTANTE: Pon solo la RAM fisica, no la expandible ni la virtual.
-                    </span>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="androidSelect">Version de Android</label>
-                    <select class="form-select" id="androidSelect" required>
-                        <option value="" disabled selected>Selecciona tu version de Android</option>
-                        <option value="android_10_less">Android 10 o anterior</option>
-                        <option value="android_11">Android 11</option>
-                        <option value="android_12">Android 12</option>
-                        <option value="android_13">Android 13</option>
-                        <option value="android_14">Android 14</option>
-                        <option value="android_15">Android 15 o superior</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Habilidades y Disponibilidad</label>
-                    <div class="checkbox-list">
-                        <label class="checkbox-item">
-                            <input type="checkbox" id="skillsBugs" value="true">
-                            <span>Tengo experiencia reportando bugs en alphas/betas</span>
-                        </label>
-                        <label class="checkbox-item">
-                            <input type="checkbox" id="skillsHours" value="true">
-                            <span>Puedo jugar mas de 5 horas a la semana</span>
-                        </label>
-                        <label class="checkbox-item">
-                            <input type="checkbox" id="skillsRecord" value="true">
-                            <span>Puedo grabar pantalla de errores cuando ocurran</span>
-                        </label>
-                        <label class="checkbox-item">
-                            <input type="checkbox" id="skillsDiscord" value="true">
-                            <span>Estoy unido al servidor de Discord oficial</span>
-                        </label>
+                    <div class="epic-input-wrapper">
+                        <input class="epic-input" id="discordInput" type="text" placeholder="Ej: panter_player#1234 o panter_player" required autofocus>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="whyTextarea">¿Por que quieres ser parte del equipo de Beta Testers?</label>
-                    <textarea class="form-textarea" id="whyTextarea" placeholder="Cuentanos brevemente tu motivacion..." required></textarea>
+                <!-- MICRO-PASO 2: DISPOSITIVO -->
+                <div class="step-panel" id="stepPanel2">
+                    <span class="micro-step-tag">Micro-Paso 02 / 06</span>
+                    <div class="step-title"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> ¿Qué modelo de celular usarás?</div>
+                    <div class="step-desc">Escribe la marca y modelo exacto de tu smartphone Android.</div>
+
+                    <div class="epic-input-wrapper">
+                        <input class="epic-input" id="deviceInput" type="text" placeholder="Ej: Samsung Galaxy S23 Ultra, Poco X5 Pro" required>
+                    </div>
                 </div>
 
-                <label class="form-checkbox-group" for="ndaCheckbox">
-                    <input class="form-checkbox" id="ndaCheckbox" type="checkbox" required>
-                    <span style="font-size: 0.85rem; color: var(--text-secondary);">Acepto no filtrar ni compartir imagenes o videos de las pruebas de juego (NDA).</span>
-                </label>
+                <!-- MICRO-PASO 3: RAM STEPPER CON BOTONES (+) Y (-) -->
+                <div class="step-panel" id="stepPanel3">
+                    <span class="micro-step-tag">Micro-Paso 03 / 06</span>
+                    <div class="step-title"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Memoria RAM Física del Celular</div>
+                    <div class="step-desc">Usa los botones (+) y (-) para sintonizar tu memoria RAM real.</div>
 
-                <button class="bt-btn-submit" id="submitBtn" type="submit">Enviar Postulacion</button>
+                    <div class="stepper-plusminus-card">
+                        <div class="stepper-control-row">
+                            <button type="button" class="btn-stepper-pm" id="btnRamMinus" onclick="stepRam(-1)">-</button>
+                            <div class="stepper-display-box">
+                                <div class="stepper-display-icon" id="ramDisplayIcon"><i class="fa-solid fa-bolt" aria-hidden="true"></i></div>
+                                <div class="stepper-display-value" id="ramDisplayValue">4 GB</div>
+                                <div class="stepper-display-badge" id="ramDisplayBadge">Gama Media</div>
+                            </div>
+                            <button type="button" class="btn-stepper-pm" id="btnRamPlus" onclick="stepRam(1)">+</button>
+                        </div>
+                        <span style="font-size:0.75rem; color:#fca5a5;"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Ingresa solo RAM física (no virtual ni expandible).</span>
+                    </div>
+                    <input type="hidden" id="ramSelect" value="4gb" required>
+                </div>
+
+                <!-- MICRO-PASO 4: ANDROID STEPPER CON BOTONES (+) Y (-) -->
+                <div class="step-panel" id="stepPanel4">
+                    <span class="micro-step-tag">Micro-Paso 04 / 06</span>
+                    <div class="step-title"><i class="fa-solid fa-robot" aria-hidden="true"></i> Versión del Sistema Android</div>
+                    <div class="step-desc">Ajusta la versión de tu sistema operativo con (+) y (-).</div>
+
+                    <div class="stepper-plusminus-card">
+                        <div class="stepper-control-row">
+                            <button type="button" class="btn-stepper-pm" id="btnAndroidMinus" onclick="stepAndroid(-1)">-</button>
+                            <div class="stepper-display-box">
+                                <div class="stepper-display-icon" id="androidDisplayIcon"><i class="fa-solid fa-robot" aria-hidden="true"></i></div>
+                                <div class="stepper-display-value" id="androidDisplayValue">Android 14</div>
+                                <div class="stepper-display-badge" id="androidDisplayBadge">Upside Down Cake</div>
+                            </div>
+                            <button type="button" class="btn-stepper-pm" id="btnAndroidPlus" onclick="stepAndroid(1)">+</button>
+                        </div>
+                    </div>
+                    <input type="hidden" id="androidSelect" value="android_14" required>
+                </div>
+
+                <!-- MICRO-PASO 5: SKILLS GAMIFICADAS -->
+                <div class="step-panel" id="stepPanel5">
+                    <span class="micro-step-tag">Micro-Paso 05 / 06</span>
+                    <div class="step-title"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Activa tus Habilidades de Tester</div>
+                    <div class="step-desc">Toca para equipar tus competencias (aumentarán tu rango).</div>
+
+                    <div class="skills-stack">
+                        <div class="skill-tile" onclick="toggleSkillTile('skillsBugs', this)">
+                            <input type="checkbox" id="skillsBugs" value="true" style="display:none;">
+                            <div class="skill-tile-left">
+                                <span class="skill-tile-icon"><i class="fa-solid fa-bug" aria-hidden="true"></i></span>
+                                <div class="skill-tile-text">
+                                    <span class="skill-tile-title">Reporte de Errores</span>
+                                    <span class="skill-tile-desc">Experiencia detallando fallos técnicos</span>
+                                </div>
+                            </div>
+                            <span class="skill-tile-status">INACTIVO</span>
+                        </div>
+
+                        <div class="skill-tile" onclick="toggleSkillTile('skillsHours', this)">
+                            <input type="checkbox" id="skillsHours" value="true" style="display:none;">
+                            <div class="skill-tile-left">
+                                <span class="skill-tile-icon"><i class="fa-solid fa-stopwatch" aria-hidden="true"></i></span>
+                                <div class="skill-tile-text">
+                                    <span class="skill-tile-title">Hardcore Gamer (+5 Horas)</span>
+                                    <span class="skill-tile-desc">Disponibilidad semanal amplia</span>
+                                </div>
+                            </div>
+                            <span class="skill-tile-status">INACTIVO</span>
+                        </div>
+
+                        <div class="skill-tile" onclick="toggleSkillTile('skillsRecord', this)">
+                            <input type="checkbox" id="skillsRecord" value="true" style="display:none;">
+                            <div class="skill-tile-left">
+                                <span class="skill-tile-icon"><i class="fa-solid fa-video" aria-hidden="true"></i></span>
+                                <div class="skill-tile-text">
+                                    <span class="skill-tile-title">Captura de Pantalla</span>
+                                    <span class="skill-tile-desc">Grabación en video de glithes</span>
+                                </div>
+                            </div>
+                            <span class="skill-tile-status">INACTIVO</span>
+                        </div>
+
+                        <div class="skill-tile" onclick="toggleSkillTile('skillsDiscord', this)">
+                            <input type="checkbox" id="skillsDiscord" value="true" style="display:none;">
+                            <div class="skill-tile-left">
+                                <span class="skill-tile-icon"><i class="fa-solid fa-comment-dots" aria-hidden="true"></i></span>
+                                <div class="skill-tile-text">
+                                    <span class="skill-tile-title">Discordian Activo</span>
+                                    <span class="skill-tile-desc">Unido al servidor oficial</span>
+                                </div>
+                            </div>
+                            <span class="skill-tile-status">INACTIVO</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MICRO-PASO 6: DOSSIER LICENCIA & CONFIRMACION -->
+                <div class="step-panel" id="stepPanel6">
+                    <span class="micro-step-tag">Micro-Paso 06 / 06</span>
+                    <div class="step-title"><i class="fa-solid fa-id-card" aria-hidden="true"></i> Confirma tu Pase de Reclutamiento</div>
+                    <div class="step-desc">Firma tu acuerdo NDA y envía la solicitud al servidor.</div>
+
+                    <div class="dossier-card">
+                        <div class="dossier-header">
+                            <span class="dossier-tag"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> DOSSIER DE RECLUTAMIENTO TESTER</span>
+                            <span style="font-size:0.75rem; color:#40c4ff; font-weight:900;" id="dossierRankTag">RANGO C</span>
+                        </div>
+                        <div class="dossier-grid">
+                            <div>
+                                <div class="dossier-label">Agente Discord</div>
+                                <div class="dossier-value" id="dosDiscord">--</div>
+                            </div>
+                            <div>
+                                <div class="dossier-label">Dispositivo</div>
+                                <div class="dossier-value" id="dosDevice">--</div>
+                            </div>
+                            <div>
+                                <div class="dossier-label">Memoria RAM</div>
+                                <div class="dossier-value" id="dosRAM">--</div>
+                            </div>
+                            <div>
+                                <div class="dossier-label">Sistema OS</div>
+                                <div class="dossier-value" id="dosAndroid">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="whyTextarea">¿Por qué deseas unirte al equipo de Beta Testers?</label>
+                        <textarea class="epic-input epic-textarea" id="whyTextarea" placeholder="Cuéntanos brevemente tu motivación..." required></textarea>
+                    </div>
+
+                    <label class="nda-card" for="ndaCheckbox">
+                        <input class="nda-checkbox" id="ndaCheckbox" type="checkbox" required>
+                        <span style="font-size: 0.84rem; color: var(--text-secondary);">
+                            <strong style="color: #ffe066;">JURAMENTO NDA:</strong> Prometo no filtrar ni compartir imágenes o videos de las pruebas confidenciales.
+                        </span>
+                    </label>
+                </div>
+
+                <!-- CONTROLES WIZARD -->
+                <div class="controls-row">
+                    <button type="button" class="btn-prev" id="btnPrev" onclick="changeStep(-1)" style="display:none;">← Atrás</button>
+                    <button type="button" class="btn-next" id="btnNext" onclick="changeStep(1)">Continuar →</button>
+                    <button type="submit" class="btn-submit" id="submitBtn" style="display:none;"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Firmar y Enviar Pase</button>
+                </div>
+
                 <div id="btStatus"></div>
             </form>
         </div>
 
     </div>
 
+    <!-- OVERLAY MODAL ÉPICO DE ESCANEO LÁSER Y VERIFICACIÓN -->
+    <div class="scan-overlay" id="scanOverlay">
+        <div class="scan-box">
+            <div class="laser-line"></div>
+            <div class="scan-icon" id="scanIcon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></div>
+            <div class="scan-title" id="scanTitle">Escaneando Pase Tester...</div>
+            <div class="scan-sub" id="scanSub">Verificando credenciales de hardware en el servidor</div>
+            <div class="stamp-approved" id="stampApproved">APROBADO <i class="fa-solid fa-check" aria-hidden="true"></i></div>
+        </div>
+    </div>
+
     <footer>
-        <p>© 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
+        <p><i class="fa-regular fa-copyright" aria-hidden="true"></i> 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
     </footer>
 
     <script src="../assets/js/core/script.js"></script>
     <script>
+    let currentStep = 1;
+    const totalSteps = 6;
     let currentUser = null;
-    let alreadyApplied = false;
+
+    const stepTitles = ['Identificación', 'Dispositivo', 'Memoria RAM', 'Sistema OS', 'Habilidades', 'Firma de Pase'];
+
+    // Opciones para RAM Stepper (+ / -)
+    const ramOptions = [
+        { value: '2gb', label: '2 GB', icon: '<i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>', badge: 'Nivel Entrada' },
+        { value: '3gb', label: '3 GB', icon: '<i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>', badge: 'Nivel Básico' },
+        { value: '4gb', label: '4 GB', icon: '<i class="fa-solid fa-bolt" aria-hidden="true"></i>', badge: 'Gama Media' },
+        { value: '6gb', label: '6 GB', icon: '<i class="fa-solid fa-bolt" aria-hidden="true"></i>', badge: 'Gama Óptima' },
+        { value: '8gb', label: '8 GB', icon: '<i class="fa-solid fa-rocket" aria-hidden="true"></i>', badge: 'Gama Alta' },
+        { value: '12gb', label: '12 GB', icon: '<i class="fa-solid fa-rocket" aria-hidden="true"></i>', badge: 'Pro Gamer' },
+        { value: '16gb', label: '16 GB+', icon: '<i class="fa-solid fa-fire" aria-hidden="true"></i>', badge: 'Flagship Ultra' }
+    ];
+    let ramIndex = 2; // Default 4GB
+
+    // Opciones para Android Stepper (+ / -)
+    const androidOptions = [
+        { value: 'android_10_less', label: 'Android 10-', icon: '<i class="fa-solid fa-robot" aria-hidden="true"></i>', badge: 'Legacy / Antiguo' },
+        { value: 'android_11', label: 'Android 11', icon: '<i class="fa-solid fa-robot" aria-hidden="true"></i>', badge: 'Red Velvet Cake' },
+        { value: 'android_12', label: 'Android 12', icon: '<i class="fa-solid fa-robot" aria-hidden="true"></i>', badge: 'Snow Cone' },
+        { value: 'android_13', label: 'Android 13', icon: '<i class="fa-solid fa-robot" aria-hidden="true"></i>', badge: 'Tiramisu' },
+        { value: 'android_14', label: 'Android 14', icon: '<i class="fa-solid fa-robot" aria-hidden="true"></i>', badge: 'Upside Down' },
+        { value: 'android_15', label: 'Android 15+', icon: '<i class="fa-solid fa-robot" aria-hidden="true"></i>', badge: 'Vanilla Ice Cream' }
+    ];
+    let androidIndex = 4; // Default Android 14
+
+    function renderRamStepper() {
+        const item = ramOptions[ramIndex];
+        document.getElementById('ramSelect').value = item.value;
+        document.getElementById('ramDisplayIcon').innerHTML = item.icon;
+        document.getElementById('ramDisplayValue').textContent = item.label;
+        document.getElementById('ramDisplayBadge').textContent = item.badge;
+        document.getElementById('btnRamMinus').disabled = (ramIndex === 0);
+        document.getElementById('btnRamPlus').disabled = (ramIndex === ramOptions.length - 1);
+        calculateRank();
+    }
+
+    function stepRam(delta) {
+        const next = ramIndex + delta;
+        if (next >= 0 && next < ramOptions.length) {
+            ramIndex = next;
+            renderRamStepper();
+        }
+    }
+
+    function renderAndroidStepper() {
+        const item = androidOptions[androidIndex];
+        document.getElementById('androidSelect').value = item.value;
+        document.getElementById('androidDisplayIcon').innerHTML = item.icon;
+        document.getElementById('androidDisplayValue').textContent = item.label;
+        document.getElementById('androidDisplayBadge').textContent = item.badge;
+        document.getElementById('btnAndroidMinus').disabled = (androidIndex === 0);
+        document.getElementById('btnAndroidPlus').disabled = (androidIndex === androidOptions.length - 1);
+        calculateRank();
+    }
+
+    function stepAndroid(delta) {
+        const next = androidIndex + delta;
+        if (next >= 0 && next < androidOptions.length) {
+            androidIndex = next;
+            renderAndroidStepper();
+        }
+    }
+
+    function calculateRank() {
+        const ram = document.getElementById('ramSelect').value;
+        const b = document.getElementById('skillsBugs').checked;
+        const h = document.getElementById('skillsHours').checked;
+        const r = document.getElementById('skillsRecord').checked;
+        const d = document.getElementById('skillsDiscord').checked;
+        
+        let score = 0;
+        if (ram === '8gb' || ram === '12gb' || ram === '16gb') score += 40;
+        else if (ram === '4gb' || ram === '6gb') score += 25;
+        else if (ram) score += 10;
+
+        if (b) score += 15;
+        if (h) score += 15;
+        if (r) score += 15;
+        if (d) score += 15;
+
+        let rankName = 'Recluta C';
+        let rankIcon = '<i class="fa-solid fa-medal" aria-hidden="true"></i>';
+
+        if (score >= 85) {
+            rankName = 'Rango S — Legend Tester';
+            rankIcon = '<i class="fa-solid fa-crown" aria-hidden="true"></i>';
+        } else if (score >= 60) {
+            rankName = 'Rango A — Elite Bug Hunter';
+            rankIcon = '<i class="fa-solid fa-crosshairs" aria-hidden="true"></i>';
+        } else if (score >= 35) {
+            rankName = 'Rango B — Core Specialist';
+            rankIcon = '<i class="fa-solid fa-shield-halved" aria-hidden="true"></i>';
+        }
+
+        const heroIcon = document.getElementById('heroRankIcon');
+        const heroName = document.getElementById('heroRankName');
+        const tag = document.getElementById('dossierRankTag');
+
+        if (heroIcon) heroIcon.innerHTML = rankIcon;
+        if (heroName) heroName.textContent = rankName;
+        if (tag) tag.textContent = rankName.toUpperCase();
+    }
+
+    function toggleSkillTile(checkboxId, tileEl) {
+        const cb = document.getElementById(checkboxId);
+        if (!cb) return;
+        cb.checked = !cb.checked;
+        const statusEl = tileEl.querySelector('.skill-tile-status');
+        if (cb.checked) {
+            tileEl.classList.add('active');
+            if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-circle-check" aria-hidden="true"></i> EQUIPADO';
+        } else {
+            tileEl.classList.remove('active');
+            if (statusEl) statusEl.textContent = 'INACTIVO';
+        }
+        calculateRank();
+    }
+
+    function setSkillTileState(checkboxId, active) {
+        const cb = document.getElementById(checkboxId);
+        if (!cb) return;
+        cb.checked = !!active;
+        const tileEl = cb.closest('.skill-tile');
+        if (tileEl) {
+            const statusEl = tileEl.querySelector('.skill-tile-status');
+            if (active) {
+                tileEl.classList.add('active');
+            if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-circle-check" aria-hidden="true"></i> EQUIPADO';
+            } else {
+                tileEl.classList.remove('active');
+                if (statusEl) statusEl.textContent = 'INACTIVO';
+            }
+        }
+    }
+
+    function updateDossier() {
+        const discord = document.getElementById('discordInput').value || 'Sin especificar';
+        const device = document.getElementById('deviceInput').value || 'Android';
+        const ram = document.getElementById('ramSelect').value || 'N/A';
+        const android = document.getElementById('androidSelect').value || 'N/A';
+
+        const d1 = document.getElementById('dosDiscord');
+        const d2 = document.getElementById('dosDevice');
+        const d3 = document.getElementById('dosRAM');
+        const d4 = document.getElementById('dosAndroid');
+
+        if (d1) d1.textContent = discord;
+        if (d2) d2.textContent = device;
+        if (d3) d3.textContent = ram.toUpperCase();
+        if (d4) d4.textContent = android.replace('_', ' ').toUpperCase();
+    }
+
+    function updateWizardUI() {
+        for (let i = 1; i <= totalSteps; i++) {
+            const panel = document.getElementById(`stepPanel${i}`);
+            if (panel) {
+                panel.classList.remove('active');
+                if (i === currentStep) panel.classList.add('active');
+            }
+        }
+
+        const stepText = document.getElementById('stepNumberText');
+        const titleTag = document.getElementById('stepTitleTag');
+        const barFill = document.getElementById('stepperBarFill');
+
+        if (stepText) stepText.textContent = `${currentStep} de ${totalSteps}`;
+        if (titleTag) titleTag.textContent = stepTitles[currentStep - 1] || '';
+        if (barFill) barFill.style.width = ((currentStep / totalSteps) * 100) + '%';
+
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (btnPrev) btnPrev.style.display = currentStep === 1 ? 'none' : 'block';
+        if (btnNext) btnNext.style.display = currentStep === totalSteps ? 'none' : 'flex';
+        if (submitBtn) submitBtn.style.display = currentStep === totalSteps ? 'flex' : 'none';
+
+        if (currentStep === 6) {
+            updateDossier();
+        }
+    }
+
+    function changeStep(delta) {
+        const next = currentStep + delta;
+        if (next >= 1 && next <= totalSteps) {
+            if (delta > 0) {
+                if (currentStep === 1) {
+                    const discord = document.getElementById('discordInput').value.trim();
+                    if (!discord) { setStatus('Ingresa tu usuario de Discord para continuar.', 'error'); return; }
+                } else if (currentStep === 2) {
+                    const device = document.getElementById('deviceInput').value.trim();
+                    if (!device) { setStatus('Ingresa el modelo de tu celular.', 'error'); return; }
+                }
+            }
+            setStatus('', 'info');
+            currentStep = next;
+            updateWizardUI();
+        }
+    }
+
+    function triggerScanEffect(onComplete) {
+        const overlay = document.getElementById('scanOverlay');
+        const title = document.getElementById('scanTitle');
+        const sub = document.getElementById('scanSub');
+        const icon = document.getElementById('scanIcon');
+        if (!overlay) return onComplete();
+
+        overlay.style.display = 'flex';
+        title.textContent = 'Escaneando Pase Tester...';
+        sub.textContent = 'Verificando firma de seguridad NDA en el servidor';
+        icon.innerHTML = '<i class="fa-solid fa-fingerprint fa-fade" aria-hidden="true"></i>';
+
+        setTimeout(() => {
+            title.textContent = '¡Pase Emitido con Éxito!';
+            sub.textContent = 'Tu registro Beta Tester ha sido registrado oficialmente.';
+            icon.innerHTML = '<i class="fa-solid fa-circle-check" aria-hidden="true"></i>';
+            if (window.confetti) {
+                window.confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+            }
+        }, 1400);
+
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            onComplete();
+        }, 3200);
+    }
 
     function waitForFirebase(timeout = 8000) {
         return new Promise((resolve) => {
-            if (window.db && window.fsDoc && window.getDoc && window.setDoc && window.auth) return resolve(true);
+            if (window.db && window.fsDoc && window.getDoc && window.setDoc) return resolve(true);
             const start = Date.now();
             const t = setInterval(() => {
-                if (window.db && window.fsDoc && window.getDoc && window.setDoc && window.auth) {
+                if (window.db && window.fsDoc && window.getDoc && window.setDoc) {
                     clearInterval(t); resolve(true);
                 } else if (Date.now() - start > timeout) {
                     clearInterval(t); resolve(false);
@@ -465,125 +1091,285 @@
     function setStatus(msg, type = 'info') {
         const el = document.getElementById('btStatus');
         if (!el) return;
-        el.textContent = msg;
+        if (!msg) { el.style.display = 'none'; return; }
+        el.innerHTML = msg;
         el.className = type;
         el.style.display = 'block';
     }
 
+    function animateCounter(elementId, targetValue) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        const target = parseInt(targetValue, 10) || 0;
+        let current = 0;
+        const duration = 1000;
+        const stepTime = 25;
+        const totalSteps = duration / stepTime;
+        const increment = Math.max(1, target / totalSteps);
+
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            el.textContent = Math.floor(current);
+        }, stepTime);
+    }
+
+    async function loadBetaTestersCount() {
+        const countEl = document.getElementById('betaTestersCount');
+        try {
+            let count = 29; // Conteo base verificado en la base de datos
+            const cached = localStorage.getItem('ps_beta_testers_count');
+            if (cached) count = parseInt(cached, 10);
+
+            if (window.db && window.collection && window.getDocs && window.query && window.where) {
+                const q = window.query(
+                    window.collection(window.db, 'conductores'),
+                    window.where('betaTesterRequest', '==', true)
+                );
+                const snap = await window.getDocs(q);
+                if (snap && typeof snap.size === 'number' && snap.size > 0) {
+                    count = snap.size;
+                    localStorage.setItem('ps_beta_testers_count', count);
+                }
+            }
+            animateCounter('betaTestersCount', count);
+        } catch (e) {
+            console.warn('Error cargando conteo de testers:', e);
+            const fallback = localStorage.getItem('ps_beta_testers_count') || 29;
+            animateCounter('betaTestersCount', fallback);
+        }
+    }
+
+    let hasExistingPass = false;
+    let isEditingPass = false;
+
+    function toggleEditPassForm() {
+        const wizardCard = document.querySelector('.bt-wizard-card');
+        const editBtn = document.getElementById('btToggleEditBtn');
+        isEditingPass = !isEditingPass;
+        if (isEditingPass) {
+            if (wizardCard) wizardCard.scrollIntoView({ behavior: 'smooth' });
+            if (editBtn) editBtn.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i> Cancelar Edición';
+        } else {
+            if (editBtn) editBtn.innerHTML = '<i class="fa-solid fa-pen" aria-hidden="true"></i> Modificar Pase';
+        }
+    }
+
     async function initForm() {
+        renderRamStepper();
+        renderAndroidStepper();
+        updateWizardUI();
+        
+        // Carga inicial del contador
+        loadBetaTestersCount();
+
         const ok = await waitForFirebase();
-        if (!ok) {
-            setStatus('Error de conexion con el servidor. Recarga la pagina.', 'error');
-            return;
+        if (ok) {
+            loadBetaTestersCount();
         }
 
-        window.auth.onAuthStateChanged(async (user) => {
+        const handleUserSession = async (user) => {
             const submitBtn = document.getElementById('submitBtn');
+            const loginPrompt = document.getElementById('btLoginPrompt');
+            const discordInput = document.getElementById('discordInput');
+            const activeBanner = document.getElementById('btActiveBanner');
+
             if (user) {
                 currentUser = user;
-                setStatus('Verificando postulacion existente...', 'info');
-                
-                try {
-                    const userDocRef = window.fsDoc(window.db, 'conductores', user.uid);
-                    const snap = await window.getDoc(userDocRef);
-                    
-                    if (snap.exists() && snap.data().betaTesterRequest) {
-                        alreadyApplied = true;
-                        const data = snap.data();
-                        
-                        document.getElementById('discordInput').value = data.betaTesterDiscord || '';
-                        document.getElementById('deviceInput').value = data.betaTesterDevice || '';
-                        document.getElementById('ramSelect').value = data.betaTesterRAM || '';
-                        document.getElementById('androidSelect').value = data.betaTesterAndroidVersion || '';
-                        
-                        document.getElementById('skillsBugs').checked = !!data.betaTesterSkillBugs;
-                        document.getElementById('skillsHours').checked = !!data.betaTesterSkillHours;
-                        document.getElementById('skillsRecord').checked = !!data.betaTesterSkillRecord;
-                        document.getElementById('skillsDiscord').checked = !!data.betaTesterSkillDiscord;
-                        
-                        document.getElementById('whyTextarea').value = data.betaTesterWhy || '';
-                        document.getElementById('ndaCheckbox').checked = true;
+                if (loginPrompt) loginPrompt.style.display = 'none';
+                if (submitBtn) submitBtn.removeAttribute('disabled');
 
-                        submitBtn.textContent = 'Actualizar Postulacion';
-                        setStatus('✅ Ya has enviado tu postulacion. Puedes modificar tus datos si lo deseas.', 'success');
-                    } else {
-                        alreadyApplied = false;
-                        setStatus('Conectado. Completa el formulario para inscribirte.', 'info');
+                if (discordInput && !discordInput.value) {
+                    discordInput.value = user.username || user.globalName || '';
+                }
+
+                try {
+                    if (window.db && window.fsDoc && window.getDoc) {
+                        const userDocRef = window.fsDoc(window.db, 'conductores', user.uid);
+                        const snap = await window.getDoc(userDocRef);
+                        let data = snap.exists() ? snap.data() : null;
+
+                        // Reconciliación con cuentas previas de Google o postulación previa
+                        if (!data?.betaTesterRequest && window.collection && window.getDocs && window.query && window.where) {
+                            if (user.email && !user.email.endsWith('@discord.local')) {
+                                const qE = window.query(
+                                    window.collection(window.db, 'conductores'),
+                                    window.where('email', '==', user.email.toLowerCase().trim())
+                                );
+                                const sE = await window.getDocs(qE);
+                                if (!sE.empty && sE.docs[0].data()?.betaTesterRequest) {
+                                    data = sE.docs[0].data();
+                                }
+                            }
+                            if (!data?.betaTesterRequest && user.username) {
+                                const qD = window.query(
+                                    window.collection(window.db, 'conductores'),
+                                    window.where('betaTesterDiscord', '==', user.username.trim())
+                                );
+                                const sD = await window.getDocs(qD);
+                                if (!sD.empty && sD.docs[0].data()?.betaTesterRequest) {
+                                    data = sD.docs[0].data();
+                                }
+                            }
+                        }
+                        
+                        if (data && data.betaTesterRequest) {
+                            hasExistingPass = true;
+
+                            // Mostrar tarjeta destacada de Pase Activo
+                            if (activeBanner) {
+                                activeBanner.style.display = 'block';
+                                const metaDevice = document.getElementById('btMetaDevice');
+                                const metaRam = document.getElementById('btMetaRam');
+                                const metaAndroid = document.getElementById('btMetaAndroid');
+                                const metaDate = document.getElementById('btMetaDate');
+                                const activeSummary = document.getElementById('btActiveSummary');
+
+                                if (metaDevice) metaDevice.textContent = data.betaTesterDevice || 'Android';
+                                if (metaRam) metaRam.textContent = data.betaTesterRAM ? (data.betaTesterRAM + ' GB') : 'Optimizada';
+                                if (metaAndroid) metaAndroid.textContent = data.betaTesterAndroidVersion || 'Actual';
+                                if (metaDate) {
+                                    const ts = data.betaTesterTimestamp || data.updatedAt;
+                                    metaDate.textContent = ts ? new Date(ts).toLocaleDateString() : 'Activa';
+                                }
+                                if (activeSummary) {
+                                    activeSummary.innerHTML = `Pase firmado por <strong>@${data.betaTesterDiscord || user.username}</strong>. Tu acceso a las pruebas cerradas está confirmado.`;
+                                }
+                            }
+
+                            if (data.betaTesterDiscord) discordInput.value = data.betaTesterDiscord;
+                            if (data.betaTesterDevice) document.getElementById('deviceInput').value = data.betaTesterDevice;
+                            
+                            if (data.betaTesterRAM) {
+                                const idx = ramOptions.findIndex(r => r.value === data.betaTesterRAM);
+                                if (idx !== -1) { ramIndex = idx; renderRamStepper(); }
+                            }
+                            if (data.betaTesterAndroidVersion) {
+                                const idx = androidOptions.findIndex(a => a.value === data.betaTesterAndroidVersion);
+                                if (idx !== -1) { androidIndex = idx; renderAndroidStepper(); }
+                            }
+                            
+                            setSkillTileState('skillsBugs', data.betaTesterSkillBugs);
+                            setSkillTileState('skillsHours', data.betaTesterSkillHours);
+                            setSkillTileState('skillsRecord', data.betaTesterSkillRecord);
+                            setSkillTileState('skillsDiscord', data.betaTesterSkillDiscord);
+                            
+                            if (data.betaTesterWhy) document.getElementById('whyTextarea').value = data.betaTesterWhy;
+                            document.getElementById('ndaCheckbox').checked = true;
+
+                            calculateRank();
+                            if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-rotate" aria-hidden="true"></i> Actualizar Pase de Tester';
+                            setStatus('<i class="fa-solid fa-circle-check" aria-hidden="true"></i> Ya estás inscrito en el programa Beta Tester. Puedes actualizar tus datos si lo deseas.', 'success');
+                        } else {
+                            if (activeBanner) activeBanner.style.display = 'none';
+                            hasExistingPass = false;
+                        }
                     }
                 } catch (e) {
-                    console.warn('Error cargando datos:', e);
-                    setStatus('Error al cargar tu perfil.', 'error');
+                    console.warn('Error cargando postulación previa:', e);
                 }
             } else {
                 currentUser = null;
-                alreadyApplied = false;
-                submitBtn.setAttribute('disabled', 'true');
-                setStatus('⚠️ Debes iniciar sesion en "Mi Perfil" para poder inscribirte.', 'error');
+                if (activeBanner) activeBanner.style.display = 'none';
+                if (loginPrompt) loginPrompt.style.display = 'block';
+                if (submitBtn) submitBtn.setAttribute('disabled', 'true');
+                setStatus('<i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Inicia sesión con Discord para postularte.', 'info');
             }
-        });
+        };
+
+        // Escuchar autenticación de Discord
+        if (window.DiscordAuth) {
+            handleUserSession(window.DiscordAuth.getUser());
+            window.DiscordAuth.onAuthStateChanged(handleUserSession);
+        } else {
+            window.addEventListener('discordAuthChanged', (e) => {
+                handleUserSession(e.detail?.user || null);
+            });
+        }
     }
 
     async function submitForm(e) {
         e.preventDefault();
         const ok = await waitForFirebase();
-        if (!ok) {
-            setStatus('Sin conexion. Intenta de nuevo.', 'error');
-            return;
-        }
+        if (!ok) { setStatus('Sin conexión con el servidor. Intenta de nuevo.', 'error'); return; }
+        if (!currentUser) { setStatus('Debes iniciar sesión con Discord primero.', 'error'); return; }
 
-        if (!currentUser) {
-            setStatus('Debes iniciar sesion primero.', 'error');
-            return;
-        }
-
-        const discord = document.getElementById('discordInput').value;
-        const device = document.getElementById('deviceInput').value;
+        const discord = document.getElementById('discordInput').value.trim();
+        const device = document.getElementById('deviceInput').value.trim();
         const ram = document.getElementById('ramSelect').value;
         const androidVersion = document.getElementById('androidSelect').value;
-        
         const skillBugs = document.getElementById('skillsBugs').checked;
         const skillHours = document.getElementById('skillsHours').checked;
         const skillRecord = document.getElementById('skillsRecord').checked;
         const skillDiscord = document.getElementById('skillsDiscord').checked;
-        
-        const why = document.getElementById('whyTextarea').value;
+        const why = document.getElementById('whyTextarea').value.trim();
         const nda = document.getElementById('ndaCheckbox').checked;
 
-        if (!nda) {
-            setStatus('Debes aceptar el acuerdo de confidencialidad.', 'error');
-            return;
-        }
+        if (!nda) { setStatus('Debes aceptar el juramento de confidencialidad (NDA).', 'error'); return; }
 
         const submitBtn = document.getElementById('submitBtn');
-        submitBtn.setAttribute('disabled', 'true');
-        setStatus('Enviando postulacion...', 'info');
+        if (submitBtn) submitBtn.setAttribute('disabled', 'true');
 
-        try {
-            const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
-            await window.setDoc(userDocRef, {
-                betaTesterRequest: true,
-                betaTesterDiscord: discord,
-                betaTesterDevice: device,
-                betaTesterRAM: ram,
-                betaTesterAndroidVersion: androidVersion,
-                betaTesterSkillBugs: skillBugs,
-                betaTesterSkillHours: skillHours,
-                betaTesterSkillRecord: skillRecord,
-                betaTesterSkillDiscord: skillDiscord,
-                betaTesterWhy: why,
-                betaTesterTimestamp: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            }, { merge: true });
+        triggerScanEffect(async () => {
+            try {
+                const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                await window.setDoc(userDocRef, {
+                    betaTesterRequest: true,
+                    betaTesterDiscord: discord,
+                    betaTesterDevice: device,
+                    betaTesterRAM: ram,
+                    betaTesterAndroidVersion: androidVersion,
+                    betaTesterSkillBugs: skillBugs,
+                    betaTesterSkillHours: skillHours,
+                    betaTesterSkillRecord: skillRecord,
+                    betaTesterSkillDiscord: skillDiscord,
+                    betaTesterWhy: why,
+                    betaTesterTimestamp: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
 
-            alreadyApplied = true;
-            submitBtn.textContent = 'Actualizar Postulacion';
-            setStatus('🎉 ¡Postulacion guardada con exito! Nos comunicaremos contigo.', 'success');
-        } catch (err) {
-            console.error('Error guardando formulario:', err);
-            setStatus('No se pudo guardar la postulacion. Reintenta.', 'error');
-        } finally {
-            submitBtn.removeAttribute('disabled');
-        }
+                            if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-rotate" aria-hidden="true"></i> Actualizar Pase de Tester';
+                setStatus('<i class="fa-solid fa-champagne-glasses" aria-hidden="true"></i> ¡Pase de Tester guardado con éxito! Tu inscripción está registrada oficialmente.', 'success');
+
+                const activeBanner = document.getElementById('btActiveBanner');
+                if (activeBanner) {
+                    activeBanner.style.display = 'block';
+                    const metaDevice = document.getElementById('btMetaDevice');
+                    const metaRam = document.getElementById('btMetaRam');
+                    const metaAndroid = document.getElementById('btMetaAndroid');
+                    const metaDate = document.getElementById('btMetaDate');
+                    const activeSummary = document.getElementById('btActiveSummary');
+
+                    if (metaDevice) metaDevice.textContent = device || 'Android';
+                    if (metaRam) metaRam.textContent = ram ? (ram + ' GB') : 'Optimizada';
+                    if (metaAndroid) metaAndroid.textContent = androidVersion || 'Actual';
+                    if (metaDate) metaDate.textContent = new Date().toLocaleDateString();
+                    if (activeSummary) {
+                        activeSummary.innerHTML = `Pase firmado por <strong>@${discord || currentUser.username}</strong>. Tu acceso a las pruebas cerradas está confirmado.`;
+                    }
+                }
+
+                // Actualizar contador en vivo si era registro nuevo
+                if (!hasExistingPass) {
+                    hasExistingPass = true;
+                    const currentCount = parseInt(localStorage.getItem('ps_beta_testers_count') || '29', 10);
+                    const nextCount = currentCount + 1;
+                    localStorage.setItem('ps_beta_testers_count', nextCount);
+                    const countEl = document.getElementById('betaTestersCount');
+                    if (countEl) countEl.textContent = nextCount;
+                }
+
+                loadBetaTestersCount();
+            } catch (err) {
+                console.error('Error guardando formulario:', err);
+                setStatus('No se pudo guardar la postulación: ' + (err.message || 'Intenta de nuevo.'), 'error');
+            } finally {
+                if (submitBtn) submitBtn.removeAttribute('disabled');
+            }
+        });
     }
 
     document.addEventListener('DOMContentLoaded', initForm);
