@@ -357,15 +357,17 @@ async function cargarEquipoRoles() {
     return equipoRolesPromise;
 }
 
-function buscarMiembroEquipo(equipo, claves, autorNombre) {
+function buscarMiembroEquipo(equipo, claves, autorNombre, autorEmail) {
     if (!Array.isArray(equipo) || !equipo.length) return null;
     const ids = new Set((claves || []).map(String));
+    const email = String(autorEmail || '').trim().toLowerCase();
 
     for (const doc of equipo) {
         if (!doc || doc.archivado === true) continue;
         const docIds = [doc.id, doc.uid, doc.discordId, doc.discord_id]
             .filter(Boolean).map(String);
         if (docIds.some(id => ids.has(id))) return doc;
+        if (email && String(doc.email || '').trim().toLowerCase() === email) return doc;
     }
 
     // Respaldo para documentos de equipo creados manualmente sin UID de Discord.
@@ -382,45 +384,40 @@ function buscarMiembroEquipo(equipo, claves, autorNombre) {
 
 /**
  * Resuelve el rol global de un autor de comentario.
- * Prioridad: equipo (rol asignado desde el Panel Admin) → conductores → rol
- * guardado en el comentario → respaldo staff/usuario.
+ * Prioridad: `equipo` (rango asignado manualmente en Panel Admin → Personal)
+ * → correo oficial del Director → `usuario`.
+ *
+ * `conductores.role` y los datos de Discord ya NO otorgan rango.
  */
-async function resolverRolUsuario(autorId, autorNombre, esStaff, autorRol) {
-    const clave = String(autorId || autorNombre || 'anonimo').trim();
+async function resolverRolUsuario(autorId, autorNombre, esStaff, autorRol, autorEmail) {
+    const clave = String(autorId || autorNombre || autorEmail || 'anonimo').trim();
     const cache = rolesUsuarioCache.get(clave);
     if (cache && (Date.now() - cache.at) < ROLES_USUARIO_TTL) return cache.role;
 
     const ids = clavesUsuario(autorId);
     let rol = null;
     let definitivo = false;
+    let email = String(autorEmail || '').trim().toLowerCase();
 
     try {
         const equipo = await cargarEquipoRoles();
-        const miembro = buscarMiembroEquipo(equipo, ids, autorNombre);
-        if (miembro) rol = extraerRolDocumento(miembro);
-        if (rol) definitivo = true;
+        const miembro = buscarMiembroEquipo(equipo, ids, autorNombre, email);
+        if (miembro) {
+            rol = extraerRolDocumento(miembro);
+            if (!email && miembro.email) email = String(miembro.email).trim().toLowerCase();
+            if (rol) definitivo = true;
+        }
     } catch (e) { /* lectura opcional */ }
 
-    if (!rol && ids.length && window.db && window.fsDoc && window.getDoc) {
-        for (const id of ids) {
-            try {
-                const snap = await window.getDoc(window.fsDoc(window.db, 'conductores', id));
-                if (snap.exists()) {
-                    rol = extraerRolDocumento(snap.data());
-                    if (rol) { definitivo = true; break; }
-                }
-            } catch (e) { /* perfil no disponible */ }
-        }
-    }
-
-    if (!rol && autorRol) {
-        rol = autorRol;
+    // Política por correo: sólo el Director recibe rango automático.
+    if (!rol && email && window.PanterRoles && typeof window.PanterRoles.roleForEmail === 'function') {
+        rol = window.PanterRoles.roleForEmail(email);
         definitivo = true;
     }
-    if (!rol) rol = esStaff ? 'soporte' : 'usuario';
+
+    if (!rol) rol = 'usuario';
 
     const normalizado = normalizarRol(rol);
-    // Solo cacheamos roles reales: el respaldo depende de `esStaff` por comentario.
     if (definitivo) rolesUsuarioCache.set(clave, { role: normalizado, at: Date.now() });
     return normalizado;
 }
@@ -440,7 +437,7 @@ async function resolverRolesComentarios(comentarios) {
     });
 
     await Promise.all(Array.from(unicos.values()).map(async c => {
-        const rol = await resolverRolUsuario(c.autorId, c.autor, Boolean(c.esStaff), c.autorRol);
+        const rol = await resolverRolUsuario(c.autorId, c.autor, Boolean(c.esStaff), c.autorRol, c.autorEmail);
         mapa.set(claveAutorComentario(c), rol);
     }));
     return mapa;
@@ -460,7 +457,6 @@ async function suscribirCambiosRoles(comentarios, onChange, onError) {
     let active = true;
     let equipoActual = [];
     let equipoUnsub = null;
-    let perfilesUnsub = [];
 
     const notificarCambio = () => {
         if (!active) return;
@@ -468,29 +464,6 @@ async function suscribirCambiosRoles(comentarios, onChange, onError) {
         equipoRolesPromise = Promise.resolve(equipoActual);
         equipoRolesAt = Date.now();
         if (active && typeof onChange === 'function') onChange();
-    };
-
-    const updateAuthors = items => {
-        if (!active) return;
-        perfilesUnsub.forEach(unsubscribe => unsubscribe());
-        perfilesUnsub = [];
-        const ids = new Set();
-        (Array.isArray(items) ? items : []).forEach(comment => {
-            clavesUsuario(comment && comment.autorId).forEach(id => {
-                if (id && !id.includes('/')) ids.add(id);
-            });
-        });
-        ids.forEach(id => {
-            const unsubscribe = window.onSnapshot(
-                window.fsDoc(window.db, 'conductores', id),
-                notificarCambio,
-                error => {
-                    console.error('[SoporteJS] Error observando el rol de un autor:', error);
-                    if (typeof onError === 'function') onError(error);
-                }
-            );
-            perfilesUnsub.push(unsubscribe);
-        });
     };
 
     equipoUnsub = window.onSnapshot(
@@ -506,14 +479,13 @@ async function suscribirCambiosRoles(comentarios, onChange, onError) {
     );
     // Un cambio de color/etiqueta en el Gestor de Roles repinta los badges.
     document.addEventListener('panter:roles-config', notificarCambio);
-    updateAuthors(comentarios);
+    // La suscripción a `equipo` es global: cualquier cambio de rango repinta.
+    const updateAuthors = () => {};
 
     const unsubscribe = () => {
         active = false;
         if (equipoUnsub) equipoUnsub();
-        perfilesUnsub.forEach(stop => stop());
         equipoUnsub = null;
-        perfilesUnsub = [];
         document.removeEventListener('panter:roles-config', notificarCambio);
     };
     unsubscribe.update = updateAuthors;
@@ -683,16 +655,46 @@ async function crearTicket(data) {
     }
 }
 
-async function getMisTickets(userId) {
+function variantesUsuario(userId) {
+    const raw = String(userId || '').trim();
+    if (!raw) return [];
+    const ids = new Set([raw]);
+    if (raw.startsWith('discord_')) {
+        const numeric = raw.slice('discord_'.length);
+        if (numeric) ids.add(numeric);
+    } else if (/^\d{5,25}$/.test(raw)) {
+        ids.add(`discord_${raw}`);
+    }
+    return Array.from(ids);
+}
+
+async function getMisTickets(userId, userEmail = '') {
     await ensureFirestore();
 
-    const q = window.query(
-        window.collection(window.db, SOPORTE_COLLECTION),
-        window.where('usuarioId', '==', userId),
-        window.orderBy('creadoEn', 'desc')
-    );
-    const snap = await window.getDocs(q);
-    return snap.docs.map(d => normalizarTicket({ id: d.id, ...d.data() }));
+    const encontrados = new Map();
+    const ids = variantesUsuario(userId);
+    const email = String(userEmail || '').trim().toLowerCase();
+
+    for (const id of ids) {
+        const q = window.query(
+            window.collection(window.db, SOPORTE_COLLECTION),
+            window.where('usuarioId', '==', id)
+        );
+        const snap = await window.getDocs(q);
+        snap.docs.forEach(d => encontrados.set(d.id, normalizarTicket({ id: d.id, ...d.data() })));
+    }
+
+    if (email) {
+        const q = window.query(
+            window.collection(window.db, SOPORTE_COLLECTION),
+            window.where('usuarioEmail', '==', email)
+        );
+        const snap = await window.getDocs(q);
+        snap.docs.forEach(d => encontrados.set(d.id, normalizarTicket({ id: d.id, ...d.data() })));
+    }
+
+    return Array.from(encontrados.values())
+        .sort((a, b) => String(b.creadoEn || '').localeCompare(String(a.creadoEn || '')));
 }
 
 async function getTicketById(ticketId) {
@@ -763,23 +765,31 @@ async function actualizarTicket(ticketId, updates = {}) {
     return { id: ticketId, ...payload };
 }
 
-async function agregarComentario(ticketId, texto, autor, autorId, esStaff = false, autorRol = null) {
+async function agregarComentario(ticketId, texto, autor, autorId, esStaff = false, autorRol = null, autorEmail = null) {
     await ensureFirestore();
 
     const now = new Date().toISOString();
-    try {
-        const comentarioRef = window.collection(window.db, SOPORTE_COLLECTION, ticketId, 'comentarios');
-        const comentario = {
-            texto,
-            autor,
-            autorId,
-            esStaff: Boolean(esStaff),
-            creadoEn: now
-        };
-        if (autorRol) comentario.autorRol = normalizarRol(autorRol);
-        await window.addDoc(comentarioRef, comentario);
+    const comentarioRef = window.collection(window.db, SOPORTE_COLLECTION, ticketId, 'comentarios');
+    const comentario = {
+        texto,
+        autor,
+        autorId,
+        esStaff: Boolean(esStaff),
+        creadoEn: now
+    };
+    if (autorRol) comentario.autorRol = normalizarRol(autorRol);
+    if (autorEmail) comentario.autorEmail = String(autorEmail).trim().toLowerCase();
 
-        let contador = 1;
+    try {
+        await window.addDoc(comentarioRef, comentario);
+    } catch (err) {
+        console.error('[SoporteJS] Error agregando comentario:', err);
+        throw new Error(traducirErrorFirestore(err));
+    }
+
+    // El contador es informativo: si falla, el comentario ya quedó guardado.
+    try {
+        let contador = null;
         if (window.increment) {
             contador = window.increment(1);
         } else {
@@ -795,9 +805,8 @@ async function agregarComentario(ticketId, texto, autor, autorId, esStaff = fals
             },
             { merge: true }
         );
-    } catch (err) {
-        console.error('[SoporteJS] Error agregando comentario:', err);
-        throw new Error(traducirErrorFirestore(err));
+    } catch (counterErr) {
+        console.warn('[SoporteJS] El comentario se guardó, pero no se pudo actualizar el contador:', counterErr);
     }
 }
 
@@ -852,6 +861,58 @@ async function suscribirTicket(ticketId, onData, onError) {
     );
 }
 
+async function suscribirMisTickets(userId, userEmail, onData, onError) {
+    await ensureFirestore();
+    if (!window.onSnapshot) throw new Error('Firestore no expone onSnapshot.');
+
+    const ids = variantesUsuario(userId);
+    const email = String(userEmail || '').trim().toLowerCase();
+    const buckets = new Map();
+    const unsubs = [];
+
+    const emit = () => {
+        if (typeof onData !== 'function') return;
+        const encontrados = new Map();
+        buckets.forEach(list => list.forEach(t => encontrados.set(t.id, t)));
+        onData(Array.from(encontrados.values())
+            .sort((a, b) => String(b.creadoEn || '').localeCompare(String(a.creadoEn || ''))));
+    };
+
+    const attach = (key, q) => {
+        unsubs.push(window.onSnapshot(q, snap => {
+            buckets.set(key, snap.docs.map(d => normalizarTicket({ id: d.id, ...d.data() })));
+            emit();
+        }, err => {
+            console.error('[SoporteJS] onSnapshot mis tickets:', err);
+            if (typeof onError === 'function') onError(new Error(traducirErrorFirestore(err)));
+        }));
+    };
+
+    // Consultas acotadas al usuario (no se lee la colección completa).
+    if (ids.length) {
+        attach('ids', window.query(
+            window.collection(window.db, SOPORTE_COLLECTION),
+            window.where('usuarioId', 'in', ids)
+        ));
+    }
+    if (email) {
+        attach('email', window.query(
+            window.collection(window.db, SOPORTE_COLLECTION),
+            window.where('usuarioEmail', '==', email)
+        ));
+    }
+
+    if (!unsubs.length) {
+        if (typeof onData === 'function') onData([]);
+    }
+
+    return () => {
+        unsubs.forEach(unsubscribe => {
+            try { unsubscribe(); } catch (e) { /* noop */ }
+        });
+    };
+}
+
 async function suscribirComentarios(ticketId, onData, onError) {
     await ensureFirestore();
     if (!window.onSnapshot) throw new Error('Firestore no expone onSnapshot.');
@@ -889,6 +950,7 @@ window.SoporteJS = {
     getComentarios,
     suscribirTickets,
     suscribirTicket,
+    suscribirMisTickets,
     suscribirComentarios,
     formatDate,
     normalizarEstado,

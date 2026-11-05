@@ -150,7 +150,8 @@
         }
 
         const role = R.resolveRole(user, profile);
-        const isAdmin = R.canAccessAdminPanel(role) || user.isAdmin === true || R.isDiscordAdmin(user);
+        // Sólo el rango manual (equipo) o el correo del Director habilitan admin.
+        const isAdmin = R.canAccessAdminPanel(role);
 
         if (navBadge) {
             navBadge.className = 'auth-role-badge ps-role-badge-host';

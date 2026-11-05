@@ -788,7 +788,6 @@ async function loadStaffList() {
         return;
     }
 
-    const STAFF_ROLES = new Set(['founder_ceo', 'director', 'administrador', 'programador', 'modelador']);
     const R = window.PanterRoles || null;
     const rowIds = row => [row && row.uid, row && row.id, row && row.discordId, row && row.discord_id, row && row.discordUserId]
         .filter(Boolean)
@@ -825,20 +824,18 @@ async function loadStaffList() {
         profiles.forEach(row => {
             const ids = rowIds(row);
             if (ids.some(id => seen.has(id) || archived.has(id))) return;
-            const role = String(row.role || '').trim().toLowerCase();
-            const normalized = R
-                ? R.normalize(role)
-                : (role === 'admin' || role === 'admin_general' ? 'administrador'
-                    : role === 'developer' ? 'programador'
-                    : role === 'modeler'   ? 'modelador'
-                    : STAFF_ROLES.has(role) ? role : null);
-            const isStaff = R ? R.isTeamRole(normalized) : Boolean(normalized);
-            if (!isStaff) return;
+            // `conductores.role` ya no otorga rango. Sólo se lista un perfil sin
+            // ficha en `equipo` cuando pertenece al correo oficial del Director.
+            const isDirector = Boolean(
+                R && typeof R.roleForEmail === 'function' &&
+                R.roleForEmail(row.email) === 'director'
+            );
+            if (!isDirector) return;
             members.push({
                 id: row.id,
                 name: row.username || row.displayName || row.nombre || 'Sin nombre',
                 email: row.email || '',
-                role: normalized,
+                role: 'director',
                 avatar: row.avatar || row.avatarUrl || ''
             });
             ids.forEach(id => seen.add(id));

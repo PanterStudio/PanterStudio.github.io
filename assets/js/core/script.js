@@ -57,38 +57,31 @@ function speakPreregistroSuccess(name = 'jugador') {
 
 const MAX_PREREGISTROS = 1000;
 let preregistrosActuales = 0;
-const ADMIN_EMAILS_LS_KEY = 'panterAdminEmails';
-const FOUNDER_CEO_EMAIL = 'pantergamey@gmail.com';
 const REFERRAL_STORAGE_KEY = 'panterPendingReferralCode';
 const DEFAULT_REFERRAL_REWARD = 50;
-const DEFAULT_ADMIN_EMAILS = [
-    'pantergamey@gmail.com',
-    'panterstudiogamedev@gmail.com'
-];
+
+/**
+ * Política de rangos: sólo el correo oficial del Director recibe un rango
+ * automático. Cualquier otra cuenta es `usuario` y los rangos superiores se
+ * asignan manualmente en el Panel Admin → Personal.
+ * `isCeoIdentifier`/`isCeoAccount` se conservan como alias del correo del
+ * Director para no romper llamadas antiguas.
+ */
+function isDirectorEmail(str) {
+    const R = window.PanterRoles;
+    const email = String(str || '').trim().toLowerCase();
+    if (R && typeof R.roleForEmail === 'function') {
+        return R.roleForEmail(email) === 'director';
+    }
+    return email === 'oliverosgutierezjhonier@mail.com';
+}
 
 function isCeoIdentifier(str) {
-    if (!str) return false;
-    const clean = String(str).trim().toLowerCase();
-    return clean === 'pantergamey' || 
-           clean === 'pantergameyt' || 
-           clean === 'pantergamey@gmail.com' || 
-           clean === 'ceo@panterstudio.lat' ||
-           clean === 'admin@psgd.me';
+    return isDirectorEmail(str);
 }
 
 function isCeoAccount(user, profile = null) {
-    if (!user && !profile) return false;
-    return isCeoIdentifier(user?.username) ||
-           isCeoIdentifier(user?.displayName) ||
-           isCeoIdentifier(user?.globalName) ||
-           isCeoIdentifier(user?.global_name) ||
-           isCeoIdentifier(user?.email) ||
-           isCeoIdentifier(profile?.username) ||
-           isCeoIdentifier(profile?.nombre_usuario) ||
-           isCeoIdentifier(profile?.displayName) ||
-           isCeoIdentifier(profile?.email) ||
-           user?.role === 'founder_ceo' ||
-           profile?.role === 'founder_ceo';
+    return isDirectorEmail(user?.email || profile?.email);
 }
 
 const SITE_ROOT = (document.body?.dataset.siteRoot || '.').replace(/\/$/, '');
@@ -301,16 +294,19 @@ function buildDefaultLocalUser(seed) {
     const fallbackId = `local_${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
     const uid = String(source.uid || source.id || stored?.uid || fallbackId);
     const username = source.username || source.displayName || stored?.username || 'Jugador';
+    const email = source.email || stored?.email || '';
+    const R = window.PanterRoles;
+    const emailRole = R && typeof R.roleForEmail === 'function' ? R.roleForEmail(email) : 'usuario';
     return {
         uid,
         id: source.id || source.discordId || uid,
         username,
         displayName: source.displayName || source.globalName || username,
-        email: source.email || stored?.email || '',
+        email,
         photoURL: source.photoURL || source.avatarUrl || stored?.photoURL || 'recursos/PSGD.png',
         avatarUrl: source.avatarUrl || source.photoURL || stored?.avatarUrl || 'recursos/PSGD.png',
-        role: source.role || stored?.role || 'viewer',
-        isAdmin: Boolean(source.isAdmin || stored?.isAdmin),
+        role: emailRole,
+        isAdmin: Boolean(R && R.canAccessAdminPanel(emailRole)),
         providerId: source.providerId || stored?.providerId || 'local',
         isLocalProfile: true
     };
@@ -354,24 +350,23 @@ async function saveUserProfile(user, username, options = {}) {
     const baseProfile = existingProfile
         || (localProfile && String(localProfile.uid) === String(safeUser.uid) ? localProfile : null);
     const email = String(safeUser.email || '').toLowerCase();
-    const isFounder = isCeoAccount(safeUser, baseProfile) || isCeoIdentifier(username) || isCeoIdentifier(email);
+    const R = window.PanterRoles;
+    const emailRole = R ? R.roleForEmail(email) : (email === 'oliverosgutierezjhonier@mail.com' ? 'director' : 'usuario');
     const now = new Date().toISOString();
     const pendingReferral = normalizeReferralCode(options.referralCode || getPendingReferralCode());
     const usernameResolution = await resolveAvailableUsername(
         username || baseProfile?.username || safeUser.displayName || safeUser.email?.split('@')[0] || 'Miembro',
         safeUser.uid
     );
-    const finalUsername = isFounder && (isCeoIdentifier(username) || isCeoIdentifier(safeUser.displayName) || isCeoIdentifier(baseProfile?.username))
-        ? (username || baseProfile?.username || safeUser.displayName || 'PanterGameY')
-        : (usernameResolution.username || username);
+    const finalUsername = usernameResolution.username || username;
 
     const profilePayload = {
         username: finalUsername,
         displayName: finalUsername,
         nombre_usuario: finalUsername,
         email: safeUser.email || baseProfile?.email || '',
-        role: isFounder ? 'founder_ceo' : (baseProfile?.role || 'viewer'),
-        isAdmin: isFounder ? true : (typeof baseProfile?.isAdmin === 'boolean' ? baseProfile.isAdmin : Boolean(safeUser.isAdmin)),
+        role: R ? R.toLegacyRole(emailRole) : emailRole,
+        isAdmin: R ? R.canAccessAdminPanel(emailRole) : false,
         referralCode: baseProfile?.referralCode || generateReferralCode(safeUser.uid),
         referredBy: baseProfile?.referredBy || null,
         coins: baseProfile?.coins !== undefined ? baseProfile.coins : 0,
@@ -566,26 +561,6 @@ document.addEventListener('DOMContentLoaded', () => {
     try { getPendingReferralCode(); } catch(e) {}
     let userAuthInitialized = false;
 
-    function getConfiguredAdminEmails() {
-        const fromStorage = localStorage.getItem(ADMIN_EMAILS_LS_KEY) || '';
-        const storageEmails = fromStorage
-            .split(',')
-            .map((email) => email.trim().toLowerCase())
-            .filter(Boolean);
-
-        const defaultEmails = DEFAULT_ADMIN_EMAILS
-            .map((email) => String(email || '').trim().toLowerCase())
-            .filter(Boolean);
-
-        return Array.from(new Set([...defaultEmails, ...storageEmails]));
-    }
-
-    function isAdminEmail(email) {
-        if (!email) return false;
-        const admins = getConfiguredAdminEmails();
-        return admins.includes(String(email).toLowerCase());
-    }
-
     function getRoleLabel(role) {
         if (window.PanterRoles) return window.PanterRoles.get(role).label;
         const labels = {
@@ -627,60 +602,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function resolveAdminAccess(user) {
-        if (!user) return { isAdmin: false, role: 'viewer' };
+        if (!user) return { isAdmin: false, role: 'usuario' };
+        const R = window.PanterRoles;
 
-        if (window.PanterRoles) {
-            if (user.discordAdmin || window.PanterRoles.isDiscordAdmin(user)) {
-                return { isAdmin: true, role: 'admin_owner' };
-            }
-            const sessionRole = window.PanterRoles.normalize(user.role);
-            if (window.PanterRoles.canAccessAdminPanel(sessionRole)) {
-                return { isAdmin: true, role: sessionRole };
-            }
+        let profile = null;
+        try { profile = await getUserProfile(user.uid, user); } catch (e) { /* perfil no disponible */ }
+
+        // El rango manual vive en `equipo` (Panel Admin → Personal).
+        let teamMember = null;
+        if (window.db && window.fsDoc && window.getDoc) {
+            try {
+                const teamSnap = await window.getDoc(window.fsDoc(window.db, 'equipo', user.uid));
+                if (teamSnap.exists()) teamMember = teamSnap.data() || null;
+            } catch (e) { /* roster no disponible */ }
         }
 
-        if (isCeoAccount(user)) return { isAdmin: true, role: 'founder_ceo' };
-        const email = String(user?.email || '').toLowerCase();
-
-        try {
-            const profile = await getUserProfile(user.uid, user);
-            // El rango asignado en el Panel Admin (colección `equipo`) manda.
-            let teamMember = null;
-            if (window.db && window.fsDoc && window.getDoc) {
-                try {
-                    const teamSnap = await window.getDoc(window.fsDoc(window.db, 'equipo', user.uid));
-                    if (teamSnap.exists()) teamMember = teamSnap.data() || null;
-                } catch (e) { /* roster no disponible */ }
-            }
-            const effectiveProfile = teamMember && teamMember.archivado !== true && teamMember.role
-                ? { ...profile, teamRole: teamMember.role }
-                : profile;
-            if (isCeoAccount(user, effectiveProfile)) return { isAdmin: true, role: 'founder_ceo' };
-            let role = window.PanterRoles
-                ? window.PanterRoles.resolveRole(user, effectiveProfile)
-                : normalizeAdminRole(profile?.role || (isAdminEmail(email) ? 'administrador' : 'usuario'));
-
-            if (window.PanterRoles) {
-                if (window.PanterRoles.hasAdminPermission) {
-                    if (window.PanterRoles.hasAdminPermission(user)) role = 'admin_owner';
-                }
-                if (profile?.isAdmin === true && role === 'usuario') role = 'administrador';
-                if (isAdminEmail(email) && !window.PanterRoles.canAccessAdminPanel(role)) role = 'administrador';
-                return { isAdmin: window.PanterRoles.canAccessAdminPanel(role), role };
-            }
-
-            if (profile?.isAdmin === true && (!profile?.role || role === 'usuario')) {
-                role = 'administrador';
-            }
-            if (isAdminEmail(email) && !canAccessAdminPanel(role)) {
-                role = 'administrador';
-            }
-            const isAdmin = canAccessAdminPanel(role);
-            return { isAdmin, role };
-        } catch {
-            const role = isAdminEmail(email) ? 'administrador' : 'usuario';
-            return { isAdmin: canAccessAdminPanel(role), role };
+        const effectiveProfile = Object.assign({}, profile || {});
+        if (teamMember && teamMember.archivado !== true && teamMember.role) {
+            effectiveProfile.teamRole = teamMember.role;
         }
+        if (!effectiveProfile.email) {
+            effectiveProfile.email = (teamMember && teamMember.email) || user.email || '';
+        }
+
+        if (!R) {
+            const role = /^oliverosgutierezjhonier@mail\.com$/i.test(String(user.email || '')) ? 'director' : 'usuario';
+            return { isAdmin: role === 'director', role };
+        }
+
+        const role = R.resolveRole(user, effectiveProfile);
+        return { isAdmin: R.canAccessAdminPanel(role), role };
     }
 
     function getAuthErrorMessage(err) {
@@ -1087,21 +1038,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const email = emailInput?.value.trim() || '';
             const password = passInput?.value || '';
 
-            if (isCeoIdentifier(email) && window.DiscordAuth?.loginWithEmail) {
-                try {
-                    message.textContent = 'Iniciando sesión como CEO...';
-                    const u = await window.DiscordAuth.loginWithEmail(email, password);
-                    message.textContent = `¡Bienvenido CEO ${u.displayName}!`;
-                    loginForm.reset();
-                    if (modal) {
-                        setTimeout(() => { modal.hidden = true; document.body.style.overflow = 'auto'; }, 600);
-                    }
-                    return;
-                } catch(e) {
-                    console.warn('Error en login CEO:', e);
-                }
-            }
-
             try {
                 message.textContent = 'Ingresando...';
                 await window.signInWithEmailAndPassword(window.auth, email, password);
@@ -1111,15 +1047,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.body.style.overflow = 'auto';
             } catch (err) {
                 console.error('Error en login:', err);
-                if (isCeoIdentifier(email) && window.DiscordAuth?.loginWithEmail) {
-                    const u = await window.DiscordAuth.loginWithEmail(email, password);
-                    message.textContent = `¡Bienvenido CEO ${u.displayName}!`;
-                    loginForm.reset();
-                    if (modal) {
-                        setTimeout(() => { modal.hidden = true; document.body.style.overflow = 'auto'; }, 600);
-                    }
-                    return;
-                }
                 message.textContent = `Error: ${getAuthErrorMessage(err)}`;
             }
         });
@@ -1214,13 +1141,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             if (msgEl) msgEl.textContent = 'Iniciando sesión...';
-            if (window.DiscordAuth?.loginWithEmail) {
+            if (window.auth && window.signInWithEmailAndPassword) {
+                await window.signInWithEmailAndPassword(window.auth, email, password);
+                if (msgEl) msgEl.textContent = 'Sesión iniciada.';
+            } else if (window.DiscordAuth?.loginWithEmail) {
                 const user = await window.DiscordAuth.loginWithEmail(email, password);
                 if (msgEl) msgEl.textContent = `¡Bienvenido, ${user.displayName}!`;
-                const modal = document.getElementById('authModal');
-                if (modal) {
-                    setTimeout(() => { modal.hidden = true; document.body.style.overflow = 'auto'; }, 600);
-                }
+            }
+            const modal = document.getElementById('authModal');
+            if (modal) {
+                setTimeout(() => { modal.hidden = true; document.body.style.overflow = 'auto'; }, 600);
             }
         } catch(err) {
             console.error('Error al iniciar sesión:', err);
@@ -1357,14 +1287,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Respaldo final: el nombre queda guardado en localStorage para
                 // que la sesión continúe aunque Firestore falle.
                 console.warn('[Username] Error al guardar el perfil; se usa respaldo local:', err);
+                const R = window.PanterRoles;
+                const fallbackRole = R ? R.roleForEmail(user.email) : 'usuario';
                 writeLocalProfile({
                     uid: user.uid,
                     username: lastChecked,
                     displayName: lastChecked,
                     nombre_usuario: lastChecked,
                     email: user.email || '',
-                    role: user.role || 'viewer',
-                    isAdmin: Boolean(user.isAdmin),
+                    role: fallbackRole,
+                    isAdmin: R ? R.canAccessAdminPanel(fallbackRole) : false,
                     providerId: user.providerId || 'local',
                     coins: 0,
                     emeralds: 0,

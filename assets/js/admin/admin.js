@@ -1,52 +1,9 @@
 // Admin Panel - Panter Studio Control Center
 
-const FOUNDER_CEO_EMAIL = 'pantergamey@gmail.com';
-const ADMIN_EMAILS_LS_KEY = 'panterAdminEmails';
-const DEFAULT_ADMIN_EMAILS = [
-    'pantergamey@gmail.com',
-    'panterstudiogamedev@gmail.com',
-    'ceo@panterstudio.lat',
-    'admin@panterstudio.lat',
-    'soporte@panterstudio.lat'
-];
-
-const PRESET_ADMIN_ACCOUNTS = {
-    'pantergamey': {
-        password: 'PanterCEO#2026!',
-        role: 'founder_ceo',
-        displayName: 'PanterGameY (CEO)',
-        email: 'pantergamey@gmail.com',
-        uid: 'preset-pantergamey-uid'
-    },
-    'pantergamey@gmail.com': {
-        password: 'PanterCEO#2026!',
-        role: 'founder_ceo',
-        displayName: 'PanterGameY (CEO)',
-        email: 'pantergamey@gmail.com',
-        uid: 'preset-pantergamey-uid'
-    },
-    'ceo@panterstudio.lat': {
-        password: 'PanterCEO#2026!',
-        role: 'founder_ceo',
-        displayName: 'CEO / Propietario',
-        email: 'ceo@panterstudio.lat',
-        uid: 'preset-ceo-uid'
-    },
-    'admin@panterstudio.lat': {
-        password: 'PanterAdmin#2026!',
-        role: 'administrador',
-        displayName: 'Equipo Administrativo',
-        email: 'admin@panterstudio.lat',
-        uid: 'preset-admin-uid'
-    },
-    'soporte@panterstudio.lat': {
-        password: 'PanterSoporte#2026!',
-        role: 'soporte',
-        displayName: 'Personal de Soporte',
-        email: 'soporte@panterstudio.lat',
-        uid: 'preset-soporte-uid'
-    }
-};
+// Política de rangos: sólo el correo oficial del Director recibe un rango
+// automático. Cualquier otra cuenta nace como `usuario`; los rangos superiores
+// se asignan manualmente en Panel Admin → Personal (colección `equipo`).
+const DIRECTOR_EMAIL = 'oliverosgutierezjhonier@mail.com';
 
 const SESSION_STORAGE_KEY = 'panterAdminSession';
 
@@ -204,27 +161,18 @@ function canRoleAccessPanel(role) {
 }
 
 function isFounderEmail(email) {
+    const R = window.PanterRoles;
     const e = String(email || '').trim().toLowerCase();
-    return e === FOUNDER_CEO_EMAIL || e === 'ceo@panterstudio.lat' || e === 'pantergamey' || e === 'pantergameyt';
+    if (R && typeof R.roleForEmail === 'function') return R.roleForEmail(e) === 'director';
+    return e === DIRECTOR_EMAIL;
 }
 
+/**
+ * Sólo el correo oficial del Director recibe un rango automático.
+ * `isCeoAccount` se conserva como alias para el resto del panel.
+ */
 function isCeoAccount(user, profile = null) {
-    if (!user && !profile) return false;
-    const isCeo = val => {
-        if (!val) return false;
-        const c = String(val).trim().toLowerCase();
-        return c === 'pantergamey' || c === 'pantergameyt' || c === 'pantergamey@gmail.com' || c === 'ceo@panterstudio.lat' || c === 'admin@psgd.me' || c === 'founder_ceo';
-    };
-    return isCeo(user?.username) ||
-           isCeo(user?.displayName) ||
-           isCeo(user?.globalName) ||
-           isCeo(user?.email) ||
-           isCeo(user?.role) ||
-           isCeo(profile?.username) ||
-           isCeo(profile?.nombre_usuario) ||
-           isCeo(profile?.displayName) ||
-           isCeo(profile?.email) ||
-           isCeo(profile?.role);
+    return isFounderEmail(user?.email || profile?.email);
 }
 
 function setCeoMessage(message, isError = false) {
@@ -265,7 +213,7 @@ function addEmailToIndex(indexMap, email, patch = {}) {
     }
 
     if (isFounderEmail(normalizedEmail)) {
-        current.role = 'founder_ceo';
+        current.role = 'director';
         current.isAdmin = true;
     }
 
@@ -336,14 +284,14 @@ function renderCeoUsersTable(filterText = '') {
     }
 
     container.innerHTML = rows.map((user, index) => {
-        const isFounder = isFounderEmail(user.email);
+        const isDirector = isFounderEmail(user.email);
         const canAssignRole = Boolean(user.uid);
-        const rowRole = isFounder ? 'founder_ceo' : normalizeRole(user.role);
+        const rowRole = isDirector ? 'director' : normalizeRole(user.role);
         const roleDef = window.PanterRoles ? window.PanterRoles.get(rowRole) : null;
         const style = roleDef
             ? { color: roleDef.color, border: roleDef.border, bg: roleDef.bg, icon: `<i class="${roleDef.icon}" aria-hidden="true"></i>` }
             : (ROLE_CARD_STYLES[rowRole] || ROLE_CARD_STYLES.usuario);
-        const roleLabel = isFounder ? 'Fundador / CEO'
+        const roleLabel = isDirector ? 'Director'
                         : (canAssignRole ? (getRoleLabel(rowRole)) : 'Sin cuenta');
         const sources = Array.from(user.sources || []);
         const initials = getInitials(user.name, user.email);
@@ -416,11 +364,32 @@ async function loadCeoUsers() {
                 name: String(data.username || data.displayName || '').trim(),
                 username: String(data.username || '').trim(),
                 avatarUrl: String(data.avatarUrl || data.photoURL || data.avatarImg || '').trim(),
-                role: isFounderEmail(email) ? 'founder_ceo' : normalizeRole(data.role),
+                role: isFounderEmail(email) ? 'director' : normalizeRole(data.role),
                 isAdmin: Boolean(data.isAdmin),
                 sources: ['conductores']
             });
         });
+
+        // El rango vigente vive en `equipo` (Panel Admin → Personal).
+        try {
+            const teamSnapshot = await window.getDocs(window.collection(window.db, 'equipo'));
+            teamSnapshot.docs.forEach((docSnap) => {
+                const data = docSnap.data() || {};
+                if (data.archivado === true) return;
+                const email = String(data.email || '').trim().toLowerCase();
+                if (!isValidEmailValue(email)) return;
+                addEmailToIndex(emailIndexMap, email, {
+                    uid: docSnap.id,
+                    name: String(data.nombre || data.displayName || data.username || '').trim(),
+                    avatarUrl: String(data.avatarUrl || '').trim(),
+                    role: isFounderEmail(email) ? 'director' : normalizeRole(data.role),
+                    isAdmin: canRoleAccessPanel(data.role),
+                    sources: ['equipo']
+                });
+            });
+        } catch (error) {
+            console.warn('No se pudo leer la colección equipo:', error);
+        }
 
         const extraCollections = EMAIL_ANALYSIS_COLLECTIONS.filter((name) => name !== 'conductores');
         const extraSnapshots = await Promise.all(
@@ -1153,19 +1122,6 @@ async function loadGlobalRedeemLogs() {
 }
 
 // ---------- General Setup & Gate Helpers ----------
-function getAdminEmails() {
-    try {
-        const parsed = JSON.parse(localStorage.getItem(ADMIN_EMAILS_LS_KEY) || '[]');
-        if (!Array.isArray(parsed)) return [...DEFAULT_ADMIN_EMAILS];
-        const merged = [...DEFAULT_ADMIN_EMAILS, ...parsed]
-            .map((email) => String(email || '').trim().toLowerCase())
-            .filter(Boolean);
-        return [...new Set(merged)];
-    } catch {
-        return [...DEFAULT_ADMIN_EMAILS];
-    }
-}
-
 function showGateError(message) {
     if (gateMessage) {
         gateMessage.textContent = message;
@@ -1186,6 +1142,40 @@ function redirectToHome(message) {
 function showPanel() {
     if (gate) gate.hidden = true;
     if (panel) panel.hidden = false;
+}
+
+function hidePanel() {
+    if (panel) panel.hidden = true;
+    if (gate) gate.hidden = false;
+}
+
+/**
+ * Espera a que el SDK de Firestore exponga las funciones necesarias para
+ * validar el rango manual (`equipo`). Devuelve `false` si no llegó a tiempo.
+ */
+function waitForAdminFirestore(timeoutMs = 4000) {
+    const ready = () => Boolean(window.db && window.fsDoc && window.getDoc);
+    if (ready()) return Promise.resolve(true);
+
+    return new Promise((resolve) => {
+        let done = false;
+        const finish = (ok) => {
+            if (done) return;
+            done = true;
+            document.removeEventListener('firebaseReady', onReady);
+            resolve(ok);
+        };
+        const onReady = () => finish(ready());
+        document.addEventListener('firebaseReady', onReady, { once: true });
+
+        const started = Date.now();
+        const tick = () => {
+            if (ready()) return finish(true);
+            if (Date.now() - started >= timeoutMs) return finish(false);
+            setTimeout(tick, 200);
+        };
+        tick();
+    });
 }
 
 function hideWelcomeOverlay() {
@@ -1221,8 +1211,6 @@ function playWelcomeAnimation(user, role) {
 
 async function resolveUserAccess(user) {
     if (!user) return { isAdmin: false, role: 'usuario' };
-    const email = String(user?.email || '').trim().toLowerCase();
-    const uname = String(user?.username || '').trim().toLowerCase();
 
     // Asegura que la jerarquía y los permisos personalizados estén cargados
     // antes de decidir si la cuenta puede entrar al panel.
@@ -1230,55 +1218,43 @@ async function resolveUserAccess(user) {
         try { await window.PanterRoles.loadRoleConfig(true); } catch (e) { /* sin conexión */ }
     }
 
-    if (PRESET_ADMIN_ACCOUNTS[email]) {
-        const preset = PRESET_ADMIN_ACCOUNTS[email];
-        return { isAdmin: true, role: preset.role };
-    }
-    if (uname && PRESET_ADMIN_ACCOUNTS[uname]) {
-        const preset = PRESET_ADMIN_ACCOUNTS[uname];
-        return { isAdmin: true, role: preset.role };
-    }
+    const R = window.PanterRoles;
 
-    if (isCeoAccount(user)) {
-        return { isAdmin: true, role: 'founder_ceo' };
-    }
-
-    const isFounder = isFounderEmail(email);
-    if (isFounder) {
-        return { isAdmin: true, role: 'founder_ceo' };
-    }
-
+    // Perfil base (conductores) sólo para enriquecer datos; NO otorga rango.
     let profileData = null;
-
     if (window.db && window.fsDoc && window.getDoc) {
         try {
-            const profileRef = window.fsDoc(window.db, 'conductores', user.uid);
-            const profileSnap = await window.getDoc(profileRef);
-            if (profileSnap.exists()) {
-                profileData = profileSnap.data() || null;
-            }
+            const profileSnap = await window.getDoc(window.fsDoc(window.db, 'conductores', user.uid));
+            if (profileSnap.exists()) profileData = profileSnap.data() || null;
         } catch (err) {
-            console.error('No se pudo leer perfil de usuario para rol admin:', err);
+            console.error('No se pudo leer el perfil de usuario:', err);
         }
     }
 
-    if (isCeoAccount(user, profileData)) {
-        return { isAdmin: true, role: 'founder_ceo' };
+    // Rango manual vigente en `equipo` (Panel Admin → Personal).
+    let teamMember = null;
+    if (window.db && window.fsDoc && window.getDoc) {
+        try {
+            const teamSnap = await window.getDoc(window.fsDoc(window.db, 'equipo', user.uid));
+            if (teamSnap.exists()) teamMember = teamSnap.data() || null;
+        } catch (err) {
+            console.error('No se pudo leer el rango del equipo:', err);
+        }
     }
 
-    const isAdminByList = getAdminEmails().includes(email);
-    let role = normalizeRole(profileData?.role || (isAdminByList ? 'administrador' : 'usuario'));
-
-    if (Boolean(profileData?.isAdmin) && (!profileData?.role || role === 'usuario' || role === 'viewer')) {
-        role = 'administrador';
+    const effectiveProfile = Object.assign({}, profileData || {});
+    if (teamMember && teamMember.archivado !== true && teamMember.role) {
+        effectiveProfile.teamRole = teamMember.role;
+    }
+    if (!effectiveProfile.email) {
+        effectiveProfile.email = (teamMember && teamMember.email) || user.email || '';
     }
 
-    if (isAdminByList && !canRoleAccessPanel(role)) {
-        role = 'administrador';
-    }
+    const role = R
+        ? R.resolveRole(user, effectiveProfile)
+        : (isFounderEmail(user.email) ? 'director' : 'usuario');
 
-    const isAdmin = canRoleAccessPanel(role);
-    return { isAdmin, role };
+    return { isAdmin: canRoleAccessPanel(role), role };
 }
 
 function updateProfileUI(user, role) {
@@ -1294,9 +1270,10 @@ function updateProfileUI(user, role) {
 }
 
 function setupCeoTools(user, role) {
-    const isCeo = isCeoAccount(user) || isFounderEmail(user?.email) || normalizeRole(role) === 'founder_ceo';
+    // La sección de cuentas la ven los rangos con acceso al panel.
+    const isManager = canRoleAccessPanel(role) || isFounderEmail(user?.email);
     if (sidebarAccountsTab) {
-        sidebarAccountsTab.hidden = !isCeo;
+        sidebarAccountsTab.hidden = !isManager;
     }
 }
 
@@ -1317,37 +1294,7 @@ async function handleEmailPasswordLogin(emailInput, passwordInput) {
         gateMessage.className = 'admin-message';
     }
 
-    // 1. Verificar cuentas de administrador configuradas
-    if (PRESET_ADMIN_ACCOUNTS[email]) {
-        const preset = PRESET_ADMIN_ACCOUNTS[email];
-        if (preset.password === password) {
-            const sessionUser = {
-                uid: preset.uid,
-                email: preset.email,
-                displayName: preset.displayName,
-                role: preset.role,
-                isAdmin: true
-            };
-            saveStoredSession(sessionUser);
-            currentUser = sessionUser;
-            updateProfileUI(sessionUser, preset.role);
-            showPanel();
-            playWelcomeAnimation(sessionUser, preset.role);
-            setupCeoTools(sessionUser, preset.role);
-            calculateStats();
-            loadBetaTesters();
-            if (gateMessage) gateMessage.textContent = '';
-            return;
-        } else {
-            if (gateMessage) {
-                gateMessage.textContent = ' Contraseña incorrecta para ' + email;
-                gateMessage.className = 'admin-message error';
-            }
-            return;
-        }
-    }
-
-    // 2. Intentar autenticación con Firebase Email/Password Auth
+    // Autenticación exclusiva con Firebase Email/Password.
     if (window.auth && window.signInWithEmailAndPassword) {
         try {
             const userCredential = await window.signInWithEmailAndPassword(window.auth, email, password);
@@ -1365,6 +1312,41 @@ async function handleEmailPasswordLogin(emailInput, passwordInput) {
     }
 }
 
+async function applyStoredSession(storedSession) {
+    if (!storedSession || !storedSession.isAdmin) return false;
+
+    // Sin Firestore no es posible revalidar el rango: no invalidamos la sesión
+    // todavía, se reintentará cuando el SDK esté listo.
+    if (!window.db || !window.fsDoc || !window.getDoc) return false;
+
+    // Revalida el rango guardado contra `equipo` y el correo del Director.
+    // Una sesión antigua no puede conservar ADMIN/OWNER automáticamente.
+    const access = await resolveUserAccess({
+        uid: storedSession.uid,
+        email: storedSession.email,
+        displayName: storedSession.displayName,
+        username: storedSession.username
+    });
+    if (!access.isAdmin) {
+        clearStoredSession();
+        return false;
+    }
+
+    const sessionUser = Object.assign({}, storedSession, {
+        role: access.role,
+        isAdmin: true
+    });
+    saveStoredSession(sessionUser);
+    currentUser = sessionUser;
+    updateProfileUI(sessionUser, access.role);
+    showPanel();
+    setupCeoTools(sessionUser, access.role);
+    calculateStats();
+    loadBetaTesters();
+    if (gateMessage) gateMessage.textContent = '';
+    return true;
+}
+
 async function handleAuthStateChange(user) {
     currentUser = user;
     const loginBtn = document.getElementById('adminLoginBtn');
@@ -1372,16 +1354,10 @@ async function handleAuthStateChange(user) {
     if (!user) {
         const storedSession = getStoredSession();
         if (storedSession && storedSession.isAdmin) {
-            currentUser = storedSession;
-            updateProfileUI(storedSession, storedSession.role);
-            showPanel();
-            setupCeoTools(storedSession, storedSession.role);
-            calculateStats();
-            loadBetaTesters();
-            if (gateMessage) gateMessage.textContent = '';
-            return;
+            if (await applyStoredSession(storedSession)) return;
         }
 
+        hidePanel();
         if (gateMessage) {
             gateMessage.textContent = 'Ingresa tus credenciales de administrador';
             gateMessage.className = 'admin-message';
@@ -1396,9 +1372,22 @@ async function handleAuthStateChange(user) {
         loginBtn.style.display = 'none';
     }
 
+    // El rango manual se lee de Firestore: espera breve para no negar el
+    // acceso a un miembro del equipo mientras carga el SDK.
+    const firestoreReady = await waitForAdminFirestore();
     const { isAdmin, role } = await resolveUserAccess(user);
 
     if (!isAdmin) {
+        if (!firestoreReady) {
+            if (gateMessage) {
+                gateMessage.textContent = 'No se pudo validar tu rango todavía. Recarga la página en unos segundos.';
+                gateMessage.className = 'admin-message error';
+            }
+            if (loginBtn) loginBtn.style.display = 'block';
+            return;
+        }
+        clearStoredSession();
+        hidePanel();
         if (gateMessage) {
             gateMessage.textContent = ' Tu cuenta (' + user.email + ') no tiene permisos de administrador.';
             gateMessage.className = 'admin-message error';
@@ -1743,7 +1732,7 @@ async function saveSiteVisibilitySettings() {
 // ---------- Personal del Estudio (colección equipo) ----------
 
 const STAFF_COLLECTION = 'equipo';
-const STAFF_FALLBACK_ROLES = ['admin_owner', 'founder_ceo', 'director', 'administrador', 'programador', 'modelador', 'moderador', 'soporte', 'creador_contenido', 'vip', 'usuario'];
+const STAFF_FALLBACK_ROLES = ['founder_ceo', 'director', 'administrador', 'programador', 'modelador', 'moderador', 'soporte', 'creador_contenido', 'vip', 'usuario'];
 
 let staffMembersCache = [];
 let staffDirectoryCache = [];
@@ -1786,8 +1775,11 @@ function staffRoleLabel(role) {
 
 function staffRoleOptions(selected) {
     const R = window.PanterRoles;
-    const normalized = R ? R.normalize(selected) : (selected || 'usuario');
-    const ids = R ? R.orderedRoleIds() : STAFF_FALLBACK_ROLES.slice();
+    let normalized = R ? R.normalize(selected) : (selected || 'usuario');
+    // ADMIN / OWNER ya no se asigna: la máxima autoridad web es Director.
+    if (normalized === 'admin_owner') normalized = 'founder_ceo';
+    const ids = (R ? R.orderedRoleIds() : STAFF_FALLBACK_ROLES.slice())
+        .filter(id => id !== 'admin_owner');
     if (R && !ids.includes(normalized) && R.ROLE_DEFS[normalized]) ids.push(normalized);
     return ids.map(id => {
         const def = R ? R.get(id) : null;
@@ -2116,7 +2108,8 @@ function staffUnhideUid(uid) {
 
 function staffNormalizeRoleValue(value) {
     const raw = String(value || '').trim().toLowerCase();
-    const normalized = window.PanterRoles ? window.PanterRoles.normalize(raw) : raw;
+    let normalized = window.PanterRoles ? window.PanterRoles.normalize(raw) : raw;
+    if (normalized === 'admin_owner') normalized = 'founder_ceo';
     if (window.PanterRoles) {
         return window.PanterRoles.ROLE_DEFS[normalized] ? normalized : 'usuario';
     }
@@ -2914,34 +2907,21 @@ function initAdminPanel() {
         hideWelcomeOverlay();
     }, 3000);
 
-    let storedSession = getStoredSession();
-    if (!storedSession) {
-        try {
-            const rawDiscord = localStorage.getItem('discord_user_session');
-            if (rawDiscord) {
-                const discordUser = JSON.parse(rawDiscord);
-                if (discordUser && isCeoAccount(discordUser)) {
-                    storedSession = {
-                        uid: discordUser.uid || 'discord-ceo',
-                        email: discordUser.email || 'pantergamey@gmail.com',
-                        displayName: discordUser.displayName || discordUser.username || 'PanterGameY',
-                        username: discordUser.username || 'PanterGameY',
-                        role: 'founder_ceo',
-                        isAdmin: true
-                    };
-                    saveStoredSession(storedSession);
-                }
-            }
-        } catch (e) {}
-    }
-
+    // Las sesiones guardadas se revalidan contra `equipo` (Personal) o el
+    // correo del Director. No se crean sesiones desde datos de Discord.
+    const storedSession = getStoredSession();
     if (storedSession && storedSession.isAdmin) {
-        currentUser = storedSession;
-        updateProfileUI(storedSession, storedSession.role);
-        showPanel();
-        setupCeoTools(storedSession, storedSession.role);
-        calculateStats();
-        loadBetaTesters();
+        const tryRestore = (attempt = 0) => {
+            const ready = Boolean(window.db && window.fsDoc && window.getDoc);
+            if (!ready && attempt < 20) {
+                setTimeout(() => tryRestore(attempt + 1), 400);
+                return;
+            }
+            applyStoredSession(storedSession).catch((error) => {
+                console.warn('No se pudo revalidar la sesión guardada:', error);
+            });
+        };
+        tryRestore();
     }
 
     if (bootAuthListener()) return;

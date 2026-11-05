@@ -3,9 +3,9 @@
  * Panter Studio · Firestore + roles + badges
  *
  * Fuente de datos:
- *   1) colección `equipo` (editable desde el Panel Admin)
- *   2) perfiles de `conductores` con rol de staff
- *   3) fallback local con el equipo fundador (si Firestore no responde)
+ *   1) colección `equipo` (rango asignado manualmente en Panel Admin → Personal)
+ *   2) perfiles de `conductores` sólo para enriquecer datos (no otorgan rango),
+ *      salvo el correo oficial del Director.
  */
 (function () {
     'use strict';
@@ -16,42 +16,6 @@
         { number: 3, title: 'Moderación', subtitle: 'Cuidado de la comunidad', roles: ['moderador'] },
         { number: 4, title: 'Desarrollo y diseño', subtitle: 'Construcción de proyectos', roles: ['programador', 'modelador'] },
         { number: 5, title: 'Comunidad y soporte', subtitle: 'Atención, contenido y miembros', roles: ['soporte', 'creador_contenido', 'vip', 'usuario'] }
-    ];
-
-    const SEED_TEAM = [
-        {
-            uid: 'seed-pantergamey',
-            nombre: 'PanterGameYT',
-            username: 'PanterGameY',
-            role: 'founder_ceo',
-            especialidad: 'Dirección Creativa',
-            descripcion: 'Fundador de Panter Studio y líder general. Responsable de la visión creativa, el diseño conceptual y la dirección ejecutiva de todos los proyectos.',
-            avatarUrl: 'https://cdn.discordapp.com/embed/avatars/0.png',
-            estado: 'online',
-            orden: 1
-        },
-        {
-            uid: 'seed-dayjho',
-            nombre: 'Dayjho',
-            username: 'Dayjho',
-            role: 'director',
-            especialidad: 'Supervisión Técnica',
-            descripcion: 'Director principal del proyecto "Nuestra Tierra Job Simulator". Encargado del diseño de jugabilidad, mecánicas interactivas y supervisión del equipo.',
-            avatarUrl: 'https://cdn.discordapp.com/embed/avatars/1.png',
-            estado: 'online',
-            orden: 2
-        },
-        {
-            uid: 'seed-fenix',
-            nombre: 'Fenix',
-            username: 'Fenix',
-            role: 'administrador',
-            especialidad: 'Roles, Bots & Discord',
-            descripcion: 'Administrador General de Panter Studio. Encargado de la infraestructura del servidor de Discord: bots, roles, integraciones automáticas y experiencia de comunidad.',
-            avatarUrl: 'https://cdn.discordapp.com/embed/avatars/2.png',
-            estado: 'online',
-            orden: 3
-        }
     ];
 
     let allMembers = [];
@@ -92,7 +56,11 @@
     function normalizeMember(raw, source, allowAnyRole) {
         if (raw && raw.archivado === true) return null;
         const R = getRoles();
-        const role = R ? R.normalize(raw.role || raw.roleEquipo || raw.rango || 'usuario') : (raw.role || 'usuario');
+        let role = R ? R.normalize(raw.role || raw.roleEquipo || raw.rango || 'usuario') : (raw.role || 'usuario');
+        // El correo oficial del Director siempre se muestra como Director.
+        if (R && typeof R.roleForEmail === 'function' && R.roleForEmail(raw.email) === 'director') {
+            role = 'director';
+        }
         if (R && !allowAnyRole && !R.isTeamRole(role)) return null;
 
         const name = raw.nombre || raw.displayName || raw.nombre_usuario || raw.username || raw.name || 'Miembro del equipo';
@@ -342,17 +310,24 @@
         currentUser = window.DiscordAuth.getUser();
         if (!currentUser) return false;
         const R = getRoles();
-        if (R && (currentUser.discordAdmin || currentUser.isAdmin)) {
-            // isAdmin puede venir de sesión antigua; se confirma con el perfil cuando sea posible.
-            if (currentUser.discordAdmin) return true;
-        }
+        currentProfile = null;
         if (getDb() && window.fsDoc && window.getDoc) {
             try {
                 const snap = await window.getDoc(window.fsDoc(window.db, 'conductores', currentUser.uid));
                 if (snap && snap.exists()) currentProfile = snap.data();
             } catch (e) { console.warn('[Personal] No se pudo cargar el perfil del editor:', e.message); }
+            // El rango manual del Panel Admin vive en `equipo`.
+            try {
+                const teamSnap = await window.getDoc(window.fsDoc(window.db, 'equipo', currentUser.uid));
+                if (teamSnap && teamSnap.exists()) {
+                    const team = teamSnap.data() || {};
+                    if (team.archivado !== true && team.role) {
+                        currentProfile = Object.assign({}, currentProfile || {}, { teamRole: team.role });
+                    }
+                }
+            } catch (e) { console.warn('[Personal] No se pudo cargar el rango del editor:', e.message); }
         }
-        const role = R ? R.resolveRole(currentUser, currentProfile) : (currentUser.role || 'usuario');
+        const role = R ? R.resolveRole(currentUser, currentProfile) : 'usuario';
         return R ? R.canManageTeam(role) : false;
     }
 
@@ -546,7 +521,14 @@
         profiles.forEach(row => {
             const ids = rowIds(row);
             if (ids.some(id => seen.has(id) || archivedIds.has(id))) return;
-            const member = normalizeMember(row, 'conductores');
+            // `conductores.role` ya no otorga rango. Sólo se incluye un perfil
+            // sin ficha en `equipo` cuando es el correo oficial del Director.
+            const isDirector = Boolean(
+                R && typeof R.roleForEmail === 'function' &&
+                R.roleForEmail(row && row.email) === 'director'
+            );
+            if (!isDirector) return;
+            const member = normalizeMember(Object.assign({}, row, { role: 'director' }), 'director');
             if (!member) return;
             if (R && !R.isTeamRole(member.role)) return;
             members.push(member);
@@ -558,12 +540,7 @@
 
     function applyRealtimeMembers() {
         if (!liveFeedReady.equipo || !liveFeedReady.perfiles) return;
-        let members = combineRosterAndProfiles(liveEquipoRows || [], liveProfileRows || []);
-
-        if (!members.length) {
-            members = SEED_TEAM.map(member => normalizeMember(member, 'seed')).filter(Boolean);
-            console.info('[Personal] Firestore no tiene miembros de equipo; se muestra el roster de respaldo.');
-        }
+        const members = combineRosterAndProfiles(liveEquipoRows || [], liveProfileRows || []);
 
         allMembers = sortMembers(members);
         const grid = document.getElementById('staffGrid');
@@ -623,7 +600,6 @@
         if (ready) {
             try { members = await loadFromFirestore(); } catch (error) { console.error('[Personal] Error cargando miembros:', error); }
         }
-        if (!members.length) members = SEED_TEAM.map(member => normalizeMember(member, 'seed')).filter(Boolean);
         allMembers = sortMembers(members);
         grid.dataset.loaded = 'true';
         renderFilters();

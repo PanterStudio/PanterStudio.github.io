@@ -612,7 +612,7 @@
 
             <!-- Quick Account Selector for Testing -->
             <div style="margin-top:1.25rem; padding-top:10px; border-top:1px solid rgba(255, 255, 255, 0.08); text-align:center;">
-                <p style="font-size:0.72rem; color:#64748b; letter-spacing:0.5px; margin:0 0 8px;">CUENTAS RÁPIDAS DE PRUEBA:</p>
+                <p style="font-size:0.72rem; color:#64748b; letter-spacing:0.5px; margin:0 0 8px;">CUENTAS DE PRUEBA — el rango web se asigna en Panel Admin → Personal:</p>
                 <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:6px;">
                     <button type="button" class="quick-account-btn" onclick="fillLoginCredentials('user@user.me', 'user123')" style="background:rgba(15, 23, 42, 0.6); border:1px solid rgba(255, 255, 255, 0.08); border-radius:8px; color:#94a3b8; font-size:0.75rem; padding:5px 10px; cursor:pointer;">
                         <i class="fa-solid fa-user" aria-hidden="true"></i> Usuario
@@ -1000,6 +1000,10 @@
         let comentariosRolesUnsub = null;
         let comentariosActuales = [];
         let staffTicketsCache = [];
+        let ticketUnsub = null;
+        let misTicketsUnsub = null;
+        let equipoRoleUnsub = null;
+        let staffTicketsUnsub = null;
 
         // ---- TABS ----
         document.querySelectorAll('.sp-tab').forEach(tab => {
@@ -1143,18 +1147,21 @@
             el.style.border = `1px solid ${type === 'success' ? 'rgba(34,197,94,0.3)' : type === 'error' ? 'rgba(239,68,68,0.3)' : 'rgba(0,176,255,0.3)'}`;
         }
 
-        // ---- MIS TICKETS ----
+        // ---- MIS TICKETS (tiempo real) ----
         async function loadMisTickets() {
             const list = document.getElementById('misTicketsList');
             if (!list || !currentUser) return;
+            if (misTicketsUnsub) {
+                try { misTicketsUnsub(); } catch (e) { /* noop */ }
+                misTicketsUnsub = null;
+            }
             list.innerHTML = '<div class="sp-empty"><div class="sp-empty-icon"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></div><p>Cargando...</p></div>';
-            try {
-                const ok = await window.SoporteJS.waitForFirebase();
-                if (!ok) throw new Error('Firebase no disponible');
-                const tickets = await window.SoporteJS.getMisTickets(currentUser.uid);
-                document.getElementById('misTicketsCount').textContent = `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}`;
-                document.getElementById('statMisTickets').textContent = tickets.length;
-                if (!tickets.length) {
+
+            const render = (tickets) => {
+                const total = Array.isArray(tickets) ? tickets.length : 0;
+                document.getElementById('misTicketsCount').textContent = `${total} ticket${total !== 1 ? 's' : ''}`;
+                document.getElementById('statMisTickets').textContent = total;
+                if (!total) {
                     list.innerHTML = '<div class="sp-empty"><div class="sp-empty-icon"><i class="fa-solid fa-inbox" aria-hidden="true"></i></div><p>No tienes tickets aún. ¡Crea uno desde "Nuevo Ticket"!</p></div>';
                     return;
                 }
@@ -1163,6 +1170,23 @@
                 ul.className = 'ticket-list';
                 tickets.forEach(t => { ul.appendChild(buildTicketCard(t)); });
                 list.appendChild(ul);
+            };
+
+            try {
+                const ok = await window.SoporteJS.waitForFirebase();
+                if (!ok) throw new Error('Firebase no disponible');
+                try {
+                    misTicketsUnsub = await window.SoporteJS.suscribirMisTickets(
+                        currentUser.uid,
+                        currentUser.email,
+                        render,
+                        err => console.warn('[Soporte] No se pudo observar mis tickets:', err)
+                    );
+                } catch (snapshotErr) {
+                    // Respaldo puntual si onSnapshot no está disponible.
+                    const tickets = await window.SoporteJS.getMisTickets(currentUser.uid, currentUser.email);
+                    render(tickets);
+                }
             } catch (err) {
                 console.error(err);
                 list.innerHTML = '<div class="sp-empty"><div class="sp-empty-icon"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></div><p>Error al cargar tickets.</p></div>';
@@ -1190,16 +1214,30 @@
             return div;
         }
 
-        // ---- PANEL GENERAL (STAFF) ----
+        // ---- PANEL GENERAL (STAFF, tiempo real) ----
         async function loadStaffTickets() {
             const list = document.getElementById('staffTicketsList');
             if (!list || !currentStaff) return;
+            if (staffTicketsUnsub) {
+                try { staffTicketsUnsub(); } catch (e) { /* noop */ }
+                staffTicketsUnsub = null;
+            }
             list.innerHTML = '<div class="sp-empty"><div class="sp-empty-icon"><i class="fa-solid fa-circle-notch fa-spin"></i></div><p>Cargando tickets…</p></div>';
             try {
                 const ok = await window.SoporteJS.waitForFirebase();
                 if (!ok) throw new Error('Firebase no disponible');
-                staffTicketsCache = await window.SoporteJS.getTodosLosTickets();
-                renderStaffTickets();
+                try {
+                    staffTicketsUnsub = await window.SoporteJS.suscribirTickets(
+                        tickets => {
+                            staffTicketsCache = tickets;
+                            renderStaffTickets();
+                        },
+                        err => console.warn('[Soporte] No se pudo observar los tickets del staff:', err)
+                    );
+                } catch (snapshotErr) {
+                    staffTicketsCache = await window.SoporteJS.getTodosLosTickets();
+                    renderStaffTickets();
+                }
             } catch (err) {
                 console.error(err);
                 list.innerHTML = '<div class="sp-empty"><div class="sp-empty-icon"><i class="fa-solid fa-triangle-exclamation"></i></div><p>No se pudieron cargar los tickets. Revisa los permisos de Firestore.</p></div>';
@@ -1328,6 +1366,42 @@
         document.getElementById('staffTicketRefresh')?.addEventListener('click', loadStaffTickets);
 
         // ---- TICKET MODAL ----
+        function applyTicketSnapshot(ticket) {
+            if (!ticket) return;
+            document.getElementById('modalTitulo').textContent = ticket.titulo || '';
+            document.getElementById('modalFecha').textContent = window.SoporteJS.formatDate(ticket.creadoEn);
+            document.getElementById('modalUsuario').textContent = ticket.usuarioNombre || '—';
+            document.getElementById('modalDescripcion').textContent = ticket.descripcion || '';
+            const badges = document.getElementById('modalBadges');
+            if (badges) {
+                badges.innerHTML = window.SoporteJS.estadoBadge(ticket.estado) + ' ' + window.SoporteJS.prioridadBadge(ticket.prioridad);
+            }
+            const addSection = document.getElementById('addComentarioSection');
+            if (addSection) {
+                addSection.style.display = (currentUser && (currentUser.uid === ticket.usuarioId || currentStaff)) ? 'block' : 'none';
+            }
+        }
+
+        async function subscribeCurrentTicket(ticketId) {
+            if (ticketUnsub) {
+                try { ticketUnsub(); } catch (e) { /* noop */ }
+                ticketUnsub = null;
+            }
+            try {
+                ticketUnsub = await window.SoporteJS.suscribirTicket(
+                    ticketId,
+                    ticket => {
+                        if (currentTicketId !== ticketId) return;
+                        if (!ticket) { closeModal(); return; }
+                        applyTicketSnapshot(ticket);
+                    },
+                    err => console.warn('[Soporte] No se pudo observar el ticket:', err)
+                );
+            } catch (err) {
+                console.warn('[Soporte] Suscripción al ticket no disponible:', err);
+            }
+        }
+
         async function openTicketModal(ticket) {
             currentTicketId = ticket.id;
             // El rol del autor pudo cambiar: invalidamos la cache de insignias.
@@ -1358,6 +1432,7 @@
             }
 
             await loadComentarios(ticket.id);
+            await subscribeCurrentTicket(ticket.id);
         }
 
         document.getElementById('closeTicketModal')?.addEventListener('click', closeModal);
@@ -1366,11 +1441,12 @@
         });
 
         function closeModal() {
-            [comentariosUnsub, comentariosRolesUnsub].forEach(unsubscribe => {
+            [comentariosUnsub, comentariosRolesUnsub, ticketUnsub].forEach(unsubscribe => {
                 if (unsubscribe) unsubscribe();
             });
             comentariosUnsub = null;
             comentariosRolesUnsub = null;
+            ticketUnsub = null;
             comentariosActuales = [];
             document.getElementById('ticketModal').style.display = 'none';
             document.body.style.overflow = 'auto';
@@ -1476,13 +1552,25 @@
                 const ok = await window.SoporteJS.waitForFirebase();
                 if (!ok) throw new Error();
                 const esStaff = currentStaff;
+                // Rol fresco: equipo o correo del Director (nunca datos de Discord).
+                let rolFresco = currentUserRole;
+                try {
+                    rolFresco = await window.SoporteJS.resolverRolUsuario(
+                        currentUser.uid,
+                        currentUser.displayName || currentUser.email,
+                        esStaff,
+                        null,
+                        currentUser.email
+                    );
+                } catch (e) { /* se usa el rol de sesión */ }
                 await window.SoporteJS.agregarComentario(
                     currentTicketId,
                     txt,
                     currentUser.displayName || currentUser.email,
                     currentUser.uid,
                     esStaff,
-                    currentUserRole
+                    rolFresco,
+                    currentUser.email
                 );
                 document.getElementById('nuevoComentario').value = '';
                 if (!comentariosUnsub) await loadComentarios(currentTicketId);
@@ -1553,7 +1641,7 @@
                 if (!ok) return;
 
                 if (!currentStaff) {
-                    const own = currentUser ? await window.SoporteJS.getMisTickets(currentUser.uid) : [];
+                    const own = currentUser ? await window.SoporteJS.getMisTickets(currentUser.uid, currentUser.email) : [];
                     const propiosActivos = own.filter(t => t.estado === 'Abierto' || t.estado === 'En Proceso').length;
                     const stat = document.getElementById('statTicketsAbiertos');
                     if (stat) stat.textContent = currentUser ? propiosActivos : '—';
@@ -1581,7 +1669,7 @@
             const staffPanel = document.getElementById('panel-staff');
 
             if (user) {
-                // Load profile to get role
+                // Perfil base (conductores) sólo para datos de contacto/nombre.
                 try {
                     if (window.getDoc && window.fsDoc && window.db) {
                         const snap = await window.getDoc(window.fsDoc(window.db, 'conductores', user.uid));
@@ -1591,19 +1679,73 @@
                     console.warn('[Soporte] No se pudo leer el perfil:', err);
                 }
 
-                const R = window.PanterRoles;
-                currentUserRole = R
-                    ? R.resolveRole(user, currentUserProfile)
-                    : (currentUserProfile?.role || user.role || 'usuario');
-                currentStaff = R
-                    ? R.isTicketStaff(currentUserRole)
-                    : window.SoporteJS.isStaff(currentUserRole);
+                // El rango vigente vive en `equipo` (Panel Admin → Personal).
+                const applyRole = () => {
+                    const R = window.PanterRoles;
+                    currentUserRole = R
+                        ? R.resolveRole(user, currentUserProfile)
+                        : 'usuario';
+                    currentStaff = R
+                        ? R.isTicketStaff(currentUserRole)
+                        : window.SoporteJS.isStaff(currentUserRole);
+
+                    if (staffTab) staffTab.hidden = !currentStaff;
+                    if (!currentStaff) {
+                        if (staffPanel) staffPanel.classList.remove('active');
+                        if (staffTicketsUnsub) {
+                            try { staffTicketsUnsub(); } catch (e) { /* noop */ }
+                            staffTicketsUnsub = null;
+                        }
+                    }
+                };
+
+                try {
+                    if (window.getDoc && window.fsDoc && window.db) {
+                        const teamSnap = await window.getDoc(window.fsDoc(window.db, 'equipo', user.uid));
+                        const team = teamSnap.exists() ? (teamSnap.data() || {}) : null;
+                        currentUserProfile = Object.assign({}, currentUserProfile || {});
+                        if (team && team.archivado !== true && team.role) {
+                            currentUserProfile.teamRole = team.role;
+                        } else {
+                            delete currentUserProfile.teamRole;
+                        }
+                    }
+                } catch (err) {
+                    console.warn('[Soporte] No se pudo leer el rango del equipo:', err);
+                }
+
+                applyRole();
+
+                // Cambios manuales de rango desde Personal se reflejan en vivo.
+                if (equipoRoleUnsub) {
+                    try { equipoRoleUnsub(); } catch (e) { /* noop */ }
+                    equipoRoleUnsub = null;
+                }
+                if (window.onSnapshot && window.fsDoc && window.db) {
+                    try {
+                        equipoRoleUnsub = window.onSnapshot(
+                            window.fsDoc(window.db, 'equipo', user.uid),
+                            snap => {
+                                const team = snap.exists() ? (snap.data() || {}) : null;
+                                currentUserProfile = Object.assign({}, currentUserProfile || {});
+                                if (team && team.archivado !== true && team.role) {
+                                    currentUserProfile.teamRole = team.role;
+                                } else {
+                                    delete currentUserProfile.teamRole;
+                                }
+                                applyRole();
+                                if (currentStaff) loadStaffTickets();
+                            },
+                            err => console.warn('[Soporte] No se pudo observar el rango:', err)
+                        );
+                    } catch (e) {
+                        console.warn('[Soporte] Suscripción de rango no disponible:', e);
+                    }
+                }
 
                 if (nuevoGate) nuevoGate.style.display = 'none';
                 if (form) form.style.display = 'flex';
                 if (misGate) misGate.style.display = 'none';
-                if (staffTab) staffTab.hidden = !currentStaff;
-                if (!currentStaff && staffPanel) staffPanel.classList.remove('active');
 
                 // Load tickets if on that tab
                 const activeTab = document.querySelector('.sp-tab.active')?.dataset.tab;
@@ -1615,6 +1757,18 @@
                 currentUserRole = 'usuario';
                 currentStaff = false;
                 staffTicketsCache = [];
+                if (equipoRoleUnsub) {
+                    try { equipoRoleUnsub(); } catch (e) { /* noop */ }
+                    equipoRoleUnsub = null;
+                }
+                if (misTicketsUnsub) {
+                    try { misTicketsUnsub(); } catch (e) { /* noop */ }
+                    misTicketsUnsub = null;
+                }
+                if (staffTicketsUnsub) {
+                    try { staffTicketsUnsub(); } catch (e) { /* noop */ }
+                    staffTicketsUnsub = null;
+                }
                 if (nuevoGate) nuevoGate.style.display = 'block';
                 if (form) form.style.display = 'none';
                 if (misGate) misGate.style.display = 'block';

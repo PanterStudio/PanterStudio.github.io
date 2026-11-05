@@ -22,28 +22,23 @@
   };
   const SPECIAL_ACCESS_ROLES = new Set(['founder_ceo','director','administrador','soporte','support_ops','programador','modelador']);
 
+  /**
+   * Sólo el correo oficial del Director recibe rango automático.
+   * El resto de rangos se asignan manualmente en Panel Admin → Personal.
+   */
+  function isDirectorEmail(str) {
+    const R = window.PanterRoles;
+    const email = String(str || '').trim().toLowerCase();
+    if (R && typeof R.roleForEmail === 'function') return R.roleForEmail(email) === 'director';
+    return email === 'oliverosgutierezjhonier@mail.com';
+  }
+
   function isCeoIdentifier(str) {
-    if (!str) return false;
-    const clean = String(str).trim().toLowerCase();
-    return clean === 'pantergamey' || 
-           clean === 'pantergameyt' || 
-           clean === 'pantergamey@gmail.com' || 
-           clean === 'ceo@panterstudio.lat' ||
-           clean === 'admin@psgd.me';
+    return isDirectorEmail(str);
   }
 
   function isCeoAccount(user, data = null) {
-    if (!user && !data) return false;
-    return isCeoIdentifier(user?.username) ||
-           isCeoIdentifier(user?.displayName) ||
-           isCeoIdentifier(user?.globalName) ||
-           isCeoIdentifier(user?.email) ||
-           isCeoIdentifier(data?.username) ||
-           isCeoIdentifier(data?.nombre_usuario) ||
-           isCeoIdentifier(data?.displayName) ||
-           isCeoIdentifier(data?.email) ||
-           user?.role === 'founder_ceo' ||
-           data?.role === 'founder_ceo';
+    return isDirectorEmail(user?.email || data?.email);
   }
 
   /* ── DOM ── */
@@ -495,12 +490,15 @@
       b.push(badge('<i class="fa-solid fa-paw" aria-hidden="true"></i> Entrenador', 'pu'));
     }
 
-    const r = String(data.role || '').toLowerCase();
-    if (SPECIAL_ACCESS_ROLES.has(r)) {
+    // Insignia de rango: se resuelve en vivo desde `equipo` o el correo del Director.
+    const R = window.PanterRoles;
+    const rangos = R ? R.resolveRole(user, data) : String(data.role || 'usuario').toLowerCase();
+    if (SPECIAL_ACCESS_ROLES.has(rangos) || (R && R.isTeamRole(rangos))) {
       let tone = 'r'; // default red (Director/Founder)
-      if (r === 'administrador') tone = 'aqua';
-      if (r === 'programador' || r === 'modelador') tone = 'b';
-      b.push(badge(roleLabel(data.role), tone));
+      if (rangos === 'administrador') tone = 'aqua';
+      if (rangos === 'programador' || rangos === 'modelador') tone = 'b';
+      if (rangos === 'soporte' || rangos === 'moderador') tone = 'g';
+      b.push(badge(roleLabel(rangos), tone));
     }
     const badgesHtml = b.join('');
     if (profileBadges) profileBadges.innerHTML = badgesHtml;
@@ -532,11 +530,6 @@
   function renderProfile() {
     if (!currentUser || !currentUserData) return;
     const d    = currentUserData;
-    const isFounder = isCeoAccount(currentUser, d);
-    if (isFounder) {
-      d.role = 'founder_ceo';
-      d.isAdmin = true;
-    }
     const name = String(d.nombre_usuario || d.displayName || d.username || currentUser.displayName || currentUser.username || currentUser.email?.split('@')[0] || 'Usuario Discord');
     const role = String(d.role || 'viewer').toLowerCase();
     const set  = (el, v) => { if (el) el.textContent = v; };
@@ -620,7 +613,7 @@
     set(profileVerificationStatusSide, currentUser.emailVerified ? 'Sí' : 'No');
     set(profileProviderSide, providerLabel(currentUser));
     set(profilePreregisterStatusSide, preregSnapshot.registered ? 'Activo' : 'Pendiente');
-    set(profileAccessLevel, SPECIAL_ACCESS_ROLES.has(role) ? 'Especial' : 'Miembro');
+    set(profileAccessLevel, SPECIAL_ACCESS_ROLES.has(resolvedRole) ? 'Especial' : 'Miembro');
     set(profileCountry, d.country || 'No definido');
     set(profileFavoriteProject, d.favoriteProject || 'No definido');
     set(profileBio, d.bio || 'Sin descripción aún.');
@@ -753,7 +746,7 @@
     renderStreakDays(d.streak || 0);
     checkDailyCooldown(d.lastDaily);
      renderBadges(d, currentUser);
-    if (profileAdminTools) profileAdminTools.hidden = !(SPECIAL_ACCESS_ROLES.has(role) || isFounder);
+    if (profileAdminTools) profileAdminTools.hidden = !(SPECIAL_ACCESS_ROLES.has(resolvedRole) || (window.PanterRoles && window.PanterRoles.canAccessAdminPanel(resolvedRole)));
     if (profileBetaTesterCard) profileBetaTesterCard.hidden = !(d.betaTesterStatus === 'approved' || d.betaTesterRequest);
 
     // Control de visibilidad de la sección de reclamo de código de referido manual
@@ -863,34 +856,39 @@
       currentConductorData = await getConductorData(user.uid);
     } catch (e) {}
     if (!currentUserData) {
-      const isCeo = isCeoAccount(user);
+      const R = window.PanterRoles;
+      const emailRole = R ? R.roleForEmail(user.email) : (isDirectorEmail(user.email) ? 'director' : 'usuario');
       currentUserData = {
-        displayName: isCeo ? 'PanterGameY' : (user.displayName || user.username || user.email?.split('@')[0] || 'Usuario Discord'),
-        username: isCeo ? 'PanterGameY' : (user.username || 'Usuario'),
+        displayName: user.displayName || user.username || user.email?.split('@')[0] || 'Usuario Discord',
+        username: user.username || 'Usuario',
         email: user.email || '',
         avatarImg: user.photoURL || user.avatarUrl,
         coins: 1000,
         emeralds: 10,
         level: 'member',
-        role: isCeo ? 'founder_ceo' : (user.role || 'viewer'),
-        isAdmin: isCeo || Boolean(user.isAdmin),
+        role: R ? R.toLegacyRole(emailRole) : emailRole,
+        isAdmin: R ? R.canAccessAdminPanel(emailRole) : false,
         createdAt: new Date().toISOString()
       };
-    } else if (isCeoAccount(user, currentUserData)) {
-      currentUserData.role = 'founder_ceo';
-      currentUserData.isAdmin = true;
     }
-    // Rango asignado desde el Panel Admin (roster `equipo`) con prioridad.
-    if (!isCeoAccount(user, currentUserData) && window.db && window.fsDoc && window.getDoc) {
+    // Rango asignado manualmente desde el Panel Admin (roster `equipo`).
+    // `conductores.role` ya no es fuente de rango.
+    if (window.db && window.fsDoc && window.getDoc) {
       try {
         const teamSnap = await window.getDoc(window.fsDoc(window.db, 'equipo', user.uid));
-        if (teamSnap.exists()) {
-          const teamMember = teamSnap.data() || {};
-          if (teamMember.archivado !== true && teamMember.role) {
-            currentUserData.teamRole = teamMember.role;
-          }
+        const teamMember = teamSnap.exists() ? (teamSnap.data() || {}) : null;
+        if (teamMember && teamMember.archivado !== true && teamMember.role) {
+          currentUserData.teamRole = teamMember.role;
+        } else {
+          delete currentUserData.teamRole;
         }
       } catch (e) { /* roster no disponible */ }
+    }
+    {
+      const R = window.PanterRoles;
+      const resolvedRole = R ? R.resolveRole(user, currentUserData) : (currentUserData.teamRole || 'usuario');
+      currentUserData.role = resolvedRole;
+      currentUserData.isAdmin = R ? R.canAccessAdminPanel(resolvedRole) : false;
     }
     subscribeProfileTeamRole(user);
     showDashboard();

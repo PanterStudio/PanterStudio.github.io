@@ -3,7 +3,7 @@
  *
  * Responsabilidades:
  *   1. Mantener bloqueada la portada hasta validar la sesión de Discord.
- *   2. Validar membresía al servidor oficial y rango (Administrator / mapeo).
+ *   2. Validar membresía al servidor oficial (el rango web se asigna en Personal).
  *   3. Mostrar estados claros: invitado, verificando, no miembro, expirado.
  *
  * El overlay existe en el HTML desde el primer paint para evitar mostrar el
@@ -113,14 +113,35 @@
         if (els.name) {
             els.name.textContent = user.displayName || user.globalName || user.username || 'Usuario de Discord';
         }
-        if (els.role) {
+
+        const paintRole = (role) => {
+            if (!els.role) return;
             const R = window.PanterRoles;
-            const role = user.discordAdmin ? 'admin_owner' : (user.role || 'usuario');
             if (R && typeof R.badgeHtml === 'function') {
                 els.role.innerHTML = R.badgeHtml(role);
             } else {
                 els.role.textContent = '';
             }
+        };
+
+        const R = window.PanterRoles;
+        // El rango manual vive en `equipo`; sin él, sólo el correo del Director
+        // recibe un rango automático.
+        paintRole(R ? R.resolveRole(user) : 'usuario');
+
+        if (R && window.db && window.fsDoc && window.getDoc) {
+            const uid = user.uid;
+            window.getDoc(window.fsDoc(window.db, 'equipo', uid))
+                .then(snap => {
+                    const current = api() && api().getUser ? api().getUser() : null;
+                    if (!current || String(current.uid) !== String(uid)) return;
+                    const team = snap.exists() ? (snap.data() || {}) : null;
+                    const profile = team && team.archivado !== true && team.role
+                        ? { teamRole: team.role, email: team.email || user.email }
+                        : { email: user.email };
+                    paintRole(R.resolveRole(user, profile));
+                })
+                .catch(() => { /* roster no disponible */ });
         }
     }
 

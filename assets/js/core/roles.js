@@ -16,6 +16,17 @@
     const ROLE_CONFIG_VERSION = 3;
 
     /* ─────────────────────────────────────────────────────────────
+       Política de asignación automática por correo
+       ─────────────────────────────────────────────────────────────
+       Sólo el correo oficial del Director recibe un rango de forma
+       automática. Cualquier otra cuenta nace como `usuario` y los
+       rangos superiores se asignan manualmente desde el Panel Admin
+       (sección Personal → colección `equipo`).
+    */
+    const DIRECTOR_EMAIL = 'oliverosgutierezjhonier@mail.com';
+    const DEFAULT_MEMBER_ROLE = 'usuario';
+
+    /* ─────────────────────────────────────────────────────────────
        Jerarquía oficial (mayor rank = mayor prioridad)
        ───────────────────────────────────────────────────────────── */
     const ROLE_DEFS = {
@@ -28,7 +39,7 @@
             bg: 'rgba(241, 196, 15, 0.14)',
             border: 'rgba(241, 196, 15, 0.45)',
             icon: 'fa-solid fa-crown',
-            description: 'Administrador total detectado desde Discord.',
+            description: 'Rango heredado de versiones anteriores. Ya no se detecta automáticamente.',
             aliases: ['owner', 'admin_owner', 'administrator_owner']
         },
         founder_ceo: {
@@ -669,74 +680,66 @@
         return rolePermissions(normalize(role)).manageTeam === true;
     }
 
+    /**
+     * Compatibilidad con roles heredados. `director` se conserva para que
+     * `conductores.role` y la sesión reflejen exactamente el rango mostrado.
+     */
     function toLegacyRole(role) {
         const id = normalize(role);
         if (id === 'admin_owner') return 'founder_ceo';
-        if (id === 'director') return 'administrador';
         return id;
     }
 
-    function isDiscordAdmin(user) {
-        if (!user) return false;
-        if (user.discordAdmin === true || user.adminOwner === true) return true;
-
-        // Administrator permission bit (0x8) del guild.
-        const permissions = user.discordPermissions != null
-            ? user.discordPermissions
-            : user.permissions;
-        if (permissions != null && permissions !== '') {
-            try {
-                if ((BigInt(permissions) & 8n) === 8n) return true;
-            } catch (e) { /* ignore */ }
-        }
-
-        const cfg = getDiscordConfig();
-        const roleIds = []
-            .concat(user.discordRoleIds || [])
-            .concat(user.discordRoles || [])
-            .concat(user.roles || [])
-            .map(String);
-
-        if ((cfg.adminRoleIds || []).some(id => roleIds.includes(String(id)))) {
-            return true;
-        }
-
-        const matched = matchDiscordRoles(roleIds, user.discordRoleNames || user.serverRoles || [], cfg);
-        return matched.role === 'admin_owner' ||
-            matched.role === 'founder_ceo' ||
-            matched.role === 'administrador' ||
-            matched.role === 'director';
+    /**
+     * @deprecated La detección automática de administradores por permisos,
+     * IDs o roles de Discord quedó deshabilitada. Los permisos se derivan
+     * únicamente del rango asignado manualmente en Personal (`equipo`) o
+     * del correo oficial del Director.
+     */
+    function isDiscordAdmin() {
+        return false;
     }
 
+    function normalizeEmail(value) {
+        return String(value == null ? '' : value).trim().toLowerCase();
+    }
+
+    /**
+     * Rango automático según el correo. Sólo el correo del Director recibe
+     * un rango; cualquier otra cuenta es `usuario` por defecto.
+     */
+    function roleForEmail(email) {
+        return normalizeEmail(email) === DIRECTOR_EMAIL ? 'director' : DEFAULT_MEMBER_ROLE;
+    }
+
+    /**
+     * Resuelve el rango efectivo de una cuenta:
+     *   1. Correo oficial del Director → `director`.
+     *   2. Rango asignado manualmente en el Panel Admin → Personal (`equipo`).
+     *   3. Cualquier otra cuenta → `usuario`.
+     *
+     * Ya NO se leen roles/permisos de Discord ni `conductores.role`, para
+     * evitar que sesiones antiguas conserven un ADMIN/OWNER automático.
+     */
     function resolveRole(user, profile) {
-        if (!user && !profile) return 'usuario';
+        if (!user && !profile) return DEFAULT_MEMBER_ROLE;
 
-        const discordAdmin = isDiscordAdmin(user);
-        if (discordAdmin) return 'admin_owner';
+        // 1) Correo oficial del Director: siempre `director`.
+        const email = normalizeEmail(
+            (profile && (profile.email || profile.correo)) ||
+            (user && (user.email || user.correo))
+        );
+        if (email === DIRECTOR_EMAIL) return 'director';
 
-        // El roster `equipo` es la fuente principal cuando un administrador
-        // asigna un rango desde el panel. Se refleja en navbar, perfil y badges.
-        const teamRoleRaw = profile && (profile.teamRole || profile.equipoRole);
-        const teamRole = teamRoleRaw ? normalize(teamRoleRaw) : null;
-        if (teamRole) return teamRole;
-
-        const profileRole = profile && profile.role ? normalize(profile.role) : null;
-        const userRole = user && user.role ? normalize(user.role) : null;
-
-        if (profileRole && profileRole !== 'usuario') return profileRole;
-        if (userRole && userRole !== 'usuario') return userRole;
-        if (profileRole) return profileRole;
-        if (userRole) return userRole;
-
-        // Último recurso: roles de Discord mapeados
-        if (user) {
-            const matched = matchDiscordRoles(
-                [].concat(user.discordRoleIds || [], user.discordRoles || []),
-                user.discordRoleNames || user.serverRoles || []
-            );
-            if (matched.role) return matched.role;
+        // 2) Rango manual desde la sección Personal del panel (equipo.role).
+        const teamRoleRaw = profile && (profile.teamRole || profile.equipoRole || profile.team_role);
+        if (teamRoleRaw) {
+            const teamRole = normalize(teamRoleRaw);
+            if (teamRole) return teamRole;
         }
-        return 'usuario';
+
+        // 3) Cualquier otra cuenta: Usuario.
+        return DEFAULT_MEMBER_ROLE;
     }
 
     /* ─────────────────────────────────────────────────────────────
@@ -933,6 +936,10 @@
         canManageTeam,
         toLegacyRole,
         resolveRole,
+        roleForEmail,
+        normalizeEmail,
+        DIRECTOR_EMAIL,
+        DEFAULT_MEMBER_ROLE,
         isDiscordAdmin,
         hasAdminPermission: isDiscordAdmin,
         rolePermissions,

@@ -599,7 +599,6 @@
 
 <script>
 (function() {
-    const ADMIN_ROLES = new Set(['admin_owner', 'founder_ceo', 'director', 'administrador', 'soporte', 'support_ops', 'moderador', 'programador']);
     let allTickets = [];
     let currentFilter = 'Todos';
     let currentTicket = null;
@@ -633,41 +632,87 @@
         t._t = setTimeout(() => { t.style.display = 'none'; }, 3000);
     }
 
-    function isCeoIdentifier(str) {
-        if (!str) return false;
-        const clean = String(str).trim().toLowerCase();
-        return clean === 'pantergamey' || clean === 'pantergameyt' || clean === 'pantergamey@gmail.com' || clean === 'ceo@panterstudio.lat' || clean === 'admin@psgd.me';
-    }
+    let staffRoleUnsub = null;
 
-    // ---- AUTH CHECK ----
-    async function checkAccess(user) {
-        if (!user) return false;
+    /**
+     * Construye el contexto de staff usando `equipo` (rango manual) y el
+     * correo oficial del Director. Los roles de Discord y `conductores.role`
+     * no conceden acceso.
+     */
+    async function resolveStaffContext(user) {
+        if (!user) return null;
         const R = window.PanterRoles;
-        const discordAdmin = Boolean(user.discordAdmin) || (R ? R.isDiscordAdmin(user) : false);
-        const sessionRole = R ? R.resolveRole(user) : String(user.role || '').toLowerCase();
-        if (discordAdmin || sessionRole === 'admin_owner') {
-            currentStaff = { uid: user.uid, nombre: user.displayName || user.username || 'ADMIN / OWNER', role: 'founder_ceo', email: user.email || '' };
-            return true;
-        }
-        const isCeo = isCeoIdentifier(user.username) || isCeoIdentifier(user.displayName) || isCeoIdentifier(user.email) || sessionRole === 'founder_ceo';
-        if (isCeo) {
-            currentStaff = { uid: user.uid, nombre: user.displayName || user.username || 'PanterGameY', role: 'founder_ceo', email: user.email || 'pantergamey@gmail.com' };
-            return true;
-        }
+
+        let profile = null;
         try {
             const snap = await window.getDoc(window.fsDoc(window.db, 'conductores', user.uid));
-            if (!snap.exists()) return false;
-            const data = snap.data();
-            const resolvedRole = R ? R.resolveRole(user, data) : String(data.role || '').toLowerCase();
-            const isDocCeo = isCeoIdentifier(data.username) || isCeoIdentifier(data.nombre_usuario) || isCeoIdentifier(data.displayName) || resolvedRole === 'founder_ceo' || resolvedRole === 'admin_owner';
-            if (isDocCeo) {
-                currentStaff = { uid: user.uid, nombre: data.displayName || data.username || 'PanterGameY', role: 'founder_ceo', email: user.email || data.email, ...data };
-                return true;
+            if (snap.exists()) profile = snap.data() || null;
+        } catch (e) { /* perfil opcional */ }
+
+        let team = null;
+        try {
+            const teamSnap = await window.getDoc(window.fsDoc(window.db, 'equipo', user.uid));
+            if (teamSnap.exists()) team = teamSnap.data() || null;
+        } catch (e) { /* roster opcional */ }
+
+        const effectiveProfile = Object.assign({}, profile || {});
+        if (team && team.archivado !== true && team.role) {
+            effectiveProfile.teamRole = team.role;
+        }
+        if (!effectiveProfile.email) {
+            effectiveProfile.email = (team && team.email) || user.email || '';
+        }
+
+        const role = R
+            ? R.resolveRole(user, effectiveProfile)
+            : 'usuario';
+        const isStaff = R ? R.isTicketStaff(role) : false;
+        if (!isStaff) return null;
+
+        return {
+            uid: user.uid,
+            nombre: (team && (team.nombre || team.displayName || team.username))
+                || user.displayName || user.username || user.email || 'Staff',
+            role,
+            email: user.email || (team && team.email) || ''
+        };
+    }
+
+    async function checkAccess(user) {
+        currentStaff = await resolveStaffContext(user);
+        if (!currentStaff) return false;
+
+        // Cambios de rango desde Panel Admin → Personal se reflejan en vivo.
+        if (staffRoleUnsub) {
+            try { staffRoleUnsub(); } catch (e) { /* noop */ }
+            staffRoleUnsub = null;
+        }
+        if (window.onSnapshot && window.fsDoc && window.db) {
+            try {
+                staffRoleUnsub = window.onSnapshot(
+                    window.fsDoc(window.db, 'equipo', user.uid),
+                    async () => {
+                        const refreshed = await resolveStaffContext(user);
+                        if (!refreshed) {
+                            currentStaff = null;
+                            document.getElementById('adminRoot').style.display = 'none';
+                            const gate = document.getElementById('accessGate');
+                            gate.style.display = 'flex';
+                            gate.querySelector('h2').textContent = 'Sin Permiso';
+                            gate.querySelector('p').textContent = 'Tu rango ya no tiene acceso al panel de soporte.';
+                            return;
+                        }
+                        currentStaff = refreshed;
+                        const label = document.getElementById('staffName');
+                        if (label) label.textContent = `${currentStaff.nombre} (${currentStaff.role})`;
+                    },
+                    err => console.warn('[SoporteAdmin] No se pudo observar el rango:', err)
+                );
+            } catch (e) {
+                console.warn('[SoporteAdmin] Suscripción de rango no disponible:', e);
             }
-            if (!ADMIN_ROLES.has(resolvedRole)) return false;
-            currentStaff = { uid: user.uid, nombre: user.displayName || user.email, role: resolvedRole, email: user.email, ...data };
-            return true;
-        } catch { return false; }
+        }
+        return true;
     }
 
     // ---- LOAD TICKETS ----
@@ -990,7 +1035,7 @@
         const btn = document.getElementById('enviarRespuestaBtn');
         btn.disabled = true;
         try {
-            await window.SoporteJS.agregarComentario(currentTicket.id, txt, currentStaff.nombre, currentStaff.uid, true, currentStaff.role);
+            await window.SoporteJS.agregarComentario(currentTicket.id, txt, currentStaff.nombre, currentStaff.uid, true, currentStaff.role, currentStaff.email);
             document.getElementById('staffComentario').value = '';
             // onSnapshot refresca la lista; este respaldo cubre el caso sin listener.
             if (!comentariosUnsub) await loadDrawerComentarios(currentTicket.id);
@@ -1021,17 +1066,6 @@
         const checkActiveUser = async (user) => {
             const gate = document.getElementById('accessGate');
             const root = document.getElementById('adminRoot');
-            if (!user) {
-                try {
-                    const rawDiscord = localStorage.getItem('discord_user_session');
-                    if (rawDiscord) {
-                        const dUser = JSON.parse(rawDiscord);
-                        if (dUser && isCeoIdentifier(dUser.username || dUser.displayName || dUser.email)) {
-                            user = dUser;
-                        }
-                    }
-                } catch(e) {}
-            }
             if (!user) {
                 gate.querySelector('p').textContent = 'Debes iniciar sesión para acceder.';
                 gate.querySelector('h2').textContent = 'Acceso Denegado';

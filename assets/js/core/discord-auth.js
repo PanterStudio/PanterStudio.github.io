@@ -8,9 +8,10 @@
  *   guilds                → lista de servidores + permisos del usuario
  *   guilds.members.read   → roles del miembro dentro del servidor
  *
- * La detección de Administrator (bit 0x8) y de los roles mapeados se hace
- * en cliente. La asignación visual es inmediata; la persistencia se replica
- * en Firestore (conductores/{uid}) para el resto de la web.
+ * El rango web NO se deduce de Discord: sólo el correo oficial del Director
+ * recibe `director` automáticamente y el resto de rangos se asignan desde
+ * Panel Admin → Personal (`equipo`). Discord se usa únicamente para validar
+ * la membresía al servidor oficial.
  */
 
 (function() {
@@ -68,23 +69,22 @@
         }
     }
 
-    function isCeoIdentifier(str) {
-        if (!str) return false;
-        const clean = String(str).trim().toLowerCase();
-        return clean === 'pantergamey' ||
-               clean === 'pantergameyt' ||
-               clean === 'pantergamey@gmail.com' ||
-               clean === 'ceo@panterstudio.lat' ||
-               clean === 'admin@psgd.me';
+    // Sólo el correo oficial del Director define un rango automático.
+    function isDirectorEmail(str) {
+        const R = rolesLib();
+        const email = String(str || '').trim().toLowerCase();
+        if (R && typeof R.roleForEmail === 'function') {
+            return R.roleForEmail(email) === 'director';
+        }
+        return email === 'oliverosgutierezjhonier@mail.com';
     }
 
-    function hasAdministratorPermission(permissions) {
-        if (permissions == null || permissions === '') return false;
-        try {
-            return (BigInt(permissions) & 8n) === 8n;
-        } catch (e) {
-            return false;
-        }
+    /**
+     * @deprecated La detección de administradores por permisos de Discord
+     * quedó deshabilitada. Se conserva por compatibilidad y siempre es false.
+     */
+    function hasAdministratorPermission() {
+        return false;
     }
 
     function saveAccessToken(token, expiresIn) {
@@ -148,17 +148,11 @@
         const extra = extras || {};
         const avatarUrl = getAvatarUrl(rawUser);
         const displayName = rawUser.global_name || rawUser.username;
-        const isCeo = isCeoIdentifier(rawUser.username) ||
-                      isCeoIdentifier(rawUser.global_name) ||
-                      isCeoIdentifier(rawUser.email) ||
-                      isCeoIdentifier(displayName);
 
         const R = rolesLib();
-        const discordAdmin = Boolean(extra.discordAdmin) || hasAdministratorPermission(extra.permissions);
-        const mappedRole = extra.role ? extra.role : null;
-        const sessionRole = discordAdmin
-            ? 'founder_ceo'
-            : (mappedRole || (isCeo ? 'founder_ceo' : (rawUser.role || 'usuario')));
+        const email = rawUser.email || `${rawUser.id}@discord.local`;
+        const sessionRole = R ? R.roleForEmail(email) : 'usuario';
+        const isDirector = Boolean(R && R.roleForEmail(email) === 'director');
 
         return {
             uid: `discord_${rawUser.id}`,
@@ -167,7 +161,7 @@
             username: rawUser.username,
             displayName: displayName,
             globalName: rawUser.global_name,
-            email: rawUser.email || `${rawUser.id}@discord.local`,
+            email: email,
             photoURL: avatarUrl,
             avatarUrl: avatarUrl,
             avatar: rawUser.avatar,
@@ -175,9 +169,9 @@
             emailVerified: true,
             providerId: 'discord.com',
             role: R ? R.toLegacyRole(sessionRole) : sessionRole,
-            isAdmin: Boolean(discordAdmin || isCeo || rawUser.isAdmin),
-            discordAdmin: discordAdmin,
-            adminOwner: discordAdmin,
+            isAdmin: Boolean(R ? R.canAccessAdminPanel(sessionRole) : isDirector),
+            discordAdmin: false,
+            adminOwner: false,
             discordPermissions: extra.permissions || null,
             discordRoleIds: Array.isArray(extra.roleIds) ? extra.roleIds : [],
             discordRoleNames: Array.isArray(extra.roleNames) ? extra.roleNames : [],
@@ -195,17 +189,14 @@
         const R = rolesLib();
         if (!R) return user;
 
-        const discordAdmin = Boolean(user.discordAdmin) || R.isDiscordAdmin(user);
-        if (discordAdmin) {
-            user.discordAdmin = true;
-            user.adminOwner = true;
-            user.role = 'founder_ceo';
-            user.isAdmin = true;
-        } else if (user.role) {
-            const normalized = R.normalize(user.role);
-            user.role = R.toLegacyRole(normalized);
-            user.isAdmin = R.canAccessAdminPanel(normalized) || Boolean(user.isAdmin);
-        }
+        // El rango de sesión se deriva sólo del correo. El rango manual de
+        // Personal (`equipo`) se resuelve en vivo con `PanterRoles.resolveRole`
+        // y en los badges/perfil/tickets.
+        const sessionRole = R.roleForEmail(user.email);
+        user.role = R.toLegacyRole(sessionRole);
+        user.isAdmin = R.canAccessAdminPanel(sessionRole);
+        user.discordAdmin = false;
+        user.adminOwner = false;
         return user;
     }
 
@@ -214,10 +205,6 @@
             const data = localStorage.getItem(STORAGE_KEY);
             if (!data) return null;
             let user = JSON.parse(data);
-            if (user && (isCeoIdentifier(user.username) || isCeoIdentifier(user.displayName) || isCeoIdentifier(user.globalName) || isCeoIdentifier(user.email))) {
-                user.role = 'founder_ceo';
-                user.isAdmin = true;
-            }
             user = applySessionRole(user);
             return user;
         } catch (e) {
@@ -325,8 +312,8 @@
 
         if (guild) {
             context.guildName = guild.name || context.guildName;
+            // El permiso de administrador del guild ya no otorga rango web.
             context.permissions = guild.permissions != null ? String(guild.permissions) : null;
-            context.discordAdmin = hasAdministratorPermission(context.permissions);
         }
 
         let member = null;
@@ -367,12 +354,10 @@
         }
 
         if (R) {
-            const matched = R.matchDiscordRoles(context.roleIds, context.roleNames, cfg);
-            context.role = matched.role;
-            context.discordAdmin = context.discordAdmin || matched.admin;
-            if (context.roleNames.length === 0 && matched.matched.length) {
-                context.roleNames = matched.matched.map(m => m.name).filter(Boolean);
-            }
+            // Los roles/permisos de Discord no asignan rangos en la web.
+            // Se conservan los nombres únicamente con fines informativos.
+            context.role = null;
+            context.discordAdmin = false;
         }
 
         try {
@@ -428,7 +413,9 @@
         const ok = await waitForFirestore();
         if (!ok) return false;
         const R = rolesLib();
-        const legacyRole = R ? R.toLegacyRole(user.role) : (user.role || 'usuario');
+        // `conductores.role` se sincroniza con la política por correo. El rango
+        // manual vive en `equipo.role` y se resuelve en vivo, nunca se pisa aquí.
+        const emailRole = R ? R.roleForEmail(user.email) : 'usuario';
         const payload = {
             uid: user.uid,
             discordId: user.discordId || user.id || null,
@@ -439,9 +426,9 @@
             avatarUrl: user.avatarUrl || user.photoURL || null,
             avatarImg: user.avatarImg || user.avatarUrl || user.photoURL || null,
             photoURL: user.photoURL || user.avatarUrl || null,
-            role: legacyRole,
-            isAdmin: Boolean(user.isAdmin || user.discordAdmin),
-            discordAdmin: Boolean(user.discordAdmin),
+            role: R ? R.toLegacyRole(emailRole) : emailRole,
+            isAdmin: R ? R.canAccessAdminPanel(emailRole) : false,
+            discordAdmin: false,
             discordPermissions: user.discordPermissions || null,
             discordRoleIds: user.discordRoleIds || [],
             discordRoleNames: user.discordRoleNames || [],
@@ -453,21 +440,9 @@
         };
         try {
             await window.setDoc(window.fsDoc(window.db, 'conductores', user.uid), payload, { merge: true });
-            // Mantener el equipo sincronizado sin sobrescribir textos editados por admins.
-            if (R && R.isTeamRole(user.role)) {
-                await window.setDoc(window.fsDoc(window.db, 'equipo', user.uid), {
-                    uid: user.uid,
-                    discordId: user.discordId || user.id || null,
-                    nombre: user.displayName || user.username || 'Miembro del equipo',
-                    username: user.username || null,
-                    avatarUrl: user.avatarUrl || user.photoURL || null,
-                    role: R.toLegacyRole(user.role),
-                    actualizadoEn: new Date().toISOString()
-                }, { merge: true });
-            }
+            // El roster `equipo` sólo se gestiona manualmente desde el panel.
             return true;
         } catch (e) {
-            // Las reglas actuales pueden bloquear role=founder_ceo desde web.
             console.warn('[DiscordAuth] No se pudo sincronizar el perfil en Firestore:', e.message);
             return false;
         }
@@ -476,27 +451,20 @@
     function enrichUserWithGuild(user, context) {
         if (!user || !context) return user;
         const R = rolesLib();
-        const role = context.role || user.role;
-        if (R && context.discordAdmin) {
-            user.discordAdmin = true;
-            user.adminOwner = true;
-            user.role = 'founder_ceo';
-            user.isAdmin = true;
-        } else if (R && role) {
-            user.role = R.toLegacyRole(role);
-            user.isAdmin = R.canAccessAdminPanel(role) || user.isAdmin;
-        }
+        // La pertenencia al guild se conserva, pero ningún dato de Discord
+        // (permisos, IDs o nombres de roles) concede rangos en la web.
         user.discordPermissions = context.permissions || user.discordPermissions || null;
         user.discordRoleIds = context.roleIds || user.discordRoleIds || [];
         user.discordRoleNames = context.roleNames || user.discordRoleNames || [];
-        user.discordRole = context.role || user.discordRole || null;
+        user.discordRole = null;
         user.discordGuildId = context.guildId || user.discordGuildId || null;
         user.discordGuildName = context.guildName || user.discordGuildName || null;
         user.discordGuildMember = context.membershipChecked
             ? Boolean(context.isMember)
             : Boolean(user.discordGuildMember);
         user.discordMembershipChecked = Boolean(context.membershipChecked) || Boolean(user.discordMembershipChecked);
-        user.discordAdmin = Boolean(context.discordAdmin || user.discordAdmin);
+        user.discordAdmin = false;
+        user.adminOwner = false;
         return applySessionRole(user);
     }
 
@@ -657,8 +625,12 @@
         base.context = context;
         base.checked = Boolean(context.membershipChecked);
         base.isMember = Boolean(context.isMember);
-        base.isAdmin = Boolean(context.discordAdmin);
         base.guildName = context.guildName || base.guildName;
+        {
+            const R = rolesLib();
+            const sessionRole = user && R ? R.roleForEmail(user.email) : 'usuario';
+            base.isAdmin = Boolean(R && R.canAccessAdminPanel(sessionRole));
+        }
 
         if (context.tokenInvalid) {
             clearAccessToken();
@@ -688,7 +660,7 @@
             state: 'member',
             user: updated,
             isMember: true,
-            isAdmin: Boolean(updated.discordAdmin)
+            isAdmin: Boolean(updated.isAdmin)
         });
     }
 
@@ -743,36 +715,22 @@
             const rawInput = String(email || '').trim();
             const cleanEmail = rawInput.toLowerCase();
             const R = rolesLib();
-            let role = 'usuario';
-            let name = rawInput.split('@')[0] || 'Usuario';
-            let finalEmail = cleanEmail.includes('@') ? cleanEmail : `${cleanEmail}@panterstudio.lat`;
-
-            if (isCeoIdentifier(cleanEmail)) {
-                role = 'founder_ceo';
-                name = 'PanterGameY (CEO)';
-                finalEmail = cleanEmail.includes('@') ? cleanEmail : 'pantergamey@gmail.com';
-            } else if (cleanEmail === 'soporte@psgd.me') {
-                role = 'soporte';
-                name = 'Agente de Soporte';
-            } else if (cleanEmail === 'mod@psgd.me') {
-                role = 'moderador';
-                name = 'Moderador PSGD';
-            } else if (cleanEmail === 'user@user.me') {
-                role = 'usuario';
-                name = 'Usuario Demo';
-            }
-
-            const isCeo = role === 'founder_ceo';
+            // Asignación exclusiva por correo: Director o Usuario.
+            const role = R ? R.roleForEmail(cleanEmail) : 'usuario';
+            const finalEmail = cleanEmail.includes('@') ? cleanEmail : `${cleanEmail}@panterstudio.lat`;
+            const name = rawInput.split('@')[0] || 'Usuario';
             const user = {
                 uid: `email_${cleanEmail.replace(/[^a-z0-9]/gi, '_')}`,
                 id: cleanEmail,
-                username: isCeo ? 'PanterGameY' : (rawInput.split('@')[0] || 'Usuario'),
-                displayName: isCeo ? 'PanterGameY' : name,
+                username: name,
+                displayName: name,
                 email: finalEmail,
                 photoURL: 'https://cdn.discordapp.com/embed/avatars/1.png',
                 avatarUrl: 'https://cdn.discordapp.com/embed/avatars/1.png',
                 role: R ? R.toLegacyRole(role) : role,
-                isAdmin: isCeo,
+                isAdmin: R ? R.canAccessAdminPanel(role) : false,
+                discordAdmin: false,
+                adminOwner: false,
                 providerId: 'password'
             };
 
@@ -798,7 +756,8 @@
         getPrimaryRedirectUri,
         getAccessToken,
         isDiscordSession,
-        isCeoIdentifier,
+        isDirectorEmail,
+        isCeoIdentifier: isDirectorEmail,
         hasAdministratorPermission,
         fetchDiscordGuildContext,
         validateGuildAccess,
