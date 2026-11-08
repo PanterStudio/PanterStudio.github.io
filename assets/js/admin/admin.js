@@ -3,7 +3,7 @@
 // Política de rangos: sólo el correo oficial del Director recibe un rango
 // automático. Cualquier otra cuenta nace como `usuario`; los rangos superiores
 // se asignan manualmente en Panel Admin → Personal (colección `equipo`).
-const DIRECTOR_EMAIL = 'oliverosgutierezjhonier@mail.com';
+const DIRECTOR_EMAIL = 'oliverosgutierezjhonier@gmail.com';
 
 const SESSION_STORAGE_KEY = 'panterAdminSession';
 

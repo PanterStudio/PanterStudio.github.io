@@ -30,7 +30,7 @@
     const R = window.PanterRoles;
     const email = String(str || '').trim().toLowerCase();
     if (R && typeof R.roleForEmail === 'function') return R.roleForEmail(email) === 'director';
-    return email === 'oliverosgutierezjhonier@mail.com';
+    return email === 'oliverosgutierezjhonier@gmail.com';
   }
 
   function isCeoIdentifier(str) {

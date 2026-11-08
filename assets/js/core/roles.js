@@ -27,7 +27,7 @@
        rangos superiores se asignan manualmente desde el Panel Admin
        (sección Personal → colección `equipo`).
     */
-    const DIRECTOR_EMAIL = 'oliverosgutierezjhonier@mail.com';
+    const DIRECTOR_EMAIL = 'oliverosgutierezjhonier@gmail.com';
     const DEFAULT_MEMBER_ROLE = 'usuario';
 
     /* ─────────────────────────────────────────────────────────────

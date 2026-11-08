@@ -73,7 +73,7 @@ function isDirectorEmail(str) {
     if (R && typeof R.roleForEmail === 'function') {
         return R.roleForEmail(email) === 'director';
     }
-    return email === 'oliverosgutierezjhonier@mail.com';
+    return email === 'oliverosgutierezjhonier@gmail.com';
 }
 
 function isCeoIdentifier(str) {
@@ -351,7 +351,7 @@ async function saveUserProfile(user, username, options = {}) {
         || (localProfile && String(localProfile.uid) === String(safeUser.uid) ? localProfile : null);
     const email = String(safeUser.email || '').toLowerCase();
     const R = window.PanterRoles;
-    const emailRole = R ? R.roleForEmail(email) : (email === 'oliverosgutierezjhonier@mail.com' ? 'director' : 'usuario');
+    const emailRole = R ? R.roleForEmail(email) : (email === 'oliverosgutierezjhonier@gmail.com' ? 'director' : 'usuario');
     const now = new Date().toISOString();
     const pendingReferral = normalizeReferralCode(options.referralCode || getPendingReferralCode());
     const usernameResolution = await resolveAvailableUsername(
@@ -626,7 +626,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (!R) {
-            const role = /^oliverosgutierezjhonier@mail\.com$/i.test(String(user.email || '')) ? 'director' : 'usuario';
+            const role = /^oliverosgutierezjhonier@gmail\.com$/i.test(String(user.email || '')) ? 'director' : 'usuario';
             return { isAdmin: role === 'director', role };
         }
 

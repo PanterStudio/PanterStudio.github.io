@@ -4,7 +4,7 @@ service cloud.firestore {
 
     // ═══════════════════════════════════════════════════════
     // 🔐 HELPERS — Política de rangos (roles.js)
-    //   • oliverosgutierezjhonier@mail.com → Director (único rango
+    //   • oliverosgutierezjhonier@gmail.com → Director (único rango
     //     automático, por correo exacto).
     //   • Cualquier otro correo → Usuario.
     //   • Fundador, Administrador, Moderador, Soporte, etc. se asignan
@@ -18,7 +18,7 @@ service cloud.firestore {
     // ═══════════════════════════════════════════════════════
     function isDirectorEmail() {
       return request.auth != null
-        && request.auth.token.get('email', '') == 'oliverosgutierezjhonier@mail.com';
+        && request.auth.token.get('email', '') == 'oliverosgutierezjhonier@gmail.com';
     }
 
     // Rango manual vigente, leído de `equipo/{uid}` (no de conductores).

@@ -76,7 +76,7 @@
         if (R && typeof R.roleForEmail === 'function') {
             return R.roleForEmail(email) === 'director';
         }
-        return email === 'oliverosgutierezjhonier@mail.com';
+        return email === 'oliverosgutierezjhonier@gmail.com';
     }
 
     /**
