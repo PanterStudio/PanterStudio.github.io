@@ -3,41 +3,56 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ═══════════════════════════════════════════════════════
-    // 🔐 HELPERS
-    // Discord OAuth NO genera request.auth en el cliente web.
-    // Por eso las colecciones operativas (tickets, personal y
-    // usuarios) permiten escritura web y se validan del lado de
-    // la aplicación. Las reglas por email siguen vigentes para
-    // Firebase Auth (Google/Email) y para el panel.
+    // 🔐 HELPERS — Política de rangos (roles.js)
+    //   • oliverosgutierezjhonier@mail.com → Director (único rango
+    //     automático, por correo exacto).
+    //   • Cualquier otro correo → Usuario.
+    //   • Fundador, Administrador, Moderador, Soporte, etc. se asignan
+    //     MANUALMENTE en Panel Admin → Personal (colección `equipo`).
+    //   • Ningún ID, rol o permiso de Discord otorga rangos web.
+    //
+    // Discord OAuth NO genera request.auth en el cliente web. Por eso
+    // las colecciones operativas (tickets, personal, perfiles) permiten
+    // escritura web y se validan en la aplicación. Las comprobaciones
+    // por correo/rango aplican a Firebase Auth (Email/Google) y al panel.
     // ═══════════════════════════════════════════════════════
-    function isAdminEmail() {
+    function isDirectorEmail() {
       return request.auth != null
-        && request.auth.token.get('email', '') in [
-          'pantergamey@gmail.com',
-          'panterstudiogamedev@gmail.com'
-        ];
+        && request.auth.token.get('email', '') == 'oliverosgutierezjhonier@mail.com';
+    }
+
+    // Rango manual vigente, leído de `equipo/{uid}` (no de conductores).
+    function teamRole() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/equipo/$(request.auth.uid))
+        && get(/databases/$(database)/documents/equipo/$(request.auth.uid)).data.get('archivado', false) != true
+          ? get(/databases/$(database)/documents/equipo/$(request.auth.uid)).data.get('role', 'usuario')
+          : 'usuario';
     }
 
     function isFirebaseAdmin() {
-      return isAdminEmail();
+      return isDirectorEmail()
+        || teamRole() in [
+          'founder_ceo', 'director', 'administrador', 'programador', 'modelador'
+        ];
     }
 
     // ═══════════════════════════════════════════════════════
     // 🎟️ TICKETS DE SOPORTE (colección canónica)
     // Lectura pública. Escritura completa para que el panel y la
-    // vista pública puedan cambiar estado, asignar, cerrar,
+    // vista pública puedan crear, cambiar estado, asignar, cerrar,
     // responder y actualizar contadores sin permission-denied.
     // ═══════════════════════════════════════════════════════
     match /soporte_tickets/{ticketId} {
-      allow read: if true;
-      allow write: if true;
+      allow read, write: if true;
 
-      // Respuestas / mensajes del ticket.
       match /comentarios/{comentarioId} {
         allow read, write: if true;
       }
-      // Alias por si alguna vista usa "messages".
       match /messages/{messageId} {
+        allow read, write: if true;
+      }
+      match /{rest=**} {
         allow read, write: if true;
       }
     }
@@ -52,9 +67,9 @@ service cloud.firestore {
 
     // ═══════════════════════════════════════════════════════
     // 👥 PERSONAL / EQUIPO (Panel Admin → Personal)
-    // `equipo` es la colección canónica y `personal` el alias.
+    // `equipo` es la fuente ÚNICA de rangos manuales; `personal` alias.
     // Escritura completa para altas, ediciones, cambios de rol,
-    // archivos y borrados desde el panel.
+    // archivado y borrados desde el panel y suscripciones en vivo.
     // ═══════════════════════════════════════════════════════
     match /equipo/{memberId} {
       allow read, write: if true;
@@ -71,15 +86,14 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════════════════
-    // 🚗 CONDUCTORES / USUARIOS (Perfiles, rangos y monedas)
+    // 🚗 CONDUCTORES / USUARIOS (Perfiles, datos y monedas)
     // `conductores` es la canónica y `users` el alias.
-    // La escritura completa evita que el panel falle al guardar
-    // perfiles que ya tienen isAdmin/role elevados.
+    // `conductores.role` NO otorga rango: se sincroniza con la
+    // política por correo. La escritura completa evita fallos al
+    // guardar perfiles, actividad, referidos y monedas.
     // ═══════════════════════════════════════════════════════
     match /conductores/{userId} {
       allow read, write: if true;
-
-      // Historial de actividad y subcolecciones del perfil.
       match /{rest=**} {
         allow read, write: if true;
       }
@@ -201,7 +215,7 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════════════════
-    // ⚙️ CONFIGURACIÓN DEL SITIO
+    // ⚙️ CONFIGURACIÓN DEL SITIO (site, donations, minigames…)
     // ═══════════════════════════════════════════════════════
     match /settings/{document} {
       allow read: if true;
@@ -219,9 +233,9 @@ service cloud.firestore {
     // ═══════════════════════════════════════════════════════
     // 🎨 CONFIGURACIÓN DE ROLES Y COLORES DEL SITIO
     // Guarda la paleta, la jerarquía y los permisos de cada rango.
-    // El panel admin usa Discord OAuth (sin request.auth), por eso
-    // se valida la estructura del documento en lugar de exigir
-    // autenticación de Firebase.
+    // El panel admin usa OAuth sin request.auth en algunos flujos,
+    // por eso se valida la estructura del documento en lugar de
+    // exigir autenticación de Firebase.
     // ═══════════════════════════════════════════════════════
     match /roles_config/{docId} {
       allow read: if true;
@@ -238,15 +252,24 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════════════════
-    // 🔗 MAPEO DE ROLES DISCORD → WEB
+    // 🔗 SERVIDOR OFICIAL DE DISCORD (sólo compuerta de acceso)
+    // El mapeo Discord → rangos web y ADMIN/OWNER se eliminó.
+    // saveDiscordConfig() escribe { guildId, guildName, updatedAt }.
+    // Se aceptan `roles`/`adminRoleIds` SÓLO como campos heredados
+    // de documentos antiguos (setDoc con merge los conserva).
     // ═══════════════════════════════════════════════════════
     match /discord_role_mappings/{docId} {
       allow read: if true;
       allow write: if isFirebaseAdmin() || (
         docId == 'global'
-        && request.resource.data.keys().hasOnly(['guildId', 'guildName', 'adminRoleIds', 'roles', 'updatedAt'])
-        && request.resource.data.roles is list
+        && request.resource.data.keys().hasOnly([
+          'guildId', 'guildName', 'adminRoleIds', 'roles', 'updatedAt', 'updatedBy'
+        ])
+        && request.resource.data.guildId is string
+        && (!('guildName' in request.resource.data) || request.resource.data.guildName is string)
+        && (!('roles' in request.resource.data) || request.resource.data.roles is list)
         && (!('adminRoleIds' in request.resource.data) || request.resource.data.adminRoleIds is list)
+        && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is string)
       );
     }
 
