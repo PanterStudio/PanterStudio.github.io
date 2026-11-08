@@ -41,7 +41,6 @@ function toSitePath(path) {
 }
 
 const ROLE_LABELS = {
-    admin_owner: 'ADMIN / OWNER',
     founder_ceo: 'Fundador / CEO',
     director: 'Director',
     administrador: 'Administrador',
@@ -55,7 +54,7 @@ const ROLE_LABELS = {
     viewer: 'Solo lectura'
 };
 
-const PANEL_ACCESS_ROLES = new Set(['admin_owner', 'founder_ceo', 'director', 'administrador', 'soporte', 'programador', 'modelador']);
+const PANEL_ACCESS_ROLES = new Set(['founder_ceo', 'director', 'administrador', 'soporte', 'programador', 'modelador']);
 const EMAIL_ANALYSIS_COLLECTIONS = ['conductores', 'preregistros'];
 
 const gate = document.getElementById('adminGate');
@@ -2495,7 +2494,6 @@ function openRoleEditor(roleId, template) {
     if (rankInput) rankInput.disabled = fixedColor;
     setRoleEditorField('roleEditorIcon', (source && source.icon) || 'fa-solid fa-user');
     setRoleEditorField('roleEditorRank', source ? Number(source.rank || 20) : 20);
-    setRoleEditorField('roleEditorDiscordId', (source && source.discordRoleId) || '');
     setRoleEditorField('roleEditorDescription', (source && source.description) || '');
     setRoleEditorField('rolePermTeam', permissions.team);
     setRoleEditorField('rolePermTicketStaff', permissions.ticketStaff);
@@ -2563,7 +2561,6 @@ function collectRoleDraft() {
         color,
         icon: String(document.getElementById('roleEditorIcon')?.value || 'fa-solid fa-user').trim().slice(0, 80),
         description: String(document.getElementById('roleEditorDescription')?.value || '').trim().slice(0, 240),
-        discordRoleId: String(document.getElementById('roleEditorDiscordId')?.value || '').replace(/\D/g, '').slice(0, 25),
         permissions: {
             team: Boolean(document.getElementById('rolePermTeam')?.checked),
             ticketStaff: Boolean(document.getElementById('rolePermTicketStaff')?.checked),
@@ -2616,7 +2613,6 @@ async function saveRoleFromEditor() {
             `Rol “${draft.label}” guardado. La página Personal y las insignias de tickets usarán este color.${syncWarning}`,
             syncWarning ? 'warning' : 'success'
         );
-        await loadDiscordRoleMapping();
     } catch (error) {
         console.error('No se pudo guardar el rol:', error);
         roleManagerSetMessage(`No se pudo guardar el rol. ${describeFirestoreFailure(error).text}`, 'error');
@@ -2659,7 +2655,6 @@ async function deleteRoleFromEditor() {
         refreshRoleUI();
         openRoleEditor(null);
         roleManagerSetMessage(`Rol eliminado.${syncWarning}`, syncWarning ? 'warning' : 'success');
-        await loadDiscordRoleMapping();
     } catch (error) {
         console.error('No se pudo eliminar el rol:', error);
         roleManagerSetMessage(`No se pudo eliminar el rol. ${describeFirestoreFailure(error).text}`, 'error');
@@ -2701,7 +2696,6 @@ async function restoreOfficialRolePalette() {
         refreshRoleUI();
         openRoleEditor(null);
         roleManagerSetMessage(`Paleta oficial restaurada.${syncWarning}`, syncWarning ? 'warning' : 'success');
-        await loadDiscordRoleMapping();
     } finally {
         if (btn) btn.disabled = false;
     }
@@ -2766,46 +2760,9 @@ function bindRoleManager() {
     openRoleEditor(null);
 }
 
-// ---------- Mapeo de roles Discord → Web ----------
-
-function parseDiscordRoleMap(text) {
-    return String(text || '')
-        .split(/\r?\n/)
-        .map(line => line.trim())
-        .filter(Boolean)
-        .map(line => {
-            const parts = line.split('|').map(part => part.trim());
-            let id = '';
-            let name = '';
-            let role = 'usuario';
-
-            if (parts.length >= 3) {
-                id = parts[0];
-                name = parts[1];
-                role = parts[2];
-            } else if (parts.length === 2) {
-                const maybeRole = window.PanterRoles ? window.PanterRoles.normalize(parts[1]) : parts[1];
-                const known = window.PanterRoles ? Boolean(window.PanterRoles.ROLE_DEFS[maybeRole]) : true;
-                if (known) {
-                    name = parts[0];
-                    role = maybeRole;
-                } else {
-                    id = parts[0];
-                    name = parts[1];
-                }
-            } else {
-                name = parts[0];
-                role = window.PanterRoles ? window.PanterRoles.normalize(parts[0]) : 'usuario';
-            }
-
-            return {
-                id: String(id || ''),
-                name: String(name || ''),
-                role: window.PanterRoles ? window.PanterRoles.normalize(role) : role
-            };
-        })
-        .filter(entry => entry.id || entry.name);
-}
+// ---------- Servidor oficial de Discord (sólo compuerta de acceso) ----------
+// El mapeo Discord → rangos web quedó eliminado: aquí sólo se configura el
+// guild contra el que se valida la membresía.
 
 async function loadDiscordRoleMapping() {
     if (!window.PanterRoles) {
@@ -2813,7 +2770,7 @@ async function loadDiscordRoleMapping() {
         return;
     }
 
-    staffDiscordSetMessage('Cargando mapeo...', false);
+    staffDiscordSetMessage('Cargando servidor...', false);
     try {
         const cfg = await window.PanterRoles.loadDiscordConfig(true);
         const setValue = (id, value) => {
@@ -2822,15 +2779,10 @@ async function loadDiscordRoleMapping() {
         };
         setValue('discordGuildId', cfg.guildId || '');
         setValue('discordGuildName', cfg.guildName || '');
-        setValue('discordAdminRoleIds', (cfg.adminRoleIds || []).join(', '));
-        const map = (cfg.roles || [])
-            .map(entry => `${entry.id || ''} | ${entry.name || ''} | ${entry.role || 'usuario'}`)
-            .join('\n');
-        setValue('discordRoleMap', map);
-        staffDiscordSetMessage('Mapeo cargado. Edita los IDs reales de Discord y guarda.', false);
+        staffDiscordSetMessage('Servidor cargado. Los rangos se gestionan en Personal.', false);
     } catch (error) {
-        console.error('No se pudo cargar el mapeo de roles:', error);
-        staffDiscordSetMessage('No se pudo cargar el mapeo desde Firestore.', true);
+        console.error('No se pudo cargar la configuración del guild:', error);
+        staffDiscordSetMessage('No se pudo cargar el servidor desde Firestore.', true);
     }
 }
 
@@ -2842,22 +2794,17 @@ async function saveDiscordRoleMapping() {
 
     const guildId = String(document.getElementById('discordGuildId')?.value || '').trim();
     const guildName = String(document.getElementById('discordGuildName')?.value || '').trim() || 'Panter Studio';
-    const adminRoleIds = String(document.getElementById('discordAdminRoleIds')?.value || '')
-        .split(/[,\s]+/)
-        .map(id => id.trim())
-        .filter(Boolean);
-    const roles = parseDiscordRoleMap(document.getElementById('discordRoleMap')?.value || '');
 
     const btn = document.getElementById('discordMapSaveBtn');
     if (btn) btn.disabled = true;
-    staffDiscordSetMessage('Guardando mapeo...', false);
+    staffDiscordSetMessage('Guardando servidor...', false);
 
     try {
-        await window.PanterRoles.saveDiscordConfig({ guildId, guildName, adminRoleIds, roles });
-        staffDiscordSetMessage('Mapeo guardado. Los usuarios deben iniciar sesión de nuevo para refrescar roles.', false);
+        await window.PanterRoles.saveDiscordConfig({ guildId, guildName });
+        staffDiscordSetMessage('Servidor guardado. Discord no asigna rangos web.', false);
     } catch (error) {
-        console.error('No se pudo guardar el mapeo de roles:', error);
-        staffDiscordSetMessage('No se pudo guardar el mapeo. Revisa las reglas de Firestore.', true);
+        console.error('No se pudo guardar la configuración del guild:', error);
+        staffDiscordSetMessage('No se pudo guardar el servidor. Revisa las reglas de Firestore.', true);
     } finally {
         if (btn) btn.disabled = false;
     }

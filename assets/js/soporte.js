@@ -33,7 +33,7 @@ const ESTADOS = {
     'Cerrado':    { label: 'Cerrado',    color: '#64748b', bg: 'rgba(100,116,139,0.12)', faIcon: 'fa-solid fa-lock' }
 };
 
-const STAFF_ROLES = new Set(['admin_owner', 'founder_ceo', 'director', 'administrador', 'support_ops', 'soporte', 'moderador', 'programador']);
+const STAFF_ROLES = new Set(['founder_ceo', 'director', 'administrador', 'support_ops', 'soporte', 'moderador', 'programador']);
 
 
 // ============================================================
@@ -198,7 +198,6 @@ function puedeVerTicket(ticket, user, role) {
  * como respaldo si el módulo central no está disponible.
  */
 const ROLE_BADGE_FALLBACK = {
-    admin_owner:       { label: 'Admin / Owner',        color: '#f1c40f', icon: 'fa-solid fa-crown' },
     founder_ceo:       { label: 'Fundador',             color: '#f1c40f', icon: 'fa-solid fa-crown' },
     director:          { label: 'Director',             color: '#ff0000', icon: 'fa-solid fa-user-tie' },
     administrador:     { label: 'Administrador',        color: '#f1c40f', icon: 'fa-solid fa-shield-halved' },
@@ -257,7 +256,7 @@ function normalizarRol(valor) {
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .replace(/[_\s-]+/g, '_');
     const mapa = {
-        admin_owner: 'admin_owner', owner: 'admin_owner',
+        admin_owner: 'founder_ceo', owner: 'founder_ceo', administrator_owner: 'founder_ceo',
         founder_ceo: 'founder_ceo', founder: 'founder_ceo', ceo: 'founder_ceo', fundador: 'founder_ceo',
         director: 'director', administrador: 'administrador', admin: 'administrador', administrator: 'administrador',
         programador: 'programador', developer: 'programador', dev: 'programador',

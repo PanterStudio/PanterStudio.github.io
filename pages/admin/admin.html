@@ -1234,9 +1234,6 @@
                                         <label>Prioridad (mayor = más alto)
                                             <input type="number" id="roleEditorRank" min="0" max="1000" step="1" placeholder="50">
                                         </label>
-                                        <label>Discord Role ID
-                                            <input type="text" id="roleEditorDiscordId" maxlength="25" placeholder="123456789012345678" autocomplete="off">
-                                        </label>
                                         <label class="ps-role-editor-wide">Descripción
                                             <input type="text" id="roleEditorDescription" maxlength="240" placeholder="Qué representa este rango dentro del estudio" autocomplete="off">
                                         </label>
@@ -1264,8 +1261,8 @@
                             </section>
 
                             <div class="ps-discord-map">
-                                <h4><i class="fa-brands fa-discord" aria-hidden="true"></i> Mapeo de roles Discord → Web</h4>
-                                <p>El <strong>Discord Role ID</strong> de cada rango se sincroniza automáticamente desde el Gestor de Roles. Aquí puedes revisar el resto del mapeo. El rol con permiso <strong>Administrator</strong> recibe automáticamente <strong>ADMIN / OWNER</strong>.</p>
+                                <h4><i class="fa-brands fa-discord" aria-hidden="true"></i> Servidor oficial de Discord</h4>
+                                <p>La pertenencia al servidor se usa <strong>sólo</strong> para validar el acceso a la web. Los rangos se asignan por correo (Director) o manualmente en <strong>Panel Admin → Personal</strong>. Ningún rol, ID o permiso de Discord otorga <strong>ADMIN / OWNER</strong>.</p>
                                 <div class="ps-admin-grid">
                                     <div class="ps-admin-staff-card">
                                         <label>Discord Guild ID
@@ -1274,19 +1271,9 @@
                                         <label>Nombre del servidor
                                             <input type="text" id="discordGuildName" placeholder="Panter Studio" autocomplete="off">
                                         </label>
-                                        <label>IDs de roles con Administrator (separados por coma)
-                                            <input type="text" id="discordAdminRoleIds" placeholder="123456789012345678, 987654321098765432" autocomplete="off">
-                                        </label>
-                                        <small class="ps-field-help">Opcional: además del permiso Administrator, estos IDs otorgan acceso total.</small>
-                                    </div>
-                                    <div class="ps-admin-staff-card">
-                                        <label>Mapeos de roles
-                                            <textarea id="discordRoleMap" rows="7" placeholder="ID_DISCORD | Nombre del rol | rol_web"></textarea>
-                                        </label>
-                                        <small class="ps-field-help">Una línea por rol. Ejemplo: <code>123456789 | Fundador | founder_ceo</code>. Los roles personalizados usan su identificador del gestor.</small>
                                         <div class="ps-admin-staff-actions">
                                             <button type="button" class="btn" id="discordMapSaveBtn">
-                                                <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar mapeo
+                                                <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar servidor
                                             </button>
                                             <button type="button" class="btn" id="discordMapReloadBtn">
                                                 <i class="fa-solid fa-rotate" aria-hidden="true"></i> Recargar

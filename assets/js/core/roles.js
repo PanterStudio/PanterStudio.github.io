@@ -1,6 +1,10 @@
 /**
- * roles.js — Jerarquía de roles, badges y mapeo Discord → Web
+ * roles.js — Jerarquía de roles, badges y configuración del guild
  * Panter Studio · Módulo compartido (sin dependencias)
+ *
+ * Los rangos web se asignan por correo (Director) o manualmente desde
+ * Panel Admin → Personal (`equipo`). Ningún rol/permiso de Discord otorga
+ * rangos ni acceso de administrador; Discord sólo valida la membresía.
  *
  * Expone window.PanterRoles
  */
@@ -30,18 +34,6 @@
        Jerarquía oficial (mayor rank = mayor prioridad)
        ───────────────────────────────────────────────────────────── */
     const ROLE_DEFS = {
-        admin_owner: {
-            id: 'admin_owner',
-            label: 'ADMIN / OWNER',
-            shortLabel: 'Owner',
-            rank: 100,
-            color: '#f1c40f',
-            bg: 'rgba(241, 196, 15, 0.14)',
-            border: 'rgba(241, 196, 15, 0.45)',
-            icon: 'fa-solid fa-crown',
-            description: 'Rango heredado de versiones anteriores. Ya no se detecta automáticamente.',
-            aliases: ['owner', 'admin_owner', 'administrator_owner']
-        },
         founder_ceo: {
             id: 'founder_ceo',
             label: 'Fundador / CEO',
@@ -168,7 +160,6 @@
        Paleta oficial inmutable para los roles base
        ───────────────────────────────────────────────────────────── */
     const OFFICIAL_ROLE_COLORS = Object.freeze({
-        admin_owner:       '#f1c40f',
         founder_ceo:       '#f1c40f',
         director:          '#ff0000',
         administrador:     '#f1c40f',
@@ -199,7 +190,6 @@
      * conserve rangos distintos en Firestore.
      */
     const ROLE_HIERARCHY = [
-        'admin_owner',
         'founder_ceo',
         'director',
         'administrador',
@@ -212,7 +202,22 @@
         'usuario'
     ];
 
-    const ALIAS_TO_ROLE = (function buildAliases() {
+    // Valores heredados de versiones anteriores. El rango ADMIN / OWNER ya
+    // no existe: cualquier registro antiguo se normaliza a Fundador / CEO.
+    const LEGACY_ALIASES = {
+        admin_owner: 'founder_ceo',
+        administrator_owner: 'founder_ceo',
+        owner: 'founder_ceo'
+    };
+
+    function addLegacyAliases(map) {
+        Object.keys(LEGACY_ALIASES).forEach(key => {
+            map[aliasKey(key)] = LEGACY_ALIASES[key];
+        });
+        return map;
+    }
+
+    const ALIAS_TO_ROLE = addLegacyAliases((function buildAliases() {
         const map = {};
         Object.values(ROLE_DEFS).forEach(def => {
             map[aliasKey(def.id)] = def.id;
@@ -220,7 +225,7 @@
             (def.aliases || []).forEach(a => { map[aliasKey(a)] = def.id; });
         });
         return map;
-    })();
+    })());
 
     /* ─────────────────────────────────────────────────────────────
        Configuración dinámica de roles y colores
@@ -231,7 +236,6 @@
     const BASE_ROLE_IDS = new Set(Object.keys(BASE_ROLE_DEFS));
 
     const DEFAULT_ROLE_PERMISSIONS = {
-        admin_owner:       { team: true,  ticketStaff: true,  adminPanel: true,  manageTeam: true  },
         founder_ceo:       { team: true,  ticketStaff: true,  adminPanel: true,  manageTeam: true  },
         director:          { team: true,  ticketStaff: true,  adminPanel: true,  manageTeam: true  },
         administrador:     { team: true,  ticketStaff: true,  adminPanel: true,  manageTeam: true  },
@@ -307,13 +311,17 @@
                 if (alias) ALIAS_TO_ROLE[aliasKey(alias)] = def.id;
             });
         });
+        addLegacyAliases(ALIAS_TO_ROLE);
 
         refreshPermissionSets();
     }
 
     function sanitizeRoleDefinition(raw, fallbackId) {
         const source = raw && typeof raw === 'object' ? raw : {};
-        const id = roleSlug(source.id || fallbackId || source.label);
+        let id = roleSlug(source.id || fallbackId || source.label);
+        // Un documento de configuración antiguo no puede resurrectar el rango
+        // ADMIN / OWNER: se normaliza al rango superior vigente.
+        if (LEGACY_ALIASES[id]) id = LEGACY_ALIASES[id];
         if (!id) return null;
         const base = BASE_ROLE_DEFS[id] || {};
         const color = OFFICIAL_ROLE_COLORS[id]
@@ -339,7 +347,6 @@
                 .concat(Array.isArray(source.aliases) ? source.aliases : [])
                 .map(alias => String(alias || '').trim().toLowerCase())
                 .filter(Boolean))),
-            discordRoleId: String(source.discordRoleId || '').replace(/[^0-9]/g, '').slice(0, 25),
             permissions: Object.assign({}, EMPTY_PERMISSIONS,
                 DEFAULT_ROLE_PERMISSIONS[id] || {},
                 source.permissions && typeof source.permissions === 'object' ? source.permissions : {}),
@@ -472,11 +479,6 @@
             );
         }
 
-        // Mantener el mapa de Discord alineado con los roles web.
-        try { await syncDiscordRolesFromConfig(); } catch (e) {
-            console.warn('[PanterRoles] No se pudo sincronizar el mapeo de Discord:', e);
-        }
-
         return applied;
     }
 
@@ -507,32 +509,10 @@
                 snap => {
                     setDiscordConfig(snap.exists() ? snap.data() : defaultConfig(), false);
                 },
-                error => console.error('[PanterRoles] Error observando roles de Discord:', error)
+                error => console.error('[PanterRoles] Error observando la configuración del guild:', error)
             );
         }
         return true;
-    }
-
-    async function syncDiscordRolesFromConfig() {
-        const rolesCfg = getRoleConfig();
-        if (!rolesCfg || !Array.isArray(rolesCfg.roles)) return null;
-        const discordCfg = getDiscordConfig();
-        const current = Array.isArray(discordCfg.roles) ? discordCfg.roles.slice() : [];
-
-        rolesCfg.roles.forEach(role => {
-            const discordId = String(role.discordRoleId || '').trim();
-            if (!discordId) return;
-            const idx = current.findIndex(entry => String(entry.id || '') === discordId);
-            const entry = {
-                id: discordId,
-                name: role.label || role.id,
-                role: role.id
-            };
-            if (idx >= 0) current[idx] = entry;
-            else current.push(entry);
-        });
-
-        return saveDiscordConfig(Object.assign({}, discordCfg, { roles: current }));
     }
 
     // Sets derivados de los permisos. Se recalculan al aplicar la configuración.
@@ -562,38 +542,6 @@
             if (perms.manageTeam === true) MANAGE_TEAM_ROLES.add(def.id);
         });
     }
-
-    const DEFAULT_ROLE_NAMES = {
-        'fundador': 'founder_ceo',
-        'founder': 'founder_ceo',
-        'ceo': 'founder_ceo',
-        'owner': 'founder_ceo',
-        'director': 'director',
-        'admin': 'administrador',
-        'administrador': 'administrador',
-        'administrator': 'administrador',
-        'programador': 'programador',
-        'developer': 'programador',
-        'dev': 'programador',
-        'modelador': 'modelador',
-        'moderador': 'moderador',
-        'moderator': 'moderador',
-        'mod': 'moderador',
-        'soporte': 'soporte',
-        'support': 'soporte',
-        'staff': 'soporte',
-        'creador de contenido': 'creador_contenido',
-        'creador': 'creador_contenido',
-        'content creator': 'creador_contenido',
-        'creator': 'creador_contenido',
-        'streamer': 'creador_contenido',
-        'youtuber': 'creador_contenido',
-        'vip': 'vip',
-        'usuario': 'usuario',
-        'user': 'usuario',
-        'member': 'usuario',
-        'miembro': 'usuario'
-    };
 
     /* ─────────────────────────────────────────────────────────────
        Helpers
@@ -685,9 +633,7 @@
      * `conductores.role` y la sesión reflejen exactamente el rango mostrado.
      */
     function toLegacyRole(role) {
-        const id = normalize(role);
-        if (id === 'admin_owner') return 'founder_ceo';
-        return id;
+        return normalize(role);
     }
 
     /**
@@ -770,22 +716,14 @@
     }
 
     /* ─────────────────────────────────────────────────────────────
-       Configuración Discord <i class="fa-solid fa-right-left" aria-hidden="true"></i> Web (Firestore: discord_role_mappings/global)
+       Servidor oficial de Discord (Firestore: discord_role_mappings/global)
+       Sólo se usa para validar la pertenencia al guild. Ningún rol, ID o
+       permiso de Discord asigna rangos web ni acceso de administrador.
        ───────────────────────────────────────────────────────────── */
     function defaultConfig() {
         return {
             guildId: '1391998991108935772',
-            guildName: 'Panter Studio Game Dev',
-            adminRoleIds: [],
-            roles: [
-                { id: '', name: 'Fundador', role: 'founder_ceo' },
-                { id: '', name: 'Admin', role: 'administrador' },
-                { id: '', name: 'Programador', role: 'programador' },
-                { id: '', name: 'Moderador', role: 'moderador' },
-                { id: '', name: 'Soporte', role: 'soporte' },
-                { id: '', name: 'Creador de Contenido', role: 'creador_contenido' },
-                { id: '', name: 'Usuario', role: 'usuario' }
-            ]
+            guildName: 'Panter Studio Game Dev'
         };
     }
 
@@ -809,21 +747,12 @@
     }
 
     function mergeConfig(base, patch) {
-        const out = Object.assign({}, base, patch || {});
-        // Nunca dejar el guild vacío por configuraciones antiguas guardadas.
-        out.guildId = String((patch && patch.guildId) || base.guildId || '');
-        out.guildName = String((patch && patch.guildName) || base.guildName || 'Panter Studio');
-        out.roles = Array.isArray(patch && patch.roles)
-            ? patch.roles.map(r => ({
-                id: String(r.id || ''),
-                name: String(r.name || ''),
-                role: normalize(r.role)
-            }))
-            : base.roles;
-        out.adminRoleIds = Array.isArray(patch && patch.adminRoleIds)
-            ? patch.adminRoleIds.map(String)
-            : (base.adminRoleIds || []);
-        return out;
+        // Se ignoran deliberadamente `roles` y `adminRoleIds` de documentos
+        // antiguos: el mapeo Discord → rangos web quedó eliminado.
+        return {
+            guildId: String((patch && patch.guildId) || base.guildId || ''),
+            guildName: String((patch && patch.guildName) || base.guildName || 'Panter Studio')
+        };
     }
 
     function setDiscordConfig(config, persist) {
@@ -850,7 +779,7 @@
                 return setDiscordConfig(Object.assign({}, cfg, snap.data() || {}));
             }
         } catch (e) {
-            console.warn('[PanterRoles] No se pudo cargar el mapeo de roles Discord:', e);
+            console.warn('[PanterRoles] No se pudo cargar la configuración del guild:', e);
         }
         return cfg;
     }
@@ -867,51 +796,6 @@
         return merged;
     }
 
-    function matchDiscordRoles(roleIds, roleNames, config) {
-        const cfg = config || getDiscordConfig();
-        const ids = (roleIds || []).map(String);
-        const names = (roleNames || []).map(n => aliasKey(n));
-
-        let best = null;
-        const matched = [];
-
-        (cfg.roles || []).forEach(entry => {
-            const entryId = String(entry.id || '');
-            const entryName = aliasKey(entry.name || '');
-            const byId = entryId && ids.includes(entryId);
-            const byName = entryName && names.includes(entryName);
-            if (!byId && !byName) return;
-
-            const role = normalize(entry.role);
-            const def = ROLE_DEFS[role];
-            if (!def) return;
-            matched.push({ id: role, name: entry.name || '', source: byId ? 'id' : 'name' });
-            if (!best || def.rank > ROLE_DEFS[best.role].rank) {
-                best = { role, name: entry.name || '', entry };
-            }
-        });
-
-        // Fallback por nombre cuando aún no hay IDs configurados.
-        names.forEach(name => {
-            if (best) return;
-            const role = ALIAS_TO_ROLE[name] || DEFAULT_ROLE_NAMES[name.replace(/_/g, ' ')];
-            if (role && ROLE_DEFS[role]) best = { role, name, entry: null };
-        });
-
-        let admin = false;
-        if (ids.some(id => (cfg.adminRoleIds || []).includes(id))) admin = true;
-        if (best && ['admin_owner', 'founder_ceo', 'administrador', 'director'].includes(best.role)) {
-            admin = true;
-        }
-
-        return {
-            role: best ? best.role : null,
-            name: best ? best.name : null,
-            admin,
-            matched
-        };
-    }
-
     /* ─────────────────────────────────────────────────────────────
        API pública
        ───────────────────────────────────────────────────────────── */
@@ -925,7 +809,6 @@
         ADMIN_PANEL_ROLES,
         TEAM_ROLES,
         MANAGE_TEAM_ROLES,
-        DEFAULT_ROLE_NAMES,
         normalize,
         get,
         rank,
@@ -951,7 +834,6 @@
         setDiscordConfig,
         loadDiscordConfig,
         saveDiscordConfig,
-        matchDiscordRoles,
         // Configuración dinámica de roles y colores
         ROLE_STORAGE_KEY,
         ROLE_COLLECTION,
@@ -970,7 +852,6 @@
         getRoleConfig,
         loadRoleConfig,
         saveRoleConfig,
-        syncDiscordRolesFromConfig,
         startRealtimeConfigSync
     };
 

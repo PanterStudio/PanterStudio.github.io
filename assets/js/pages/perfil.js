@@ -10,7 +10,7 @@
   const REDEEM_COLLECTION     = 'coin_redemptions';
 
   const ROLE_LABELS = {
-    admin_owner: 'ADMIN / OWNER', founder_ceo: 'Fundador / CEO',
+    founder_ceo: 'Fundador / CEO',
     director: 'Director', administrador: 'Administrador',
     moderador: 'Moderador',
     soporte: 'Soporte', support_ops: 'Soporte',

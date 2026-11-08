@@ -11,7 +11,7 @@
     'use strict';
 
     const TEAM_LEVELS = [
-        { number: 1, title: 'Fundación y dirección', subtitle: 'Liderazgo del estudio', roles: ['admin_owner', 'founder_ceo', 'director'] },
+        { number: 1, title: 'Fundación y dirección', subtitle: 'Liderazgo del estudio', roles: ['founder_ceo', 'director'] },
         { number: 2, title: 'Administración', subtitle: 'Gestión y operaciones', roles: ['administrador'] },
         { number: 3, title: 'Moderación', subtitle: 'Cuidado de la comunidad', roles: ['moderador'] },
         { number: 4, title: 'Desarrollo y diseño', subtitle: 'Construcción de proyectos', roles: ['programador', 'modelador'] },

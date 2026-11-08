@@ -5,8 +5,8 @@
  * Scopes solicitados:
  *   identify              → perfil básico
  *   email                 → correo
- *   guilds                → lista de servidores + permisos del usuario
- *   guilds.members.read   → roles del miembro dentro del servidor
+ *   guilds                → lista de servidores (comprobación de membresía)
+ *   guilds.members.read   → confirmar que el usuario pertenece al servidor
  *
  * El rango web NO se deduce de Discord: sólo el correo oficial del Director
  * recibe `director` automáticamente y el resto de rangos se asignan desde
@@ -172,10 +172,6 @@
             isAdmin: Boolean(R ? R.canAccessAdminPanel(sessionRole) : isDirector),
             discordAdmin: false,
             adminOwner: false,
-            discordPermissions: extra.permissions || null,
-            discordRoleIds: Array.isArray(extra.roleIds) ? extra.roleIds : [],
-            discordRoleNames: Array.isArray(extra.roleNames) ? extra.roleNames : [],
-            discordRole: extra.role || null,
             discordGuildId: extra.guildId || null,
             discordGuildName: extra.guildName || null,
             discordGuildMember: extra.isMember === true,
@@ -273,26 +269,23 @@
      */
     async function fetchDiscordGuildContext(accessToken, overrides) {
         const R = rolesLib();
-        const cfg = R ? R.getDiscordConfig() : { guildId: '', roles: [], adminRoleIds: [] };
+        const cfg = R ? R.getDiscordConfig() : { guildId: '', guildName: '' };
         const override = overrides || {};
         const guildId = override.guildId || cfg.guildId || OFFICIAL_GUILD_ID;
         const context = {
             guildId: guildId || null,
             guildName: override.guildName || cfg.guildName || OFFICIAL_GUILD_NAME,
-            permissions: null,
-            roleIds: [],
-            roleNames: [],
-            role: null,
-            discordAdmin: false,
             guilds: [],
             isMember: false,
             membershipChecked: false,
             configured: Boolean(guildId)
         };
 
+        // Discord se consulta únicamente para comprobar la pertenencia al
+        // servidor oficial. No se leen permisos ni roles del guild: ningún
+        // metadato externo puede asignar rangos o acceso de administrador.
         if (!accessToken) return context;
         if (!guildId) {
-            // Sin guild configurado no se puede consultar el miembro, pero sí listar guilds.
             try { context.guilds = await discordFetch('/users/@me/guilds', accessToken); } catch (e) {}
             return context;
         }
@@ -312,8 +305,6 @@
 
         if (guild) {
             context.guildName = guild.name || context.guildName;
-            // El permiso de administrador del guild ya no otorga rango web.
-            context.permissions = guild.permissions != null ? String(guild.permissions) : null;
         }
 
         let member = null;
@@ -335,29 +326,9 @@
         }
 
         if (member) {
-            context.roleIds = Array.isArray(member.roles) ? member.roles.map(String) : [];
             if (member.nick) context.nick = member.nick;
             if (member.avatar) context.memberAvatar = member.avatar;
             if (member.joined_at) context.joinedAt = member.joined_at;
-        }
-
-        // Intentar completar nombres de roles (puede fallar sin token de bot).
-        if (context.roleIds.length) {
-            try {
-                const guildRoles = await discordFetch(`/guilds/${guildId}/roles`, accessToken);
-                if (Array.isArray(guildRoles)) {
-                    const byId = {};
-                    guildRoles.forEach(r => { byId[String(r.id)] = r.name; });
-                    context.roleNames = context.roleIds.map(id => byId[id]).filter(Boolean);
-                }
-            } catch (e) { /* OAuth de usuario no siempre puede listar roles del guild */ }
-        }
-
-        if (R) {
-            // Los roles/permisos de Discord no asignan rangos en la web.
-            // Se conservan los nombres únicamente con fines informativos.
-            context.role = null;
-            context.discordAdmin = false;
         }
 
         try {
@@ -376,11 +347,6 @@
             context = await fetchDiscordGuildContext(accessToken);
         }
         return formatDiscordUser(rawUser, {
-            permissions: context.permissions,
-            roleIds: context.roleIds,
-            roleNames: context.roleNames,
-            role: context.role,
-            discordAdmin: context.discordAdmin,
             guildId: context.guildId,
             guildName: context.guildName,
             isMember: context.isMember,
@@ -429,10 +395,6 @@
             role: R ? R.toLegacyRole(emailRole) : emailRole,
             isAdmin: R ? R.canAccessAdminPanel(emailRole) : false,
             discordAdmin: false,
-            discordPermissions: user.discordPermissions || null,
-            discordRoleIds: user.discordRoleIds || [],
-            discordRoleNames: user.discordRoleNames || [],
-            discordRole: user.discordRole || null,
             discordGuildId: user.discordGuildId || null,
             discordGuildName: user.discordGuildName || null,
             lastLoginAt: new Date().toISOString(),
@@ -450,13 +412,12 @@
 
     function enrichUserWithGuild(user, context) {
         if (!user || !context) return user;
-        const R = rolesLib();
-        // La pertenencia al guild se conserva, pero ningún dato de Discord
-        // (permisos, IDs o nombres de roles) concede rangos en la web.
-        user.discordPermissions = context.permissions || user.discordPermissions || null;
-        user.discordRoleIds = context.roleIds || user.discordRoleIds || [];
-        user.discordRoleNames = context.roleNames || user.discordRoleNames || [];
-        user.discordRole = null;
+        // Sólo se conserva la pertenencia al guild. Los roles y permisos de
+        // Discord ya no se leen ni se guardan en la sesión.
+        delete user.discordPermissions;
+        delete user.discordRoleIds;
+        delete user.discordRoleNames;
+        delete user.discordRole;
         user.discordGuildId = context.guildId || user.discordGuildId || null;
         user.discordGuildName = context.guildName || user.discordGuildName || null;
         user.discordGuildMember = context.membershipChecked
@@ -468,7 +429,7 @@
         return applySessionRole(user);
     }
 
-    async function refreshDiscordRoles() {
+    async function refreshGuildMembership() {
         const user = getCurrentSession();
         if (!user) return null;
         const token = getAccessToken();
@@ -484,7 +445,7 @@
             syncProfile(updated).catch(() => {});
             return updated;
         } catch (e) {
-            console.warn('[DiscordAuth] No se pudieron refrescar los roles:', e.message);
+            console.warn('[DiscordAuth] No se pudo revalidar la membresía:', e.message);
             return user;
         }
     }
@@ -763,7 +724,7 @@
         validateGuildAccess,
         consumeAuthError,
         whenReady: function() { return hashCallbackPromise; },
-        refreshRoles: refreshDiscordRoles,
+        refreshRoles: refreshGuildMembership,
         syncProfile
     };
 

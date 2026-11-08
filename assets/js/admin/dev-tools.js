@@ -759,7 +759,6 @@ async function loadAnnouncements() {
    8. PERSONAL (Firestore — todos con rol staff)
 ═══════════════════════════════════════════════════════ */
 const ROLE_COLORS = {
-    admin_owner:   { bg: 'rgba(241,196,15,0.12)',  border: 'rgba(241,196,15,0.4)',  color: '#f1c40f' },
     founder_ceo:   { bg: 'rgba(241,196,15,0.12)',  border: 'rgba(241,196,15,0.4)',  color: '#f1c40f' },
     director:      { bg: 'rgba(255,0,0,0.1)',      border: 'rgba(255,0,0,0.4)',     color: '#ff0000' },
     administrador: { bg: 'rgba(241,196,15,0.1)',   border: 'rgba(241,196,15,0.4)',  color: '#f1c40f' },
@@ -772,7 +771,7 @@ const ROLE_COLORS = {
     usuario:       { bg: 'rgba(0,85,255,0.08)',    border: 'rgba(0,85,255,0.3)',    color: '#0055ff' },
 };
 const ROLE_LABELS_DEV = {
-    admin_owner:'<i class="fa-solid fa-crown" aria-hidden="true"></i> Admin / Owner', founder_ceo:'<i class="fa-solid fa-crown" aria-hidden="true"></i> Fundador / CEO', director:'<i class="fa-solid fa-user-tie" aria-hidden="true"></i> Director', administrador:'<i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Administrador',
+    founder_ceo:'<i class="fa-solid fa-crown" aria-hidden="true"></i> Fundador / CEO', director:'<i class="fa-solid fa-user-tie" aria-hidden="true"></i> Director', administrador:'<i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Administrador',
     moderador:'<i class="fa-solid fa-gavel" aria-hidden="true"></i> Moderador', programador:'<i class="fa-solid fa-code" aria-hidden="true"></i> Programador', modelador:'<i class="fa-solid fa-cube" aria-hidden="true"></i> Modelador',
     soporte:'<i class="fa-solid fa-headset" aria-hidden="true"></i> Soporte', creador_contenido:'<i class="fa-solid fa-photo-film" aria-hidden="true"></i> Creador de Contenido',
     vip:'<i class="fa-solid fa-star" aria-hidden="true"></i> VIP', usuario:'<i class="fa-solid fa-user" aria-hidden="true"></i> Usuario'
