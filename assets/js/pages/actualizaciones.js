@@ -41,10 +41,10 @@
 
     function waitForFirebase(timeout = 7000) {
         return new Promise((resolve) => {
-            if (window.db && window.collection && window.getDocs && window.getDoc && window.fsDoc && window.addDoc && window.auth && window.onAuthStateChanged) return resolve(true);
+            if (window.db && window.collection && window.getDocs && window.getDoc && window.fsDoc && window.addDoc && window.firebaseAuth && window.onAuthStateChanged) return resolve(true);
             const start = Date.now();
             const timer = setInterval(() => {
-                if (window.db && window.collection && window.getDocs && window.getDoc && window.fsDoc && window.addDoc && window.auth && window.onAuthStateChanged) {
+                if (window.db && window.collection && window.getDocs && window.getDoc && window.fsDoc && window.addDoc && window.firebaseAuth && window.onAuthStateChanged) {
                     clearInterval(timer);
                     resolve(true);
                 } else if (Date.now() - start > timeout) {

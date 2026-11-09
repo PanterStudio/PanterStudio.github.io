@@ -61,29 +61,11 @@ const REFERRAL_STORAGE_KEY = 'panterPendingReferralCode';
 const DEFAULT_REFERRAL_REWARD = 50;
 
 /**
- * Política de rangos: sólo el correo oficial del Director recibe un rango
- * automático. Cualquier otra cuenta es `usuario` y los rangos superiores se
- * asignan manualmente en el Panel Admin → Personal.
- * `isCeoIdentifier`/`isCeoAccount` se conservan como alias del correo del
- * Director para no romper llamadas antiguas.
+ * Política de rangos: sólo oliverosgutierezjhonier@gmail.com recibe
+ * `director` automáticamente; cualquier otra cuenta es `usuario`. El resto
+ * de rangos se asigna manualmente en Panel Admin → Personal (`equipo`) y
+ * se resuelve en vivo con window.PanterRoles.resolveRole().
  */
-function isDirectorEmail(str) {
-    const R = window.PanterRoles;
-    const email = String(str || '').trim().toLowerCase();
-    if (R && typeof R.roleForEmail === 'function') {
-        return R.roleForEmail(email) === 'director';
-    }
-    return email === 'oliverosgutierezjhonier@gmail.com';
-}
-
-function isCeoIdentifier(str) {
-    return isDirectorEmail(str);
-}
-
-function isCeoAccount(user, profile = null) {
-    return isDirectorEmail(user?.email || profile?.email);
-}
-
 const SITE_ROOT = (document.body?.dataset.siteRoot || '.').replace(/\/$/, '');
 
 function toSitePath(path) {
@@ -564,20 +546,25 @@ document.addEventListener('DOMContentLoaded', () => {
     function getRoleLabel(role) {
         if (window.PanterRoles) return window.PanterRoles.get(role).label;
         const labels = {
-            founder_ceo: 'Fundador/CEO',
+            founder_ceo: 'Fundador / CEO',
+            director: 'Director',
             administrador: 'Administrador',
+            moderador: 'Moderador',
+            soporte: 'Soporte',
             programador: 'Programador',
             modelador: 'Modelador',
+            creador_contenido: 'Creador de Contenido',
+            vip: 'VIP',
+            usuario: 'Usuario',
+            // Alias heredados
             admin_general: 'Administrador',
             developer: 'Programador',
             modeler: 'Modelador',
-            community_manager: 'Community',
-            support_ops: 'Operaciones',
-            youtuber: 'Youtuber',
-            streamer: 'Streamer',
-            vip: 'VIP',
-            usuario: 'Usuario',
-            viewer: 'Miembro'
+            community_manager: 'Creador de Contenido',
+            support_ops: 'Soporte',
+            youtuber: 'Creador de Contenido',
+            streamer: 'Creador de Contenido',
+            viewer: 'Usuario'
         };
         return labels[role] || labels.viewer;
     }
@@ -657,12 +644,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function waitForFirebaseAuth(timeout = 8000) {
         return new Promise((resolve) => {
-            const isReady = () => Boolean(window.auth)
+            // `window.auth` es la sesión unificada y puede ser null sin sesión;
+            // la disponibilidad real del SDK se mide con `firebaseAuth`.
+            const isReady = () => Boolean(window.firebaseAuth)
                 && typeof window.onAuthStateChanged === 'function'
-                && typeof window.getRedirectResult === 'function';
-            if (isReady()) {
-                return resolve(true);
-            }
+                && typeof window.signInWithEmailAndPassword === 'function';
+            if (isReady()) return resolve(true);
             const start = Date.now();
             const timer = setInterval(() => {
                 if (isReady()) {
@@ -670,7 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     resolve(true);
                 } else if (Date.now() - start >= timeout) {
                     clearInterval(timer);
-                    resolve(Boolean(window.auth) && typeof window.onAuthStateChanged === 'function');
+                    resolve(Boolean(window.firebaseAuth) && typeof window.onAuthStateChanged === 'function');
                 }
             }, 100);
         });
@@ -750,6 +737,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /**
+     * Escritor ÚNICO de insignias de rango. `PanterRoleBadges` observa
+     * `equipo` con onSnapshot y es la fuente en vivo; este módulo sólo
+     * pinta como respaldo en páginas donde no se cargó ese script.
+     */
+    function paintRoleBadges(role) {
+        if (window.PanterRoleBadges && typeof window.PanterRoleBadges.refresh === 'function') {
+            try { window.PanterRoleBadges.refresh(); return; } catch (e) { /* fallback */ }
+        }
+        const html = window.PanterRoles
+            ? window.PanterRoles.badgeHtml(role)
+            : getRoleLabel(role).toUpperCase();
+        const navBadge = document.getElementById('navUserRoleBadge');
+        if (navBadge) {
+            navBadge.className = 'auth-role-badge ps-role-badge-host';
+            navBadge.innerHTML = html;
+        }
+        document.querySelectorAll('[data-auth-role-badge]').forEach(el => {
+            if (el === navBadge) return;
+            el.className = 'auth-role-badge ps-role-badge-host';
+            el.innerHTML = html;
+        });
+    }
+
     async function updateAuthUi(user) {
         setupUnifiedNavRight();
 
@@ -787,13 +798,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (navMenuUname) navMenuUname.textContent = authText;
             if (navMenuUemail) navMenuUemail.textContent = email || 'Sesión activa';
 
-            if (navUserRoleBadge) {
-                navUserRoleBadge.hidden = false;
-                navUserRoleBadge.className = 'auth-role-badge ps-role-badge-host';
-                navUserRoleBadge.innerHTML = window.PanterRoles
-                    ? window.PanterRoles.badgeHtml(role, { className: 'ps-role-badge-nav' })
-                    : getRoleLabel(role).toUpperCase();
-            }
+            if (navUserRoleBadge) navUserRoleBadge.hidden = false;
+            paintRoleBadges(role);
             if (navMenuAdminLink) {
                 navMenuAdminLink.style.display = isAdmin ? 'flex' : 'none';
             }
@@ -813,15 +819,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             document.querySelectorAll('[data-auth-signal-text]').forEach(label => {
                 label.textContent = isAdmin ? 'Conectado (Admin)' : 'Conectado';
-            });
-            document.querySelectorAll('[data-auth-role-badge]').forEach(badge => {
-                if (badge !== navUserRoleBadge) {
-                    badge.hidden = false;
-                    badge.className = 'auth-role-badge ps-role-badge-host';
-                    badge.innerHTML = window.PanterRoles
-                        ? window.PanterRoles.badgeHtml(role)
-                        : getRoleLabel(role).toUpperCase();
-                }
             });
         } else {
             if (navBrandAvatarLink) {
@@ -942,16 +939,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (!authObserverBound) {
-                if (typeof window.getRedirectResult === 'function') {
-                    try {
-                        await window.getRedirectResult(window.auth);
-                    } catch (err) {
-                        console.error('Error recuperando redirect de Google:', err);
-                    }
-                } else {
-                    console.warn('getRedirectResult aún no está disponible; se omite.');
-                }
-
                 if (typeof window.onAuthStateChanged !== 'function') {
                     console.warn('Firebase Auth aún no está listo para observar el estado.');
                     return false;
@@ -992,7 +979,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 message.textContent = 'Creando cuenta...';
-                const credential = await window.createUserWithEmailAndPassword(window.auth, email, password);
+                const credential = await window.createUserWithEmailAndPassword(window.firebaseAuth, email, password);
                 let canCloseModal = true;
                 if (credential?.user) {
                     const generatedUsername = String(email || '').split('@')[0] || 'Jugador';
@@ -1040,7 +1027,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 message.textContent = 'Ingresando...';
-                await window.signInWithEmailAndPassword(window.auth, email, password);
+                await window.signInWithEmailAndPassword(window.firebaseAuth, email, password);
                 message.textContent = 'Sesion iniciada.';
                 loginForm.reset();
                 if (modal) modal.hidden = true;
@@ -1061,7 +1048,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const provider = new window.GoogleAuthProvider();
                 provider.setCustomParameters({ prompt: 'select_account' });
                 if (useModalMessage) message.textContent = 'Iniciando sesión...';
-                await window.signInWithPopup(window.auth, provider);
+                await window.signInWithPopup(window.firebaseAuth, provider);
             } catch (err) {
                 console.error('Error en login con Google:', err);
                 if (useModalMessage) message.textContent = `Error: ${getAuthErrorMessage(err)}`;
@@ -1083,14 +1070,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     provider = new window.GoogleAuthProvider();
                 }
                 if (useModalMessage) message.textContent = 'Iniciando sesión con Discord...';
-                await window.signInWithPopup(window.auth, provider);
+                await window.signInWithPopup(window.firebaseAuth, provider);
             } catch (err) {
                 console.error('Error en login con Discord:', err);
                 // Fallback to Google auth if custom OAuth provider is not configured in Firebase console yet
                 if (err?.code === 'auth/operation-not-allowed' || err?.code === 'auth/invalid-provider-id') {
                     if (useModalMessage) message.textContent = 'Iniciando con cuenta de Google/Discord...';
                     const googleProv = new window.GoogleAuthProvider();
-                    await window.signInWithPopup(window.auth, googleProv);
+                    await window.signInWithPopup(window.firebaseAuth, googleProv);
                 } else {
                     if (useModalMessage) message.textContent = `Error: ${getAuthErrorMessage(err)}`;
                     else alert(getAuthErrorMessage(err));
@@ -1114,7 +1101,7 @@ document.addEventListener('DOMContentLoaded', () => {
             button.addEventListener('click', async () => {
                 if (!(await ensureAuthReady(false))) return;
                 try {
-                    await window.signOut(window.auth);
+                    await window.signOut(window.firebaseAuth);
                 } catch (err) {
                     console.error('Error al cerrar sesion:', err);
                 }
@@ -1141,8 +1128,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             if (msgEl) msgEl.textContent = 'Iniciando sesión...';
-            if (window.auth && window.signInWithEmailAndPassword) {
-                await window.signInWithEmailAndPassword(window.auth, email, password);
+            if (window.firebaseAuth && window.signInWithEmailAndPassword) {
+                await window.signInWithEmailAndPassword(window.firebaseAuth, email, password);
                 if (msgEl) msgEl.textContent = 'Sesión iniciada.';
             } else if (window.DiscordAuth?.loginWithEmail) {
                 const user = await window.DiscordAuth.loginWithEmail(email, password);
@@ -1316,8 +1303,8 @@ document.addEventListener('DOMContentLoaded', () => {
             setStatus('', '');
             delete confirmBtn.dataset.saving;
 
-            if (window.PanterRoles && typeof window.PanterRoles.refresh === 'function') {
-                try { window.PanterRoles.refresh(); } catch (e) { /* ignore */ }
+            if (window.PanterRoleBadges && typeof window.PanterRoleBadges.refresh === 'function') {
+                try { window.PanterRoleBadges.refresh(); } catch (e) { /* ignore */ }
             }
 
             // Refleja el nombre elegido en la barra de sesión aunque el usuario
@@ -1795,6 +1782,11 @@ document.addEventListener('DOMContentLoaded', () => {
     setupAuthModal();
     setupUserAuth();
     setupUsernameModal();
+
+    // El bus de sesión global vive en otro IIFE de este archivo; se expone
+    // aquí para que los eventos de DiscordAuth/Firebase Auth actualicen la
+    // barra de navegación en lugar de quedarse sin efecto.
+    window.updateAuthUi = updateAuthUi;
 });
 
 /* ===== FUNCIONES PARA VENTANAS LATERALES ===== */
@@ -2072,14 +2064,14 @@ function preventScroll(side, isOpen) {
             if (window.DiscordAuth && typeof window.DiscordAuth.logout === 'function') {
                 await window.DiscordAuth.logout();
             }
-            if (window.signOut && window.auth) {
-                await window.signOut(window.auth);
+            if (typeof window.signOut === 'function') {
+                await window.signOut(window.firebaseAuth);
             }
         } catch (err) {
             console.warn('Error during logout:', err);
         }
-        if (typeof updateAuthUi === 'function') {
-            updateAuthUi(null);
+        if (typeof window.updateAuthUi === 'function') {
+            window.updateAuthUi(null);
         }
         window.location.reload();
     });
@@ -2097,23 +2089,19 @@ function preventScroll(side, isOpen) {
         }
     });
 
-    document.addEventListener('discordAuthChanged', (e) => {
-        if (typeof updateAuthUi === 'function') {
-            updateAuthUi(e.detail?.user || null);
-        }
-        if (e.detail?.user) {
-            checkUserBetaStatus(e.detail.user);
-        }
-    });
-
-    document.addEventListener('authStateChanged', (e) => {
-        if (typeof updateAuthUi === 'function') {
-            updateAuthUi(e.detail?.user || null);
-        }
-        if (e.detail?.user) {
-            checkUserBetaStatus(e.detail.user);
-        }
-    });
+    // DiscordAuth emite DOS eventos por cambio de sesión. Se colapsan con un
+    // debounce corto para no ejecutar updateAuthUi + checkUserBetaStatus 2×.
+    let authEventTimer = null;
+    const onSessionEvent = (e) => {
+        const user = e.detail?.user || null;
+        clearTimeout(authEventTimer);
+        authEventTimer = setTimeout(() => {
+            if (typeof window.updateAuthUi === 'function') window.updateAuthUi(user);
+            if (user && typeof checkUserBetaStatus === 'function') checkUserBetaStatus(user);
+        }, 40);
+    };
+    document.addEventListener('discordAuthChanged', onSessionEvent);
+    document.addEventListener('authStateChanged', onSessionEvent);
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initGlobalAuthAndNav);

@@ -787,10 +787,11 @@
     async function saveDiscordConfig(config) {
         const merged = setDiscordConfig(config);
         if (global.db && global.fsDoc && global.setDoc) {
+            // Sin `merge`: así se limpian de una vez los campos heredados
+            // (`roles`, `adminRoleIds`) del mapeo Discord → rangos eliminado.
             await global.setDoc(
                 global.fsDoc(global.db, COLLECTION, DOC_ID),
-                Object.assign({}, merged, { updatedAt: new Date().toISOString() }),
-                { merge: true }
+                Object.assign({}, merged, { updatedAt: new Date().toISOString() })
             );
         }
         return merged;

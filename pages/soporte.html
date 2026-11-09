@@ -1470,7 +1470,7 @@
 
             list.innerHTML = '';
             comentarios.forEach(c => {
-                const rol = roles.get(window.SoporteJS.claveAutorComentario(c)) || (c.esStaff ? 'soporte' : 'usuario');
+                const rol = roles.get(window.SoporteJS.claveAutorComentario(c)) || 'usuario';
                 list.appendChild(buildComentario(c, rol));
             });
             list.scrollTop = list.scrollHeight;
@@ -1489,7 +1489,6 @@
                 const unsubscribeComments = await window.SoporteJS.suscribirComentarios(ticketId, comentarios => {
                     if (currentTicketId !== ticketId) return;
                     comentariosActuales = comentarios;
-                    if (comentariosRolesUnsub) comentariosRolesUnsub.update(comentarios);
                     renderComentariosList(comentarios);
                 }, err => {
                     console.error(err);
@@ -1502,7 +1501,7 @@
                     return;
                 }
                 comentariosUnsub = unsubscribeComments;
-                const unsubscribeRoles = await window.SoporteJS.suscribirCambiosRoles([], () => {
+                const unsubscribeRoles = await window.SoporteJS.suscribirCambiosRoles(() => {
                     if (currentTicketId === ticketId && comentariosActuales.length) {
                         renderComentariosList(comentariosActuales);
                     }
@@ -1558,8 +1557,6 @@
                     rolFresco = await window.SoporteJS.resolverRolUsuario(
                         currentUser.uid,
                         currentUser.displayName || currentUser.email,
-                        esStaff,
-                        null,
                         currentUser.email
                     );
                 } catch (e) { /* se usa el rol de sesión */ }
@@ -1659,7 +1656,12 @@
         }
 
         // ---- AUTH STATE ----
+        // Secuencia anti-stale: si llega un logout mientras un await está en
+        // vuelo, la continuación del usuario anterior se descarta y no deja
+        // listeners huérfanos.
+        let authSeq = 0;
         async function onUserChanged(user) {
+            const seq = ++authSeq;
             currentUser = user;
             const nuevoGate = document.getElementById('nuevoAuthGate');
             const form = document.getElementById('nuevoTicketForm');
@@ -1678,6 +1680,7 @@
                 } catch (err) {
                     console.warn('[Soporte] No se pudo leer el perfil:', err);
                 }
+                if (seq !== authSeq) return;
 
                 // El rango vigente vive en `equipo` (Panel Admin → Personal).
                 const applyRole = () => {
@@ -1713,6 +1716,7 @@
                 } catch (err) {
                     console.warn('[Soporte] No se pudo leer el rango del equipo:', err);
                 }
+                if (seq !== authSeq) return;
 
                 applyRole();
 
@@ -1726,6 +1730,7 @@
                         equipoRoleUnsub = window.onSnapshot(
                             window.fsDoc(window.db, 'equipo', user.uid),
                             snap => {
+                                if (seq !== authSeq) return;
                                 const team = snap.exists() ? (snap.data() || {}) : null;
                                 currentUserProfile = Object.assign({}, currentUserProfile || {});
                                 if (team && team.archivado !== true && team.role) {
@@ -1786,33 +1791,33 @@
             return d.innerHTML;
         }
 
-        document.addEventListener('firebaseReady', () => {
+        // Arranque IDEMPOTENTE: una sola suscripción de sesión, sin depender
+        // de `window.auth` (la sesión unificada puede ser null con logout).
+        let soporteBooted = false;
+        function bootSoporte() {
+            if (soporteBooted || !window.SoporteJS || !window.db) return;
+            soporteBooted = true;
             buildCategoriasUI();
             buildPrioridadUI();
             updateStats();
 
-            if (window.onAuthStateChanged && window.auth) {
-                window.onAuthStateChanged(window.auth, (user) => {
-                    onUserChanged(user || null);
-                });
-            }
-        });
+            // Fuente única: el bus de DiscordAuth funciona con sesión Discord,
+            // con Firebase Auth y sin request.auth.
+            document.addEventListener('authStateChanged', (e) => {
+                onUserChanged(e.detail?.user || null);
+            });
+            const session = window.DiscordAuth && typeof window.DiscordAuth.getUser === 'function'
+                ? window.DiscordAuth.getUser()
+                : null;
+            onUserChanged(session || null);
+        }
 
-        // Fallback: the firebaseReady event may fire before this script runs.
-        // Poll briefly until Firestore helpers are available, then build the UI once.
-        (function waitForSoporteBridge(attempt = 0) {
-            const ready = !!(window.SoporteJS && window.fsDoc && window.db);
-            const built = document.querySelectorAll('.sp-cat-item').length > 0;
-            if (ready && !built) {
-                buildCategoriasUI();
-                buildPrioridadUI();
-                updateStats();
-                if (window.onAuthStateChanged && (window.auth || window.firebaseAuth)) {
-                    window.onAuthStateChanged(window.auth || window.firebaseAuth, (user) => onUserChanged(user || null));
-                }
-                return;
-            }
-            if (attempt < 40) setTimeout(() => waitForSoporteBridge(attempt + 1), 250);
+        document.addEventListener('firebaseReady', bootSoporte);
+        bootSoporte();
+        (function pollBridge(attempt = 0) {
+            if (soporteBooted) return;
+            bootSoporte();
+            if (!soporteBooted && attempt < 40) setTimeout(() => pollBridge(attempt + 1), 250);
         })();
 
     })();

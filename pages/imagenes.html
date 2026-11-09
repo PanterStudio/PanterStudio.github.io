@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
     <title>Galería de Imágenes — Panter Studio</title>
-    <meta name="description" content="Explora las capturas oficiales, modelos 3D y carreteras de Nuestra Tierra Job Simulator en smartphones.">
+    <meta name="description" content="Explora las capturas oficiales, modelos 3D y carreteras de Nuestra Tierra Job Simulator, con imágenes publicadas en vivo por el equipo.">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
     <meta name="google-adsense-account" content="ca-pub-8870488962578785">
     <link rel="icon" href="../recursos/PSGD.png" type="image/png">
@@ -22,9 +22,10 @@
             --color-primary: #00b0ff;
             --color-primary-light: #40c4ff;
         }
+        [hidden] { display: none !important; }
         body {
             background-color: #0a0d14 !important;
-            background-image: 
+            background-image:
                 radial-gradient(circle at 15% 15%, rgba(0, 176, 255, 0.08) 0%, transparent 45%),
                 radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.06) 0%, transparent 50%) !important;
             background-attachment: fixed !important;
@@ -33,7 +34,7 @@
         }
         .gallery-hero-header {
             text-align: center;
-            padding: 2.5rem 1rem 2rem;
+            padding: 2.5rem 1rem 1.5rem;
             max-width: 800px;
             margin: 0 auto;
         }
@@ -65,9 +66,232 @@
         }
         .gallery-desc {
             font-size: 1.05rem;
-            color: var(--text-secondary, #94a3b8);
+            color: var(--text-secondary, #cbd5e1);
             line-height: 1.6;
             margin: 0;
+        }
+
+        /* ── Barra de gestión (sólo roles autorizados) ── */
+        .gallery-admin-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.75rem 1rem;
+            margin: 0 auto 1.5rem;
+            padding: 0.9rem 1.2rem;
+            max-width: 900px;
+            background: rgba(16, 185, 129, 0.07);
+            border: 1px solid rgba(16, 185, 129, 0.28);
+            border-radius: 16px;
+        }
+        .gallery-admin-hint {
+            font-size: 0.8rem;
+            color: #6ee7b7;
+            font-weight: 600;
+        }
+        .gallery-add-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 18px;
+            border: 1px solid rgba(0, 176, 255, 0.45);
+            border-radius: 100px;
+            background: linear-gradient(135deg, rgba(0, 176, 255, 0.22), rgba(16, 185, 129, 0.18));
+            color: #fff;
+            font-weight: 800;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .gallery-add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(0, 176, 255, 0.25);
+        }
+        .gallery-status {
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--text-muted, #8a99ad);
+            margin: -0.5rem 0 1.5rem;
+            letter-spacing: 0.02em;
+        }
+
+        /* ── Tarjetas ── */
+        .gallery-card-author {
+            margin-top: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-size: 0.75rem;
+            color: var(--text-muted, #8a99ad);
+        }
+        .gallery-delete-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 1px solid rgba(239, 68, 68, 0.45);
+            background: rgba(10, 14, 24, 0.88);
+            color: #f87171;
+            cursor: pointer;
+            z-index: 2;
+            transition: background .2s ease, transform .2s ease;
+        }
+        .gallery-delete-btn:hover {
+            background: rgba(239, 68, 68, 0.85);
+            color: #fff;
+            transform: scale(1.08);
+        }
+        .gallery-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted, #8a99ad);
+            border: 1px dashed rgba(255,255,255,0.12);
+            border-radius: 18px;
+        }
+        .gallery-empty i { font-size: 2.2rem; margin-bottom: 0.75rem; display: block; }
+
+        /* ── Modal de publicación ── */
+        .gallery-admin-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 2500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: rgba(5, 8, 15, 0.88);
+            backdrop-filter: blur(18px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s ease;
+        }
+        .gallery-admin-modal.active { opacity: 1; pointer-events: auto; }
+        .gallery-admin-card {
+            width: min(560px, 100%);
+            max-height: 90vh;
+            overflow-y: auto;
+            background: rgba(18, 24, 38, 0.97);
+            border: 1px solid rgba(0, 176, 255, 0.32);
+            border-radius: 22px;
+            padding: 1.6rem;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.6);
+        }
+        .gallery-admin-card h2 {
+            margin: 0 0 0.35rem;
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+        .gallery-admin-card > p {
+            margin: 0 0 1.25rem;
+            font-size: 0.82rem;
+            color: var(--text-muted, #8a99ad);
+            line-height: 1.5;
+        }
+        .gallery-admin-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+        .gallery-modal-close {
+            flex-shrink: 0;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.04);
+            color: #cbd5e1;
+            cursor: pointer;
+        }
+        .gallery-modal-close:hover { background: rgba(239,68,68,0.7); color: #fff; }
+        .gallery-form label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 0.9rem;
+        }
+        .gallery-form input,
+        .gallery-form select,
+        .gallery-form textarea {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 0.35rem;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(10, 14, 24, 0.8);
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.88rem;
+        }
+        .gallery-form textarea { resize: vertical; min-height: 78px; }
+        .gallery-form input:focus,
+        .gallery-form select:focus,
+        .gallery-form textarea:focus {
+            outline: none;
+            border-color: rgba(0, 176, 255, 0.6);
+            box-shadow: 0 0 0 3px rgba(0, 176, 255, 0.12);
+        }
+        .gallery-form-msg {
+            min-height: 1.1rem;
+            font-size: 0.78rem;
+            margin: 0 0 0.6rem;
+        }
+        .gallery-form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+        .gallery-btn {
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.14);
+            background: rgba(255,255,255,0.05);
+            color: #cbd5e1;
+        }
+        .gallery-btn.primary {
+            border-color: rgba(0, 176, 255, 0.5);
+            background: linear-gradient(135deg, #00b0ff, #0066ff);
+            color: #fff;
+        }
+        .gallery-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .toast-notice {
+            position: fixed;
+            left: 50%;
+            bottom: 28px;
+            transform: translateX(-50%);
+            z-index: 3000;
+            display: none;
+            padding: 12px 22px;
+            border-radius: 12px;
+            background: rgba(16, 185, 129, 0.16);
+            border: 1px solid rgba(16, 185, 129, 0.45);
+            color: #6ee7b7;
+            font-size: 0.85rem;
+            font-weight: 700;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.5);
+        }
+        .toast-notice.is-error {
+            background: rgba(239, 68, 68, 0.16);
+            border-color: rgba(239, 68, 68, 0.45);
+            color: #fca5a5;
         }
     </style>
 
@@ -123,105 +347,80 @@
     </nav>
 
     <main class="container" style="max-width: 1200px; padding: 1rem 1.5rem 4rem;">
-        
-        <!-- HEADER -->
+
         <header class="gallery-hero-header">
-            <span class="gallery-badge"><i class="fa-solid fa-camera" aria-hidden="true"></i> Capturas Oficiales · En Desarrollo</span>
+            <span class="gallery-badge"><i class="fa-solid fa-camera" aria-hidden="true"></i> Capturas Oficiales · En Vivo</span>
             <h1 class="gallery-title">Galería de Nuestra Tierra</h1>
             <p class="gallery-desc">
-                Conoce el mundo abierto, vehículos detallados, escenarios inspirados en Latinoamérica y mecánicas en desarrollo para smartphones.
+                Capturas oficiales, modelos 3D y carreteras del juego, más las imágenes que publica el equipo en tiempo real.
             </p>
         </header>
 
-        <!-- FILTERS -->
-        <div class="gallery-filters" role="tablist">
-            <button class="gallery-filter-btn active" data-filter="all">Todas las Imágenes</button>
-            <button class="gallery-filter-btn" data-filter="vehiculos">Vehículos</button>
-            <button class="gallery-filter-btn" data-filter="mapas">Mapas & Carreteras</button>
-            <button class="gallery-filter-btn" data-filter="garaje">Garaje & 3D</button>
+        <!-- Herramientas de gestión: visibles sólo para Fundador, Director, Administrador y Moderador -->
+        <div class="gallery-admin-bar" id="galleryAdminBar" hidden>
+            <span class="gallery-admin-hint" id="galleryAdminHint"></span>
+            <button type="button" class="gallery-add-btn" id="galleryAddBtn">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i> Agregar imagen
+            </button>
         </div>
 
-        <!-- GRID -->
-        <section class="gallery-grid" id="galleryGrid">
-            
-            <!-- Item 1: Garage -->
-            <article class="gallery-card" data-category="garaje" tabindex="0" role="button" aria-label="Ver Garaje de Personalización">
-                <div class="gallery-thumb-wrap">
-                    <img src="../recursos/imagenes/garage.png" alt="Taller y Garaje de Personalización" class="gallery-thumb-img">
-                    <span class="gallery-category-badge">Garaje & Taller</span>
-                </div>
-                <div class="gallery-card-body">
-                    <h3 class="gallery-card-title">Taller de Personalización</h3>
-                    <p class="gallery-card-desc">Personaliza suspensión, pintura, luces exploradoras, llantas y motores para rutas de montaña.</p>
-                </div>
-            </article>
+        <!-- FILTROS -->
+        <div class="gallery-filters" role="tablist" aria-label="Filtrar imágenes por categoría">
+            <button type="button" class="gallery-filter-btn active" data-filter="all" role="tab" aria-selected="true">Todas las Imágenes</button>
+            <button type="button" class="gallery-filter-btn" data-filter="vehiculos" role="tab" aria-selected="false">Vehículos</button>
+            <button type="button" class="gallery-filter-btn" data-filter="mapas" role="tab" aria-selected="false">Mapas & Carreteras</button>
+            <button type="button" class="gallery-filter-btn" data-filter="garaje" role="tab" aria-selected="false">Garaje & 3D</button>
+            <button type="button" class="gallery-filter-btn" data-filter="comunidad" role="tab" aria-selected="false">Comunidad</button>
+        </div>
 
-            <!-- Item 2: Sprinter 3D -->
-            <article class="gallery-card" data-category="vehiculos" tabindex="0" role="button" aria-label="Ver Van Sprinter de Envíos Express">
-                <div class="gallery-thumb-wrap">
-                    <img src="../recursos/vehiculos/sprinter.png" alt="Van Sprinter 3D para Reparto" class="gallery-thumb-img">
-                    <span class="gallery-category-badge">Vehículo Express</span>
-                </div>
-                <div class="gallery-card-body">
-                    <h3 class="gallery-card-title">Van Sprinter de Carga</h3>
-                    <p class="gallery-card-desc">Modelo de alta fidelidad diseñado para misiones de mensajería urgente y paquetería urbana.</p>
-                </div>
-            </article>
+        <p class="gallery-status" id="galleryStatus" aria-live="polite">Cargando galería...</p>
 
-            <!-- Item 3: Mapa y Vía -->
-            <article class="gallery-card" data-category="mapas" tabindex="0" role="button" aria-label="Ver Vías y Paisajes">
-                <div class="gallery-thumb-wrap">
-                    <img src="../recursos/imagenes/mapa1.png" alt="Rutas Colombianas y Carreteras" class="gallery-thumb-img">
-                    <span class="gallery-category-badge">Rutas & Mapas</span>
-                </div>
-                <div class="gallery-card-body">
-                    <h3 class="gallery-card-title">Carreteras de Montaña</h3>
-                    <p class="gallery-card-desc">Curvas cerradas, peajes, vegetación tropical y desniveles con físicas auténticas de suspensión.</p>
-                </div>
-            </article>
-
-            <!-- Item 4: Físicas y Gameplay -->
-            <article class="gallery-card" data-category="vehiculos" tabindex="0" role="button" aria-label="Ver Físicas de Conducción">
-                <div class="gallery-thumb-wrap">
-                    <img src="../recursos/imagenes/1.png" alt="Simulación de Conducción y Carga" class="gallery-thumb-img">
-                    <span class="gallery-category-badge">Gameplay 3D</span>
-                </div>
-                <div class="gallery-card-body">
-                    <h3 class="gallery-card-title">Físicas de Carga Pesada</h3>
-                    <p class="gallery-card-desc">Control de inercia y tracción según el peso de la mercancía transportada en cada entrega.</p>
-                </div>
-            </article>
-
-            <!-- Item 5: Atardecer en Ruta -->
-            <article class="gallery-card" data-category="mapas" tabindex="0" role="button" aria-label="Ver Ciclo Día y Noche">
-                <div class="gallery-thumb-wrap">
-                    <img src="../recursos/imagenes/fondo.jpg" alt="Ciclo de Luz y Clima Dinámico" class="gallery-thumb-img">
-                    <span class="gallery-category-badge">Clima Dinámico</span>
-                </div>
-                <div class="gallery-card-body">
-                    <h3 class="gallery-card-title">Ciclo Día / Noche y Lluvia</h3>
-                    <p class="gallery-card-desc">Iluminación realista con niebla matutina, atardeceres y asfalto mojado en tiempo real.</p>
-                </div>
-            </article>
-
-            <!-- Item 6: Cabina y Render 3D -->
-            <article class="gallery-card" data-category="garaje" tabindex="0" role="button" aria-label="Ver Cabina de Conducción">
-                <div class="gallery-thumb-wrap">
-                    <img src="../recursos/imagenes/hero_banner.png" alt="Cabina e Interior Realista" class="gallery-thumb-img">
-                    <span class="gallery-category-badge">Interior & Cabina</span>
-                </div>
-                <div class="gallery-card-body">
-                    <h3 class="gallery-card-title">Cabina y Tacómetro Activo</h3>
-                    <p class="gallery-card-desc">Cámaras en primera persona con tacómetros funcionales, espejos retrovisores y volante interactivo.</p>
-                </div>
-            </article>
-
-        </section>
+        <!-- GRID (renderizado dinámicamente por imagenes.js) -->
+        <section class="gallery-grid" id="galleryGrid" aria-label="Imágenes de la galería"></section>
 
     </main>
 
-    <!-- LIGHTBOX MODAL -->
-    <div class="lightbox-modal" id="lightboxModal" role="dialog" aria-modal="true" aria-hidden="true">
+    <!-- MODAL DE PUBLICACIÓN -->
+    <div class="gallery-admin-modal" id="galleryAdminModal" role="dialog" aria-modal="true" aria-labelledby="galleryAdminTitle" aria-hidden="true">
+        <div class="gallery-admin-card">
+            <div class="gallery-admin-head">
+                <div>
+                    <h2 id="galleryAdminTitle"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Publicar imagen</h2>
+                    <p>Pega un enlace directo de Imgur (<code>i.imgur.com/...</code>), una página individual de Imgur o cualquier URL pública de imagen. Se mostrará al instante para todos los visitantes.</p>
+                </div>
+                <button type="button" class="gallery-modal-close" id="galleryAdminClose" aria-label="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </div>
+            <form class="gallery-form" id="galleryForm">
+                <label>Enlace de la imagen *
+                    <input type="url" id="galleryUrl" placeholder="https://i.imgur.com/abc123.png o https://imgur.com/abc123" required autocomplete="off">
+                </label>
+                <label>Título *
+                    <input type="text" id="galleryTitle" maxlength="90" placeholder="Ej. Atardecer en la ruta" required autocomplete="off">
+                </label>
+                <label>Categoría
+                    <select id="galleryCategory">
+                        <option value="comunidad">Comunidad</option>
+                        <option value="vehiculos">Vehículos</option>
+                        <option value="mapas">Mapas & Carreteras</option>
+                        <option value="garaje">Garaje & 3D</option>
+                    </select>
+                </label>
+                <label>Descripción
+                    <textarea id="galleryDesc" maxlength="400" placeholder="Cuéntanos qué muestra esta imagen..."></textarea>
+                </label>
+                <p class="gallery-form-msg" id="galleryFormMsg" role="status"></p>
+                <div class="gallery-form-actions">
+                    <button type="button" class="gallery-btn" id="galleryCancelBtn">Cancelar</button>
+                    <button type="submit" class="gallery-btn primary" id="gallerySaveBtn">
+                        <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Publicar imagen
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- LIGHTBOX -->
+    <div class="lightbox-modal" id="lightboxModal" role="dialog" aria-modal="true" aria-labelledby="lightboxTitle" aria-hidden="true">
         <div class="lightbox-content">
             <button type="button" class="lightbox-close-btn" id="lightboxCloseBtn" aria-label="Cerrar imagen"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
             <img src="" alt="" class="lightbox-media" id="lightboxImg">
@@ -233,85 +432,13 @@
         </div>
     </div>
 
+    <div class="toast-notice" id="galleryToast" role="status" aria-live="polite"></div>
+
     <footer>
         <p><i class="fa-regular fa-copyright" aria-hidden="true"></i> 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
     </footer>
 
     <script src="../assets/js/core/script.js"></script>
-    <script>
-        // Gallery Filter Logic & Lightbox Interactive Engine
-        (function() {
-            const filterBtns = document.querySelectorAll('.gallery-filter-btn');
-            const cards = document.querySelectorAll('.gallery-card');
-            const modal = document.getElementById('lightboxModal');
-            const modalImg = document.getElementById('lightboxImg');
-            const modalTitle = document.getElementById('lightboxTitle');
-            const modalDesc = document.getElementById('lightboxDesc');
-            const modalBadge = document.getElementById('lightboxBadge');
-            const closeBtn = document.getElementById('lightboxCloseBtn');
-
-            // Filtering
-            filterBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    filterBtns.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    const filter = btn.dataset.filter;
-
-                    cards.forEach(card => {
-                        if (filter === 'all' || card.dataset.category === filter) {
-                            card.style.display = 'block';
-                        } else {
-                            card.style.display = 'none';
-                        }
-                    });
-                });
-            });
-
-            // Lightbox opening
-            cards.forEach(card => {
-                card.addEventListener('click', () => {
-                    const img = card.querySelector('.gallery-thumb-img');
-                    const title = card.querySelector('.gallery-card-title');
-                    const desc = card.querySelector('.gallery-card-desc');
-                    const badge = card.querySelector('.gallery-category-badge');
-
-                    modalImg.src = img.src;
-                    modalImg.alt = img.alt;
-                    modalTitle.textContent = title.textContent;
-                    modalDesc.textContent = desc.textContent;
-                    modalBadge.textContent = badge.textContent;
-
-                    modal.classList.add('active');
-                    modal.setAttribute('aria-hidden', 'false');
-                    document.body.style.overflow = 'hidden';
-                });
-
-                card.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        card.click();
-                    }
-                });
-            });
-
-            function closeModal() {
-                modal.classList.remove('active');
-                modal.setAttribute('aria-hidden', 'true');
-                document.body.style.overflow = 'auto';
-            }
-
-            if (closeBtn) closeBtn.addEventListener('click', closeModal);
-
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) closeModal();
-            });
-
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && modal.classList.contains('active')) {
-                    closeModal();
-                }
-            });
-        })();
-    </script>
+    <script src="../assets/js/pages/imagenes.js"></script>
 </body>
 </html>

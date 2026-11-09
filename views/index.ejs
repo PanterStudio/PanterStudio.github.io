@@ -374,7 +374,9 @@
                     const data = doc.data();
                     const email = String(data.email || '').trim().toLowerCase();
                     const uname = String(data.username || data.nombre_usuario || data.displayName || '').trim().toLowerCase();
-                    const isFounder = email === 'pantergamey@gmail.com' || uname === 'pantergamey' || uname === 'pantergameyt' || data.role === 'founder_ceo';
+                    // Política exclusiva por correo (sin detección por Discord).
+                    const R = window.PanterRoles;
+                    const role = R && typeof R.roleForEmail === 'function' ? R.roleForEmail(email) : 'usuario';
                     list.push({
                         nombre_usuario: data.nombre_usuario,
                         username: data.username,
@@ -382,7 +384,7 @@
                         coins: Math.max(Number(data.coins || 0), Number(data.saldo || 0)),
                         avatar: data.avatar || '😊',
                         avatarImg: data.avatarImg || '',
-                        role: isFounder ? 'founder_ceo' : (data.role || 'viewer'),
+                        role: role,
                         betaTesterStatus: data.betaTesterStatus || '',
                         email: email,
                         streak: Number(data.streak || 0),
@@ -398,11 +400,12 @@
                 
                 // Mostrar los mejores 5
                 let top5 = list.slice(0, 5);
-                const isCeoMatch = u => String(u.email || '').toLowerCase() === 'pantergamey@gmail.com' || ['pantergamey', 'pantergameyt'].includes(String(u.username || u.nombre_usuario || u.displayName || '').toLowerCase()) || u.role === 'founder_ceo';
-                const founderItem = list.find(isCeoMatch);
-                const hasFounder = top5.some(isCeoMatch);
-                if (founderItem && !hasFounder) {
-                    top5.push(founderItem);
+                const R2 = window.PanterRoles;
+                const isDirectorMatch = u => R2 && typeof R2.roleForEmail === 'function'
+                    && R2.roleForEmail(String(u.email || '')) === 'director';
+                const directorItem = list.find(isDirectorMatch);
+                if (directorItem && !top5.some(isDirectorMatch)) {
+                    top5.push(directorItem);
                 }
                 
                 // Hacer la lista accesible para el click handler
@@ -431,18 +434,17 @@
                     streamer: 'Streamer'
                 };
 
-                const roleBadgeTones = {
-                    founder_ceo: 'color: #fde68a; border: 1px solid rgba(251,191,36,.4); background: linear-gradient(135deg, rgba(251,191,36,.25), rgba(28,33,46,.8)); text-shadow: 0 0 4px rgba(251,191,36,.5); box-shadow: 0 0 8px rgba(251,191,36,.25);',
-                    director: 'color: #fca5a5; border: 1px solid rgba(239,68,68,.3); background: rgba(239,68,68,.08);',
-                    administrador: 'color: #80f0ff; border: 1px solid rgba(0,240,255,.3); background: rgba(0,240,255,.08);',
-                    programador: 'color: #fda4af; border: 1px solid rgba(248,113,113,.2); background: rgba(248,113,113,.08);',
-                    modelador: 'color: #93c5fd; border: 1px solid rgba(96,165,250,.2); background: rgba(96,165,250,.08);',
-                    community_manager: 'color: #d8b4fe; border: 1px solid rgba(168,85,247,.2); background: rgba(168,85,247,.08);',
-                    vip: 'color: #fde68a; border: 1px solid rgba(251,191,36,.2); background: rgba(251,191,36,.08);',
-                    youtuber: 'color: #fda4af; border: 1px solid rgba(248,113,113,.2); background: rgba(248,113,113,.08);',
-                    streamer: 'color: #fda4af; border: 1px solid rgba(248,113,113,.2); background: rgba(248,113,113,.08);',
-                    support_ops: 'color: #86efac; border: 1px solid rgba(74,222,128,.2); background: rgba(74,222,128,.08);'
+                // Paleta ÚNICA: se deriva del diccionario global de roles.
+                const officialTone = (role) => {
+                    const R = window.PanterRoles;
+                    const def = R ? R.get(role) : null;
+                    const color = def ? def.color : '#0055ff';
+                    return `color: ${color}; border: 1px solid ${color}66; background: ${color}1f;`;
                 };
+                const roleBadgeTones = {};
+                ['founder_ceo','director','administrador','programador','modelador','moderador',
+                 'soporte','creador_contenido','vip','usuario','community_manager',
+                 'support_ops','youtuber','streamer'].forEach(r => { roleBadgeTones[r] = officialTone(r); });
 
                 let idx = -1;
                 let rank = 0;
@@ -630,15 +632,16 @@
             roleBadgeEl.className = 'qp-role-badge';
             
             // Custom role styles
-            const badgeTones = {
-                founder_ceo: 'background: linear-gradient(135deg, rgba(251,191,36,.2), rgba(251,191,36,.05)); color:#fde68a; border:1px solid rgba(251,191,36,.45);',
-                director: 'background: rgba(239,68,68,.1); color:#fca5a5; border:1px solid rgba(239,68,68,.35);',
-                administrador: 'background: rgba(0,240,255,.1); color:#80f0ff; border:1px solid rgba(0,240,255,.45);',
-                programador: 'background: rgba(96,165,250,.1); color:#93c5fd; border:1px solid rgba(96,165,250,.35);',
-                modelador: 'background: rgba(96,165,250,.1); color:#93c5fd; border:1px solid rgba(96,165,250,.35);',
-                community_manager: 'background: rgba(168,85,247,.1); color:#d8b4fe; border:1px solid rgba(168,85,247,.35);',
-                vip: 'background: rgba(251,191,36,.1); color:#fde68a; border:1px solid rgba(251,191,36,.25);'
-            };
+            // Paleta ÚNICA: mismo diccionario global que el resto de la web.
+            const badgeTones = {};
+            ['founder_ceo','director','administrador','programador','modelador','moderador',
+             'soporte','creador_contenido','vip','usuario','community_manager',
+             'support_ops','youtuber','streamer'].forEach(r => {
+                const R = window.PanterRoles;
+                const def = R ? R.get(r) : null;
+                const color = def ? def.color : '#0055ff';
+                badgeTones[r] = `background: ${color}1f; color:${color}; border:1px solid ${color}59;`;
+            });
             roleBadgeEl.setAttribute('style', `font-size:0.75rem; padding:3px 10px; border-radius:12px; font-weight:700; ${badgeTones[role] || 'background:rgba(255,255,255,0.05); color:#c4cfda; border:1px solid rgba(255,255,255,0.1);'}`);
 
             // Beta tester status

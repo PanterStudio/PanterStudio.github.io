@@ -54,7 +54,7 @@ const ROLE_LABELS = {
     viewer: 'Solo lectura'
 };
 
-const PANEL_ACCESS_ROLES = new Set(['founder_ceo', 'director', 'administrador', 'soporte', 'programador', 'modelador']);
+const PANEL_ACCESS_ROLES = new Set(['founder_ceo', 'director', 'administrador', 'programador', 'modelador']);
 const EMAIL_ANALYSIS_COLLECTIONS = ['conductores', 'preregistros'];
 
 const gate = document.getElementById('adminGate');
@@ -96,7 +96,7 @@ const tabInfo = {
     accounts: { title: 'Gestión de Cuentas (CEO)', sub: 'Miembros del equipo y niveles de rol autorizados.' },
     support: { title: 'Soporte al Jugador', sub: 'Búsqueda de usuarios, edición de perfiles, saldos, mascotas y logs de canjes.' },
     announcements: { title: 'Anuncios', sub: 'Publicación de novedades para la comunidad.' },
-    staff: { title: 'Personal del Estudio', sub: 'Equipo visible en la web, rangos y mapeo de roles de Discord.' },
+    staff: { title: 'Personal del Estudio', sub: 'Equipo visible en la web y rangos asignados manualmente.' },
     siteconfig: { title: 'Configuración Global', sub: 'Modificación de parámetros de la web, donaciones y bonos en Firestore.' },
     visibility: { title: 'Visibilidad del Sitio', sub: 'Gestión del modo de mantenimiento global y accesos por página.' }
 };
@@ -166,14 +166,6 @@ function isFounderEmail(email) {
     return e === DIRECTOR_EMAIL;
 }
 
-/**
- * Sólo el correo oficial del Director recibe un rango automático.
- * `isCeoAccount` se conserva como alias para el resto del panel.
- */
-function isCeoAccount(user, profile = null) {
-    return isFounderEmail(user?.email || profile?.email);
-}
-
 function setCeoMessage(message, isError = false) {
     if (!ceoUsersMessageEl) return;
     ceoUsersMessageEl.textContent = message || '';
@@ -231,7 +223,7 @@ const ROLE_CARD_FALLBACK = {
     creador_contenido: { color: '#9d00ff', border: 'rgba(157,0,255,0.4)', bg: 'rgba(157,0,255,0.08)', icon: '<i class="fa-solid fa-photo-film" aria-hidden="true"></i>' },
     vip:           { color: '#ff7ddf', border: 'rgba(255,125,223,0.4)',  bg: 'rgba(255,125,223,0.08)', icon: '<i class="fa-solid fa-star" aria-hidden="true"></i>' },
     usuario:       { color: '#0055ff', border: 'rgba(0,85,255,0.3)',     bg: 'rgba(0,85,255,0.06)',    icon: '<i class="fa-solid fa-user" aria-hidden="true"></i>' },
-    viewer:        { color: '#64748b', border: 'rgba(100,116,139,0.2)',  bg: 'rgba(100,116,139,0.05)', icon: '<i class="fa-solid fa-eye" aria-hidden="true"></i>' },
+    viewer:        { color: '#0055ff', border: 'rgba(0,85,255,0.3)',     bg: 'rgba(0,85,255,0.06)',    icon: '<i class="fa-solid fa-user" aria-hidden="true"></i>' },
 };
 
 const ROLE_CARD_STYLES = (function buildRoleCardStyles() {
@@ -1294,9 +1286,9 @@ async function handleEmailPasswordLogin(emailInput, passwordInput) {
     }
 
     // Autenticación exclusiva con Firebase Email/Password.
-    if (window.auth && window.signInWithEmailAndPassword) {
+    if (window.firebaseAuth && window.signInWithEmailAndPassword) {
         try {
-            const userCredential = await window.signInWithEmailAndPassword(window.auth, email, password);
+            const userCredential = await window.signInWithEmailAndPassword(window.firebaseAuth, email, password);
             const user = userCredential.user;
             await handleAuthStateChange(user);
             return;
@@ -1421,8 +1413,8 @@ async function handleAuthStateChange(user) {
 async function handleLogout() {
     clearStoredSession();
     try {
-        if (window.auth && window.signOut) {
-            await window.signOut(window.auth);
+        if (typeof window.signOut === 'function') {
+            await window.signOut(window.firebaseAuth);
         }
     } catch (err) {
         console.error('Error al cerrar sesión:', err);
@@ -1774,11 +1766,9 @@ function staffRoleLabel(role) {
 
 function staffRoleOptions(selected) {
     const R = window.PanterRoles;
-    let normalized = R ? R.normalize(selected) : (selected || 'usuario');
-    // ADMIN / OWNER ya no se asigna: la máxima autoridad web es Director.
-    if (normalized === 'admin_owner') normalized = 'founder_ceo';
-    const ids = (R ? R.orderedRoleIds() : STAFF_FALLBACK_ROLES.slice())
-        .filter(id => id !== 'admin_owner');
+    const normalized = R ? R.normalize(selected) : (selected || 'usuario');
+    // `normalize()` ya convierte el legado ADMIN / OWNER a Fundador / CEO.
+    const ids = R ? R.orderedRoleIds() : STAFF_FALLBACK_ROLES.slice();
     if (R && !ids.includes(normalized) && R.ROLE_DEFS[normalized]) ids.push(normalized);
     return ids.map(id => {
         const def = R ? R.get(id) : null;
@@ -2107,8 +2097,7 @@ function staffUnhideUid(uid) {
 
 function staffNormalizeRoleValue(value) {
     const raw = String(value || '').trim().toLowerCase();
-    let normalized = window.PanterRoles ? window.PanterRoles.normalize(raw) : raw;
-    if (normalized === 'admin_owner') normalized = 'founder_ceo';
+    const normalized = window.PanterRoles ? window.PanterRoles.normalize(raw) : raw;
     if (window.PanterRoles) {
         return window.PanterRoles.ROLE_DEFS[normalized] ? normalized : 'usuario';
     }
@@ -2816,9 +2805,9 @@ function bootAuthListener() {
         adminLoginBtn.dataset.bound = "true";
         adminLoginBtn.addEventListener('click', async () => {
             try {
-                if (window.auth && window.GoogleAuthProvider && window.signInWithPopup) {
+                if (window.firebaseAuth && window.GoogleAuthProvider && window.signInWithPopup) {
                     const provider = new window.GoogleAuthProvider();
-                    await window.signInWithPopup(window.auth, provider);
+                    await window.signInWithPopup(window.firebaseAuth, provider);
                 } else {
                     alert('El servicio de autenticación de Firebase no está listo. Reintenta.');
                 }
@@ -2829,7 +2818,7 @@ function bootAuthListener() {
         });
     }
 
-    if (!window.auth || !window.onAuthStateChanged) {
+    if (!window.firebaseAuth || !window.onAuthStateChanged) {
         showGateError('Inicializando autenticación...');
         return false;
     }

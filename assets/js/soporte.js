@@ -33,7 +33,7 @@ const ESTADOS = {
     'Cerrado':    { label: 'Cerrado',    color: '#64748b', bg: 'rgba(100,116,139,0.12)', faIcon: 'fa-solid fa-lock' }
 };
 
-const STAFF_ROLES = new Set(['founder_ceo', 'director', 'administrador', 'support_ops', 'soporte', 'moderador', 'programador']);
+const STAFF_ROLES = new Set(['founder_ceo', 'director', 'administrador', 'programador', 'moderador', 'soporte']);
 
 
 // ============================================================
@@ -382,36 +382,48 @@ function buscarMiembroEquipo(equipo, claves, autorNombre, autorEmail) {
 }
 
 /**
- * Resuelve el rol global de un autor de comentario.
- * Prioridad: `equipo` (rango asignado manualmente en Panel Admin → Personal)
- * → correo oficial del Director → `usuario`.
+ * Resuelve el rol global de un autor de comentario con la MISMA prioridad
+ * que `PanterRoles.resolveRole`:
+ *   1. Correo oficial del Director → `director`.
+ *   2. Rango manual asignado en Panel Admin → Personal (`equipo`).
+ *   3. Cualquier otra cuenta → `usuario`.
  *
- * `conductores.role` y los datos de Discord ya NO otorgan rango.
+ * `conductores.role`, `esStaff` y los datos de Discord NO otorgan rango.
  */
-async function resolverRolUsuario(autorId, autorNombre, esStaff, autorRol, autorEmail) {
-    const clave = String(autorId || autorNombre || autorEmail || 'anonimo').trim();
+async function resolverRolUsuario(autorId, autorNombre, autorEmail) {
+    const emailInicial = String(autorEmail || '').trim().toLowerCase();
+    const clave = String(autorId || autorNombre || emailInicial || 'anonimo').trim();
     const cache = rolesUsuarioCache.get(clave);
     if (cache && (Date.now() - cache.at) < ROLES_USUARIO_TTL) return cache.role;
 
     const ids = clavesUsuario(autorId);
+    const R = window.PanterRoles;
     let rol = null;
     let definitivo = false;
-    let email = String(autorEmail || '').trim().toLowerCase();
 
-    try {
-        const equipo = await cargarEquipoRoles();
-        const miembro = buscarMiembroEquipo(equipo, ids, autorNombre, email);
-        if (miembro) {
-            rol = extraerRolDocumento(miembro);
-            if (!email && miembro.email) email = String(miembro.email).trim().toLowerCase();
-            if (rol) definitivo = true;
-        }
-    } catch (e) { /* lectura opcional */ }
-
-    // Política por correo: sólo el Director recibe rango automático.
-    if (!rol && email && window.PanterRoles && typeof window.PanterRoles.roleForEmail === 'function') {
-        rol = window.PanterRoles.roleForEmail(email);
+    // 1) Correo exacto del Director (prioridad absoluta).
+    if (emailInicial && R && typeof R.roleForEmail === 'function'
+        && R.roleForEmail(emailInicial) === 'director') {
+        rol = 'director';
         definitivo = true;
+    }
+
+    // 2) Rango manual en `equipo` (por uid o por correo).
+    if (!rol) {
+        try {
+            const equipo = await cargarEquipoRoles();
+            const miembro = buscarMiembroEquipo(equipo, ids, autorNombre, emailInicial);
+            if (miembro) {
+                const miembroEmail = String(miembro.email || '').trim().toLowerCase();
+                if (miembroEmail && R && typeof R.roleForEmail === 'function'
+                    && R.roleForEmail(miembroEmail) === 'director') {
+                    rol = 'director';
+                } else {
+                    rol = extraerRolDocumento(miembro);
+                }
+                if (rol) definitivo = true;
+            }
+        } catch (e) { /* lectura opcional */ }
     }
 
     if (!rol) rol = 'usuario';
@@ -436,7 +448,7 @@ async function resolverRolesComentarios(comentarios) {
     });
 
     await Promise.all(Array.from(unicos.values()).map(async c => {
-        const rol = await resolverRolUsuario(c.autorId, c.autor, Boolean(c.esStaff), c.autorRol, c.autorEmail);
+        const rol = await resolverRolUsuario(c.autorId, c.autor, c.autorEmail);
         mapa.set(claveAutorComentario(c), rol);
     }));
     return mapa;
@@ -449,7 +461,12 @@ function limpiarCacheRoles() {
     equipoRolesAt = 0;
 }
 
-async function suscribirCambiosRoles(comentarios, onChange, onError) {
+/**
+ * Observa `equipo` y la configuración de roles para repintar las insignias
+ * del chat en vivo. No necesita la lista de comentarios: la caché de roles
+ * se invalida globalmente y el render vuelve a resolver cada autor.
+ */
+async function suscribirCambiosRoles(onChange, onError) {
     await ensureFirestore();
     if (!window.onSnapshot) throw new Error('Firestore no expone onSnapshot.');
 
@@ -462,7 +479,7 @@ async function suscribirCambiosRoles(comentarios, onChange, onError) {
         rolesUsuarioCache.clear();
         equipoRolesPromise = Promise.resolve(equipoActual);
         equipoRolesAt = Date.now();
-        if (active && typeof onChange === 'function') onChange();
+        if (typeof onChange === 'function') onChange();
     };
 
     equipoUnsub = window.onSnapshot(
@@ -476,19 +493,14 @@ async function suscribirCambiosRoles(comentarios, onChange, onError) {
             if (typeof onError === 'function') onError(error);
         }
     );
-    // Un cambio de color/etiqueta en el Gestor de Roles repinta los badges.
     document.addEventListener('panter:roles-config', notificarCambio);
-    // La suscripción a `equipo` es global: cualquier cambio de rango repinta.
-    const updateAuthors = () => {};
 
-    const unsubscribe = () => {
+    return () => {
         active = false;
         if (equipoUnsub) equipoUnsub();
         equipoUnsub = null;
         document.removeEventListener('panter:roles-config', notificarCambio);
     };
-    unsubscribe.update = updateAuthors;
-    return unsubscribe;
 }
 
 if (typeof document !== 'undefined') {

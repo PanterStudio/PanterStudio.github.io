@@ -79,14 +79,6 @@
         return email === 'oliverosgutierezjhonier@gmail.com';
     }
 
-    /**
-     * @deprecated La detección de administradores por permisos de Discord
-     * quedó deshabilitada. Se conserva por compatibilidad y siempre es false.
-     */
-    function hasAdministratorPermission() {
-        return false;
-    }
-
     function saveAccessToken(token, expiresIn) {
         if (!token) return;
         try { sessionStorage.setItem(TOKEN_KEY, token); } catch (e) { /* ignore */ }
@@ -216,6 +208,44 @@
         } catch (e) {
             console.error('[DiscordAuth] Error guardando sesión:', e);
         }
+    }
+
+    /**
+     * Adopta un usuario de Firebase Auth (email/password o Google) como
+     * sesión unificada de la web. El rango se decide EXCLUSIVAMENTE por el
+     * correo: Director para oliverosgutierezjhonier@gmail.com, Usuario para
+     * cualquier otro. Los rangos superiores se asignan en `equipo` (Personal).
+     */
+    function adoptFirebaseUser(fbUser) {
+        if (!fbUser || !fbUser.uid) return null;
+        const R = rolesLib();
+        const email = String(fbUser.email || '').trim().toLowerCase();
+        const role = R ? R.roleForEmail(email) : 'usuario';
+        const name = String(fbUser.displayName || (email.split('@')[0] || 'Usuario')).trim();
+        const avatar = fbUser.photoURL || 'https://cdn.discordapp.com/embed/avatars/0.png';
+        const providerId = (fbUser.providerData && fbUser.providerData[0] && fbUser.providerData[0].providerId)
+            || 'password';
+
+        const user = {
+            uid: fbUser.uid,
+            id: fbUser.uid,
+            username: name,
+            displayName: name,
+            globalName: name,
+            email: email,
+            photoURL: avatar,
+            avatarUrl: avatar,
+            emailVerified: Boolean(fbUser.emailVerified),
+            providerId: providerId,
+            role: R ? R.toLegacyRole(role) : role,
+            isAdmin: R ? R.canAccessAdminPanel(role) : false,
+            discordAdmin: false,
+            adminOwner: false,
+            discordMembershipChecked: false
+        };
+        saveSession(user);
+        syncProfile(user).catch(() => {});
+        return user;
     }
 
     function clearSession() {
@@ -661,13 +691,14 @@
         const current = getCurrentSession();
         callback(current);
 
+        // Sólo se revalida la pertenencia al guild; los rangos NUNCA vienen
+        // de Discord. La cadena va protegida para no dejar rechazos sin tratar.
         checkSession().then(user => {
             if (user) {
                 callback(user);
-                // Refresca roles una vez por carga si existe token de sesión.
-                refreshDiscordRoles().catch(() => {});
+                refreshGuildMembership().catch(() => {});
             }
-        });
+        }).catch(() => {});
         return () => listeners.delete(callback);
     }
 
@@ -718,8 +749,7 @@
         getAccessToken,
         isDiscordSession,
         isDirectorEmail,
-        isCeoIdentifier: isDirectorEmail,
-        hasAdministratorPermission,
+        adoptFirebaseUser,
         fetchDiscordGuildContext,
         validateGuildAccess,
         consumeAuthError,

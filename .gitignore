@@ -16,3 +16,6 @@ npm-debug.log*
 # Temporales
 .cache/
 tmp/
+
+# Backups locales (no se versionan)
+views/index_js_backup.txt

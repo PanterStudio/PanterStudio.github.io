@@ -551,10 +551,16 @@
         bindGridEvents();
     }
 
+    function stopRealtimeSubscriptions() {
+        firestoreSubscriptions.forEach(fn => { try { fn(); } catch (e) { /* noop */ } });
+        firestoreSubscriptions = [];
+        realtimeStarted = false;
+    }
+
     function startRealtimeSubscriptions() {
         if (realtimeStarted || !getDb() || typeof window.onSnapshot !== 'function') return false;
-        realtimeStarted = true;
         setLoading(true);
+        let started = 0;
 
         const subscribe = (collectionName, feedName, onRows) => {
             try {
@@ -571,7 +577,10 @@
                         applyRealtimeMembers();
                     }
                 );
-                if (typeof unsubscribe === 'function') firestoreSubscriptions.push(unsubscribe);
+                if (typeof unsubscribe === 'function') {
+                    firestoreSubscriptions.push(unsubscribe);
+                    started++;
+                }
             } catch (error) {
                 console.error(`[Personal] No se pudo iniciar la suscripción de ${collectionName}:`, error);
                 liveFeedReady[feedName] = true;
@@ -580,6 +589,12 @@
 
         subscribe('equipo', 'equipo', rows => { liveEquipoRows = rows; });
         subscribe('conductores', 'perfiles', rows => { liveProfileRows = rows; });
+
+        // Sólo se considera iniciado si al menos un listener quedó activo;
+        // si ambos fallan, init() cae al respaldo de lectura puntual.
+        if (!started) return false;
+        realtimeStarted = true;
+        window.addEventListener('pagehide', stopRealtimeSubscriptions, { once: true });
         return true;
     }
 

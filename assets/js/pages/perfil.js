@@ -20,25 +20,17 @@
     vip: 'VIP',                    community_manager: 'Creador de Contenido',
     youtuber: 'Creador de Contenido', streamer: 'Creador de Contenido'
   };
-  const SPECIAL_ACCESS_ROLES = new Set(['founder_ceo','director','administrador','soporte','support_ops','programador','modelador']);
+  const SPECIAL_ACCESS_ROLES = new Set([
+    'founder_ceo', 'director', 'administrador', 'moderador',
+    'soporte', 'programador', 'modelador'
+  ]);
 
-  /**
-   * Sólo el correo oficial del Director recibe rango automático.
-   * El resto de rangos se asignan manualmente en Panel Admin → Personal.
-   */
+  /** Sólo el correo oficial del Director recibe rango automático. */
   function isDirectorEmail(str) {
     const R = window.PanterRoles;
     const email = String(str || '').trim().toLowerCase();
     if (R && typeof R.roleForEmail === 'function') return R.roleForEmail(email) === 'director';
     return email === 'oliverosgutierezjhonier@gmail.com';
-  }
-
-  function isCeoIdentifier(str) {
-    return isDirectorEmail(str);
-  }
-
-  function isCeoAccount(user, data = null) {
-    return isDirectorEmail(user?.email || data?.email);
   }
 
   /* ── DOM ── */
@@ -573,18 +565,16 @@
     });
     const roleBadgeHtml = R
       ? R.badgeHtml(resolvedRole, { className: 'ps-role-badge-profile' })
-      : `<span class="discord-role-pill role-member">${esc(roleLabel(role))}</span>`;
+      : `<span class="discord-role-pill role-member" style="color:#0055ff">${esc(roleLabel(role))}</span>`;
 
     const extraPills = [];
-
-    // Add live roles fetched from Discord Server API
-    if (Array.isArray(currentUser.serverRoles) && currentUser.serverRoles.length > 0) {
-      currentUser.serverRoles.slice(0, 6).forEach(r => {
-        extraPills.push(`<span class="discord-role-pill role-discord-server"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> ${esc(r)}</span>`);
-      });
-    }
-
-    extraPills.push('<span class="discord-role-pill role-discord"><i class="fa-brands fa-discord" aria-hidden="true"></i> Autenticado con Discord</span>');
+    const providerId = String(currentUser.providerId || '');
+    const isDiscord = providerId.includes('discord');
+    extraPills.push(
+      isDiscord
+        ? '<span class="discord-role-pill role-discord"><i class="fa-brands fa-discord" aria-hidden="true"></i> Autenticado con Discord</span>'
+        : '<span class="discord-role-pill role-discord"><i class="fa-solid fa-envelope" aria-hidden="true"></i> Cuenta con correo</span>'
+    );
     extraPills.push('<span class="discord-role-pill role-gamer"><i class="fa-solid fa-gamepad" aria-hidden="true"></i> Conductor Nuestra Tierra</span>');
 
     const rolesHtml = roleBadgeHtml + extraPills.join('');
@@ -600,8 +590,8 @@
     }
 
     // Set tab info fields
-    set($('tabInfoServerNick'), currentUser.serverNick || name);
-    set($('tabInfoServerName'), currentUser.serverName || 'PanterStudio Game Dev');
+    set($('tabInfoServerNick'), currentUser.globalName || name);
+    set($('tabInfoServerName'), currentUser.discordGuildName || 'Panter Studio Game Dev');
     set($('tabInfoDiscordId'), currentUser.discordId || currentUser.id || '—');
 
     // Setup profile tab switching
@@ -951,7 +941,7 @@
     if (!await waitForFirebase()) { setAuthMessage('Firebase no está listo. Recarga la página.', 'error'); return; }
     try {
       setAuthMessage('Creando cuenta...');
-      const cred = await window.createUserWithEmailAndPassword(window.auth, email, password);
+      const cred = await window.createUserWithEmailAndPassword(window.firebaseAuth, email, password);
       const { username: finalName, changed } = await resolveUsername(email.split('@')[0] || 'Jugador', cred.user.uid);
       await window.updateProfile(cred.user, { displayName: finalName });
       try {
@@ -973,12 +963,12 @@
     e.preventDefault();
     const email = String($('loginEmail')?.value || '').trim();
     if (!email) { setAuthMessage('Ingresa tu correo primero.', 'error'); return; }
-    try { await window.sendPasswordResetEmail(window.auth, email); setAuthMessage('Correo de recuperación enviado.', 'success'); }
+    try { await window.sendPasswordResetEmail(window.firebaseAuth, email); setAuthMessage('Correo de recuperación enviado.', 'success'); }
     catch (err) { setAuthMessage(getAuthError(err), 'error'); }
   });
 
   /* Logout */
-  logoutBtn?.addEventListener('click', async () => { try { await window.signOut(window.auth); } catch (e) { console.error(e); } });
+  logoutBtn?.addEventListener('click', async () => { try { await window.signOut(window.firebaseAuth); } catch (e) { console.error(e); } });
 
   /* Discord / Auth */
   const handleDiscordAuth = async () => {
