@@ -1,10 +1,8 @@
 // Admin Panel - Panter Studio Control Center
 
-// Política de rangos: sólo el correo oficial del Director recibe un rango
-// automático. Cualquier otra cuenta nace como `usuario`; los rangos superiores
-// se asignan manualmente en Panel Admin → Personal (colección `equipo`).
-const DIRECTOR_EMAIL = 'oliverosgutierezjhonier@gmail.com';
-
+// Política de rangos: SIN rango automático por correo. Toda cuenta nace
+// como `usuario`; TODOS los rangos se asignan manualmente en
+// Panel Admin → Personal (colección `equipo`) y se reflejan al instante.
 const SESSION_STORAGE_KEY = 'panterAdminSession';
 
 function getStoredSession() {
@@ -157,11 +155,9 @@ function canRoleAccessPanel(role) {
     return PANEL_ACCESS_ROLES.has(normalizeRole(role));
 }
 
+/** @deprecated Sin rango automático por correo: siempre false. */
 function isFounderEmail(email) {
-    const R = window.PanterRoles;
-    const e = String(email || '').trim().toLowerCase();
-    if (R && typeof R.roleForEmail === 'function') return R.roleForEmail(e) === 'director';
-    return e === DIRECTOR_EMAIL;
+    return false;
 }
 
 function setCeoMessage(message, isError = false) {
@@ -199,11 +195,6 @@ function addEmailToIndex(indexMap, email, patch = {}) {
     if (typeof patch.isAdmin === 'boolean') current.isAdmin = patch.isAdmin;
     if (Array.isArray(patch.sources)) {
         patch.sources.forEach((source) => current.sources.add(source));
-    }
-
-    if (isFounderEmail(normalizedEmail)) {
-        current.role = 'director';
-        current.isAdmin = true;
     }
 
     indexMap.set(normalizedEmail, current);
@@ -273,15 +264,14 @@ function renderCeoUsersTable(filterText = '') {
     }
 
     container.innerHTML = rows.map((user, index) => {
-        const isDirector = isFounderEmail(user.email);
+        const isDirector = false;
         const canAssignRole = Boolean(user.uid);
-        const rowRole = isDirector ? 'director' : normalizeRole(user.role);
+        const rowRole = normalizeRole(user.role);
         const roleDef = window.PanterRoles ? window.PanterRoles.get(rowRole) : null;
         const style = roleDef
             ? { color: roleDef.color, border: roleDef.border, bg: roleDef.bg, icon: `<i class="${roleDef.icon}" aria-hidden="true"></i>` }
             : (ROLE_CARD_STYLES[rowRole] || ROLE_CARD_STYLES.usuario);
-        const roleLabel = isDirector ? 'Director'
-                        : (canAssignRole ? (getRoleLabel(rowRole)) : 'Sin cuenta');
+        const roleLabel = canAssignRole ? getRoleLabel(rowRole) : 'Sin cuenta';
         const sources = Array.from(user.sources || []);
         const initials = getInitials(user.name, user.email);
         const displayName = user.name || 'Sin nombre';
@@ -367,7 +357,7 @@ async function loadCeoUsers() {
                 name: String(data.username || data.displayName || '').trim(),
                 username: String(data.username || '').trim(),
                 avatarUrl: String(data.avatarUrl || data.photoURL || data.avatarImg || '').trim(),
-                role: isFounderEmail(email) ? 'director' : normalizeRole(data.role),
+                role: normalizeRole(data.role),
                 isAdmin: Boolean(data.isAdmin),
                 sources: ['conductores']
             });
@@ -385,7 +375,7 @@ async function loadCeoUsers() {
                     uid: docSnap.id,
                     name: String(data.nombre || data.displayName || data.username || '').trim(),
                     avatarUrl: String(data.avatarUrl || '').trim(),
-                    role: isFounderEmail(email) ? 'director' : normalizeRole(data.role),
+                    role: normalizeRole(data.role),
                     isAdmin: canRoleAccessPanel(data.role),
                     sources: ['equipo']
                 });
@@ -492,7 +482,7 @@ function findCeoUser(uid) {
 
 function isProtectedCeoUser(item) {
     if (!item) return true;
-    return isFounderEmail(item.email) || normalizeRole(item.role) === 'founder_ceo';
+    return normalizeRole(item.role) === 'founder_ceo';
 }
 
 function setCeoDeleteMessage(text, isError = false) {
@@ -1249,7 +1239,7 @@ async function resolveUserAccess(user) {
 
     const role = R
         ? R.resolveRole(user, effectiveProfile)
-        : (isFounderEmail(user.email) ? 'director' : 'usuario');
+        : 'usuario';
 
     return { isAdmin: canRoleAccessPanel(role), role };
 }
@@ -1268,7 +1258,7 @@ function updateProfileUI(user, role) {
 
 function setupCeoTools(user, role) {
     // La sección de cuentas la ven los rangos con acceso al panel.
-    const isManager = canRoleAccessPanel(role) || isFounderEmail(user?.email);
+    const isManager = canRoleAccessPanel(role);
     if (sidebarAccountsTab) {
         sidebarAccountsTab.hidden = !isManager;
     }
@@ -2833,6 +2823,7 @@ function bootAuthListener() {
 // las personas ya asignadas. Todo se refleja en `personal.html`.
 // ═══════════════════════════════════════════════════════════
 let assignmentAccounts = [];
+let assignmentAccountsBuffer = [];
 let assignmentMembers = [];
 let assignmentUnsub = null;
 
@@ -2855,41 +2846,76 @@ function assignSetMessage(text, tone = 'info') {
         : tone === 'success' ? '#86efac' : '#7dd3fc';
 }
 
+/** Normaliza un nombre para detectar duplicados («Fénix» = «Fenix»). */
+function assignmentNameKey(value) {
+    return String(value || '').trim().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '');
+}
+
+/**
+ * Unifica las cuentas por CORREO y por NOMBRE: una misma persona con varios
+ * documentos (típicamente 3 «Fénix» con uids distintos) aparece UNA sola vez
+ * en el desplegable. Se conserva el registro con más datos (avatar/nombre).
+ */
 async function loadAssignmentAccounts() {
-    const accounts = new Map();
+    const byKey = new Map();
+
+    const addAccount = (uid, nombre, email, avatarUrl) => {
+        const cleanUid = String(uid || '').trim();
+        const cleanNombre = String(nombre || '').trim() || cleanUid;
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        const cleanAvatar = String(avatarUrl || '').trim();
+        if (!cleanUid && !cleanEmail) return;
+
+        const candidate = { uid: cleanUid || cleanEmail, nombre: cleanNombre, email: cleanEmail, avatarUrl: cleanAvatar };
+        const keys = [];
+        if (cleanEmail) keys.push('email:' + cleanEmail);
+        const nameKey = assignmentNameKey(cleanNombre);
+        if (nameKey) keys.push('name:' + nameKey);
+        if (cleanUid) keys.push('uid:' + cleanUid);
+
+        const existingIndex = keys.map(key => byKey.get(key)).find(value => value !== undefined);
+        if (existingIndex === undefined) {
+            const index = assignmentAccountsBuffer.length;
+            assignmentAccountsBuffer.push(candidate);
+            keys.forEach(key => byKey.set(key, index));
+            return;
+        }
+        const previous = assignmentAccountsBuffer[existingIndex];
+        // Mezcla: conserva el nombre con acentos y el avatar si lo hay.
+        if (!previous.avatarUrl && candidate.avatarUrl) previous.avatarUrl = candidate.avatarUrl;
+        if (!previous.email && candidate.email) previous.email = candidate.email;
+        if (candidate.nombre.length > previous.nombre.length) previous.nombre = candidate.nombre;
+        keys.forEach(key => byKey.set(key, existingIndex));
+    };
+
+    assignmentAccountsBuffer = [];
     try {
         const docs = await readCollectionSafe('conductores');
         docs.forEach(docSnap => {
             const d = docSnap.data() || {};
             if (d.eliminado === true) return;
-            const uid = docSnap.id;
             const email = String(d.email || '').trim().toLowerCase();
             const nombre = String(
                 d.nombre || d.displayName || d.username || d.nombre_usuario ||
-                (email ? email.split('@')[0] : uid)
+                (email ? email.split('@')[0] : docSnap.id)
             ).trim();
-            accounts.set(String(uid), {
-                uid: String(uid),
-                nombre,
-                email,
-                avatarUrl: String(d.avatarUrl || d.avatarImg || d.photoURL || '').trim()
-            });
+            addAccount(docSnap.id, nombre, email,
+                d.avatarUrl || d.avatarImg || d.photoURL || '');
         });
     } catch (e) {
         console.warn('[Personal] No se pudo leer el listado de usuarios:', e);
     }
     // Incluye a quienes ya tienen ficha de equipo aunque no tengan cuenta.
-    assignmentMembers.forEach(member => {
-        const uid = String(member.uid || '');
-        if (!uid || accounts.has(uid)) return;
-        accounts.set(uid, {
-            uid,
-            nombre: String(member.nombre || member.displayName || member.username || uid).trim(),
-            email: String(member.email || '').trim().toLowerCase(),
-            avatarUrl: String(member.avatarUrl || '').trim()
-        });
-    });
-    assignmentAccounts = Array.from(accounts.values())
+    assignmentMembers.forEach(member => addAccount(
+        member.uid,
+        member.nombre || member.displayName || member.username || member.uid,
+        member.email || '',
+        member.avatarUrl || ''
+    ));
+
+    assignmentAccounts = assignmentAccountsBuffer.slice()
         .sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'));
 }
 
@@ -2937,7 +2963,28 @@ function renderRoleAssignment() {
 async function refreshAssignment() {
     await loadStaffDirectory();
     await loadStaffMembers();
-    assignmentMembers = staffMembersCache.slice();
+
+    // Deduplica los miembros por correo/nombre (evita 3 «Fénix» con uids
+    // distintos). Se conserva el de mayor rango y el que tenga avatar.
+    const seen = new Set();
+    const deduped = [];
+    staffMembersCache.slice().sort((a, b) => {
+        const R = window.PanterRoles;
+        const ra = R ? R.rank(a.role) : 0;
+        const rb = R ? R.rank(b.role) : 0;
+        return rb - ra;
+    }).forEach(member => {
+        const keys = [];
+        const email = String(member.email || '').trim().toLowerCase();
+        if (email) keys.push('email:' + email);
+        const nameKey = assignmentNameKey(member.nombre || member.displayName || member.username);
+        if (nameKey) keys.push('name:' + nameKey);
+        if (keys.length && keys.some(key => seen.has(key))) return;
+        keys.forEach(key => seen.add(key));
+        deduped.push(member);
+    });
+    assignmentMembers = deduped;
+
     await loadAssignmentAccounts();
     renderRoleAssignment();
     startAssignmentRealtime();

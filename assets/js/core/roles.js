@@ -20,14 +20,13 @@
     const ROLE_CONFIG_VERSION = 3;
 
     /* ─────────────────────────────────────────────────────────────
-       Política de asignación automática por correo
+       Política de rangos: SIN asignación automática por correo
        ─────────────────────────────────────────────────────────────
-       Sólo el correo oficial del Director recibe un rango de forma
-       automática. Cualquier otra cuenta nace como `usuario` y los
-       rangos superiores se asignan manualmente desde el Panel Admin
-       (sección Personal → colección `equipo`).
+       Toda cuenta nace como `usuario`. CUALQUIER rango (Fundador,
+       Director, Administrador, Moderador...) se asigna única y
+       manualmente desde Panel Admin → Personal (colección `equipo`)
+       y se refleja de inmediato en toda la web.
     */
-    const DIRECTOR_EMAIL = 'oliverosgutierezjhonier@gmail.com';
     const DEFAULT_MEMBER_ROLE = 'usuario';
 
     /* ─────────────────────────────────────────────────────────────
@@ -639,8 +638,7 @@
     /**
      * @deprecated La detección automática de administradores por permisos,
      * IDs o roles de Discord quedó deshabilitada. Los permisos se derivan
-     * únicamente del rango asignado manualmente en Personal (`equipo`) o
-     * del correo oficial del Director.
+     * únicamente del rango asignado manualmente en Personal (`equipo`).
      */
     function isDiscordAdmin() {
         return false;
@@ -651,40 +649,33 @@
     }
 
     /**
-     * Rango automático según el correo. Sólo el correo del Director recibe
-     * un rango; cualquier otra cuenta es `usuario` por defecto.
+     * @deprecated Ya no existe asignación automática por correo.
+     * Se conserva únicamente por compatibilidad con llamadas antiguas:
+     * TODOS los correos devuelven `usuario`. El rango real se resuelve
+     * con `resolveRole()` leyendo `equipo` (Panel Admin → Personal).
      */
     function roleForEmail(email) {
-        return normalizeEmail(email) === DIRECTOR_EMAIL ? 'director' : DEFAULT_MEMBER_ROLE;
+        return DEFAULT_MEMBER_ROLE;
     }
 
     /**
      * Resuelve el rango efectivo de una cuenta:
-     *   1. Correo oficial del Director → `director`.
-     *   2. Rango asignado manualmente en el Panel Admin → Personal (`equipo`).
-     *   3. Cualquier otra cuenta → `usuario`.
+     *   1. Rango asignado manualmente en Panel Admin → Personal (`equipo`).
+     *   2. Cualquier otra cuenta → `usuario`.
      *
-     * Ya NO se leen roles/permisos de Discord ni `conductores.role`, para
-     * evitar que sesiones antiguas conserven un ADMIN/OWNER automático.
+     * NO hay rango automático por correo, Discord ni `conductores.role`.
+     * Cambiar el rango en Personal se refleja de inmediato aquí.
      */
     function resolveRole(user, profile) {
         if (!user && !profile) return DEFAULT_MEMBER_ROLE;
 
-        // 1) Correo oficial del Director: siempre `director`.
-        const email = normalizeEmail(
-            (profile && (profile.email || profile.correo)) ||
-            (user && (user.email || user.correo))
-        );
-        if (email === DIRECTOR_EMAIL) return 'director';
-
-        // 2) Rango manual desde la sección Personal del panel (equipo.role).
+        // Rango manual desde la sección Personal del panel (equipo.role).
         const teamRoleRaw = profile && (profile.teamRole || profile.equipoRole || profile.team_role);
         if (teamRoleRaw) {
             const teamRole = normalize(teamRoleRaw);
             if (teamRole) return teamRole;
         }
 
-        // 3) Cualquier otra cuenta: Usuario.
         return DEFAULT_MEMBER_ROLE;
     }
 
@@ -822,7 +813,6 @@
         resolveRole,
         roleForEmail,
         normalizeEmail,
-        DIRECTOR_EMAIL,
         DEFAULT_MEMBER_ROLE,
         isDiscordAdmin,
         hasAdminPermission: isDiscordAdmin,

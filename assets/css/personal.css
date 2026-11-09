@@ -1,867 +1,363 @@
+/**
+ * personal.css — Página pública "Nuestro equipo"
+ * Árbol organizacional limpio, simétrico y responsive.
+ * Un único sistema de estilos (sin generaciones duplicadas).
+ */
+
+/* ── Contenedor e introducción ─────────────────────────────── */
 .team-container {
-    width: min(1180px, 100%);
-    padding: clamp(1.25rem, 3vw, 2.5rem) 1rem 4rem;
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem 4rem;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 .ps-team-intro {
     display: grid;
     justify-items: center;
-    gap: 0.65rem;
-    margin: 0 auto 2rem;
     text-align: center;
+    gap: .55rem;
+    padding: 1.8rem 1.4rem 1.5rem;
+    margin: 0 auto 1.4rem;
+    max-width: 900px;
+    background: rgba(20, 26, 40, .55);
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 22px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
-
 .ps-team-eyebrow {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    color: #9fb0c6;
-    font-size: 0.72rem;
+    gap: 8px;
+    font-size: .72rem;
     font-weight: 800;
-    letter-spacing: 0.16em;
+    letter-spacing: .14em;
     text-transform: uppercase;
+    color: #7dd3fc;
 }
-
-.ps-team-eyebrow i {
-    color: #00b0ff;
-}
-
 .ps-team-intro h1 {
     margin: 0;
+    font-size: clamp(2rem, 5vw, 3.1rem);
+    font-weight: 900;
+    letter-spacing: -.02em;
     color: #f8fafc;
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    font-weight: 850;
-    letter-spacing: -0.055em;
-    line-height: 1;
 }
-
 .ps-team-intro p {
-    max-width: 590px;
     margin: 0;
-    color: #91a0b5;
-    font-size: clamp(0.9rem, 2vw, 1.02rem);
+    max-width: 620px;
+    font-size: .95rem;
     line-height: 1.6;
+    color: #94a3b8;
 }
-
 .ps-team-live {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.35rem;
-    padding: 0.42rem 0.72rem;
-    border: 1px solid rgba(74, 222, 128, 0.22);
-    border-radius: 999px;
-    background: rgba(74, 222, 128, 0.07);
-    color: #9be8b2;
-    font-size: 0.7rem;
-    font-weight: 750;
-    letter-spacing: 0.04em;
+    gap: 8px;
+    margin-top: .3rem;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: .74rem;
+    font-weight: 700;
+    color: #6ee7b7;
+    background: rgba(16, 185, 129, .09);
+    border: 1px solid rgba(16, 185, 129, .28);
 }
-
 .ps-team-live-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #4ade80;
-    box-shadow: 0 0 10px rgba(74, 222, 128, 0.7);
-    animation: ps-live-pulse 1.8s ease-in-out infinite;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #34d399;
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, .6);
+    animation: ps-live-pulse 2s infinite;
+}
+@keyframes ps-live-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(52, 211, 153, .55); }
+    70%  { box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
 }
 
 .ps-team-toolbar {
     display: flex;
-    flex-wrap: nowrap;
     justify-content: center;
-    gap: 0.5rem;
-    max-width: 100%;
-    margin: 0 auto 2rem;
-    padding: 0.25rem 0.1rem 0.75rem;
-    overflow-x: auto;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(148, 163, 184, 0.28) transparent;
+    flex-wrap: wrap;
+    margin: 0 auto 1.2rem;
 }
-
-.ps-team-filter {
-    display: inline-flex;
-    flex: 0 0 auto;
-    align-items: center;
-    gap: 0.45rem;
-    min-height: 36px;
-    padding: 0.48rem 0.75rem;
-    border: 1px solid rgba(148, 163, 184, 0.16);
-    border-radius: 999px;
-    background: rgba(17, 24, 39, 0.72);
-    color: #aebbd0;
-    font: inherit;
-    font-size: 0.74rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: color 180ms ease, border-color 180ms ease, background 180ms ease, transform 180ms ease;
-}
-
-.ps-team-filter:hover,
-.ps-team-filter.active {
-    border-color: rgba(0, 176, 255, 0.52);
-    background: rgba(0, 176, 255, 0.11);
-    color: #e8f7ff;
-}
-
-.ps-team-filter:hover {
-    transform: translateY(-1px);
-}
-
-.ps-team-count {
-    display: inline-grid;
-    min-width: 1.25rem;
-    height: 1.25rem;
-    place-items: center;
-    padding: 0 0.25rem;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.08);
-    color: #d7e3f2;
-    font-size: 0.65rem;
-}
-
-.ps-team-tree {
-    --ps-tree-line: rgba(148, 163, 184, 0.2);
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    width: 100%;
-    min-width: 0;
-}
-
-.ps-team-tree > .ps-level {
-    margin-bottom: 0;
-    animation: none;
-}
-
-.ps-level {
-    position: relative;
-    min-width: 0;
-    padding: 1.8rem 0 0;
-}
-
-.ps-level + .ps-level {
-    margin-top: 0.15rem;
-}
-
-.ps-level::before {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    width: 1px;
-    height: 1.8rem;
-    background: linear-gradient(var(--ps-tree-line), var(--ps-level-color, #00b0ff));
-    content: "";
-}
-
-.ps-level:first-child {
-    padding-top: 0;
-}
-
-.ps-level:first-child::before {
-    display: none;
-}
-
-.ps-level-heading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.7rem;
-    margin: 0 auto 1.05rem;
-    color: #e8edf5;
-    text-align: center;
-}
-
-.ps-level-number {
-    display: inline-grid;
-    width: 2rem;
-    height: 2rem;
-    flex: 0 0 2rem;
-    place-items: center;
-    border: 1px solid color-mix(in srgb, var(--ps-level-color, #00b0ff) 45%, transparent);
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--ps-level-color, #00b0ff) 10%, #0c111b);
-    color: var(--ps-level-color, #00b0ff);
-    font-size: 0.68rem;
-    font-weight: 850;
-    box-shadow: 0 0 18px color-mix(in srgb, var(--ps-level-color, #00b0ff) 14%, transparent);
-}
-
-.ps-level-title {
-    display: grid;
-    gap: 0.12rem;
-    text-align: left;
-}
-
-.ps-level-title strong {
-    font-size: 0.79rem;
-    font-weight: 820;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-.ps-level-title small {
-    color: #8290a4;
-    font-size: 0.68rem;
-}
-
-.ps-level-branches {
-    position: relative;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 245px), 1fr));
-    align-items: start;
-    gap: 1rem;
-    min-width: 0;
-    padding-top: 1.15rem;
-}
-
-.ps-level-branches::before {
-    position: absolute;
-    top: 0;
-    right: 8%;
-    left: 8%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--ps-tree-line) 12%, var(--ps-tree-line) 88%, transparent);
-    content: "";
-}
-
-.ps-role-branch {
-    position: relative;
-    min-width: 0;
-    margin-bottom: 0;
-    padding-top: 0.7rem;
-    animation: ps-branch-enter 420ms both;
-    animation-delay: calc(var(--branch-index, 0) * 55ms);
-}
-
-.ps-role-branch::before {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    width: 1px;
-    height: 0.7rem;
-    background: var(--ps-branch-color, var(--ps-tree-line));
-    content: "";
-}
-
-.ps-branch-heading {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-height: 2.2rem;
-    margin-bottom: 0.55rem;
-    padding: 0.42rem 0.62rem;
-    border: 1px solid color-mix(in srgb, var(--ps-branch-color, #94a3b8) 28%, transparent);
-    border-radius: 11px;
-    background: linear-gradient(100deg, color-mix(in srgb, var(--ps-branch-color, #94a3b8) 9%, transparent), rgba(11, 16, 25, 0.78));
-}
-
-.ps-branch-icon {
-    display: inline-grid;
-    width: 1.45rem;
-    height: 1.45rem;
-    flex: 0 0 1.45rem;
-    place-items: center;
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--ps-branch-color, #94a3b8) 13%, #0c111b);
-    color: var(--ps-branch-color, #cbd5e1);
-    font-size: 0.67rem;
-}
-
-.ps-branch-name {
-    overflow: hidden;
-    color: #e6edf7;
-    font-size: 0.7rem;
-    font-weight: 780;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.ps-branch-count {
-    margin-left: auto;
-    color: #8290a4;
-    font-size: 0.64rem;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.ps-branch-members {
-    display: grid;
-    gap: 0.48rem;
-    min-width: 0;
-}
-
-.ps-staff-card {
-    position: relative;
-    display: grid;
-    grid-template-columns: 42px minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.62rem;
-    min-width: 0;
-    padding: 0.62rem 0.7rem;
-    overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--ps-staff-color, #0055ff) 38%, rgba(255, 255, 255, 0.08));
-    border-radius: 14px;
-    background: linear-gradient(115deg, color-mix(in srgb, var(--ps-staff-color, #0055ff) 8%, rgba(18, 24, 36, 0.96)), rgba(14, 19, 29, 0.96) 58%);
-    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18), inset 0 0 22px color-mix(in srgb, var(--ps-staff-color, #0055ff) 4%, transparent);
-    text-align: left;
-    transition: transform 190ms ease, border-color 190ms ease, box-shadow 190ms ease, background 190ms ease;
-    animation: ps-card-enter 450ms both;
-    animation-delay: calc(var(--card-index, 0) * 55ms);
-}
-
-.ps-staff-card::before {
-    position: absolute;
-    top: 18%;
-    bottom: 18%;
-    left: 0;
-    width: 2px;
-    border-radius: 0 4px 4px 0;
-    background: var(--ps-staff-color, #0055ff);
-    box-shadow: 0 0 12px var(--ps-staff-color, #0055ff);
-    content: "";
-}
-
-.ps-staff-card:hover {
-    z-index: 1;
-    transform: translateY(-3px);
-    border-color: var(--ps-staff-color, #0055ff);
-    box-shadow: 0 10px 26px color-mix(in srgb, var(--ps-staff-color, #0055ff) 15%, transparent), 0 8px 22px rgba(0, 0, 0, 0.25);
-}
-
-.ps-staff-card .avatar-frame {
-    margin-bottom: 0;
-    font-size: 1rem;
-    flex: 0 0 auto;
-}
-
-.ps-staff-card:hover .avatar-frame {
-    transform: scale(1.04);
-}
-
-.ps-staff-avatar {
-    position: relative;
-    display: grid;
-    width: 42px;
-    height: 42px;
-    place-items: center;
-    overflow: visible;
-    border: 1px solid color-mix(in srgb, var(--ps-staff-color, #0055ff) 70%, transparent);
-    border-radius: 50%;
-    background: #101725;
-    box-shadow: 0 0 13px color-mix(in srgb, var(--ps-staff-color, #0055ff) 20%, transparent);
-}
-
-.ps-staff-avatar img,
-.ps-staff-avatar .ps-avatar-fallback {
-    display: grid;
-    width: 100%;
-    height: 100%;
-    place-items: center;
-    overflow: hidden;
-    border-radius: inherit;
-    color: var(--ps-staff-color, #0055ff);
-    font-size: 1rem;
-    object-fit: cover;
-}
-
-.ps-staff-avatar .ps-presence {
-    position: absolute;
-    right: -1px;
-    bottom: 0;
-    width: 10px;
-    height: 10px;
-    border: 2px solid #111722;
-    border-radius: 50%;
-    background: #64748b;
-}
-
-.ps-staff-avatar .ps-presence.online {
-    background: #4ade80;
-    box-shadow: 0 0 8px rgba(74, 222, 128, 0.65);
-}
-
-.ps-staff-card-content {
-    display: grid;
-    gap: 0.14rem;
-    min-width: 0;
-}
-
-.ps-staff-card .staff-name {
-    overflow: hidden;
-    margin: 0;
-    color: #f3f6fb;
-    font-size: 0.84rem;
-    font-weight: 790;
-    letter-spacing: -0.015em;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.ps-staff-card .staff-title {
-    overflow: hidden;
-    margin: 0;
-    color: #9cabc0;
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 0;
-    text-overflow: ellipsis;
-    text-transform: none;
-    white-space: nowrap;
-}
-
-.ps-staff-card .staff-badge-group {
-    display: flex;
-    justify-content: flex-end;
-    margin: 0;
-}
-
-.ps-staff-card .ps-role-badge {
+.ps-team-summary {
     display: inline-flex;
     align-items: center;
-    gap: 0.28rem;
-    max-width: 112px;
-    padding: 0.25rem 0.42rem;
-    overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--ps-role-color) 45%, transparent);
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--ps-role-color) 12%, transparent);
-    color: var(--ps-role-color);
-    font-size: 0.58rem;
-    font-weight: 800;
-    line-height: 1.1;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    gap: 8px;
+    padding: 7px 16px;
+    border-radius: 100px;
+    font-size: .78rem;
+    font-weight: 700;
+    color: #7dd3fc;
+    background: rgba(0, 176, 255, .09);
+    border: 1px solid rgba(0, 176, 255, .28);
 }
 
-.ps-staff-card .ps-role-badge > i {
-    font-size: 0.6rem;
-}
-
-.ps-staff-card .ps-role-badge-text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.ps-staff-edit-btn {
-    grid-column: 2 / -1;
-    justify-self: start;
-    padding: 0.28rem 0.5rem;
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.04);
-    color: #b8c5d6;
-    font: inherit;
-    font-size: 0.66rem;
-    cursor: pointer;
-}
-
-.ps-staff-edit-btn:hover {
-    border-color: var(--ps-staff-color);
-    color: #fff;
-}
-
-.ps-team-empty {
-    display: grid;
-    justify-items: center;
-    gap: 0.6rem;
-    padding: 2.5rem 1rem;
-    border: 1px dashed rgba(148, 163, 184, 0.24);
-    border-radius: 18px;
-    color: #a8b4c5;
-    text-align: center;
-}
-
-.ps-team-empty strong {
-    color: #e2e8f0;
-}
-
-.ps-team-empty p {
-    max-width: 440px;
-    margin: 0;
-    color: #8290a4;
-    font-size: 0.82rem;
-    line-height: 1.55;
-}
-
-.ps-staff-editor {
-    grid-column: 1 / -1;
-    width: 100%;
-}
-
-@keyframes ps-card-enter {
-    from { opacity: 0; transform: translateY(9px) scale(0.985); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@keyframes ps-branch-enter {
-    from { opacity: 0; translate: 0 8px; }
-    to { opacity: 1; translate: 0 0; }
-}
-
-@keyframes ps-live-pulse {
-    50% { opacity: 0.55; box-shadow: 0 0 3px rgba(74, 222, 128, 0.4); }
-}
-
-@media (max-width: 700px) {
-    .team-container {
-        padding-inline: 0.8rem;
-    }
-
-    .ps-team-toolbar {
-        justify-content: flex-start;
-        margin-bottom: 1.2rem;
-    }
-
-    .ps-level {
-        padding-top: 1.45rem;
-    }
-
-    .ps-level::before {
-        height: 1.45rem;
-    }
-
-    .ps-level-branches {
-        grid-template-columns: repeat(auto-fit, minmax(min(100%, 225px), 1fr));
-        gap: 0.7rem;
-        padding-top: 0.85rem;
-    }
-
-    .ps-level-branches::before {
-        right: 12%;
-        left: 12%;
-    }
-
-    .ps-role-branch {
-        padding-top: 0.55rem;
-    }
-
-    .ps-role-branch::before {
-        height: 0.55rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .ps-team-intro {
-        margin-bottom: 1.3rem;
-    }
-
-    .ps-level-heading {
-        margin-bottom: 0.75rem;
-    }
-
-    .ps-level-branches {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 0.55rem;
-        padding-top: 0.6rem;
-    }
-
-    .ps-level-branches::before {
-        right: 50%;
-        left: 50%;
-    }
-
-    .ps-role-branch {
-        padding-top: 0.45rem;
-    }
-
-    .ps-role-branch::before {
-        height: 0.45rem;
-    }
-
-    .ps-staff-card {
-        grid-template-columns: 38px minmax(0, 1fr) auto;
-        gap: 0.55rem;
-        padding: 0.56rem 0.62rem;
-    }
-
-    .ps-staff-avatar {
-        width: 38px;
-        height: 38px;
-    }
-
-    .ps-staff-card .ps-role-badge {
-        max-width: 98px;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .ps-team-live-dot,
-    .ps-role-branch,
-    .ps-staff-card {
-        animation: none;
-    }
-
-    .ps-team-filter,
-    .ps-staff-card {
-        transition: none;
-    }
-}
-
-/* ═══════════════════════════════════════════════════════════
-   ÁRBOL ORGANIZACIONAL — lienzo claro + conectores
-   Cúspide: Fundador / CEO junto al Director.
-   Debajo: ramas por rango con todo el personal asignado.
-   ═══════════════════════════════════════════════════════════ */
-.ps-team-tree { display: block; }
+/* ── Lienzo del árbol ──────────────────────────────────────── */
+.ps-team-tree { display: block; width: 100%; min-width: 0; }
 
 .ps-org {
-    --ps-org-line: #c8c0ae;
-    --ps-org-line-soft: #ddd5c4;
-    background: #faf7f0;
-    color: #26303f;
-    border: 1px solid #e8e0d0;
-    border-radius: 26px;
-    padding: 2.5rem 1.5rem 3.5rem;
-    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
+    --ps-org-line: rgba(125, 211, 252, .28);
+    --ps-org-line-soft: rgba(125, 211, 252, .16);
+    width: 100%;
+    box-sizing: border-box;
+    padding: 2rem 1.25rem 2.5rem;
+    background: linear-gradient(180deg, rgba(18, 26, 42, .96), rgba(11, 17, 29, .97));
+    border: 1px solid rgba(0, 176, 255, .20);
+    border-radius: 24px;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, .42), inset 0 1px 0 rgba(255, 255, 255, .03);
     text-align: center;
+    overflow: hidden;
 }
 .ps-org-title {
     margin: 0 0 .35rem;
-    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    font-size: clamp(1.5rem, 3vw, 2.1rem);
     font-weight: 900;
     letter-spacing: -.02em;
-    color: #2f3a4a;
+    color: #f1f5f9;
 }
 .ps-org-sub {
-    margin: 0 auto 2rem;
-    max-width: 640px;
-    font-size: .9rem;
-    color: #6b7686;
-    line-height: 1.6;
+    margin: 0 auto 1.8rem;
+    max-width: 620px;
+    font-size: .88rem;
+    line-height: 1.55;
+    color: #94a3b8;
 }
 
-/* Cúspide: dos nodos unidos por una línea horizontal */
+/* Cúspide: dos nodos simétricos unidos por una línea */
 .ps-org-top {
     display: flex;
     align-items: flex-start;
     justify-content: center;
     flex-wrap: nowrap;
-    position: relative;
+    gap: 0;
 }
-.ps-org-couple {
-    flex: 0 0 72px;
+.ps-org-link {
+    flex: 0 0 clamp(24px, 6vw, 72px);
     height: 1px;
-    background: var(--ps-org-line);
     margin-top: 52px;
-}
-.ps-org-stem {
-    width: 1px;
-    height: 40px;
     background: var(--ps-org-line);
+}
+.ps-org-trunk {
+    width: 1px;
+    height: 34px;
     margin: 0 auto;
+    background: var(--ps-org-line);
 }
 
-/* Nodos circulares */
-.ps-org-person {
+/* Niveles por rango: una columna vertebral limpia */
+.ps-org-levels {
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 150px;
-    flex: 0 0 150px;
-    padding-top: 1rem;
+    gap: 1.5rem;
+    padding-top: 1.8rem;
 }
-.ps-org-person::before {
+.ps-org-levels::before {
     content: "";
     position: absolute;
     top: 0;
+    bottom: 1.2rem;
     left: 50%;
     width: 1px;
-    height: 1rem;
     background: var(--ps-org-line-soft);
 }
-.ps-org-top .ps-org-person::before { display: none; }
-.ps-org-person.is-big {
-    width: 190px;
-    flex-basis: 190px;
-    padding-top: 0;
-}
-.ps-org-avatar {
-    position: relative;
-    width: 76px;
-    height: 76px;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 3px solid var(--ps-org-color, #0055ff);
-    background: #e9e2d4;
-    box-shadow: 0 8px 22px rgba(45, 55, 72, .14);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.ps-org-person.is-big .ps-org-avatar {
-    width: 104px;
-    height: 104px;
-    border-width: 4px;
-}
-.ps-org-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-.ps-org-initial {
-    width: 100%;
-    height: 100%;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.6rem;
-    font-weight: 900;
-    color: var(--ps-org-color, #0055ff);
-}
-.ps-org-person.is-big .ps-org-initial { font-size: 2.2rem; }
-.ps-org-name {
-    margin-top: .7rem;
-    font-size: .98rem;
-    font-weight: 800;
-    color: #25303f;
-    line-height: 1.25;
-    word-break: break-word;
-}
-.ps-org-person.is-big .ps-org-name { font-size: 1.2rem; }
-.ps-org-role {
-    font-size: .78rem;
-    color: #6b7686;
-    margin-top: .15rem;
-    font-weight: 600;
-}
-.ps-org-specialty {
-    font-size: .7rem;
-    color: #8a94a3;
-    margin-top: .2rem;
-    max-width: 140px;
-}
-.ps-org-badge {
-    margin-top: .5rem;
-    transform: scale(.85);
-    transform-origin: top center;
-}
-.ps-org-badge .ps-role-badge {
-    background: #fff !important;
-    border-color: var(--ps-org-color) !important;
-}
 
-/* Ramas por rango */
-.ps-org-branches {
+.ps-org-tier {
+    position: relative;
+    width: 100%;
+    max-width: 940px;
+    box-sizing: border-box;
+    padding-top: 1.4rem;
+}
+.ps-org-tier::before {
+    content: "";
+    position: absolute;
+    top: -1.8rem;
+    left: 50%;
+    width: 1px;
+    height: 1.8rem;
+    background: var(--ps-org-line);
+}
+.ps-org-tier-label {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 100px;
+    font-size: .78rem;
+    font-weight: 800;
+    color: #08111f;
+    background: var(--ps-org-color, #0055ff);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .35);
+}
+.ps-org-tier-label em {
+    font-style: normal;
+    font-size: .7rem;
+    padding: 1px 8px;
+    border-radius: 100px;
+    background: rgba(0, 0, 0, .20);
+}
+.ps-org-tier-people {
     position: relative;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     align-items: flex-start;
-    gap: 1.6rem 1rem;
-    padding-top: 1.4rem;
+    gap: .85rem;
+    margin-top: 1rem;
+    padding-top: 1.1rem;
 }
-.ps-org-branches::before {
+.ps-org-tier-people::before {
     content: "";
     position: absolute;
     top: 0;
-    left: 8%;
-    right: 8%;
-    height: 1px;
-    background: var(--ps-org-line);
-}
-.ps-org-branch {
-    position: relative;
-    min-width: 210px;
-    max-width: 420px;
-    flex: 1 1 240px;
-    padding-top: 1.4rem;
-}
-.ps-org-branch::before {
-    content: "";
-    position: absolute;
-    top: -1.4rem;
     left: 50%;
-    width: 1px;
-    height: 1.4rem;
-    background: var(--ps-org-line);
-}
-.ps-org-branch-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 5px 14px;
-    border-radius: 100px;
-    font-size: .76rem;
-    font-weight: 800;
-    color: #fff;
-    background: var(--ps-org-color, #0055ff);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, .12);
-}
-.ps-org-branch-label span {
-    background: rgba(255, 255, 255, .22);
-    border-radius: 100px;
-    padding: 1px 7px;
-    font-size: .7rem;
-}
-.ps-org-branch-people {
-    position: relative;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: .75rem;
-    padding-top: 1.2rem;
-    margin-top: .6rem;
-}
-.ps-org-branch-people::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 12%;
-    right: 12%;
+    transform: translateX(-50%);
+    width: min(420px, 70%);
     height: 1px;
     background: var(--ps-org-line-soft);
 }
-.ps-org-empty {
-    color: #6b7686;
-    font-size: .9rem;
-    padding: 1rem;
+
+/* ── Tarjeta de miembro (glassmorphism compacto) ───────────── */
+.ps-org-person {
+    --ps-org-color: #0055ff;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 150px;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: .85rem .6rem .8rem;
+    background: rgba(255, 255, 255, .035);
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-top: 2px solid var(--ps-org-color);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .22);
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+    animation: ps-card-in .45s both;
+}
+.ps-org-person:hover {
+    transform: translateY(-4px);
+    border-color: var(--ps-org-color);
+    box-shadow: 0 16px 34px rgba(0, 0, 0, .34), 0 0 0 1px var(--ps-org-color);
+}
+.ps-org-person.is-big {
+    width: clamp(140px, 20vw, 190px);
+    padding: 1rem .7rem .9rem;
+    background: rgba(255, 255, 255, .055);
+    border-top-width: 3px;
+}
+@keyframes ps-card-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-@media (max-width: 760px) {
-    .ps-org { padding: 1.8rem .75rem 2.5rem; border-radius: 18px; }
-    .ps-org-couple { flex-basis: 28px; margin-top: 42px; }
-    .ps-org-person.is-big { width: 130px; flex-basis: 130px; }
-    .ps-org-person.is-big .ps-org-avatar { width: 84px; height: 84px; }
-    .ps-org-person { width: 120px; flex-basis: 120px; }
-    .ps-org-branches::before,
-    .ps-org-branch-people::before,
-    .ps-org-branch::before,
-    .ps-org-person::before { display: none; }
-    .ps-org-branch { min-width: 100%; padding-top: .8rem; }
-    .ps-org-branch-people { padding-top: .5rem; }
-}
-
-/* ═══════════════════════════════════════════════════════════
-   TEMA OSCURO INTEGRADO CON EL RESTO DE LA WEB
-   Mantiene las líneas conectoras del árbol genealógico pero con
-   la paleta azul/oscura del sitio y los colores oficiales de rango.
-   ═══════════════════════════════════════════════════════════ */
-.ps-org {
-    --ps-org-line: rgba(125, 211, 252, 0.30);
-    --ps-org-line-soft: rgba(125, 211, 252, 0.16);
-    background: linear-gradient(180deg, rgba(18, 26, 42, .96), rgba(11, 17, 29, .97));
-    color: #e2e8f0;
-    border: 1px solid rgba(0, 176, 255, .20);
-    box-shadow: 0 25px 70px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .03);
-}
-.ps-org-title { color: #f1f5f9; }
-.ps-org-sub { color: #94a3b8; }
 .ps-org-avatar {
+    position: relative;
+    width: 62px; height: 62px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid var(--ps-org-color);
     background: rgba(255, 255, 255, .05);
-    box-shadow: 0 8px 22px rgba(0, 0, 0, .35);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .32);
+    flex-shrink: 0;
 }
-.ps-org-name { color: #f1f5f9; }
-.ps-org-role { color: #94a3b8; }
-.ps-org-specialty { color: #64748b; }
-.ps-org-empty { color: #94a3b8; }
+.ps-org-person.is-big .ps-org-avatar { width: 90px; height: 90px; border-width: 4px; }
+.ps-org-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ps-org-initial {
+    width: 100%; height: 100%;
+    align-items: center; justify-content: center;
+    font-size: 1.4rem; font-weight: 900;
+    color: var(--ps-org-color);
+}
+.ps-org-person.is-big .ps-org-initial { font-size: 2rem; }
+
+.ps-org-name {
+    margin-top: .55rem;
+    font-size: .9rem;
+    font-weight: 800;
+    line-height: 1.25;
+    color: #f1f5f9;
+    word-break: break-word;
+    max-width: 100%;
+}
+.ps-org-person.is-big .ps-org-name { font-size: 1.05rem; }
+.ps-org-specialty {
+    margin-top: .25rem;
+    font-size: .7rem;
+    line-height: 1.35;
+    color: #64748b;
+    max-width: 100%;
+    word-break: break-word;
+}
+.ps-org-badge {
+    margin-top: .45rem;
+    transform: scale(.86);
+    transform-origin: center;
+}
 .ps-org-badge .ps-role-badge {
-    background: rgba(255, 255, 255, .04) !important;
+    background: rgba(255, 255, 255, .05) !important;
+    border-color: var(--ps-org-color) !important;
 }
-.ps-org-branch-label {
-    color: #08111f;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, .3);
+.ps-org-fallback-badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 100px;
+    font-size: .65rem;
+    font-weight: 800;
+    color: var(--ps-org-color);
+    border: 1px solid var(--ps-org-color);
 }
-.ps-org-branch-label span { background: rgba(0, 0, 0, .18); }
+.ps-org-empty {
+    margin: 0;
+    padding: 1.2rem;
+    font-size: .85rem;
+    color: #94a3b8;
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 760px) {
+    .team-container { padding: 1rem .7rem 3rem; }
+    .ps-team-intro { padding: 1.4rem 1rem; border-radius: 18px; }
+    .ps-org { padding: 1.5rem .7rem 2rem; border-radius: 18px; }
+    .ps-org-link { flex-basis: 18px; margin-top: 45px; }
+    .ps-org-person.is-big { width: 132px; }
+    .ps-org-person.is-big .ps-org-avatar { width: 78px; height: 78px; }
+    .ps-org-person { width: 128px; }
+    .ps-org-levels { gap: 1.2rem; padding-top: 1.4rem; }
+    .ps-org-tier { padding-top: 1.1rem; }
+    .ps-org-tier::before { height: 1.4rem; top: -1.4rem; }
+    .ps-org-tier-people { gap: .6rem; padding-top: .85rem; }
+    .ps-org-tier-people::before { width: 55%; }
+}
+
+@media (max-width: 480px) {
+    /* En móvil se simplifican los conectores: nada de líneas flotantes. */
+    .ps-org-link { flex-basis: 12px; margin-top: 40px; }
+    .ps-org-trunk { height: 24px; }
+    .ps-org-levels::before,
+    .ps-org-tier::before,
+    .ps-org-tier-people::before { display: none; }
+    .ps-org-levels { padding-top: .4rem; gap: 1rem; }
+    .ps-org-tier { padding-top: .4rem; }
+    .ps-org-tier-people { padding-top: .3rem; }
+    .ps-org-person { width: 46%; max-width: 160px; }
+    .ps-org-person.is-big { width: 44%; max-width: 150px; }
+    .ps-org-person.is-big .ps-org-avatar { width: 70px; height: 70px; }
+    .ps-org-avatar { width: 56px; height: 56px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ps-org-person { animation: none; transition: none; }
+    .ps-team-live-dot { animation: none; }
+}

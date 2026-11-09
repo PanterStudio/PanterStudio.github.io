@@ -4,24 +4,15 @@ service cloud.firestore {
 
     // ═══════════════════════════════════════════════════════
     // 🔐 HELPERS — Política de rangos (roles.js)
-    //   • oliverosgutierezjhonier@gmail.com → Director (único rango
-    //     automático, por correo EXACTO).
-    //   • Cualquier otro correo → Usuario.
-    //   • Fundador, Administrador, Moderador, Soporte, etc. se asignan
-    //     MANUALMENTE en Panel Admin → Personal (colección `equipo`).
+    //   • SIN rango automático por correo. Toda cuenta es Usuario.
+    //   • Fundador, Director, Administrador, Moderador, Soporte, etc.
+    //     se asignan MANUALMENTE en Panel Admin → Personal (`equipo`).
     //   • Ningún ID, rol o permiso de Discord otorga rangos web.
     //
     // Discord OAuth NO genera `request.auth`. Por eso la autorización
     // de rangos se resuelve en la aplicación (UI + `equipo`) y las
-    // colecciones operativas no exigen autenticación de Firebase: así
-    // se evita cualquier `permission-denied` en los flujos reales.
-    // Los helpers de abajo se conservan para las colecciones que sí
-    // validan estructura y para una futura migración a Firebase Auth.
+    // colecciones operativas no exigen autenticación de Firebase.
     // ═══════════════════════════════════════════════════════
-    function isDirectorEmail() {
-      return request.auth != null
-        && request.auth.token.get('email', '') == 'oliverosgutierezjhonier@gmail.com';
-    }
 
     // Rango manual vigente, leído de `equipo/{uid}` (no de conductores).
     function teamRole() {
@@ -33,10 +24,9 @@ service cloud.firestore {
     }
 
     function isFirebaseAdmin() {
-      return isDirectorEmail()
-        || teamRole() in [
-          'founder_ceo', 'director', 'administrador', 'programador', 'modelador'
-        ];
+      return teamRole() in [
+        'founder_ceo', 'director', 'administrador', 'programador', 'modelador'
+      ];
     }
 
     // ═══════════════════════════════════════════════════════

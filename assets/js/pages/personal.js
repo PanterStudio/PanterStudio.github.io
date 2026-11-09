@@ -15,7 +15,6 @@
 (function () {
     'use strict';
 
-    const DIRECTOR_EMAIL = 'oliverosgutierezjhonier@gmail.com';
     const LOCAL_KEY = 'ps_staff_local';
     const HIDDEN_KEY = 'ps_staff_hidden';
 
@@ -80,11 +79,10 @@
     function normalizeMember(raw) {
         if (!raw || raw.archivado === true) return null;
         const lib = R();
-        let role = lib ? lib.normalize(raw.role || raw.roleEquipo || raw.rango || 'usuario') : 'usuario';
+        // El rango viene ÚNICAMENTE de `equipo` (Panel Admin → Personal).
+        // No hay rango automático por correo.
+        const role = lib ? lib.normalize(raw.role || raw.roleEquipo || raw.rango || 'usuario') : 'usuario';
         const email = String(raw.email || '').trim().toLowerCase();
-        if (lib && typeof lib.roleForEmail === 'function' && lib.roleForEmail(email) === 'director') {
-            role = 'director';
-        }
         const nombre = String(raw.nombre || raw.displayName || raw.nombre_usuario || raw.username || raw.name || 'Miembro').trim();
         return {
             uid: String(raw.uid || raw.id || raw.discordId || `team_${nameKey(nombre) || 'miembro'}`),
@@ -179,27 +177,28 @@
         return result;
     }
 
-    /** Cúspide fija: Fundador/CEO y Director, sin duplicarlos en las ramas. */
+    /**
+     * Cúspide: PanterGameY (Fundador / CEO) junto a la persona con el rango
+     * MÁS ALTO realmente asignado en `equipo`. Su insignia muestra el rango
+     * vigente, por lo que un cambio en Personal se refleja de inmediato.
+     * No se fuerza ningún rango por correo.
+     */
     function leadership() {
-        const lib = R();
         const founder = Object.assign({}, FOUNDER);
-
-        const match = allMembers.find(member =>
-            member.email === DIRECTOR_EMAIL || nameKey(member.nombre) === 'fenix'
-        );
-        const director = match
-            ? Object.assign({}, match, { role: 'director' })
+        const ranked = sortByRole(allMembers);
+        const coLeader = ranked.length
+            ? Object.assign({}, ranked[0])
             : {
-                uid: 'director_fenix', nombre: 'Fénix', email: DIRECTOR_EMAIL,
-                role: 'director', especialidad: 'Director', avatarUrl: '',
+                uid: 'cofounder_fenix', nombre: 'Fénix', email: '',
+                role: 'usuario', especialidad: '', avatarUrl: '',
                 orden: 0, _fixed: true
             };
 
-        const topKeys = new Set(memberKeys(founder).concat(memberKeys(director)));
+        const topKeys = new Set(memberKeys(founder).concat(memberKeys(coLeader)));
         const branches = allMembers.filter(member =>
             !memberKeys(member).some(key => topKeys.has(key))
         );
-        return { founder, director, branches };
+        return { founder, coLeader, branches };
     }
 
     function sortByRole(list) {
@@ -213,35 +212,37 @@
         });
     }
 
+    /** Tarjeta compacta: avatar, nombre, UNA insignia de rol y especialidad. */
     function personNode(member, big) {
         const lib = R();
         const def = lib ? lib.get(member.role) : null;
         const color = def ? def.color : '#0055ff';
-        const label = def ? def.label : member.role;
         const initial = String(member.nombre || '?').charAt(0).toUpperCase();
         const avatar = member.avatarUrl
             ? `<img src="${esc(member.avatarUrl)}" alt="${esc(member.nombre)}" loading="lazy" decoding="async" data-ps-avatar>`
             : '';
+        const badge = lib
+            ? lib.badgeHtml(member.role, { iconOnly: false })
+            : `<span class="ps-org-fallback-badge">${esc(member.role)}</span>`;
         return `
-            <div class="ps-org-person${big ? ' is-big' : ''}" style="--ps-org-color:${color}">
+            <article class="ps-org-person${big ? ' is-big' : ''}" style="--ps-org-color:${color}">
                 <div class="ps-org-avatar">
                     ${avatar}
                     <span class="ps-org-initial" style="display:${member.avatarUrl ? 'none' : 'flex'}">${esc(initial)}</span>
                 </div>
                 <div class="ps-org-name">${esc(member.nombre)}</div>
-                <div class="ps-org-role">${esc(label)}</div>
+                <div class="ps-org-badge">${badge}</div>
                 ${member.especialidad ? `<div class="ps-org-specialty">${esc(member.especialidad)}</div>` : ''}
-                ${lib ? `<div class="ps-org-badge">${lib.badgeHtml(member.role)}</div>` : ''}
-            </div>`;
+            </article>`;
     }
 
     function render() {
         const grid = $('staffGrid');
         if (!grid) return;
         const lib = R();
-        const { founder, director, branches } = leadership();
+        const { founder, coLeader, branches } = leadership();
 
-        // Agrupar por rango en orden jerárquico oficial.
+        // Agrupar por rango en orden jerárquico oficial (mayor → menor).
         const groups = new Map();
         sortByRole(branches).forEach(member => {
             if (!groups.has(member.role)) groups.set(member.role, []);
@@ -251,18 +252,18 @@
             ? lib.orderedRoleIds(Array.from(groups.keys()))
             : Array.from(groups.keys()).sort();
 
-        const branchHtml = order.map(roleId => {
+        const tiersHtml = order.map(roleId => {
             const def = lib ? lib.get(roleId) : null;
             const list = groups.get(roleId) || [];
             if (!list.length) return '';
             return `
-                <section class="ps-org-branch" style="--ps-org-color:${def ? def.color : '#0055ff'}">
-                    <div class="ps-org-branch-label">
+                <section class="ps-org-tier" style="--ps-org-color:${def ? def.color : '#0055ff'}">
+                    <div class="ps-org-tier-label">
                         ${def ? `<i class="${def.icon}" aria-hidden="true"></i>` : ''}
-                        ${esc(def ? def.label : roleId)}
-                        <span>${list.length}</span>
+                        <span>${esc(def ? def.label : roleId)}</span>
+                        <em>${list.length}</em>
                     </div>
-                    <div class="ps-org-branch-people">
+                    <div class="ps-org-tier-people">
                         ${list.map(member => personNode(member, false)).join('')}
                     </div>
                 </section>`;
@@ -271,21 +272,23 @@
         const totalCount = branches.length + 2;
         const summary = $('teamFilters');
         if (summary) {
-            summary.innerHTML = `<span class="ps-team-summary"><i class="fa-solid fa-sitemap" aria-hidden="true"></i> ${totalCount} personas · ${order.length} rangos activos · actualización en vivo</span>`;
+            summary.innerHTML = `<span class="ps-team-summary"><i class="fa-solid fa-sitemap" aria-hidden="true"></i> ${totalCount} personas · ${order.length + 1} rangos · en vivo</span>`;
         }
 
         grid.innerHTML = `
             <div class="ps-org">
                 <h2 class="ps-org-title">Árbol del Equipo</h2>
-                <p class="ps-org-sub">Fundación, dirección y todas las personas con rango asignado, en orden jerárquico.</p>
+                <p class="ps-org-sub">De mayor a menor rango. Los cambios en Personal se reflejan al instante.</p>
+
                 <div class="ps-org-top">
                     ${personNode(founder, true)}
-                    <span class="ps-org-couple" aria-hidden="true"></span>
-                    ${personNode(director, true)}
+                    <span class="ps-org-link" aria-hidden="true"></span>
+                    ${personNode(coLeader, true)}
                 </div>
-                <div class="ps-org-stem" aria-hidden="true"></div>
-                <div class="ps-org-branches">
-                    ${branchHtml || '<p class="ps-org-empty">Aún no hay más miembros asignados. Agrégalos desde Panel Admin → Personal.</p>'}
+                <div class="ps-org-trunk" aria-hidden="true"></div>
+
+                <div class="ps-org-levels">
+                    ${tiersHtml || '<p class="ps-org-empty">Aún no hay más miembros asignados. Agrégalos desde Panel Admin → Personal.</p>'}
                 </div>
             </div>`;
         grid.dataset.loaded = 'true';

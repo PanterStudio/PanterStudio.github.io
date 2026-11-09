@@ -61,10 +61,10 @@ const REFERRAL_STORAGE_KEY = 'panterPendingReferralCode';
 const DEFAULT_REFERRAL_REWARD = 50;
 
 /**
- * Política de rangos: sólo oliverosgutierezjhonier@gmail.com recibe
- * `director` automáticamente; cualquier otra cuenta es `usuario`. El resto
- * de rangos se asigna manualmente en Panel Admin → Personal (`equipo`) y
- * se resuelve en vivo con window.PanterRoles.resolveRole().
+ * Política de rangos: SIN rango automático por correo. Toda cuenta es
+ * `usuario` hasta que se le asigna un rango manualmente en
+ * Panel Admin → Personal (`equipo`), resuelto en vivo con
+ * window.PanterRoles.resolveRole().
  */
 const SITE_ROOT = (document.body?.dataset.siteRoot || '.').replace(/\/$/, '');
 
@@ -333,7 +333,7 @@ async function saveUserProfile(user, username, options = {}) {
         || (localProfile && String(localProfile.uid) === String(safeUser.uid) ? localProfile : null);
     const email = String(safeUser.email || '').toLowerCase();
     const R = window.PanterRoles;
-    const emailRole = R ? R.roleForEmail(email) : (email === 'oliverosgutierezjhonier@gmail.com' ? 'director' : 'usuario');
+    const emailRole = 'usuario';
     const now = new Date().toISOString();
     const pendingReferral = normalizeReferralCode(options.referralCode || getPendingReferralCode());
     const usernameResolution = await resolveAvailableUsername(

@@ -69,14 +69,12 @@
         }
     }
 
-    // Sólo el correo oficial del Director define un rango automático.
+    /**
+     * @deprecated Ya no hay rango automático por correo. Los rangos se
+     * asignan manualmente en Panel Admin → Personal (`equipo`).
+     */
     function isDirectorEmail(str) {
-        const R = rolesLib();
-        const email = String(str || '').trim().toLowerCase();
-        if (R && typeof R.roleForEmail === 'function') {
-            return R.roleForEmail(email) === 'director';
-        }
-        return email === 'oliverosgutierezjhonier@gmail.com';
+        return false;
     }
 
     function saveAccessToken(token, expiresIn) {
@@ -143,8 +141,9 @@
 
         const R = rolesLib();
         const email = rawUser.email || `${rawUser.id}@discord.local`;
-        const sessionRole = R ? R.roleForEmail(email) : 'usuario';
-        const isDirector = Boolean(R && R.roleForEmail(email) === 'director');
+        // Sin rango automático por correo: el rango real se resuelve en vivo
+        // desde `equipo` mediante PanterRoles.resolveRole().
+        const sessionRole = 'usuario';
 
         return {
             uid: `discord_${rawUser.id}`,
@@ -161,7 +160,7 @@
             emailVerified: true,
             providerId: 'discord.com',
             role: R ? R.toLegacyRole(sessionRole) : sessionRole,
-            isAdmin: Boolean(R ? R.canAccessAdminPanel(sessionRole) : isDirector),
+            isAdmin: false,
             discordAdmin: false,
             adminOwner: false,
             discordGuildId: extra.guildId || null,
@@ -177,10 +176,10 @@
         const R = rolesLib();
         if (!R) return user;
 
-        // El rango de sesión se deriva sólo del correo. El rango manual de
-        // Personal (`equipo`) se resuelve en vivo con `PanterRoles.resolveRole`
-        // y en los badges/perfil/tickets.
-        const sessionRole = R.roleForEmail(user.email);
+        // El rango de sesión es siempre el base; el rango manual asignado en
+        // Personal (`equipo`) se resuelve en vivo con PanterRoles.resolveRole()
+        // en badges, perfil, panel y tickets.
+        const sessionRole = 'usuario';
         user.role = R.toLegacyRole(sessionRole);
         user.isAdmin = R.canAccessAdminPanel(sessionRole);
         user.discordAdmin = false;
@@ -212,15 +211,15 @@
 
     /**
      * Adopta un usuario de Firebase Auth (email/password o Google) como
-     * sesión unificada de la web. El rango se decide EXCLUSIVAMENTE por el
-     * correo: Director para oliverosgutierezjhonier@gmail.com, Usuario para
-     * cualquier otro. Los rangos superiores se asignan en `equipo` (Personal).
+     * sesión unificada de la web. Sin rango automático por correo: el rango
+     * se asigna manualmente en `equipo` (Panel Admin → Personal) y se
+     * resuelve en vivo con PanterRoles.resolveRole().
      */
     function adoptFirebaseUser(fbUser) {
         if (!fbUser || !fbUser.uid) return null;
         const R = rolesLib();
         const email = String(fbUser.email || '').trim().toLowerCase();
-        const role = R ? R.roleForEmail(email) : 'usuario';
+        const role = 'usuario';
         const name = String(fbUser.displayName || (email.split('@')[0] || 'Usuario')).trim();
         const avatar = fbUser.photoURL || 'https://cdn.discordapp.com/embed/avatars/0.png';
         const providerId = (fbUser.providerData && fbUser.providerData[0] && fbUser.providerData[0].providerId)

@@ -861,25 +861,8 @@ async function loadStaffList() {
             rowIds(row).forEach(id => seen.add(id));
         });
 
-        profiles.forEach(row => {
-            const ids = rowIds(row);
-            if (ids.some(id => seen.has(id) || archived.has(id))) return;
-            // `conductores.role` ya no otorga rango. Sólo se lista un perfil sin
-            // ficha en `equipo` cuando pertenece al correo oficial del Director.
-            const isDirector = Boolean(
-                R && typeof R.roleForEmail === 'function' &&
-                R.roleForEmail(row.email) === 'director'
-            );
-            if (!isDirector) return;
-            members.push({
-                id: row.id,
-                name: row.username || row.displayName || row.nombre || 'Sin nombre',
-                email: row.email || '',
-                role: 'director',
-                avatar: row.avatar || row.avatarUrl || ''
-            });
-            ids.forEach(id => seen.add(id));
-        });
+        // `conductores` NO aporta miembros ni rangos: la única fuente de
+        // rangos es `equipo` (Panel Admin → Personal). Sin excepción por correo.
 
         members.sort((a, b) => {
             const ra = R ? R.rank(a.role) : 0;

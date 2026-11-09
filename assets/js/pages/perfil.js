@@ -25,12 +25,9 @@
     'soporte', 'programador', 'modelador'
   ]);
 
-  /** Sólo el correo oficial del Director recibe rango automático. */
+  /** @deprecated Sin rango automático por correo: siempre false. */
   function isDirectorEmail(str) {
-    const R = window.PanterRoles;
-    const email = String(str || '').trim().toLowerCase();
-    if (R && typeof R.roleForEmail === 'function') return R.roleForEmail(email) === 'director';
-    return email === 'oliverosgutierezjhonier@gmail.com';
+    return false;
   }
 
   /* ── DOM ── */
@@ -847,7 +844,7 @@
     } catch (e) {}
     if (!currentUserData) {
       const R = window.PanterRoles;
-      const emailRole = R ? R.roleForEmail(user.email) : (isDirectorEmail(user.email) ? 'director' : 'usuario');
+      const emailRole = 'usuario';
       currentUserData = {
         displayName: user.displayName || user.username || user.email?.split('@')[0] || 'Usuario Discord',
         username: user.username || 'Usuario',

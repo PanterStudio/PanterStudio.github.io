@@ -468,13 +468,13 @@ function buscarMiembroEquipo(equipo, claves, autorNombre, autorEmail) {
 }
 
 /**
- * Resuelve el rol global de un autor de comentario con la MISMA prioridad
+ * Resuelve el rol global de un autor de comentario con la MISMA política
  * que `PanterRoles.resolveRole`:
- *   1. Correo oficial del Director → `director`.
- *   2. Rango manual asignado en Panel Admin → Personal (`equipo`).
- *   3. Cualquier otra cuenta → `usuario`.
+ *   1. Rango manual asignado en Panel Admin → Personal (`equipo`).
+ *   2. Cualquier otra cuenta → `usuario`.
  *
- * `conductores.role`, `esStaff` y los datos de Discord NO otorgan rango.
+ * No hay rango automático por correo. `conductores.role`, `esStaff` y
+ * los datos de Discord NO otorgan rango.
  */
 async function resolverRolUsuario(autorId, autorNombre, autorEmail) {
     const emailInicial = String(autorEmail || '').trim().toLowerCase();
@@ -487,30 +487,16 @@ async function resolverRolUsuario(autorId, autorNombre, autorEmail) {
     let rol = null;
     let definitivo = false;
 
-    // 1) Correo exacto del Director (prioridad absoluta).
-    if (emailInicial && R && typeof R.roleForEmail === 'function'
-        && R.roleForEmail(emailInicial) === 'director') {
-        rol = 'director';
-        definitivo = true;
-    }
-
-    // 2) Rango manual en `equipo` (por uid o por correo).
-    if (!rol) {
-        try {
-            const equipo = await cargarEquipoRoles();
-            const miembro = buscarMiembroEquipo(equipo, ids, autorNombre, emailInicial);
-            if (miembro) {
-                const miembroEmail = String(miembro.email || '').trim().toLowerCase();
-                if (miembroEmail && R && typeof R.roleForEmail === 'function'
-                    && R.roleForEmail(miembroEmail) === 'director') {
-                    rol = 'director';
-                } else {
-                    rol = extraerRolDocumento(miembro);
-                }
-                if (rol) definitivo = true;
-            }
-        } catch (e) { /* lectura opcional */ }
-    }
+    // Única fuente: rango manual en `equipo` (por uid o por correo).
+    // No hay rango automático por correo ni por Discord.
+    try {
+        const equipo = await cargarEquipoRoles();
+        const miembro = buscarMiembroEquipo(equipo, ids, autorNombre, emailInicial);
+        if (miembro) {
+            rol = extraerRolDocumento(miembro);
+            if (rol) definitivo = true;
+        }
+    } catch (e) { /* lectura opcional */ }
 
     if (!rol) rol = 'usuario';
 

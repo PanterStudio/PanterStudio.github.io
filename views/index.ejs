@@ -374,9 +374,8 @@
                     const data = doc.data();
                     const email = String(data.email || '').trim().toLowerCase();
                     const uname = String(data.username || data.nombre_usuario || data.displayName || '').trim().toLowerCase();
-                    // Política exclusiva por correo (sin detección por Discord).
-                    const R = window.PanterRoles;
-                    const role = R && typeof R.roleForEmail === 'function' ? R.roleForEmail(email) : 'usuario';
+                    // Sin rango automático por correo: se resuelve desde `equipo`.
+                    const role = 'usuario';
                     list.push({
                         nombre_usuario: data.nombre_usuario,
                         username: data.username,
@@ -398,15 +397,8 @@
                 // Ordenar por monedas descendente
                 list.sort((a, b) => b.coins - a.coins);
                 
-                // Mostrar los mejores 5
+                // Mostrar los mejores 5 (sin excepciones por correo)
                 let top5 = list.slice(0, 5);
-                const R2 = window.PanterRoles;
-                const isDirectorMatch = u => R2 && typeof R2.roleForEmail === 'function'
-                    && R2.roleForEmail(String(u.email || '')) === 'director';
-                const directorItem = list.find(isDirectorMatch);
-                if (directorItem && !top5.some(isDirectorMatch)) {
-                    top5.push(directorItem);
-                }
                 
                 // Hacer la lista accesible para el click handler
                 window.leaderboardCachedList = top5;
