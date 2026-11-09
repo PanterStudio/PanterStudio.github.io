@@ -23,6 +23,9 @@
             --color-primary-light: #40c4ff;
         }
         [hidden] { display: none !important; }
+        /* Las partículas se atenúan para que las imágenes sean las protagonistas. */
+        #tsparticles { opacity: .18 !important; }
+        .gallery-filters { margin-bottom: 1rem !important; }
         body {
             background-color: #0a0d14 !important;
             background-image:
@@ -34,7 +37,7 @@
         }
         .gallery-hero-header {
             text-align: center;
-            padding: 2.5rem 1rem 1.5rem;
+            padding: 1.2rem 1rem .8rem;
             max-width: 800px;
             margin: 0 auto;
         }
@@ -55,7 +58,7 @@
             box-shadow: 0 0 20px rgba(0, 176, 255, 0.25);
         }
         .gallery-title {
-            font-size: clamp(2rem, 4.5vw, 3.2rem);
+            font-size: clamp(1.8rem, 3.6vw, 2.5rem);
             font-weight: 900;
             line-height: 1.1;
             margin: 0 0 1rem 0;
@@ -112,7 +115,7 @@
             text-align: center;
             font-size: 0.78rem;
             color: var(--text-muted, #8a99ad);
-            margin: -0.5rem 0 1.5rem;
+            margin: -0.2rem 0 0.9rem;
             letter-spacing: 0.02em;
         }
 
@@ -293,6 +296,13 @@
             border-color: rgba(239, 68, 68, 0.45);
             color: #fca5a5;
         }
+
+        /* Compacto: las tarjetas deben entrar en el primer pantallazo. */
+        .gallery-hero-header { padding: .8rem 1rem .4rem !important; }
+        .gallery-badge { margin-bottom: .6rem !important; }
+        .gallery-title { margin-bottom: .5rem !important; }
+        .gallery-desc { font-size: .92rem !important; line-height: 1.45 !important; }
+        .gallery-admin-bar { margin-bottom: .7rem !important; padding: .6rem 1rem !important; }
     </style>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
@@ -346,7 +356,7 @@
         </nav>
     </nav>
 
-    <main class="container" style="max-width: 1200px; padding: 1rem 1.5rem 4rem;">
+    <main class="container" style="max-width: 1200px; padding: 0.4rem 1.5rem 3rem;">
 
         <header class="gallery-hero-header">
             <span class="gallery-badge"><i class="fa-solid fa-camera" aria-hidden="true"></i> Capturas Oficiales · En Vivo</span>

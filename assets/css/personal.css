@@ -598,3 +598,238 @@
         transition: none;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   ÁRBOL ORGANIZACIONAL — lienzo claro + conectores
+   Cúspide: Fundador / CEO junto al Director.
+   Debajo: ramas por rango con todo el personal asignado.
+   ═══════════════════════════════════════════════════════════ */
+.ps-team-tree { display: block; }
+
+.ps-org {
+    --ps-org-line: #c8c0ae;
+    --ps-org-line-soft: #ddd5c4;
+    background: #faf7f0;
+    color: #26303f;
+    border: 1px solid #e8e0d0;
+    border-radius: 26px;
+    padding: 2.5rem 1.5rem 3.5rem;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
+    text-align: center;
+}
+.ps-org-title {
+    margin: 0 0 .35rem;
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    font-weight: 900;
+    letter-spacing: -.02em;
+    color: #2f3a4a;
+}
+.ps-org-sub {
+    margin: 0 auto 2rem;
+    max-width: 640px;
+    font-size: .9rem;
+    color: #6b7686;
+    line-height: 1.6;
+}
+
+/* Cúspide: dos nodos unidos por una línea horizontal */
+.ps-org-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: nowrap;
+    position: relative;
+}
+.ps-org-couple {
+    flex: 0 0 72px;
+    height: 1px;
+    background: var(--ps-org-line);
+    margin-top: 52px;
+}
+.ps-org-stem {
+    width: 1px;
+    height: 40px;
+    background: var(--ps-org-line);
+    margin: 0 auto;
+}
+
+/* Nodos circulares */
+.ps-org-person {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 150px;
+    flex: 0 0 150px;
+    padding-top: 1rem;
+}
+.ps-org-person::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 1px;
+    height: 1rem;
+    background: var(--ps-org-line-soft);
+}
+.ps-org-top .ps-org-person::before { display: none; }
+.ps-org-person.is-big {
+    width: 190px;
+    flex-basis: 190px;
+    padding-top: 0;
+}
+.ps-org-avatar {
+    position: relative;
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid var(--ps-org-color, #0055ff);
+    background: #e9e2d4;
+    box-shadow: 0 8px 22px rgba(45, 55, 72, .14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.ps-org-person.is-big .ps-org-avatar {
+    width: 104px;
+    height: 104px;
+    border-width: 4px;
+}
+.ps-org-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.ps-org-initial {
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--ps-org-color, #0055ff);
+}
+.ps-org-person.is-big .ps-org-initial { font-size: 2.2rem; }
+.ps-org-name {
+    margin-top: .7rem;
+    font-size: .98rem;
+    font-weight: 800;
+    color: #25303f;
+    line-height: 1.25;
+    word-break: break-word;
+}
+.ps-org-person.is-big .ps-org-name { font-size: 1.2rem; }
+.ps-org-role {
+    font-size: .78rem;
+    color: #6b7686;
+    margin-top: .15rem;
+    font-weight: 600;
+}
+.ps-org-specialty {
+    font-size: .7rem;
+    color: #8a94a3;
+    margin-top: .2rem;
+    max-width: 140px;
+}
+.ps-org-badge {
+    margin-top: .5rem;
+    transform: scale(.85);
+    transform-origin: top center;
+}
+.ps-org-badge .ps-role-badge {
+    background: #fff !important;
+    border-color: var(--ps-org-color) !important;
+}
+
+/* Ramas por rango */
+.ps-org-branches {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 1.6rem 1rem;
+    padding-top: 1.4rem;
+}
+.ps-org-branches::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 8%;
+    right: 8%;
+    height: 1px;
+    background: var(--ps-org-line);
+}
+.ps-org-branch {
+    position: relative;
+    min-width: 210px;
+    max-width: 420px;
+    flex: 1 1 240px;
+    padding-top: 1.4rem;
+}
+.ps-org-branch::before {
+    content: "";
+    position: absolute;
+    top: -1.4rem;
+    left: 50%;
+    width: 1px;
+    height: 1.4rem;
+    background: var(--ps-org-line);
+}
+.ps-org-branch-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 14px;
+    border-radius: 100px;
+    font-size: .76rem;
+    font-weight: 800;
+    color: #fff;
+    background: var(--ps-org-color, #0055ff);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .12);
+}
+.ps-org-branch-label span {
+    background: rgba(255, 255, 255, .22);
+    border-radius: 100px;
+    padding: 1px 7px;
+    font-size: .7rem;
+}
+.ps-org-branch-people {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: .75rem;
+    padding-top: 1.2rem;
+    margin-top: .6rem;
+}
+.ps-org-branch-people::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 12%;
+    right: 12%;
+    height: 1px;
+    background: var(--ps-org-line-soft);
+}
+.ps-org-empty {
+    color: #6b7686;
+    font-size: .9rem;
+    padding: 1rem;
+}
+
+@media (max-width: 760px) {
+    .ps-org { padding: 1.8rem .75rem 2.5rem; border-radius: 18px; }
+    .ps-org-couple { flex-basis: 28px; margin-top: 42px; }
+    .ps-org-person.is-big { width: 130px; flex-basis: 130px; }
+    .ps-org-person.is-big .ps-org-avatar { width: 84px; height: 84px; }
+    .ps-org-person { width: 120px; flex-basis: 120px; }
+    .ps-org-branches::before,
+    .ps-org-branch-people::before,
+    .ps-org-branch::before,
+    .ps-org-person::before { display: none; }
+    .ps-org-branch { min-width: 100%; padding-top: .8rem; }
+    .ps-org-branch-people { padding-top: .5rem; }
+}

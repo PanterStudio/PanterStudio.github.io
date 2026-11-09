@@ -5,395 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Equipo & Rangos — Panter Studio</title>
     <link rel="icon" href="../recursos/PSGD.png" type="image/png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/modules.css">
     <script src="../assets/js/core/roles.js"></script>
     <script src="../assets/js/core/discord-auth.js"></script>
     <script src="../assets/js/core/role-badges.js"></script>
     <script src="../assets/js/core/firebase-config.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
-    <style>
-        /* ===== ULTRA MODERN TEAM & STAFF STYLES ===== */
-        :root {
-            --bg-body: #13161d;
-            --bg-card: rgba(22, 27, 40, 0.75);
-            --border-color: rgba(255, 255, 255, 0.08);
-            --text-accent: #00b0ff;
-        }
-
-        body {
-            background-color: #13161d !important;
-            background-image: radial-gradient(ellipse at 30% 20%, rgba(0, 176, 255, 0.08) 0%, transparent 60%),
-                              radial-gradient(ellipse at 75% 80%, rgba(88, 101, 242, 0.06) 0%, transparent 55%) !important;
-            background-attachment: fixed !important;
-            color: #f0f4ff;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        }
-
-        .team-container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 1.5rem 1rem 4rem 1rem;
-        }
-
-        /* Clean Header without big boxes */
-        .team-simple-header {
-            text-align: center;
-            margin-bottom: 2.5rem;
-            padding-top: 1rem;
-        }
-
-        .team-simple-header h1 {
-            font-size: clamp(2rem, 4.5vw, 3rem);
-            font-weight: 800;
-            margin: 0 0 0.5rem 0;
-            color: #ffffff;
-            letter-spacing: -0.5px;
-        }
-
-        .team-simple-header p {
-            font-size: 1rem;
-            color: #94a3b8;
-            margin: 0 auto;
-            max-width: 500px;
-        }
-
-        /* Staff Grid */
-        .staff-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 2rem;
-            justify-content: center;
-        }
-
-        /* Árbol jerárquico de rangos */
-        .ps-team-tree {
-            display: flex;
-            flex-direction: column;
-            gap: 2.5rem;
-        }
-
-        .ps-rank-group {
-            position: relative;
-            padding-left: 1.35rem;
-            border-left: 2px solid var(--ps-rank-border, rgba(255, 255, 255, 0.12));
-        }
-
-        .ps-rank-group::before {
-            content: '';
-            position: absolute;
-            top: 2.1rem;
-            left: -2px;
-            width: 1.35rem;
-            height: 2px;
-            background: var(--ps-rank-border, rgba(255, 255, 255, 0.12));
-        }
-
-        .ps-rank-header {
-            display: flex;
-            align-items: center;
-            gap: 0.85rem;
-            margin: 0 0 1.25rem;
-            padding: 0.8rem 1rem;
-            border-radius: 16px;
-            border: 1px solid var(--ps-rank-border, rgba(255, 255, 255, 0.12));
-            background: linear-gradient(90deg, var(--ps-rank-bg, rgba(255, 255, 255, 0.04)), transparent 78%);
-        }
-
-        .ps-rank-node {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 38px;
-            height: 38px;
-            flex: 0 0 38px;
-            border-radius: 50%;
-            color: var(--ps-rank-color, #00b0ff);
-            background: rgba(9, 13, 23, 0.75);
-            border: 1px solid var(--ps-rank-border, rgba(255, 255, 255, 0.18));
-            box-shadow: 0 0 18px var(--ps-rank-bg, rgba(0, 176, 255, 0.12));
-        }
-
-        .ps-rank-heading {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            min-width: 0;
-        }
-
-        .ps-rank-name {
-            font-size: 1.02rem;
-            font-weight: 800;
-            letter-spacing: 0.02em;
-            color: var(--ps-rank-color, #e2e8f0);
-            text-transform: uppercase;
-        }
-
-        .ps-rank-meta {
-            font-size: 0.72rem;
-            font-weight: 600;
-            color: #94a3b8;
-        }
-
-        .ps-rank-count {
-            margin-left: auto;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 30px;
-            padding: 3px 10px;
-            border-radius: 999px;
-            font-size: 0.76rem;
-            font-weight: 800;
-            color: var(--ps-rank-color, #e2e8f0);
-            background: rgba(9, 13, 23, 0.6);
-            border: 1px solid var(--ps-rank-border, rgba(255, 255, 255, 0.18));
-        }
-
-        @media (max-width: 640px) {
-            .ps-rank-group {
-                padding-left: 0.85rem;
-            }
-            .ps-rank-group::before {
-                width: 0.85rem;
-            }
-            .ps-rank-header {
-                gap: 0.65rem;
-                padding: 0.7rem 0.75rem;
-            }
-            .ps-rank-name {
-                font-size: 0.9rem;
-            }
-        }
-
-        /* Premium Glass Card */
-        .staff-card {
-            background: rgba(22, 27, 40, 0.85);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            padding: 2.5rem 2rem;
-            text-align: center;
-            position: relative;
-            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            overflow: hidden;
-        }
-
-        .staff-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 4px;
-            transition: opacity 0.3s;
-        }
-
-        .staff-card:hover {
-            transform: translateY(-8px);
-        }
-
-        /* Theme Overrides for Cards */
-        .card-gold {
-            border-color: rgba(251, 191, 36, 0.25);
-        }
-        .card-gold::before {
-            background: linear-gradient(90deg, #f59e0b, #fbbf24);
-        }
-        .card-gold:hover {
-            border-color: rgba(251, 191, 36, 0.55);
-            box-shadow: 0 16px 45px rgba(251, 191, 36, 0.12), 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        .card-red {
-            border-color: rgba(239, 68, 68, 0.25);
-        }
-        .card-red::before {
-            background: linear-gradient(90deg, #dc2626, #ef4444);
-        }
-        .card-red:hover {
-            border-color: rgba(239, 68, 68, 0.55);
-            box-shadow: 0 16px 45px rgba(239, 68, 68, 0.12), 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        .card-aqua {
-            border-color: rgba(0, 240, 255, 0.25);
-        }
-        .card-aqua::before {
-            background: linear-gradient(90deg, #00b0ff, #00f0ff);
-        }
-        .card-aqua:hover {
-            border-color: rgba(0, 240, 255, 0.55);
-            box-shadow: 0 16px 45px rgba(0, 240, 255, 0.12), 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        /* Avatar Frame */
-        .avatar-frame {
-            width: 96px;
-            height: 96px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            background: rgba(15, 23, 42, 0.8);
-            font-size: 3rem;
-            margin-bottom: 1.25rem;
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .staff-card:hover .avatar-frame {
-            transform: scale(1.08);
-        }
-
-        .frame-gold {
-            border: 3px solid #fbbf24;
-            box-shadow: 0 0 24px rgba(251, 191, 36, 0.35);
-        }
-        .frame-red {
-            border: 3px solid #ef4444;
-            box-shadow: 0 0 24px rgba(239, 68, 68, 0.35);
-        }
-        .frame-aqua {
-            border: 3px solid #00f0ff;
-            box-shadow: 0 0 24px rgba(0, 240, 255, 0.35);
-        }
-
-        /* Color dinámico por rango (sincronizado desde el Gestor de Roles) */
-        .ps-staff-card {
-            border-color: var(--ps-staff-border, rgba(255, 255, 255, 0.08));
-        }
-        .ps-staff-card::before {
-            background: linear-gradient(90deg, transparent, var(--ps-staff-color, #00b0ff), transparent);
-        }
-        .ps-staff-card:hover {
-            border-color: var(--ps-staff-color, #00b0ff);
-            box-shadow: 0 16px 45px var(--ps-staff-bg, rgba(0, 176, 255, 0.12)), 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-        .ps-staff-avatar {
-            border: 3px solid var(--ps-staff-color, #00b0ff);
-            box-shadow: 0 0 24px var(--ps-staff-border, rgba(0, 176, 255, 0.35));
-        }
-
-        /* Badges */
-        .staff-badge-group {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-bottom: 1rem;
-        }
-
-        .staff-badge {
-            font-size: 0.72rem;
-            font-weight: 800;
-            padding: 4px 14px;
-            border-radius: 100px;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-        }
-
-        .badge-gold {
-            background: rgba(251, 191, 36, 0.12);
-            border: 1px solid rgba(251, 191, 36, 0.35);
-            color: #fbbf24;
-        }
-        .badge-red {
-            background: rgba(239, 68, 68, 0.12);
-            border: 1px solid rgba(239, 68, 68, 0.35);
-            color: #f87171;
-        }
-        .badge-aqua {
-            background: rgba(0, 240, 255, 0.12);
-            border: 1px solid rgba(0, 240, 255, 0.35);
-            color: #38bdf8;
-        }
-        .badge-purple {
-            background: rgba(168, 85, 247, 0.12);
-            border: 1px solid rgba(168, 85, 247, 0.35);
-            color: #c084fc;
-        }
-
-        .staff-name {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: #f8fafc;
-            margin: 0 0 0.35rem 0;
-            letter-spacing: -0.3px;
-        }
-
-        .staff-title {
-            font-size: 0.85rem;
-            color: var(--ps-staff-color, #38bdf8);
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-bottom: 1rem;
-        }
-
-        .staff-desc {
-            font-size: 0.9rem;
-            color: #94a3b8;
-            line-height: 1.55;
-            margin: 0 0 1.5rem 0;
-            flex-grow: 1;
-        }
-
-        /* Staff Meta Table */
-        .staff-meta {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            padding-top: 1.25rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            background: rgba(15, 23, 42, 0.4);
-            border-radius: 14px;
-            padding: 1rem;
-        }
-
-        .meta-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.82rem;
-        }
-
-        .meta-label {
-            color: #64748b;
-            font-weight: 600;
-        }
-
-        .meta-value {
-            color: #cbd5e1;
-            font-weight: 700;
-        }
-
-        .status-online {
-            color: #4ade80;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .status-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background-color: #4ade80;
-            box-shadow: 0 0 8px #4ade80;
-        }
-    </style>
-
     <link rel="stylesheet" href="../assets/css/personal.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <style>
+        /* El árbol va sobre un lienzo claro para que destaquen las líneas
+           conectoras, como en un árbol genealógico clásico. */
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        #tsparticles { display: none !important; }
+        .team-container { padding-bottom: 4rem; }
+        .ps-team-summary {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 7px 16px; border-radius: 100px;
+            font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em;
+            color: #7dd3fc;
+            background: rgba(0, 176, 255, 0.09);
+            border: 1px solid rgba(0, 176, 255, 0.28);
+        }
+    </style>
 </head>
 <body data-site-root=".." data-theme="dark" class="dark-mode">
-    <div id="tsparticles"></div>
-    
+
     <!-- NAV -->
     <nav>
         <div class="nav-left">
@@ -422,7 +60,6 @@
         <button class="nav-hamburger" aria-label="Menú" aria-expanded="false">
             <span></span><span></span><span></span>
         </button>
-        <!-- Mobile menu -->
         <nav class="nav-mobile-menu">
             <a href="../index.html">Inicio</a>
             <a href="nuestra-tierra.html">Nuestra Tierra</a>
@@ -430,7 +67,7 @@
             <span style="font-size:0.75rem;color:var(--text-muted);padding:0.5rem 1rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Novedades</span>
             <div class="nav-mobile-sub">
                 <a href="actualizaciones.html">Actualizaciones</a>
-                <a href="imagenes.html">Galería</a>
+                <a href="imagenes.html" class="active">Galería</a>
                 <a href="videos.html">Videos</a>
             </div>
             <hr>
@@ -441,34 +78,26 @@
         </nav>
     </nav>
 
-    <!-- MAIN CONTENT -->
     <main class="team-container">
         <header class="ps-team-intro">
             <span class="ps-team-eyebrow"><i class="fa-solid fa-sitemap" aria-hidden="true"></i> Panter Studio · Organización</span>
             <h1>Nuestro equipo</h1>
-            <p>Conoce a las personas que hacen crecer nuestros proyectos. Los rangos y la disponibilidad se actualizan en tiempo real.</p>
-            <span class="ps-team-live"><span class="ps-team-live-dot" aria-hidden="true"></span> Sincronizado con Firestore</span>
+            <p>Fundación, dirección y todas las personas con rango asignado, en orden jerárquico y en tiempo real.</p>
+            <span class="ps-team-live"><span class="ps-team-live-dot" aria-hidden="true"></span> Sincronizado con el panel</span>
         </header>
 
-        <!-- FILTROS DINÁMICOS -->
-        <div class="ps-team-toolbar" id="teamFilters" aria-label="Filtrar personal por rango"></div>
+        <div class="ps-team-toolbar" id="teamFilters" aria-live="polite"></div>
 
-        <!-- TEAM TREE (renderizado por personal.js) -->
-        <div class="ps-team-tree" id="staffGrid">
-            <div class="ps-team-empty">
-                <i class="fa-solid fa-circle-notch fa-spin"></i>
-                <strong>Cargando equipo…</strong>
-                <p>Sincronizando miembros, rangos y colores desde Firestore.</p>
-            </div>
-        </div>
+        <!-- ÁRBOL ORGANIZACIONAL (renderizado por personal.js) -->
+        <div class="ps-team-tree" id="staffGrid"></div>
     </main>
 
     <footer>
         <p>&copy; 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
     </footer>
+
     <script src="../assets/js/site-visibility.js"></script>
     <script src="../assets/js/core/script.js"></script>
-
     <script src="../assets/js/pages/personal.js"></script>
 </body>
 </html>

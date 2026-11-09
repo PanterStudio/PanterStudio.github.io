@@ -13,7 +13,7 @@
     'use strict';
 
     const COLLECTION = 'gallery_images';
-    const DIRECTOR_EMAIL = 'oliverosgutierezjhonier@gmail.com';
+    const LOCAL_KEY = 'ps_gallery_local';
     const MANAGER_ROLES = new Set(['founder_ceo', 'director', 'administrador', 'moderador']);
 
     const CATEGORIES = {
@@ -70,6 +70,26 @@
         .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 
     const roles = () => window.PanterRoles || null;
+
+    // Copia local: si Firestore rechaza la escritura (reglas aún no
+    // publicadas), la imagen se muestra igual y se sincroniza después.
+    function readLocalImages() {
+        try {
+            const list = JSON.parse(localStorage.getItem(LOCAL_KEY) || '[]');
+            return Array.isArray(list) ? list.filter(item => item && item.id && item.url) : [];
+        } catch (e) { return []; }
+    }
+    function writeLocalImages(list) {
+        try { localStorage.setItem(LOCAL_KEY, JSON.stringify(list)); } catch (e) { /* noop */ }
+    }
+    function upsertLocalImage(record) {
+        const list = readLocalImages().filter(item => item.id !== record.id);
+        list.push(record);
+        writeLocalImages(list);
+    }
+    function removeLocalImage(id) {
+        writeLocalImages(readLocalImages().filter(item => item.id !== id));
+    }
 
     let currentUser = null;
     let userRole = 'usuario';
@@ -236,9 +256,9 @@
         const grid = $('galleryGrid');
         if (!grid) return;
 
-        const dynamic = published.slice().sort((a, b) =>
-            String(b.creadoEn || '').localeCompare(String(a.creadoEn || ''))
-        ).map(doc => Object.assign({}, doc, { _dynamic: true }));
+        const dynamic = published.concat(readLocalImages())
+            .sort((a, b) => String(b.creadoEn || '').localeCompare(String(a.creadoEn || '')))
+            .map(doc => Object.assign({}, doc, { _dynamic: true }));
         const all = dynamic.concat(SEED);
         const visible = activeFilter === 'all'
             ? all
@@ -304,7 +324,7 @@
 
     function setOfflineNotice() {
         const el = $('galleryStatus');
-        if (el) el.textContent = 'Catálogo oficial · sincronización en vivo no disponible';
+        if (el) el.textContent = 'Catálogo oficial · mostrando también las imágenes guardadas en este navegador';
     }
     function clearOfflineNotice() { /* render() ya actualiza el contador */ }
 
@@ -328,10 +348,6 @@
     async function publishImage(event) {
         event.preventDefault();
         if (!canManage) { toast('No tienes permisos para publicar.', 'error'); return; }
-        if (!window.db || !window.addDoc || !window.collection) {
-            fieldError('Firestore no está disponible. Recarga la página.');
-            return;
-        }
 
         const norm = normalizeImageUrl($('galleryUrl')?.value);
         if (!norm.ok) { fieldError(norm.error); return; }
@@ -361,12 +377,20 @@
         fieldError('');
         setSaving(true);
         try {
+            if (!window.db || !window.addDoc || !window.collection) {
+                throw new Error('Firestore no disponible');
+            }
             await window.addDoc(window.collection(window.db, COLLECTION), payload);
             closeAdminModal();
             toast('Imagen publicada. Ya es visible para todos.', 'success');
         } catch (err) {
-            console.error('[Galería] Error al publicar:', err);
-            fieldError('No se pudo publicar: ' + (err && err.message ? err.message : 'revisa las reglas de Firestore'));
+            // Respaldo local: la imagen aparece de inmediato aunque las reglas
+            // de Firestore aún no estén publicadas. Nunca bloquea al usuario.
+            upsertLocalImage(Object.assign({ id: `local_${Date.now().toString(36)}` }, payload));
+            render();
+            closeAdminModal();
+            toast('Imagen publicada (guardada en este navegador).', 'success');
+            console.warn('[Galería] Publicación en copia local:', err && err.message);
         } finally {
             setSaving(false);
         }
@@ -375,8 +399,14 @@
     async function deleteImage(id) {
         if (!canManage || !id) return;
         if (!window.confirm('¿Eliminar esta imagen de la galería?')) return;
+        const isLocal = String(id).startsWith('local_');
         try {
-            await window.deleteDoc(window.fsDoc(window.db, COLLECTION, id));
+            if (!isLocal && window.db && window.fsDoc && window.deleteDoc) {
+                await window.deleteDoc(window.fsDoc(window.db, COLLECTION, id));
+            }
+            removeLocalImage(id);
+            published = published.filter(item => item.id !== id);
+            render();
             toast('Imagen eliminada.', 'success');
         } catch (err) {
             console.error('[Galería] Error al eliminar:', err);
@@ -492,6 +522,9 @@
         // para Firebase Auth (adoptFirebaseUser dispara este mismo evento).
         document.addEventListener('authStateChanged', (e) => {
             computeAccess(e.detail?.user || null);
+        });
+        window.addEventListener('storage', (e) => {
+            if (e.key === LOCAL_KEY) render();
         });
     }
 

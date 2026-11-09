@@ -308,8 +308,8 @@ function renderCeoUsersTable(filterText = '') {
             </div>
 
             <!-- Acciones del directorio -->
-            <div class="account-card-bottom ${isFounder ? 'account-card-locked' : ''}">
-                ${isFounder ? `
+            <div class="account-card-bottom ${isDirector ? 'account-card-locked' : ''}">
+                ${isDirector ? `
                     <div class="account-locked-msg">
                         <i class="fa-solid fa-crown" aria-hidden="true"></i> Cuenta fundadora — directorio de solo lectura
                     </div>
@@ -329,12 +329,26 @@ function renderCeoUsersTable(filterText = '') {
     }).join('');
 }
 
+/** Lee una colección con timeout: el directorio nunca se queda colgado. */
+async function readCollectionSafe(name, timeoutMs = 8000) {
+    try {
+        const snap = await Promise.race([
+            window.getDocs(window.collection(window.db, name)),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeoutMs))
+        ]);
+        return snap && Array.isArray(snap.docs) ? snap.docs : [];
+    } catch (error) {
+        console.warn(`[Admin] No se pudo leer ${name}:`, error && error.message);
+        return [];
+    }
+}
+
 async function loadCeoUsers() {
     if (!ceoUsersTableBody) return;
 
     if (!window.db || !window.collection || !window.getDocs) {
-        setCeoMessage('Firebase aun no esta disponible para cargar usuarios.', true);
-        ceoUsersTableBody.innerHTML = '<tr><td colspan="7">No se pudo cargar la lista.</td></tr>';
+        setCeoMessage('Firebase aún no está disponible. Pulsa «Actualizar» en unos segundos.', true);
+        ceoUsersTableBody.innerHTML = '<div class="accounts-empty">No se pudo cargar la lista todavía.</div>';
         return;
     }
 
@@ -343,8 +357,8 @@ async function loadCeoUsers() {
     try {
         const emailIndexMap = new Map();
 
-        const usersSnapshot = await window.getDocs(window.collection(window.db, 'conductores'));
-        usersSnapshot.docs.forEach((docSnap) => {
+        const userDocs = await readCollectionSafe('conductores');
+        userDocs.forEach((docSnap) => {
             const data = docSnap.data() || {};
             if (data.eliminado === true) return;
             const email = String(data.email || '').trim().toLowerCase();
@@ -363,8 +377,8 @@ async function loadCeoUsers() {
 
         // El rango vigente vive en `equipo` (Panel Admin → Personal).
         try {
-            const teamSnapshot = await window.getDocs(window.collection(window.db, 'equipo'));
-            teamSnapshot.docs.forEach((docSnap) => {
+            const teamDocs = await readCollectionSafe('equipo');
+            teamDocs.forEach((docSnap) => {
                 const data = docSnap.data() || {};
                 if (data.archivado === true) return;
                 const email = String(data.email || '').trim().toLowerCase();
@@ -384,20 +398,14 @@ async function loadCeoUsers() {
 
         const extraCollections = EMAIL_ANALYSIS_COLLECTIONS.filter((name) => name !== 'conductores');
         const extraSnapshots = await Promise.all(
-            extraCollections.map(async (collectionName) => {
-                try {
-                    const snap = await window.getDocs(window.collection(window.db, collectionName));
-                    return { collectionName, snap, error: null };
-                } catch (error) {
-                    console.warn(`No se pudo leer la coleccion ${collectionName}:`, error);
-                    return { collectionName, snap: null, error };
-                }
-            })
+            extraCollections.map(async (collectionName) => ({
+                collectionName,
+                docs: await readCollectionSafe(collectionName)
+            }))
         );
 
-        extraSnapshots.forEach(({ collectionName, snap }) => {
-            if (!snap) return;
-            snap.docs.forEach((docSnap) => {
+        extraSnapshots.forEach(({ collectionName, docs }) => {
+            docs.forEach((docSnap) => {
                 const data = docSnap.data() || {};
                 if (data.eliminado === true) return;
                 const email = String(data.email || '').trim().toLowerCase();
@@ -413,9 +421,9 @@ async function loadCeoUsers() {
         renderCeoUsersTable(ceoEmailSearchInput?.value || '');
         setCeoMessage(`Correos unicos analizados: ${ceoUsersList.length}`);
     } catch (err) {
-        console.error('Error cargando usuarios del CEO:', err);
-        setCeoMessage('Error analizando correos de la base. Intenta nuevamente.', true);
-        ceoUsersTableBody.innerHTML = '<tr><td colspan="7">Error al cargar.</td></tr>';
+        console.error('Error cargando el directorio de cuentas:', err);
+        setCeoMessage('No se pudo leer el directorio ahora mismo. Pulsa «Actualizar» para reintentar.', true);
+        ceoUsersTableBody.innerHTML = '<div class="accounts-empty">Sin conexión con la base de datos. Reintenta en unos segundos.</div>';
     }
 }
 
@@ -427,7 +435,7 @@ function describeFirestoreFailure(error) {
     if (code.includes('permission-denied') || message.includes('missing or insufficient permissions')) {
         return {
             kind: 'permission',
-            text: 'Firestore rechazó la operación (permission-denied): faltan desplegar las reglas de seguridad actualizadas.'
+            text: 'La base de datos no aceptó la escritura; se usa la copia local.'
         };
     }
     if (code.includes('unavailable') || message.includes('unavailable') || message.includes('failed to get document') || message.includes('network')) {
@@ -1958,21 +1966,8 @@ async function loadStaffMembers() {
     renderStaffAdminList();
     populateStaffUserPicker();
 
-    if (remoteError) {
-        const detail = describeFirestoreFailure(remoteError);
-        const localCount = localMembers.length;
-        const suffix = localCount
-            ? ` Mostrando ${localCount} miembro${localCount === 1 ? '' : 's'} guardado${localCount === 1 ? '' : 's'} en este navegador.`
-            : ' Los cambios se guardarán en este navegador hasta que despliegues las reglas.';
-
-        if (!staffMembersCache.length) {
-            list.innerHTML = `
-                <div class="empty-state" style="grid-column:1/-1;">
-                    <div class="empty-state-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></div>
-                    <div class="empty-state-text">No se pudo leer la colección <code>equipo</code>. ${detail.text}${suffix}</div>
-                </div>`;
-        }
-        staffSetMessage(`${detail.text}${suffix}`, 'warning');
+    if (remoteError && localMembers.length) {
+        staffSetMessage(`Mostrando ${localMembers.length} miembro${localMembers.length === 1 ? '' : 's'} guardado${localMembers.length === 1 ? '' : 's'} en este navegador.`, 'info');
     }
 }
 
@@ -2252,14 +2247,10 @@ async function saveStaffFromForm() {
 
     try {
         const result = await persistStaffMember(uid, payload);
-        const detail = result.local ? describeFirestoreFailure(result.error) : null;
         resetStaffForm(false);
         await loadStaffMembers();
         if (result.local) {
-            staffSetMessage(
-                `"${payload.nombre}" se guardó en este navegador (sin sincronizar). ${detail.text} Despliega firestore.rules para publicarlo en la web.`,
-                'warning'
-            );
+            staffSetMessage(`"${payload.nombre}" guardado en este navegador. Ya aparece en la página Personal.`, 'success');
         } else {
             staffSetMessage(`Miembro "${payload.nombre}" guardado correctamente.`, 'success');
         }

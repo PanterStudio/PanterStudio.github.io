@@ -715,6 +715,47 @@
     }
     .empty-state-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
     .empty-state-text { font-size: 0.9rem; }
+
+    /* ── Panel simple: opciones avanzadas plegadas ── */
+    .ps-staff-advanced {
+        border: 1px solid rgba(255,255,255,0.09);
+        border-radius: 12px;
+        padding: 0.65rem 0.9rem;
+        background: rgba(255,255,255,0.02);
+    }
+    .ps-staff-advanced summary,
+    .ps-admin-collapsible > summary {
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: var(--admin-text-secondary, #cbd5e1);
+        list-style: none;
+    }
+    .ps-staff-advanced summary::-webkit-details-marker,
+    .ps-admin-collapsible > summary::-webkit-details-marker { display: none; }
+    .ps-staff-advanced summary::before,
+    .ps-admin-collapsible > summary::before {
+        content: "\f054";
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        display: inline-block;
+        margin-right: 8px;
+        font-size: 0.7rem;
+        transition: transform .2s ease;
+    }
+    .ps-staff-advanced[open] summary::before,
+    .ps-admin-collapsible[open] > summary::before { transform: rotate(90deg); }
+    .ps-staff-advanced summary small,
+    .ps-admin-collapsible > summary small { font-weight: 500; opacity: .7; }
+    .ps-staff-advanced[open] { padding-bottom: 1rem; }
+    .ps-staff-advanced[open] label { margin-top: 0.8rem; }
+    .ps-admin-collapsible {
+        margin-top: 1.5rem;
+        border: 1px dashed rgba(255,255,255,0.12);
+        border-radius: 14px;
+        padding: 0.9rem 1.1rem;
+    }
+    .ps-admin-collapsible[open] > summary { margin-bottom: 1.2rem; }
     </style>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
@@ -1111,71 +1152,41 @@
                                 </button>
                             </div>
 
-                            <!-- Selector de usuario registrado -->
+                            <!-- Selector rápido de cuenta registrada -->
                             <div class="ps-staff-picker">
-                                <label for="staffUserPicker">Agregar o seleccionar un usuario de la plataforma</label>
+                                <label for="staffUserPicker">Elegir una cuenta registrada (opcional)</label>
                                 <div class="ps-staff-picker-row">
                                     <select id="staffUserPicker">
                                         <option value="">— Nuevo miembro manual —</option>
                                     </select>
                                     <button type="button" class="btn" id="staffUserPickBtn">
-                                        <i class="fa-solid fa-user-plus" aria-hidden="true"></i> Cargar en formulario
+                                        <i class="fa-solid fa-user-plus" aria-hidden="true"></i> Cargar
                                     </button>
                                 </div>
-                                <small class="ps-field-help" id="staffUserPickerMsg">Elige una cuenta registrada para rellenar UID, nombre, avatar y Discord ID automáticamente.</small>
                             </div>
 
+                            <!-- Formulario simple: nombre + rango + especialidad -->
                             <form id="staffForm" class="ps-admin-grid" style="margin-top:1rem;" onsubmit="return false;">
                                 <div class="ps-admin-staff-card">
-                                    <label>Discord User ID
-                                        <input type="text" id="staffFieldUid" placeholder="123456789012345678 o discord_123456789012345678" autocomplete="off">
+                                    <label>Nombre visible *
+                                        <input type="text" id="staffFieldNombre" placeholder="Ej. PanterGameY" maxlength="80" autocomplete="off">
                                     </label>
-                                    <label>Nombre visible
-                                        <input type="text" id="staffFieldNombre" placeholder="PanterGameYT" maxlength="80" autocomplete="off">
-                                    </label>
-                                    <label>Usuario de Discord
-                                        <input type="text" id="staffFieldUsername" placeholder="pantergamey" maxlength="60" autocomplete="off">
-                                    </label>
-                                    <label>URL del avatar
-                                        <input type="text" id="staffFieldAvatar" placeholder="https://cdn.discordapp.com/..." autocomplete="off">
-                                    </label>
-                                    <label>Estado
-                                        <select id="staffFieldEstado">
-                                            <option value="online">En línea</option>
-                                            <option value="idle">Ausente</option>
-                                            <option value="dnd">No molestar</option>
-                                            <option value="offline">Offline</option>
-                                        </select>
-                                    </label>
-                                    <small class="ps-field-help">El Discord User ID es opcional, pero permite enlazar el rol con el servidor.</small>
-                                </div>
-                                <div class="ps-admin-staff-card">
-                                    <label>Rango / Grupo principal
+                                    <label>Rango *
                                         <select id="staffFieldRole"></select>
                                     </label>
                                     <label>Especialidad
-                                        <input type="text" id="staffFieldEspecialidad" list="staffSpecialtyList" placeholder="Programador, Modelador, Diseñador..." maxlength="80" autocomplete="off">
+                                        <input type="text" id="staffFieldEspecialidad" list="staffSpecialtyList" placeholder="Ej. Dirección creativa" maxlength="80" autocomplete="off">
                                         <datalist id="staffSpecialtyList">
+                                            <option value="Dirección Creativa"></option>
                                             <option value="Programador"></option>
                                             <option value="Modelador 3D"></option>
-                                            <option value="Diseñador Gráfico"></option>
-                                            <option value="Diseñador de Interfaz"></option>
-                                            <option value="Artista Conceptual"></option>
-                                            <option value="Animador"></option>
-                                            <option value="Compositor / Audio"></option>
-                                            <option value="Guionista"></option>
-                                            <option value="Director Creativo"></option>
-                                            <option value="Community Manager"></option>
-                                            <option value="Soporte Técnico"></option>
                                             <option value="Moderador"></option>
+                                            <option value="Soporte Técnico"></option>
+                                            <option value="Community Manager"></option>
+                                            <option value="Diseñador Gráfico"></option>
                                         </datalist>
                                     </label>
-                                    <label>Descripción
-                                        <textarea id="staffFieldDescripcion" rows="4" maxlength="1200" placeholder="Responsabilidades dentro del estudio…"></textarea>
-                                    </label>
-                                    <label>Orden de prioridad (menor aparece primero)
-                                        <input type="number" id="staffFieldOrden" placeholder="1" min="0" step="1">
-                                    </label>
+
                                     <div class="ps-admin-staff-actions">
                                         <button type="button" class="btn" id="staffSaveBtn">
                                             <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar
@@ -1186,12 +1197,45 @@
                                     </div>
                                     <small class="ps-field-help" id="staffFormMsg"></small>
                                 </div>
+
+                                <div class="ps-admin-staff-card">
+                                    <details class="ps-staff-advanced">
+                                        <summary>Opciones avanzadas <small>(sólo si necesitas enlazar una cuenta)</small></summary>
+                                        <label>Discord User ID
+                                            <input type="text" id="staffFieldUid" placeholder="123456789012345678" autocomplete="off">
+                                        </label>
+                                        <label>Usuario de Discord
+                                            <input type="text" id="staffFieldUsername" placeholder="pantergamey" maxlength="60" autocomplete="off">
+                                        </label>
+                                        <label>URL del avatar
+                                            <input type="text" id="staffFieldAvatar" placeholder="https://cdn.discordapp.com/..." autocomplete="off">
+                                        </label>
+                                        <label>Estado
+                                            <select id="staffFieldEstado">
+                                                <option value="online">En línea</option>
+                                                <option value="idle">Ausente</option>
+                                                <option value="dnd">No molestar</option>
+                                                <option value="offline">Offline</option>
+                                            </select>
+                                        </label>
+                                        <label>Descripción
+                                            <textarea id="staffFieldDescripcion" rows="3" maxlength="1200" placeholder="Responsabilidades dentro del estudio…"></textarea>
+                                        </label>
+                                        <label>Orden de prioridad (menor aparece primero)
+                                            <input type="number" id="staffFieldOrden" placeholder="1" min="0" step="1">
+                                        </label>
+                                    </details>
+                                </div>
                             </form>
 
                             <h4 class="ps-admin-subtitle">Directorio del equipo</h4>
                             <div id="staffAdminList" class="ps-admin-grid" style="margin-top:1rem;">
                                 <div class="empty-state"><div class="empty-state-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></div><div class="empty-state-text">Cargando personal...</div></div>
                             </div>
+
+                            <!-- Herramientas avanzadas: plegadas para mantener el panel simple -->
+                            <details class="ps-admin-collapsible">
+                                <summary><i class="fa-solid fa-sliders" aria-hidden="true"></i> Herramientas avanzadas <small>(paleta de roles y servidor Discord)</small></summary>
 
                             <!-- Gestor de roles y colores -->
                             <section class="ps-role-manager" id="roleManager">
@@ -1283,6 +1327,7 @@
                                     </div>
                                 </div>
                             </div>
+                            </details>
                         </div>
                     </div>
 

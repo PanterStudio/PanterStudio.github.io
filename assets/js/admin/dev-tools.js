@@ -878,19 +878,7 @@ async function loadStaffList() {
 /* ═══════════════════════════════════════════════════════
    TAB HOOKS — extender el sistema de tabs existente
 ═══════════════════════════════════════════════════════ */
-const DEV_TAB_INFO = {
-    roadmap:      { title: '<i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> Roadmap del Juego', sub: 'Tablero Kanban de tareas y features del videojuego.' },
-    ideas:        { title: '<i class="fa-solid fa-lightbulb" aria-hidden="true"></i> Banco de Ideas', sub: 'Captura y organiza ideas para el desarrollo del juego.' },
-    changelog:    { title: '<i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Changelog Interno', sub: 'Registro privado de versiones y cambios del videojuego.' },
-    bugs:         { title: '<i class="fa-solid fa-bug" aria-hidden="true"></i> Tracker de Bugs', sub: 'Gestiona y resuelve los bugs reportados del videojuego.' },
-    assets:       { title: '<i class="fa-solid fa-box" aria-hidden="true"></i> Inventario de Assets', sub: 'Registro de sprites, audios, UI y más recursos del juego.' },
-    notepad:      { title: '<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Pizarrón del Estudio', sub: 'Editor libre para notas, diseño y decisiones del equipo.' },
-    announcements:{ title: '<i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Tablón de Anuncios', sub: 'Gestiona los anuncios publicados en la comunidad.' },
-    staff:        { title: '<i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Personal del Estudio', sub: 'Vista del equipo de staff activo en Panter Studio.' },
-};
-
 // Hook into tab switch
-const _origTabClick = window._tabClickHandler;
 document.querySelectorAll('.sidebar-tab').forEach(btn => {
     btn.addEventListener('click', () => {
         const tab = btn.getAttribute('data-tab');
@@ -902,12 +890,9 @@ document.querySelectorAll('.sidebar-tab').forEach(btn => {
         if (tab === 'assets') renderAssets();
         if (tab === 'notepad') initNotepad();
         if (tab === 'announcements') loadAnnouncements();
-        if (tab === 'staff') loadStaffList();
+        // La pestaña Personal la gestiona por completo admin.js.
     });
 });
-
-// Expose for staff refresh btn
-document.getElementById('staffRefreshBtn')?.addEventListener('click', loadStaffList);
 
 // Store current user for Firestore writes
 window._currentAdminUser = null;
