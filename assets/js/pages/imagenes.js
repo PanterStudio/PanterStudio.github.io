@@ -16,12 +16,73 @@
     const LOCAL_KEY = 'ps_gallery_local';
     const MANAGER_ROLES = new Set(['founder_ceo', 'director', 'administrador', 'moderador']);
 
-    const CATEGORIES = {
-        vehiculos:  'Vehículos',
-        mapas:      'Mapas & Carreteras',
-        garaje:     'Garaje & 3D',
-        comunidad:  'Comunidad'
-    };
+    const CAT_KEY = 'ps_gallery_categories';
+    const HIDDEN_SEEDS_KEY = 'ps_gallery_hidden_seeds';
+    const DEFAULT_CATEGORIES = [
+        { id: 'vehiculos', label: 'Vehículos' },
+        { id: 'mapas', label: 'Mapas & Carreteras' },
+        { id: 'garaje', label: 'Garaje & 3D' },
+        { id: 'comunidad', label: 'Comunidad' }
+    ];
+
+    function slugify(value) {
+        const base = String(value || '').trim().toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+        return base || `cat_${Date.now().toString(36)}`;
+    }
+    function readCategories() {
+        try {
+            const list = JSON.parse(localStorage.getItem(CAT_KEY) || 'null');
+            if (Array.isArray(list) && list.length) {
+                return list.filter(c => c && c.id && c.label);
+            }
+        } catch (e) { /* noop */ }
+        return DEFAULT_CATEGORIES.slice();
+    }
+    function writeCategories(list) {
+        try { localStorage.setItem(CAT_KEY, JSON.stringify(list)); } catch (e) { /* noop */ }
+    }
+    function findCategory(id) {
+        return readCategories().find(c => c.id === id) || null;
+    }
+    function categoryLabel(key) {
+        const found = findCategory(key);
+        return found ? found.label : (findCategory('comunidad')?.label || 'Comunidad');
+    }
+    function addCategory(label) {
+        const clean = String(label || '').trim().slice(0, 40);
+        if (!clean) return null;
+        const list = readCategories();
+        const existing = list.find(c => c.label.toLowerCase() === clean.toLowerCase());
+        if (existing) return existing;
+        const created = { id: slugify(clean), label: clean };
+        list.push(created);
+        writeCategories(list);
+        return created;
+    }
+    function removeCategory(id) {
+        if (id === 'comunidad') return false;
+        writeCategories(readCategories().filter(c => c.id !== id));
+        // Las imágenes de esa categoría pasan a Comunidad para no perderse.
+        const locals = readLocalImages().map(item =>
+            item.categoria === id ? Object.assign({}, item, { categoria: 'comunidad' }) : item
+        );
+        writeLocalImages(locals);
+        if (activeFilter === id) activeFilter = 'all';
+        return true;
+    }
+    function readHiddenSeeds() {
+        try {
+            const list = JSON.parse(localStorage.getItem(HIDDEN_SEEDS_KEY) || '[]');
+            return new Set(Array.isArray(list) ? list.map(String) : []);
+        } catch (e) { return new Set(); }
+    }
+    function hideSeed(id) {
+        const set = readHiddenSeeds();
+        set.add(String(id));
+        try { localStorage.setItem(HIDDEN_SEEDS_KEY, JSON.stringify(Array.from(set))); } catch (e) { /* noop */ }
+    }
 
     // Catálogo base: garantiza que la página nunca quede vacía, incluso sin
     // conexión a Firestore. No se persiste en la BD.
@@ -157,6 +218,7 @@
         }
         const grid = $('galleryGrid');
         if (grid) grid.dataset.canManage = canManage ? 'true' : 'false';
+        document.body.classList.toggle('gallery-can-manage', canManage);
     }
 
     // ── Normalización de enlaces Imgur / URLs directas ─────────
@@ -202,10 +264,6 @@
     }
 
     // ── Render ─────────────────────────────────────────────────
-    function categoryLabel(key) {
-        return CATEGORIES[key] || CATEGORIES.comunidad;
-    }
-
     function buildCard(item) {
         const R = roles();
         const card = document.createElement('article');
@@ -223,7 +281,8 @@
         const authorLine = item._dynamic
             ? `<div class="gallery-card-author">${escapeHtml(item.autorNombre || 'Equipo')} ${authorBadge}</div>`
             : '';
-        const deleteBtn = (item._dynamic && canManage)
+        // Todas las imágenes se pueden eliminar, también las del catálogo base.
+        const deleteBtn = canManage
             ? `<button type="button" class="gallery-delete-btn" data-delete-id="${escapeHtml(item.id)}" aria-label="Eliminar ${escapeHtml(item.titulo)}"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>`
             : '';
 
@@ -252,6 +311,29 @@
         return card;
     }
 
+    function renderFilters() {
+        const container = $('galleryFilters');
+        if (!container) return;
+        const categories = readCategories();
+        const html = [
+            `<button type="button" class="gallery-filter-btn${activeFilter === 'all' ? ' active' : ''}" data-filter="all" role="tab" aria-selected="${activeFilter === 'all'}">Todas las Imágenes</button>`
+        ].concat(categories.map(cat => `
+            <span class="gallery-filter-wrap">
+                <button type="button" class="gallery-filter-btn${activeFilter === cat.id ? ' active' : ''}" data-filter="${escapeHtml(cat.id)}" role="tab" aria-selected="${activeFilter === cat.id}">${escapeHtml(cat.label)}</button>
+                <button type="button" class="gallery-filter-remove" data-cat-remove="${escapeHtml(cat.id)}" title="Eliminar categoría" aria-label="Eliminar categoría ${escapeHtml(cat.label)}"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </span>`)).join('');
+        container.innerHTML = html;
+    }
+
+    function populateCategorySelect() {
+        const select = $('galleryCategory');
+        if (!select) return;
+        const previous = select.value;
+        select.innerHTML = readCategories()
+            .map(cat => `<option value="${escapeHtml(cat.id)}">${escapeHtml(cat.label)}</option>`).join('');
+        if (previous && findCategory(previous)) select.value = previous;
+    }
+
     function render() {
         const grid = $('galleryGrid');
         if (!grid) return;
@@ -259,13 +341,18 @@
         const dynamic = published.concat(readLocalImages())
             .sort((a, b) => String(b.creadoEn || '').localeCompare(String(a.creadoEn || '')))
             .map(doc => Object.assign({}, doc, { _dynamic: true }));
-        const all = dynamic.concat(SEED);
+        const hiddenSeeds = readHiddenSeeds();
+        const seeds = SEED.filter(item => !hiddenSeeds.has(String(item.id)));
+        const all = dynamic.concat(seeds);
         const visible = activeFilter === 'all'
             ? all
             : all.filter(item => item.categoria === activeFilter);
 
         grid.innerHTML = '';
         visible.forEach(item => grid.appendChild(buildCard(item)));
+
+        renderFilters();
+        populateCategorySelect();
 
         const status = $('galleryStatus');
         if (status) {
@@ -356,6 +443,7 @@
         if (!titulo) { fieldError('Escribe un título.'); return; }
 
         const categoria = String($('galleryCategory')?.value || 'comunidad');
+        const catDef = findCategory(categoria) || findCategory('comunidad');
         const descripcion = String($('galleryDesc')?.value || '').trim().slice(0, 400);
         const now = new Date().toISOString();
         const R = roles();
@@ -363,8 +451,8 @@
         const payload = {
             titulo: titulo,
             descripcion: descripcion,
-            categoria: CATEGORIES[categoria] ? categoria : 'comunidad',
-            badge: categoryLabel(categoria),
+            categoria: catDef ? catDef.id : 'comunidad',
+            badge: catDef ? catDef.label : categoryLabel(categoria),
             url: norm.url,
             autorNombre: String(currentUser.displayName || currentUser.username || currentUser.email || 'Equipo').slice(0, 80),
             autorEmail: String(currentUser.email || '').trim().toLowerCase(),
@@ -399,19 +487,30 @@
     async function deleteImage(id) {
         if (!canManage || !id) return;
         if (!window.confirm('¿Eliminar esta imagen de la galería?')) return;
-        const isLocal = String(id).startsWith('local_');
-        try {
-            if (!isLocal && window.db && window.fsDoc && window.deleteDoc) {
-                await window.deleteDoc(window.fsDoc(window.db, COLLECTION, id));
-            }
-            removeLocalImage(id);
-            published = published.filter(item => item.id !== id);
+        const key = String(id);
+        const isSeed = key.startsWith('seed-');
+        const isLocal = key.startsWith('local_');
+
+        if (isSeed) {
+            // Las imágenes del catálogo base se ocultan de forma persistente.
+            hideSeed(key);
             render();
             toast('Imagen eliminada.', 'success');
-        } catch (err) {
-            console.error('[Galería] Error al eliminar:', err);
-            toast('No se pudo eliminar: ' + (err && err.message ? err.message : 'error'), 'error');
+            return;
         }
+
+        // Intento en la nube (no bloquea el borrado local si falla).
+        if (!isLocal && window.db && window.fsDoc && window.deleteDoc) {
+            try {
+                await window.deleteDoc(window.fsDoc(window.db, COLLECTION, key));
+            } catch (err) {
+                console.warn('[Galería] Borrado aplicado en copia local:', err && err.message);
+            }
+        }
+        removeLocalImage(key);
+        published = published.filter(item => item.id !== key);
+        render();
+        toast('Imagen eliminada.', 'success');
     }
 
     // ── Modales / lightbox ─────────────────────────────────────
@@ -480,17 +579,33 @@
 
     // ── Eventos ────────────────────────────────────────────────
     function bindEvents() {
-        document.querySelectorAll('.gallery-filter-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.gallery-filter-btn').forEach(b => {
-                    b.classList.remove('active');
-                    b.setAttribute('aria-selected', 'false');
-                });
-                btn.classList.add('active');
-                btn.setAttribute('aria-selected', 'true');
-                activeFilter = btn.dataset.filter || 'all';
-                render();
-            });
+        // Filtros generados dinámicamente + borrado de categorías propias.
+        $('galleryFilters')?.addEventListener('click', (event) => {
+            const removeBtn = event.target.closest('[data-cat-remove]');
+            if (removeBtn) {
+                const id = removeBtn.getAttribute('data-cat-remove');
+                if (!canManage) { toast('Tu rango no permite eliminar categorías.', 'error'); return; }
+                if (!window.confirm('¿Eliminar esta categoría? Sus imágenes pasarán a Comunidad.')) return;
+                if (removeCategory(id)) { render(); toast('Categoría eliminada.', 'success'); }
+                return;
+            }
+            const btn = event.target.closest('[data-filter]');
+            if (!btn) return;
+            activeFilter = btn.dataset.filter || 'all';
+            render();
+        });
+
+        $('galleryAddCategoryBtn')?.addEventListener('click', () => {
+            const input = $('galleryNewCategory');
+            const created = addCategory(input?.value);
+            if (!created) { fieldError('Escribe un nombre para la categoría.'); return; }
+            if (input) input.value = '';
+            populateCategorySelect();
+            const select = $('galleryCategory');
+            if (select) select.value = created.id;
+            renderFilters();
+            fieldError('');
+            toast(`Categoría "${created.label}" creada.`, 'success');
         });
 
         $('galleryAddBtn')?.addEventListener('click', openAdminModal);

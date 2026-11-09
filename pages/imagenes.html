@@ -303,6 +303,25 @@
         .gallery-title { margin-bottom: .5rem !important; }
         .gallery-desc { font-size: .92rem !important; line-height: 1.45 !important; }
         .gallery-admin-bar { margin-bottom: .7rem !important; padding: .6rem 1rem !important; }
+
+        /* Categorías creadas por el usuario */
+        .gallery-cat-new { display: flex; gap: .5rem; flex-wrap: wrap; margin: -.2rem 0 .9rem; }
+        .gallery-cat-new input {
+            flex: 1 1 190px; min-width: 0; margin: 0 !important; padding: 9px 12px;
+            border-radius: 10px; border: 1px solid rgba(255,255,255,.12);
+            background: rgba(10,14,24,.8); color: #fff; font-family: inherit; font-size: .84rem;
+        }
+        .gallery-cat-new .gallery-btn { padding: 9px 14px; font-size: .78rem; white-space: nowrap; }
+        .gallery-filter-wrap { display: inline-flex; align-items: center; gap: 0; }
+        .gallery-filter-remove {
+            display: none; width: 22px; height: 22px; margin-left: -6px;
+            border-radius: 50%; border: 1px solid rgba(239,68,68,.45);
+            background: rgba(10,14,24,.9); color: #f87171;
+            cursor: pointer; font-size: .65rem; line-height: 1;
+            align-items: center; justify-content: center;
+        }
+        body.gallery-can-manage .gallery-filter-remove { display: inline-flex; }
+        .gallery-filter-remove:hover { background: rgba(239,68,68,.85); color: #fff; }
     </style>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
@@ -374,14 +393,8 @@
             </button>
         </div>
 
-        <!-- FILTROS -->
-        <div class="gallery-filters" role="tablist" aria-label="Filtrar imágenes por categoría">
-            <button type="button" class="gallery-filter-btn active" data-filter="all" role="tab" aria-selected="true">Todas las Imágenes</button>
-            <button type="button" class="gallery-filter-btn" data-filter="vehiculos" role="tab" aria-selected="false">Vehículos</button>
-            <button type="button" class="gallery-filter-btn" data-filter="mapas" role="tab" aria-selected="false">Mapas & Carreteras</button>
-            <button type="button" class="gallery-filter-btn" data-filter="garaje" role="tab" aria-selected="false">Garaje & 3D</button>
-            <button type="button" class="gallery-filter-btn" data-filter="comunidad" role="tab" aria-selected="false">Comunidad</button>
-        </div>
+        <!-- FILTROS (generados desde las categorías que crees) -->
+        <div class="gallery-filters" id="galleryFilters" role="tablist" aria-label="Filtrar imágenes por categoría"></div>
 
         <p class="gallery-status" id="galleryStatus" aria-live="polite">Cargando galería...</p>
 
@@ -408,13 +421,12 @@
                     <input type="text" id="galleryTitle" maxlength="90" placeholder="Ej. Atardecer en la ruta" required autocomplete="off">
                 </label>
                 <label>Categoría
-                    <select id="galleryCategory">
-                        <option value="comunidad">Comunidad</option>
-                        <option value="vehiculos">Vehículos</option>
-                        <option value="mapas">Mapas & Carreteras</option>
-                        <option value="garaje">Garaje & 3D</option>
-                    </select>
+                    <select id="galleryCategory"></select>
                 </label>
+                <div class="gallery-cat-new">
+                    <input type="text" id="galleryNewCategory" maxlength="40" placeholder="Nombre de la nueva categoría" autocomplete="off">
+                    <button type="button" class="gallery-btn" id="galleryAddCategoryBtn"><i class="fa-solid fa-plus" aria-hidden="true"></i> Crear categoría</button>
+                </div>
                 <label>Descripción
                     <textarea id="galleryDesc" maxlength="400" placeholder="Cuéntanos qué muestra esta imagen..."></textarea>
                 </label>

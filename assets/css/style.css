@@ -165,22 +165,30 @@ a {
 }
 
 /* ========================================
-   HEADER (Glass Bar)
+   HEADER DE CONTENIDO (hero de página)
+   Antes esto era `header { position: sticky; top: 0; z-index: 800;
+   display: flex }`, pensado como barra de navegación global. Se filtraba
+   a los <header> de contenido (galería, personal, panel admin): quedaban
+   pegados arriba, tapaban el contenido al hacer scroll y partían el
+   texto en columnas. El nav real es <nav> y ya tiene su propio sticky.
    ======================================== */
 header {
-  position: sticky;
-  top: 0;
-  z-index: 800;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 2rem;
-  background: var(--bg-glass-strong);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border-bottom: var(--border-glass);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
-  transition: all var(--transition-fast);
+  position: static;
+  top: auto;
+  z-index: auto;
+  display: block;
+  align-items: initial;
+  justify-content: initial;
+  padding: 1.3rem 1.6rem;
+  margin-bottom: 1.4rem;
+  background: rgba(20, 26, 40, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.18);
+  transition: none;
 }
 
 .logo-img {
@@ -197,14 +205,14 @@ header {
 }
 
 header > p {
-  flex: 1;
-  margin: 0 2rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  opacity: 0.8;
+  flex: initial;
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  text-transform: none;
+  letter-spacing: normal;
+  opacity: 1;
 }
 
 /* Auth Box */

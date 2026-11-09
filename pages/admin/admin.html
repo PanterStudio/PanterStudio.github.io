@@ -1331,6 +1331,15 @@
                         <div class="admin-card">
                             <h3><i class="fa-solid fa-gears" aria-hidden="true"></i> Configuración Global del Sitio</h3>
                             <p>Modifica los parámetros de recompensa, bonos diarios y enlaces externos almacenados en Firestore.</p>
+
+                            <!-- Catálogo de vehículos: comparte datos con la Wiki -->
+                            <div class="admin-card" style="margin-bottom:1.25rem; padding:1.1rem; background:rgba(0,0,0,0.12);">
+                                <h4 style="font-size:0.95rem; color:#40c4ff; margin:0 0 6px;"><i class="fa-solid fa-car" aria-hidden="true"></i> Catálogo de Vehículos</h4>
+                                <p style="font-size:0.8rem; color:var(--admin-text-muted); margin:0 0 .8rem;">Los vehículos, fotos Imgur y categorías que crees en la Wiki aparecen aquí y en la web al instante.</p>
+                                <div id="adminVehGrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:.6rem;"></div>
+                                <a href="../wiki/vehiculos.html" target="_blank" rel="noopener" class="btn" style="margin-top:.9rem;"><i class="fa-solid fa-plus" aria-hidden="true"></i> Añadir / editar vehículos</a>
+                            </div>
+
                             <form id="siteConfigForm" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:20px;" onsubmit="return false;">
                                 <!-- Bonos y Recompensas -->
                                 <div class="admin-card" style="margin-bottom:0; padding:20px; background:rgba(0,0,0,0.15); border-color:rgba(255,255,255,0.04);">
@@ -1840,6 +1849,7 @@
 
     <script src="../../assets/js/admin/admin.js"></script>
     <script src="../../assets/js/admin/dev-tools.js"></script>
+    <script src="../../assets/js/pages/vehiculos.js"></script>
     <script>
     // ── Mobile sidebar toggle ──
     (function() {

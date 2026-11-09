@@ -335,6 +335,89 @@
             color: #e2e8f0;
             font-weight: 600;
         }
+
+        /* ── Gestión de vehículos ── */
+        .veh-admin-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: .7rem 1rem; margin: 0 0 1rem; padding: .7rem 1rem;
+            background: rgba(16,185,129,.07); border: 1px solid rgba(16,185,129,.28);
+            border-radius: 14px;
+        }
+        .veh-admin-hint { font-size: .8rem; font-weight: 600; color: #6ee7b7; }
+        .veh-add-btn {
+            display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px;
+            border-radius: 100px; border: 1px solid rgba(0,176,255,.45);
+            background: linear-gradient(135deg, rgba(0,176,255,.22), rgba(16,185,129,.18));
+            color: #fff; font-weight: 800; font-size: .85rem; cursor: pointer;
+        }
+        .veh-filters { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.2rem; }
+        .veh-filter-btn {
+            padding: 7px 15px; border-radius: 100px; font-size: .78rem; font-weight: 700;
+            border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04);
+            color: #cbd5e1; cursor: pointer;
+        }
+        .veh-filter-btn.active { border-color: rgba(0,176,255,.6); color: #fff; background: rgba(0,176,255,.16); }
+        .vehicle-card { position: relative; }
+        .veh-del-btn {
+            position: absolute; top: 8px; right: 8px; z-index: 2;
+            width: 30px; height: 30px; border-radius: 50%;
+            border: 1px solid rgba(239,68,68,.5); background: rgba(10,14,24,.9);
+            color: #f87171; cursor: pointer; display: none; align-items: center; justify-content: center;
+        }
+        body.veh-can-manage .veh-del-btn { display: inline-flex; }
+        .veh-del-btn:hover { background: rgba(239,68,68,.85); color: #fff; }
+        .veh-cat-del {
+            display: none; width: 20px; height: 20px; margin-left: -5px;
+            border-radius: 50%; border: 1px solid rgba(239,68,68,.45);
+            background: rgba(10,14,24,.9); color: #f87171; cursor: pointer;
+            font-size: .62rem; line-height: 1; align-items: center; justify-content: center;
+        }
+        body.veh-can-manage .veh-cat-del { display: inline-flex; }
+        #adminVehGrid [data-veh-del] { display: none; }
+        body.veh-can-manage #adminVehGrid [data-veh-del] { display: block; }
+
+        .veh-modal {
+            position: fixed; inset: 0; z-index: 2500; display: flex;
+            align-items: center; justify-content: center; padding: 1rem;
+            background: rgba(5,8,15,.88); backdrop-filter: blur(18px);
+            opacity: 0; pointer-events: none; transition: opacity .25s ease;
+        }
+        .veh-modal.active { opacity: 1; pointer-events: auto; }
+        .veh-modal-card {
+            width: min(520px, 100%); max-height: 90vh; overflow-y: auto;
+            background: rgba(18,24,38,.97); border: 1px solid rgba(0,176,255,.32);
+            border-radius: 22px; padding: 1.5rem; box-shadow: 0 25px 70px rgba(0,0,0,.6);
+        }
+        .veh-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+        .veh-modal-head h2 { margin: 0; font-size: 1.25rem; font-weight: 800; }
+        .veh-modal-close {
+            width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+            border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04);
+            color: #cbd5e1; cursor: pointer;
+        }
+        .veh-modal-close:hover { background: rgba(239,68,68,.7); color: #fff; }
+        .veh-modal-sub { margin: .4rem 0 1.2rem; font-size: .82rem; color: #94a3b8; line-height: 1.5; }
+        .veh-modal form label {
+            display: block; font-size: .72rem; font-weight: 800; letter-spacing: .06em;
+            text-transform: uppercase; color: #94a3b8; margin-bottom: .85rem;
+        }
+        .veh-modal form input, .veh-modal form select, .veh-modal form textarea {
+            display: block; width: 100%; box-sizing: border-box; margin-top: .35rem;
+            padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,.12);
+            background: rgba(10,14,24,.8); color: #fff; font-family: inherit; font-size: .88rem;
+            text-transform: none;
+        }
+        .veh-cat-new { display: flex; gap: .5rem; flex-wrap: wrap; margin: -.2rem 0 .9rem; }
+        .veh-cat-new input { flex: 1 1 180px; min-width: 0; margin: 0 !important; }
+        .veh-form-msg { min-height: 1.1rem; font-size: .78rem; margin: 0 0 .6rem; }
+        .veh-modal-actions { display: flex; justify-content: flex-end; gap: .6rem; flex-wrap: wrap; }
+        .veh-btn {
+            padding: 10px 16px; border-radius: 10px; font-weight: 800; font-size: .82rem;
+            cursor: pointer; border: 1px solid rgba(255,255,255,.14);
+            background: rgba(255,255,255,.05); color: #cbd5e1;
+        }
+        .veh-btn.primary { border-color: rgba(0,176,255,.5); background: linear-gradient(135deg,#00b0ff,#0066ff); color: #fff; }
+        .veh-btn:disabled { opacity: .6; cursor: not-allowed; }
     </style>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
@@ -440,20 +523,17 @@
                         <h2><i class="fa-solid fa-car" aria-hidden="true"></i> Catalogo de Vehiculos</h2>
                         <p>Los vehiculos son tu principal herramienta para desplazarte por la ciudad y completar los encargos de los trabajos. Cada uno cuenta con atributos y caracteristicas unicas.</p>
                         
-                        <!-- VEHICLE GRID -->
-                        <div class="vehicle-grid">
-                            
-                            <!-- VEHICLE: Sprinter -->
-                            <div class="vehicle-card" data-type="camiones">
-                                <div>
-                                    <img src="../../recursos/vehiculos/sprinter.png" alt="Sprinter Van" class="vehicle-img">
-                                    <div class="vehicle-type-badge">Carga / Van</div>
-                                    <h4 class="vehicle-name">Sprinter Van</h4>
-                                    <p class="vehicle-desc">Vehiculo de carga tipo van usado especificamente en el trabajo de Mensajero. Ofrece excelente capacidad para almacenar paquetes y cajas, y una velocidad optima para repartos rapidos.</p>
-                                </div>
-                            </div>
-
+                        <!-- GESTIÓN DE VEHÍCULOS (sólo rangos autorizados) -->
+                        <div class="veh-admin-bar" id="vehAdminBar" hidden>
+                            <span class="veh-admin-hint" id="vehAdminHint"></span>
+                            <button type="button" class="veh-add-btn" id="vehAddBtn"><i class="fa-solid fa-plus" aria-hidden="true"></i> Añadir vehículo</button>
                         </div>
+
+                        <!-- FILTROS POR CATEGORÍA (creadas manualmente) -->
+                        <div class="veh-filters" id="vehFilters"></div>
+
+                        <!-- VEHICLE GRID (dinámico) -->
+                        <div class="vehicle-grid" id="vehicleGrid"></div>
                     </div>
                 </div>
 
@@ -483,45 +563,41 @@
     
     <script src="../../assets/js/site-visibility.js"></script>
     <script src="../../assets/js/core/script.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const searchInput = document.getElementById('wikiSearch');
-            const menuLinks = document.querySelectorAll('.wiki-nav-btn, .wiki-nested-btn');
-            const filterBtns = document.querySelectorAll('.filter-btn');
-            const vehicleCards = document.querySelectorAll('.vehicle-card');
 
-            // Search filter
-            if (searchInput) {
-                searchInput.addEventListener('input', (e) => {
-                    const term = e.target.value.toLowerCase().trim();
-                    menuLinks.forEach(link => {
-                        const text = link.innerText.toLowerCase();
-                        if (text.includes(term)) {
-                            link.style.display = '';
-                        } else {
-                            link.style.display = 'none';
-                        }
-                    });
-                });
-            }
+    <!-- MODAL: AÑADIR VEHÍCULO -->
+    <div class="veh-modal" id="vehModal" role="dialog" aria-modal="true" aria-labelledby="vehModalTitle" aria-hidden="true">
+        <div class="veh-modal-card">
+            <div class="veh-modal-head">
+                <h2 id="vehModalTitle"><i class="fa-solid fa-car" aria-hidden="true"></i> Añadir vehículo</h2>
+                <button type="button" class="veh-modal-close" id="vehModalClose" aria-label="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </div>
+            <p class="veh-modal-sub">Pega un enlace de Imgur (<code>i.imgur.com/...</code>) o una URL directa de imagen, escribe el nombre y crea la categoría que quieras.</p>
+            <form id="vehForm">
+                <label>Enlace de la imagen *
+                    <input type="text" id="vehUrl" placeholder="https://i.imgur.com/abc123.png" required autocomplete="off">
+                </label>
+                <label>Nombre del vehículo *
+                    <input type="text" id="vehName" maxlength="80" placeholder="Ej. Sprinter Van" required autocomplete="off">
+                </label>
+                <label>Categoría
+                    <select id="vehCategory"></select>
+                </label>
+                <div class="veh-cat-new">
+                    <input type="text" id="vehNewCategory" maxlength="40" placeholder="Nueva categoría (ej. Camiones)" autocomplete="off">
+                    <button type="button" class="veh-btn" id="vehAddCategoryBtn"><i class="fa-solid fa-plus" aria-hidden="true"></i> Crear</button>
+                </div>
+                <label>Descripción
+                    <textarea id="vehDesc" maxlength="400" rows="3" placeholder="Características del vehículo..."></textarea>
+                </label>
+                <p class="veh-form-msg" id="vehFormMsg" role="status"></p>
+                <div class="veh-modal-actions">
+                    <button type="button" class="veh-btn" id="vehCancelBtn">Cancelar</button>
+                    <button type="submit" class="veh-btn primary" id="vehSaveBtn"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Publicar vehículo</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-            // Vehicle Category Filtering
-            filterBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    filterBtns.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-
-                    const filter = btn.dataset.filter;
-                    vehicleCards.forEach(card => {
-                        if (filter === 'all' || card.dataset.type === filter) {
-                            card.style.display = 'flex';
-                        } else {
-                            card.style.display = 'none';
-                        }
-                    });
-                });
-            });
-        });
-    </script>
+    <script src="../../assets/js/pages/vehiculos.js"></script>
 </body>
 </html>
