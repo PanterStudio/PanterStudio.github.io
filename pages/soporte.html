@@ -485,6 +485,21 @@
 
     .comentario-meta strong { color: #fff; }
     .comentario-texto { font-size: 0.88rem; color: var(--text-secondary, #b0bcce); line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+    .sp-chat-texto { white-space: pre-wrap; word-break: break-word; }
+    .sp-chat-link { color: #38bdf8; text-decoration: underline; word-break: break-all; }
+    .sp-chat-imagenes { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .sp-chat-img-link { display: block; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,.12); }
+    .sp-chat-img { display: block; max-width: min(280px, 100%); max-height: 200px; object-fit: cover; border-radius: 10px; }
+    .sp-system-msg {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 7px 12px; border-radius: 10px;
+        background: rgba(0,176,255,.09); border: 1px solid rgba(0,176,255,.28);
+        color: #7dd3fc; font-size: .78rem; font-weight: 800; letter-spacing: .02em;
+        text-transform: uppercase;
+    }
+    .sp-system-msg i { color: #38bdf8; font-size: .9rem; }
+    .comentario-item.sistema .comentario-avatar { background: rgba(0,176,255,.12); border-color: rgba(0,176,255,.35); color: #38bdf8; }
+    .comentario-item.sistema .comentario-bubble { background: rgba(0,176,255,.05); border-color: rgba(0,176,255,.18); }
 
     /* Search */
     .sp-search-row { display: flex; gap: 10px; }
@@ -953,7 +968,7 @@
 
                     <!-- Agregar comentario -->
                     <div id="addComentarioSection" style="margin-top:1rem; display:none;">
-                        <textarea id="nuevoComentario" class="sp-input" rows="3" placeholder="Agrega información adicional o responde al staff..."></textarea>
+                        <textarea id="nuevoComentario" class="sp-input" rows="3" placeholder="Escribe tu respuesta o pega un enlace de Imgur / imagen para adjuntarla..."></textarea>
                         <button class="sp-btn sp-btn-primary" id="enviarComentarioBtn" style="margin-top:8px; max-width:220px;">
                             <i class="fa-solid fa-comment-dots" aria-hidden="true"></i> Enviar Comentario
                         </button>
@@ -1331,8 +1346,12 @@
                         await window.SoporteJS.reabrirTicket(t.id);
                         showToast('Ticket reabierto', 'success');
                     } else if (action === 'progress') {
-                        await window.SoporteJS.actualizarTicket(t.id, { estado: 'En Proceso' });
-                        showToast('Ticket marcado en proceso', 'success');
+                        await window.SoporteJS.tomarTicket(
+                            t.id,
+                            currentUser?.displayName || currentUser?.username || 'Staff',
+                            currentUser?.uid
+                        );
+                        showToast('Ticket tomado por el soporte', 'success');
                     }
                     await updateStats();
                 } catch (err) {
@@ -1356,6 +1375,13 @@
                     await window.SoporteJS.cerrarTicket(currentTicketId, currentUser.displayName || currentUser.username || 'Staff');
                 } else if (estado === 'Abierto') {
                     await window.SoporteJS.reabrirTicket(currentTicketId);
+                } else if (estado === 'En Proceso') {
+                    // Tomar el ticket inyecta el mensaje de sistema en el chat.
+                    await window.SoporteJS.tomarTicket(
+                        currentTicketId,
+                        currentUser.displayName || currentUser.username || 'Staff',
+                        currentUser.uid
+                    );
                 } else {
                     await window.SoporteJS.actualizarTicket(currentTicketId, { estado });
                 }
@@ -1537,9 +1563,11 @@
 
         function buildComentario(c, rol) {
             const div = document.createElement('div');
-            div.className = `comentario-item${c.esStaff ? ' staff' : ''}`;
-            const inicial = String(c.autor || 'U')[0].toUpperCase();
-            const badge = window.SoporteJS.rolBadgeHtml(rol || (c.esStaff ? 'soporte' : 'usuario'));
+            const sistema = Boolean(c.esSistema);
+            div.className = `comentario-item${sistema ? ' sistema' : (c.esStaff ? ' staff' : '')}`;
+            const inicial = sistema ? '<i class="fa-solid fa-user-shield" aria-hidden="true"></i>' : String(c.autor || 'U')[0].toUpperCase();
+            const badge = sistema ? '' : window.SoporteJS.rolBadgeHtml(rol || (c.esStaff ? 'soporte' : 'usuario'));
+            const cuerpo = window.SoporteJS.renderTextoComentario(c);
             div.innerHTML = `
                 <div class="comentario-avatar">${inicial}</div>
                 <div class="comentario-bubble">
@@ -1548,7 +1576,7 @@
                         ${badge}
                         <span>${window.SoporteJS.formatDate(c.creadoEn)}</span>
                     </div>
-                    <div class="comentario-texto">${escHtml(c.texto)}</div>
+                    <div class="comentario-texto">${cuerpo}</div>
                 </div>`;
             return div;
         }

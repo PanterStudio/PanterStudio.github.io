@@ -9,6 +9,11 @@
 const SOPORTE_COLLECTION = 'soporte_tickets';
 const COMENTARIOS_COLLECTION = 'soporte_comentarios';
 
+// Mensajes de sistema del chat (icono vectorial + texto exacto).
+const SYSTEM_ICON_HTML = '<i class="fa-solid fa-user-shield"></i>';
+const SYSTEM_MSG_TOMADO = 'SOPORTE PANTER STUDIO HA TOMADO EL TICKET';
+const SYSTEM_MSG_CERRADO = 'SOPORTE PANTER STUDIO HA CERRADO EL TICKET';
+
 const CATEGORIAS = [
     { id: 'bug',        label: 'Bug / Error',      icon: '<i class="fa-solid fa-bug" aria-hidden="true"></i>',              faIcon: 'fa-solid fa-bug', color: '#ef4444' },
     { id: 'cuenta',     label: 'Mi Cuenta',        icon: '<i class="fa-solid fa-circle-user" aria-hidden="true"></i>',      faIcon: 'fa-solid fa-circle-user', color: '#00b0ff' },
@@ -334,6 +339,52 @@ function escapeHtmlSoporte(value) {
         .replace(/'/g, '&#039;');
 }
 
+/** Convierte una URL de Imgur (página individual) en enlace directo de imagen. */
+function normalizarUrlImagen(raw) {
+    let url = String(raw || '').trim();
+    if (!/^https?:\/\//i.test(url)) return null;
+    const pagina = url.match(/^https?:\/\/(?:www\.)?imgur\.com\/([A-Za-z0-9]{5,12})\/?(?:[?#].*)?$/i);
+    if (pagina) return `https://i.imgur.com/${pagina[1]}.jpg`;
+    if (/^https?:\/\/(?:www\.)?imgur\.com\/(?:a|gallery|t)\//i.test(url)) return null;
+    // URL directa de imagen (con o sin extensión / query).
+    if (/^https?:\/\/\S+\.(?:jpe?g|png|gif|webp|bmp|avif)(?:\?[^\s]*)?$/i.test(url)) return url;
+    if (/^https?:\/\/i\.imgur\.com\//i.test(url)) return url;
+    return null;
+}
+
+/**
+ * Construye el HTML del cuerpo de un comentario.
+ *  · Mensaje de sistema: icono user-shield + texto exacto, con estilo propio.
+ *  · Mensaje normal: texto escapado + previsualización de imágenes Imgur/URL
+ *    directa pegadas en el mensaje.
+ */
+function renderTextoComentario(comentario) {
+    if (!comentario) return '';
+    if (comentario.esSistema) {
+        // Contenido constante generado por el motor (nunca input del usuario).
+        return `<div class="sp-system-msg">${comentario.texto}</div>`;
+    }
+
+    const texto = String(comentario.texto || '');
+    const partes = texto.split(/(\bhttps?:\/\/[^\s<>"']+)/gi);
+    let html = '';
+    let imagenes = '';
+
+    partes.forEach(parte => {
+        if (!parte) return;
+        const imagen = /^https?:\/\//i.test(parte) ? normalizarUrlImagen(parte.replace(/[.,;:!?)]+$/, '')) : null;
+        if (imagen) {
+            imagenes += `<a href="${escapeHtmlSoporte(parte)}" target="_blank" rel="noopener" class="sp-chat-img-link">`
+                + `<img src="${escapeHtmlSoporte(imagen)}" alt="Imagen adjunta" class="sp-chat-img" loading="lazy" decoding="async"></a>`;
+            html += `<a href="${escapeHtmlSoporte(parte)}" target="_blank" rel="noopener" class="sp-chat-link">${escapeHtmlSoporte(parte)}</a>`;
+        } else {
+            html += escapeHtmlSoporte(parte);
+        }
+    });
+
+    return `<div class="sp-chat-texto">${html}</div>${imagenes ? `<div class="sp-chat-imagenes">${imagenes}</div>` : ''}`;
+}
+
 function normalizarRol(valor) {
     if (window.PanterRoles && typeof window.PanterRoles.normalize === 'function') {
         return window.PanterRoles.normalize(valor);
@@ -579,12 +630,33 @@ if (typeof document !== 'undefined') {
     document.addEventListener('panter:roles-config', limpiarCacheRoles);
 }
 
+/** Mensaje de sistema reutilizable (icono user-shield + texto exacto). */
+async function agregarMensajeSistema(ticketId, mensaje) {
+    return agregarComentario(
+        ticketId,
+        `${SYSTEM_ICON_HTML} ${mensaje}`,
+        'Sistema', 'sistema', true, null, null, true
+    );
+}
+
+/** El staff toma el ticket: pasa a En Proceso e inyecta el aviso en el chat. */
+async function tomarTicket(ticketId, staffName, staffUid) {
+    const actualizado = await actualizarTicket(ticketId, {
+        estado: 'En Proceso',
+        staffAsignadoId: staffUid || null,
+        staffNombre: staffName || 'Staff'
+    });
+    await agregarMensajeSistema(ticketId, SYSTEM_MSG_TOMADO);
+    return actualizado;
+}
+
 async function cerrarTicket(ticketId, staffName) {
     await actualizarTicket(ticketId, {
         estado: 'Cerrado',
         cerradoPor: staffName || 'Staff',
         cerradoEn: new Date().toISOString()
     });
+    await agregarMensajeSistema(ticketId, SYSTEM_MSG_CERRADO);
 }
 
 async function reabrirTicket(ticketId) {
@@ -872,11 +944,12 @@ async function actualizarTicket(ticketId, updates = {}) {
     return { id: ticketId, ...(merged || payload) };
 }
 
-async function agregarComentario(ticketId, texto, autor, autorId, esStaff = false, autorRol = null, autorEmail = null) {
+async function agregarComentario(ticketId, texto, autor, autorId, esStaff = false, autorRol = null, autorEmail = null, esSistema = false) {
     const now = new Date().toISOString();
     const comentario = {
         texto, autor, autorId,
         esStaff: Boolean(esStaff),
+        esSistema: Boolean(esSistema),
         creadoEn: now
     };
     if (autorRol) comentario.autorRol = normalizarRol(autorRol);
@@ -1130,6 +1203,9 @@ window.SoporteJS = {
     puedeVerTicket,
     cerrarTicket,
     reabrirTicket,
+    tomarTicket,
+    agregarMensajeSistema,
+    renderTextoComentario,
     generateTicketCode,
     // Roles globales / insignias dinámicas
     ROLE_BADGE_DEFS,

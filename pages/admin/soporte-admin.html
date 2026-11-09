@@ -422,6 +422,21 @@
         .sadm-sidebar-logo { display: none; }
         .sadm-drawer { width: 100%; border-left: none; border-top: 1px solid var(--adm-border); top: auto; }
     }
+
+    /* ── Chat: mensajes de sistema e imágenes Imgur ── */
+    .sp-chat-texto { white-space: pre-wrap; word-break: break-word; }
+    .sp-chat-link { color: #38bdf8; text-decoration: underline; word-break: break-all; }
+    .sp-chat-imagenes { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .sp-chat-img-link { display: block; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,.12); }
+    .sp-chat-img { display: block; max-width: min(280px, 100%); max-height: 200px; object-fit: cover; border-radius: 10px; }
+    .sp-system-msg {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 7px 12px; border-radius: 10px;
+        background: rgba(0,176,255,.09); border: 1px solid rgba(0,176,255,.28);
+        color: #7dd3fc; font-size: .76rem; font-weight: 800; letter-spacing: .02em;
+        text-transform: uppercase;
+    }
+    .sp-system-msg i { color: #38bdf8; font-size: .9rem; }
     </style>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
@@ -569,7 +584,7 @@
         <div>
             <div class="sadm-section-label">Asignado A</div>
             <div id="drawerStaffInfo" style="font-size:0.85rem;color:rgba(176,188,206,0.7);"></div>
-            <button class="sadm-btn" id="asignarmeBtn" style="margin-top:8px;"><i class="fa-solid fa-bullseye" aria-hidden="true"></i> Asignarme este ticket</button>
+            <button class="sadm-btn" id="asignarmeBtn" style="margin-top:8px;"><i class="fa-solid fa-user-shield" aria-hidden="true"></i> Tomar ticket</button>
         </div>
 
         <!-- Comentarios -->
@@ -577,7 +592,7 @@
             <div class="sadm-section-label">Comentarios</div>
             <div id="drawerComentarios" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;max-height:200px;overflow-y:auto;"></div>
             <div class="sadm-comment-form">
-                <textarea id="staffComentario" class="sadm-textarea" placeholder="Escribe una respuesta pública visible para el usuario..."></textarea>
+                <textarea id="staffComentario" class="sadm-textarea" placeholder="Escribe una respuesta o pega un enlace de Imgur / imagen para adjuntarla..."></textarea>
                 <button class="sadm-btn success" id="enviarRespuestaBtn"><i class="fa-solid fa-comment-dots" aria-hidden="true"></i> Enviar Respuesta</button>
             </div>
         </div>
@@ -914,19 +929,22 @@
 
         cont.innerHTML = '';
         comentarios.forEach(c => {
+            const sistema = Boolean(c.esSistema);
             const rol = roles.get(window.SoporteJS.claveAutorComentario(c)) || 'usuario';
-            const badge = window.SoporteJS.rolBadgeHtml(rol);
+            const badge = sistema ? '' : window.SoporteJS.rolBadgeHtml(rol);
             const banda = window.SoporteJS.obtenerRolBadge(rol).color || '#00a715';
             const div = document.createElement('div');
-            div.style.cssText = 'padding:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:8px;';
-            if (c.esStaff) div.style.borderColor = `${banda}33`;
+            div.style.cssText = sistema
+                ? 'padding:10px;background:rgba(0,176,255,0.05);border:1px solid rgba(0,176,255,0.18);border-radius:8px;'
+                : 'padding:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:8px;';
+            if (c.esStaff && !sistema) div.style.borderColor = `${banda}33`;
             div.innerHTML = `
                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap;">
                     <strong style="font-size:0.8rem;color:#fff;">${escHtml(c.autor)}</strong>
                     ${badge}
                     <span style="font-size:0.7rem;color:rgba(176,188,206,0.4);margin-left:auto;">${window.SoporteJS.formatDate(c.creadoEn)}</span>
                 </div>
-                <div style="font-size:0.82rem;color:rgba(176,188,206,0.8);line-height:1.5;white-space:pre-wrap;">${escHtml(c.texto)}</div>`;
+                <div style="font-size:0.82rem;color:rgba(176,188,206,0.8);line-height:1.5;">${window.SoporteJS.renderTextoComentario(c)}</div>`;
             cont.appendChild(div);
         });
         cont.scrollTop = cont.scrollHeight;
@@ -962,7 +980,16 @@
         btn.disabled = true;
         btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> Aplicando...';
         try {
-            const updated = await window.SoporteJS.actualizarTicket(currentTicket.id, { estado: nuevoEstado });
+            let updated;
+            if (nuevoEstado === 'Cerrado') {
+                updated = await window.SoporteJS.cerrarTicket(currentTicket.id, currentStaff?.nombre || 'Staff');
+            } else if (nuevoEstado === 'En Proceso') {
+                updated = await window.SoporteJS.tomarTicket(
+                    currentTicket.id, currentStaff?.nombre || 'Staff', currentStaff?.uid
+                );
+            } else {
+                updated = await window.SoporteJS.actualizarTicket(currentTicket.id, { estado: nuevoEstado });
+            }
             currentTicket = { ...currentTicket, ...updated };
             applyTicketToDrawer(currentTicket);
 
@@ -1014,30 +1041,32 @@
         }
     });
 
-    // ---- ASIGNARME ----
+    // ---- TOMAR TICKET (inyecta mensaje de sistema en el chat) ----
     document.getElementById('asignarmeBtn')?.addEventListener('click', async () => {
         if (!currentTicket || !currentStaff) return;
         const btn = document.getElementById('asignarmeBtn');
+        const originalHtml = btn.innerHTML;
         btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> Tomando...';
         try {
-            const nuevoEstado = currentTicket.estado === 'Abierto' ? 'En Proceso' : currentTicket.estado;
-            const updated = await window.SoporteJS.actualizarTicket(currentTicket.id, {
-                staffAsignadoId: currentStaff.uid,
-                staffNombre: currentStaff.nombre,
-                estado: nuevoEstado
-            });
-            currentTicket = { ...currentTicket, ...updated };
+            const updated = await window.SoporteJS.tomarTicket(
+                currentTicket.id,
+                currentStaff.nombre || 'Staff',
+                currentStaff.uid
+            );
+            currentTicket = { ...currentTicket, ...updated, estado: 'En Proceso', status: 'En Proceso' };
             applyTicketToDrawer(currentTicket);
             const idx = allTickets.findIndex(t => t.id === currentTicket.id);
             if (idx !== -1) allTickets[idx] = { ...allTickets[idx], ...updated };
             updateKPIs();
             renderTable();
-            showToast('Ticket asignado a ti', 'success');
+            showToast('Ticket tomado por soporte', 'success');
         } catch (err) {
-            console.error('[Soporte admin] Error al asignar:', err);
-            showToast(err.message || 'Error al asignar', 'error');
+            console.error('[Soporte admin] Error al tomar ticket:', err);
+            showToast(err.message || 'Error al tomar el ticket', 'error');
         } finally {
             btn.disabled = false;
+            btn.innerHTML = originalHtml;
         }
     });
 
