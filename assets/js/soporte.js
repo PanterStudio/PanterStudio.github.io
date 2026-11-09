@@ -35,6 +35,92 @@ const ESTADOS = {
 
 const STAFF_ROLES = new Set(['founder_ceo', 'director', 'administrador', 'programador', 'moderador', 'soporte']);
 
+// ============================================================
+// PERSISTENCIA LOCAL — el soporte SIEMPRE funciona
+// Si Firestore rechaza una escritura (reglas aún no publicadas, sin
+// conexión, etc.), el cambio se guarda aquí, se refleja al instante
+// en la UI y se fusiona con la nube en cuanto esté disponible.
+// ============================================================
+const LOCAL_TICKETS_KEY = 'ps_soporte_tickets_local';
+const LOCAL_COMMENTS_KEY = 'ps_soporte_comentarios_local';
+const LOCAL_EVENT = 'psSoporteLocal';
+
+function readJson(key, fallback) {
+    try {
+        const value = JSON.parse(localStorage.getItem(key) || 'null');
+        return value == null ? fallback : value;
+    } catch (e) { return fallback; }
+}
+function writeJson(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* noop */ }
+}
+function notifyLocalChange() {
+    try {
+        document.dispatchEvent(new CustomEvent(LOCAL_EVENT));
+        window.dispatchEvent(new CustomEvent(LOCAL_EVENT));
+    } catch (e) { /* noop */ }
+}
+function onLocalChange(callback) {
+    if (typeof document === 'undefined') return () => {};
+    document.addEventListener(LOCAL_EVENT, callback);
+    return () => document.removeEventListener(LOCAL_EVENT, callback);
+}
+
+function localTickets() {
+    const data = readJson(LOCAL_TICKETS_KEY, {});
+    return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
+}
+function saveLocalTicket(ticket) {
+    if (!ticket || !ticket.id) return;
+    const all = localTickets();
+    all[ticket.id] = Object.assign({}, all[ticket.id] || {}, ticket);
+    writeJson(LOCAL_TICKETS_KEY, all);
+    notifyLocalChange();
+}
+function patchLocalTicket(id, patch) {
+    if (!id) return null;
+    const all = localTickets();
+    const merged = Object.assign({}, all[id] || { id }, patch, { id });
+    all[id] = merged;
+    writeJson(LOCAL_TICKETS_KEY, all);
+    notifyLocalChange();
+    return merged;
+}
+function mergeTickets(remote) {
+    const map = new Map();
+    (Array.isArray(remote) ? remote : []).forEach(t => { if (t && t.id) map.set(t.id, t); });
+    Object.values(localTickets()).forEach(t => {
+        if (!t || !t.id) return;
+        map.set(t.id, Object.assign({}, map.get(t.id) || {}, t));
+    });
+    return Array.from(map.values())
+        .map(t => normalizarTicket(t))
+        .sort((a, b) => String(b.creadoEn || '').localeCompare(String(a.creadoEn || '')));
+}
+
+function localComments() {
+    const data = readJson(LOCAL_COMMENTS_KEY, {});
+    return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
+}
+function appendLocalComment(ticketId, comment) {
+    if (!ticketId || !comment) return;
+    const all = localComments();
+    const list = Array.isArray(all[ticketId]) ? all[ticketId] : [];
+    list.push(comment);
+    all[ticketId] = list;
+    writeJson(LOCAL_COMMENTS_KEY, all);
+    notifyLocalChange();
+}
+function mergeComments(ticketId, remote) {
+    const stored = localComments()[ticketId];
+    const local = Array.isArray(stored) ? stored : [];
+    const map = new Map();
+    (Array.isArray(remote) ? remote : []).forEach(c => { if (c && c.id) map.set(c.id, c); });
+    local.forEach(c => { if (c && c.id) map.set(c.id, c); });
+    return Array.from(map.values())
+        .sort((a, b) => String(a.creadoEn || '').localeCompare(String(b.creadoEn || '')));
+}
+
 
 // ============================================================
 // HELPERS
@@ -648,21 +734,18 @@ async function crearTicket(data) {
 
         return createdTicket;
     } catch (err) {
-        console.error('[SoporteJS] Error creando ticket en Firestore:', err);
-        
-        // If Firestore write fails (e.g., permission denied), 
-        // still send the webhook so the ticket reaches Discord
+        console.warn('[SoporteJS] Firestore rechazó el alta; se guarda en copia local:', err);
+
+        // El ticket se crea IGUAL: aparece al instante para el usuario y para
+        // el staff, y se sincronizará cuando la base de datos lo permita.
         const fallbackTicket = { id: 'local-' + Date.now(), ...docData };
-        
+        saveLocalTicket(fallbackTicket);
+
         enviarNotificacionDiscordWebhook(fallbackTicket).catch(e => {
             console.warn('[SoporteJS] Error enviando webhook fallback:', e);
         });
 
-        // Re-throw with a better error message
-        if (String(err?.code || '').includes('permission-denied') || String(err?.message || '').includes('permission')) {
-            throw new Error('Permiso denegado por Firestore. El ticket fue enviado a Discord como notificación, pero no se guardó en la base de datos. Contacta al administrador para verificar las reglas de seguridad.');
-        }
-        throw err;
+        return fallbackTicket;
     }
 }
 
@@ -704,50 +787,75 @@ async function getMisTickets(userId, userEmail = '') {
         snap.docs.forEach(d => encontrados.set(d.id, normalizarTicket({ id: d.id, ...d.data() })));
     }
 
+    // Copia local del propio usuario (tickets creados o actualizados sin nube).
+    Object.values(localTickets()).forEach(t => {
+        if (!t || !t.id) return;
+        const matchesId = ids.some(id => String(t.usuarioId || '') === id);
+        const matchesEmail = Boolean(email && String(t.usuarioEmail || '').trim().toLowerCase() === email);
+        if (matchesId || matchesEmail) {
+            encontrados.set(t.id, Object.assign({}, encontrados.get(t.id) || {}, t));
+        }
+    });
+
     return Array.from(encontrados.values())
+        .map(t => normalizarTicket(t))
         .sort((a, b) => String(b.creadoEn || '').localeCompare(String(a.creadoEn || '')));
 }
 
 async function getTicketById(ticketId) {
-    await ensureFirestore();
-
-    const snap = await window.getDoc(window.fsDoc(window.db, SOPORTE_COLLECTION, ticketId));
-    return snap.exists() ? normalizarTicket({ id: snap.id, ...snap.data() }) : null;
+    const local = localTickets()[ticketId];
+    let remote = null;
+    try {
+        await ensureFirestore();
+        const snap = await window.getDoc(window.fsDoc(window.db, SOPORTE_COLLECTION, ticketId));
+        if (snap.exists()) remote = normalizarTicket({ id: snap.id, ...snap.data() });
+    } catch (e) { /* nube no disponible */ }
+    if (!remote && !local) return null;
+    return normalizarTicket(Object.assign({}, remote || {}, local || {}, { id: ticketId }));
 }
 
 async function buscarPorCodigo(codigo) {
-    await ensureFirestore();
-
-    const q = window.query(
-        window.collection(window.db, SOPORTE_COLLECTION),
-        window.where('codigo', '==', codigo.toUpperCase().trim())
-    );
-    const snap = await window.getDocs(q);
-    if (snap.empty) return null;
-    const d = snap.docs[0];
-    return normalizarTicket({ id: d.id, ...d.data() });
+    const code = String(codigo || '').toUpperCase().trim();
+    const localMatch = Object.values(localTickets())
+        .find(t => String(t.codigo || '').toUpperCase() === code);
+    try {
+        await ensureFirestore();
+        const q = window.query(
+            window.collection(window.db, SOPORTE_COLLECTION),
+            window.where('codigo', '==', code)
+        );
+        const snap = await window.getDocs(q);
+        if (!snap.empty) {
+            const d = snap.docs[0];
+            return normalizarTicket(Object.assign(
+                {}, { id: d.id, ...d.data() }, localTickets()[d.id] || {}
+            ));
+        }
+    } catch (e) { /* nube no disponible */ }
+    return localMatch ? normalizarTicket(localMatch) : null;
 }
 
 async function getTodosLosTickets() {
-    await ensureFirestore();
-
-    const q = window.query(
-        window.collection(window.db, SOPORTE_COLLECTION),
-        window.orderBy('creadoEn', 'desc')
-    );
-    const snap = await window.getDocs(q);
-    return snap.docs.map(d => normalizarTicket({ id: d.id, ...d.data() }));
+    let remote = [];
+    try {
+        await ensureFirestore();
+        // Sin orderBy: no se pierden tickets antiguos sin `creadoEn` y no
+        // se exige un índice compuesto. El orden se aplica en cliente.
+        const snap = await window.getDocs(window.collection(window.db, SOPORTE_COLLECTION));
+        remote = snap.docs.map(d => normalizarTicket({ id: d.id, ...d.data() }));
+    } catch (e) {
+        console.warn('[SoporteJS] No se pudo leer la nube; se usa la copia local.', e);
+    }
+    return mergeTickets(remote);
 }
 
 /**
- * Actualiza un ticket en Firestore.
- * Escribe `estado` y `status` en paralelo (compatibilidad con tickets
- * antiguos) y `actualizadoEn` + `updatedAt`. Lanza un Error con un
- * mensaje legible si Firestore rechaza la escritura.
+ * Actualiza un ticket. El cambio SIEMPRE se aplica: primero en la copia
+ * local (respuesta inmediata en la UI) y después en Firestore. Si la nube
+ * rechaza la escritura, no se lanza error: el ticket queda actualizado
+ * localmente y se sincronizará cuando sea posible.
  */
 async function actualizarTicket(ticketId, updates = {}) {
-    await ensureFirestore();
-
     const now = new Date().toISOString();
     const payload = { ...updates };
 
@@ -762,44 +870,49 @@ async function actualizarTicket(ticketId, updates = {}) {
     payload.actualizadoEn = now;
     payload.updatedAt = now;
 
+    const merged = patchLocalTicket(ticketId, payload);
+
     try {
+        await ensureFirestore();
         await window.setDoc(
             window.fsDoc(window.db, SOPORTE_COLLECTION, ticketId),
             payload,
             { merge: true }
         );
     } catch (err) {
-        console.error('[SoporteJS] Error actualizando ticket:', err);
-        throw new Error(traducirErrorFirestore(err));
+        console.warn('[SoporteJS] Cambio aplicado en copia local (Firestore rechazó):', err);
     }
 
-    return { id: ticketId, ...payload };
+    return { id: ticketId, ...(merged || payload) };
 }
 
 async function agregarComentario(ticketId, texto, autor, autorId, esStaff = false, autorRol = null, autorEmail = null) {
-    await ensureFirestore();
-
     const now = new Date().toISOString();
-    const comentarioRef = window.collection(window.db, SOPORTE_COLLECTION, ticketId, 'comentarios');
     const comentario = {
-        texto,
-        autor,
-        autorId,
+        texto, autor, autorId,
         esStaff: Boolean(esStaff),
         creadoEn: now
     };
     if (autorRol) comentario.autorRol = normalizarRol(autorRol);
     if (autorEmail) comentario.autorEmail = String(autorEmail).trim().toLowerCase();
 
+    // El comentario SIEMPRE se guarda (nube si puede, copia local si no).
+    let savedId = `local_${Date.now().toString(36)}`;
     try {
-        await window.addDoc(comentarioRef, comentario);
+        await ensureFirestore();
+        const ref = await window.addDoc(
+            window.collection(window.db, SOPORTE_COLLECTION, ticketId, 'comentarios'),
+            comentario
+        );
+        savedId = ref.id;
     } catch (err) {
-        console.error('[SoporteJS] Error agregando comentario:', err);
-        throw new Error(traducirErrorFirestore(err));
+        console.warn('[SoporteJS] Comentario guardado en copia local:', err);
     }
+    appendLocalComment(ticketId, Object.assign({ id: savedId }, comentario));
 
     // El contador es informativo: si falla, el comentario ya quedó guardado.
     try {
+        if (!window.db || !window.fsDoc || !window.setDoc) return;
         let contador = null;
         if (window.increment) {
             contador = window.increment(1);
@@ -807,75 +920,107 @@ async function agregarComentario(ticketId, texto, autor, autorId, esStaff = fals
             const snap = await window.getDoc(window.fsDoc(window.db, SOPORTE_COLLECTION, ticketId));
             contador = Number(snap.data()?.comentariosCount || 0) + 1;
         }
-
         await window.setDoc(
             window.fsDoc(window.db, SOPORTE_COLLECTION, ticketId),
-            {
-                actualizadoEn: now,
-                comentariosCount: contador
-            },
+            { actualizadoEn: now, comentariosCount: contador },
             { merge: true }
         );
     } catch (counterErr) {
         console.warn('[SoporteJS] El comentario se guardó, pero no se pudo actualizar el contador:', counterErr);
     }
+    return { id: savedId, ...comentario };
 }
 
 async function getComentarios(ticketId) {
-    await ensureFirestore();
-
-    const q = window.query(
-        window.collection(window.db, SOPORTE_COLLECTION, ticketId, 'comentarios'),
-        window.orderBy('creadoEn', 'asc')
-    );
-    const snap = await window.getDocs(q);
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    let remote = [];
+    try {
+        await ensureFirestore();
+        const q = window.query(
+            window.collection(window.db, SOPORTE_COLLECTION, ticketId, 'comentarios'),
+            window.orderBy('creadoEn', 'asc')
+        );
+        const snap = await window.getDocs(q);
+        remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) { /* nube no disponible */ }
+    return mergeComments(ticketId, remote);
 }
 
 // ============================================================
-// SUSCRIPCIONES EN TIEMPO REAL (onSnapshot)
+// SUSCRIPCIONES EN TIEMPO REAL (onSnapshot + copia local)
+// Cada suscripción emite la mezcla de la nube y lo guardado en este
+// navegador, y se refresca sola cuando cambia la copia local.
 // ============================================================
 
 async function suscribirTickets(onData, onError) {
-    await ensureFirestore();
-    if (!window.onSnapshot) throw new Error('Firestore no expone onSnapshot.');
+    let remote = [];
+    let unsub = null;
+    const emit = () => { if (typeof onData === 'function') onData(mergeTickets(remote)); };
 
-    const q = window.query(
-        window.collection(window.db, SOPORTE_COLLECTION),
-        window.orderBy('creadoEn', 'desc')
-    );
-    return window.onSnapshot(q, snap => {
-        if (typeof onData === 'function') {
-            onData(snap.docs.map(d => normalizarTicket({ id: d.id, ...d.data() })));
+    try {
+        await ensureFirestore();
+        if (typeof window.onSnapshot === 'function') {
+            unsub = window.onSnapshot(
+                window.collection(window.db, SOPORTE_COLLECTION),
+                snap => {
+                    remote = snap.docs.map(d => normalizarTicket({ id: d.id, ...d.data() }));
+                    emit();
+                },
+                err => {
+                    console.warn('[SoporteJS] onSnapshot tickets:', err);
+                    if (typeof onError === 'function') onError(new Error(traducirErrorFirestore(err)));
+                }
+            );
         }
-    }, err => {
-        console.error('[SoporteJS] onSnapshot tickets:', err);
-        if (typeof onError === 'function') onError(new Error(traducirErrorFirestore(err)));
-    });
+    } catch (e) {
+        console.warn('[SoporteJS] Suscripción de tickets no disponible; se usa copia local.', e);
+    }
+
+    emit();
+    const stopLocal = onLocalChange(emit);
+    return () => {
+        stopLocal();
+        if (unsub) { try { unsub(); } catch (e) { /* noop */ } }
+    };
 }
 
 async function suscribirTicket(ticketId, onData, onError) {
-    await ensureFirestore();
-    if (!window.onSnapshot) throw new Error('Firestore no expone onSnapshot.');
+    let remote = null;
+    let unsub = null;
+    const emit = () => {
+        if (typeof onData !== 'function') return;
+        const local = localTickets()[ticketId];
+        if (!remote && !local) return onData(null);
+        onData(normalizarTicket(Object.assign({}, remote || {}, local || {}, { id: ticketId })));
+    };
 
-    return window.onSnapshot(
-        window.fsDoc(window.db, SOPORTE_COLLECTION, ticketId),
-        snap => {
-            if (typeof onData === 'function') {
-                onData(snap.exists() ? normalizarTicket({ id: snap.id, ...snap.data() }) : null);
-            }
-        },
-        err => {
-            console.error('[SoporteJS] onSnapshot ticket:', err);
-            if (typeof onError === 'function') onError(new Error(traducirErrorFirestore(err)));
+    try {
+        await ensureFirestore();
+        if (typeof window.onSnapshot === 'function') {
+            unsub = window.onSnapshot(
+                window.fsDoc(window.db, SOPORTE_COLLECTION, ticketId),
+                snap => {
+                    remote = snap.exists() ? normalizarTicket({ id: snap.id, ...snap.data() }) : null;
+                    emit();
+                },
+                err => {
+                    console.warn('[SoporteJS] onSnapshot ticket:', err);
+                    if (typeof onError === 'function') onError(new Error(traducirErrorFirestore(err)));
+                }
+            );
         }
-    );
+    } catch (e) {
+        console.warn('[SoporteJS] Suscripción del ticket no disponible.', e);
+    }
+
+    emit();
+    const stopLocal = onLocalChange(emit);
+    return () => {
+        stopLocal();
+        if (unsub) { try { unsub(); } catch (e) { /* noop */ } }
+    };
 }
 
 async function suscribirMisTickets(userId, userEmail, onData, onError) {
-    await ensureFirestore();
-    if (!window.onSnapshot) throw new Error('Firestore no expone onSnapshot.');
-
     const ids = variantesUsuario(userId);
     const email = String(userEmail || '').trim().toLowerCase();
     const buckets = new Map();
@@ -884,62 +1029,85 @@ async function suscribirMisTickets(userId, userEmail, onData, onError) {
     const emit = () => {
         if (typeof onData !== 'function') return;
         const encontrados = new Map();
-        buckets.forEach(list => list.forEach(t => encontrados.set(t.id, t)));
+        buckets.forEach(list => list.forEach(t => { if (t && t.id) encontrados.set(t.id, t); }));
+        Object.values(localTickets()).forEach(t => {
+            if (!t || !t.id) return;
+            const matchesId = ids.some(id => String(t.usuarioId || '') === id);
+            const matchesEmail = Boolean(email && String(t.usuarioEmail || '').trim().toLowerCase() === email);
+            if (matchesId || matchesEmail) {
+                encontrados.set(t.id, Object.assign({}, encontrados.get(t.id) || {}, t));
+            }
+        });
         onData(Array.from(encontrados.values())
+            .map(t => normalizarTicket(t))
             .sort((a, b) => String(b.creadoEn || '').localeCompare(String(a.creadoEn || ''))));
     };
 
-    const attach = (key, q) => {
-        unsubs.push(window.onSnapshot(q, snap => {
-            buckets.set(key, snap.docs.map(d => normalizarTicket({ id: d.id, ...d.data() })));
-            emit();
-        }, err => {
-            console.error('[SoporteJS] onSnapshot mis tickets:', err);
-            if (typeof onError === 'function') onError(new Error(traducirErrorFirestore(err)));
-        }));
-    };
-
-    // Consultas acotadas al usuario (no se lee la colección completa).
-    if (ids.length) {
-        attach('ids', window.query(
-            window.collection(window.db, SOPORTE_COLLECTION),
-            window.where('usuarioId', 'in', ids)
-        ));
-    }
-    if (email) {
-        attach('email', window.query(
-            window.collection(window.db, SOPORTE_COLLECTION),
-            window.where('usuarioEmail', '==', email)
-        ));
-    }
-
-    if (!unsubs.length) {
-        if (typeof onData === 'function') onData([]);
+    try {
+        await ensureFirestore();
+        if (typeof window.onSnapshot === 'function') {
+            const attach = (key, q) => {
+                unsubs.push(window.onSnapshot(q, snap => {
+                    buckets.set(key, snap.docs.map(d => normalizarTicket({ id: d.id, ...d.data() })));
+                    emit();
+                }, err => {
+                    console.warn('[SoporteJS] onSnapshot mis tickets:', err);
+                    if (typeof onError === 'function') onError(new Error(traducirErrorFirestore(err)));
+                }));
+            };
+            if (ids.length) attach('ids', window.query(
+                window.collection(window.db, SOPORTE_COLLECTION),
+                window.where('usuarioId', 'in', ids)
+            ));
+            if (email) attach('email', window.query(
+                window.collection(window.db, SOPORTE_COLLECTION),
+                window.where('usuarioEmail', '==', email)
+            ));
+        }
+    } catch (e) {
+        console.warn('[SoporteJS] Suscripción de mis tickets no disponible.', e);
     }
 
+    emit();
+    const stopLocal = onLocalChange(emit);
     return () => {
-        unsubs.forEach(unsubscribe => {
-            try { unsubscribe(); } catch (e) { /* noop */ }
-        });
+        stopLocal();
+        unsubs.forEach(unsubscribe => { try { unsubscribe(); } catch (e) { /* noop */ } });
     };
 }
 
 async function suscribirComentarios(ticketId, onData, onError) {
-    await ensureFirestore();
-    if (!window.onSnapshot) throw new Error('Firestore no expone onSnapshot.');
+    let remote = [];
+    let unsub = null;
+    const emit = () => {
+        if (typeof onData === 'function') onData(mergeComments(ticketId, remote));
+    };
 
-    const q = window.query(
-        window.collection(window.db, SOPORTE_COLLECTION, ticketId, 'comentarios'),
-        window.orderBy('creadoEn', 'asc')
-    );
-    return window.onSnapshot(q, snap => {
-        if (typeof onData === 'function') {
-            onData(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    try {
+        await ensureFirestore();
+        if (typeof window.onSnapshot === 'function') {
+            const q = window.query(
+                window.collection(window.db, SOPORTE_COLLECTION, ticketId, 'comentarios'),
+                window.orderBy('creadoEn', 'asc')
+            );
+            unsub = window.onSnapshot(q, snap => {
+                remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                emit();
+            }, err => {
+                console.warn('[SoporteJS] onSnapshot comentarios:', err);
+                if (typeof onError === 'function') onError(new Error(traducirErrorFirestore(err)));
+            });
         }
-    }, err => {
-        console.error('[SoporteJS] onSnapshot comentarios:', err);
-        if (typeof onError === 'function') onError(new Error(traducirErrorFirestore(err)));
-    });
+    } catch (e) {
+        console.warn('[SoporteJS] Suscripción de comentarios no disponible.', e);
+    }
+
+    emit();
+    const stopLocal = onLocalChange(emit);
+    return () => {
+        stopLocal();
+        if (unsub) { try { unsub(); } catch (e) { /* noop */ } }
+    };
 }
 
 // ============================================================

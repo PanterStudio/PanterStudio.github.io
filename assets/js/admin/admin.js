@@ -119,14 +119,12 @@ tabButtons.forEach(btn => {
         
         if (tabName === 'betatesters') {
             loadBetaTesters();
-        } else if (tabName === 'accounts') {
-            loadCeoUsers();
         } else if (tabName === 'support') {
             loadGlobalRedeemLogs();
         } else if (tabName === 'siteconfig') {
             loadSiteConfig();
         } else if (tabName === 'staff') {
-            loadStaffMembers();
+            refreshAssignment();
             loadDiscordRoleMapping();
             if (window.PanterRoles) {
                 window.PanterRoles.loadRoleConfig(true)
@@ -1526,7 +1524,7 @@ function bindEvents() {
     populateStaffRoleSelect();
     document.getElementById('staffRefreshBtn')?.addEventListener('click', () => {
         loadStaffDirectory(true);
-        loadStaffMembers();
+        refreshAssignment();
         loadDiscordRoleMapping();
         if (window.PanterRoles) {
             window.PanterRoles.loadRoleConfig(true)
@@ -1557,6 +1555,7 @@ function bindEvents() {
     document.getElementById('discordMapSaveBtn')?.addEventListener('click', saveDiscordRoleMapping);
     document.getElementById('discordMapReloadBtn')?.addEventListener('click', loadDiscordRoleMapping);
     bindRoleManager();
+    bindRoleAssignment();
 
     bindCeoRoleActions();
 }
@@ -1954,7 +1953,7 @@ async function loadStaffMembers() {
 
     const merged = new Map();
     remoteMembers.forEach((member) => merged.set(String(member.uid), member));
-    localMembers.forEach((member) => merged.set(String(member.uid), Object.assign({}, member, { localOnly: true })));
+    localMembers.forEach((member) => merged.set(String(member.uid), Object.assign({}, member)));
 
     staffMembersCache = Array.from(merged.values()).sort((a, b) => {
         const rankA = window.PanterRoles ? window.PanterRoles.rank(a.role) : 0;
@@ -2154,21 +2153,22 @@ async function persistStaffMember(uid, payload) {
         actualizadoPor: currentUser ? (currentUser.uid || currentUser.email || 'admin') : 'admin'
     });
 
+    // Espejo local SIEMPRE: así la página pública `personal.html` ve el
+    // cambio al instante, incluso si las reglas de Firestore aún no están
+    // publicadas o la nube rechaza la escritura.
+    mirrorStaffLocal(record);
+    staffUnhideUid(uid);
+
     if (!window.db || !window.fsDoc || !window.setDoc) {
-        staffUpsertLocal(record);
         return { record, local: true, error: new Error('Firestore no disponible') };
     }
 
     try {
         await window.setDoc(window.fsDoc(window.db, STAFF_COLLECTION, uid), record, { merge: true });
     } catch (error) {
-        console.error('No se pudo guardar el miembro en Firestore:', error);
-        staffUpsertLocal(record);
+        console.warn('[Personal] Guardado en copia local (Firestore rechazó):', error);
         return { record, local: true, error };
     }
-
-    staffRemoveLocal(uid);
-    staffUnhideUid(uid);
 
     // Refleja los rangos del equipo en perfiles existentes, sin crear perfiles parciales.
     if (window.getDoc && window.setDoc && payload.role) {
@@ -2825,6 +2825,220 @@ function bootAuthListener() {
     });
 
     return true;
+}
+
+// ═══════════════════════════════════════════════════════════
+// ASIGNACIÓN DE PERSONAL POR RANGO
+// Un único sitio: cada rango muestra su desplegable de usuarios y
+// las personas ya asignadas. Todo se refleja en `personal.html`.
+// ═══════════════════════════════════════════════════════════
+let assignmentAccounts = [];
+let assignmentMembers = [];
+let assignmentUnsub = null;
+
+/** Escribe SIEMPRE una copia limpia en el espejo local del equipo. */
+function mirrorStaffLocal(record) {
+    if (!record || !record.uid) return;
+    const clean = Object.assign({}, record);
+    delete clean.localOnly;
+    delete clean.pendienteSincronizar;
+    const list = staffReadLocal().filter(item => String(item.uid) !== String(record.uid));
+    list.push(clean);
+    staffWriteLocal(list);
+}
+
+function assignSetMessage(text, tone = 'info') {
+    const el = document.getElementById('staffAssignMsg');
+    if (!el) return;
+    el.textContent = text || '';
+    el.style.color = tone === 'error' ? '#fca5a5'
+        : tone === 'success' ? '#86efac' : '#7dd3fc';
+}
+
+async function loadAssignmentAccounts() {
+    const accounts = new Map();
+    try {
+        const docs = await readCollectionSafe('conductores');
+        docs.forEach(docSnap => {
+            const d = docSnap.data() || {};
+            if (d.eliminado === true) return;
+            const uid = docSnap.id;
+            const email = String(d.email || '').trim().toLowerCase();
+            const nombre = String(
+                d.nombre || d.displayName || d.username || d.nombre_usuario ||
+                (email ? email.split('@')[0] : uid)
+            ).trim();
+            accounts.set(String(uid), {
+                uid: String(uid),
+                nombre,
+                email,
+                avatarUrl: String(d.avatarUrl || d.avatarImg || d.photoURL || '').trim()
+            });
+        });
+    } catch (e) {
+        console.warn('[Personal] No se pudo leer el listado de usuarios:', e);
+    }
+    // Incluye a quienes ya tienen ficha de equipo aunque no tengan cuenta.
+    assignmentMembers.forEach(member => {
+        const uid = String(member.uid || '');
+        if (!uid || accounts.has(uid)) return;
+        accounts.set(uid, {
+            uid,
+            nombre: String(member.nombre || member.displayName || member.username || uid).trim(),
+            email: String(member.email || '').trim().toLowerCase(),
+            avatarUrl: String(member.avatarUrl || '').trim()
+        });
+    });
+    assignmentAccounts = Array.from(accounts.values())
+        .sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'));
+}
+
+function renderRoleAssignment() {
+    const container = document.getElementById('roleAssignmentList');
+    if (!container) return;
+    const R = window.PanterRoles;
+    if (!R) {
+        container.innerHTML = '<div class="empty-state">Cargando rangos...</div>';
+        return;
+    }
+    const options = ['<option value="">— Elegir usuario —</option>']
+        .concat(assignmentAccounts.map(account =>
+            `<option value="${staffEscape(account.uid)}">${staffEscape(account.nombre)}${account.email ? ' · ' + staffEscape(account.email) : ''}</option>`
+        )).join('');
+
+    container.innerHTML = R.orderedRoleIds().map(roleId => {
+        const def = R.get(roleId);
+        const people = assignmentMembers.filter(member => R.normalize(member.role) === roleId);
+        const chips = people.length
+            ? people.map(member => `
+                <span class="ps-assign-chip">
+                    ${staffEscape(member.nombre || member.displayName || member.username || member.uid)}
+                    <button type="button" data-assign-remove="${staffEscape(member.uid)}" title="Quitar del rango" aria-label="Quitar">×</button>
+                </span>`).join('')
+            : '<span class="ps-assign-empty">Sin personas asignadas todavía</span>';
+        return `
+            <section class="ps-assign-role" style="--ps-role-color:${staffEscape(def.color)};">
+                <div class="ps-assign-head">
+                    <span class="ps-assign-icon"><i class="${staffEscape(def.icon || 'fa-solid fa-user')}" aria-hidden="true"></i></span>
+                    <div>
+                        <strong>${staffEscape(def.label)}</strong>
+                        <small>prioridad ${Number(def.rank || 0)} · ${people.length} persona${people.length === 1 ? '' : 's'}</small>
+                    </div>
+                </div>
+                <div class="ps-assign-controls">
+                    <select data-assign-select="${staffEscape(roleId)}" aria-label="Usuarios para ${staffEscape(def.label)}">${options}</select>
+                    <button type="button" data-assign-add="${staffEscape(roleId)}">Agregar</button>
+                </div>
+                <div class="ps-assign-people">${chips}</div>
+            </section>`;
+    }).join('');
+}
+
+async function refreshAssignment() {
+    await loadStaffDirectory();
+    await loadStaffMembers();
+    assignmentMembers = staffMembersCache.slice();
+    await loadAssignmentAccounts();
+    renderRoleAssignment();
+    startAssignmentRealtime();
+}
+
+async function assignPerson(uid, role) {
+    if (!uid || !role) return;
+    const R = window.PanterRoles;
+    const account = assignmentAccounts.find(item => String(item.uid) === String(uid)) || {};
+    const nombre = String(account.nombre || uid).trim();
+    const roleId = R ? R.normalize(role) : role;
+    const record = {
+        uid: String(uid),
+        nombre,
+        role: roleId,
+        email: account.email || '',
+        avatarUrl: account.avatarUrl || '',
+        especialidad: '',
+        orden: 999,
+        estado: 'online',
+        actualizadoEn: new Date().toISOString(),
+        actualizadoPor: currentUser ? (currentUser.uid || currentUser.email || 'admin') : 'admin'
+    };
+
+    mirrorStaffLocal(record);
+    staffUnhideUid(String(uid));
+    try {
+        if (window.db && window.fsDoc && window.setDoc) {
+            await window.setDoc(window.fsDoc(window.db, STAFF_COLLECTION, String(uid)), record, { merge: true });
+        }
+    } catch (e) {
+        console.warn('[Personal] Asignación guardada en copia local:', e);
+    }
+    assignSetMessage(`"${nombre}" ahora figura en ${R ? R.get(roleId).label : roleId}.`, 'success');
+    await refreshAssignment();
+}
+
+async function removeAssignedPerson(uid) {
+    if (!uid) return;
+    staffWriteLocal(staffReadLocal().filter(item => String(item.uid) !== String(uid)));
+    staffHideUid(String(uid));
+    try {
+        if (window.db && window.fsDoc && window.setDoc) {
+            await window.setDoc(window.fsDoc(window.db, STAFF_COLLECTION, String(uid)), {
+                archivado: true,
+                actualizadoEn: new Date().toISOString()
+            }, { merge: true });
+        }
+    } catch (e) {
+        console.warn('[Personal] Baja aplicada en copia local:', e);
+    }
+    assignSetMessage('Persona retirada del rango.', 'success');
+    await refreshAssignment();
+}
+
+function startAssignmentRealtime() {
+    if (assignmentUnsub || !window.db || !window.collection || typeof window.onSnapshot !== 'function') return;
+    try {
+        assignmentUnsub = window.onSnapshot(
+            window.collection(window.db, STAFF_COLLECTION),
+            () => refreshAssignment(),
+            err => console.warn('[Personal] Suscripción de equipo no disponible:', err)
+        );
+        window.addEventListener('pagehide', () => {
+            try { assignmentUnsub && assignmentUnsub(); } catch (e) { /* noop */ }
+            assignmentUnsub = null;
+        }, { once: true });
+    } catch (e) {
+        console.warn('[Personal] No se pudo iniciar la suscripción:', e);
+    }
+}
+
+function bindRoleAssignment() {
+    const container = document.getElementById('roleAssignmentList');
+    if (!container || container.dataset.bound === 'true') return;
+    container.dataset.bound = 'true';
+    container.addEventListener('click', async (event) => {
+        const addBtn = event.target.closest('[data-assign-add]');
+        if (addBtn) {
+            const role = addBtn.getAttribute('data-assign-add');
+            const select = container.querySelector(`[data-assign-select="${role}"]`);
+            const uid = select?.value || '';
+            if (!uid) { assignSetMessage('Elige un usuario del desplegable.', 'error'); return; }
+            addBtn.disabled = true;
+            try { await assignPerson(uid, role); }
+            catch (e) { assignSetMessage('No se pudo asignar: ' + (e?.message || e), 'error'); }
+            finally { addBtn.disabled = false; }
+            return;
+        }
+        const removeBtn = event.target.closest('[data-assign-remove]');
+        if (removeBtn) {
+            removeBtn.disabled = true;
+            try { await removeAssignedPerson(removeBtn.getAttribute('data-assign-remove')); }
+            catch (e) { assignSetMessage('No se pudo retirar: ' + (e?.message || e), 'error'); }
+        }
+    });
+    window.addEventListener('storage', (event) => {
+        if (event.key === STAFF_LOCAL_KEY || event.key === STAFF_HIDDEN_KEY) refreshAssignment();
+    });
+    document.addEventListener('panter:roles-config', () => renderRoleAssignment());
+    document.addEventListener('firebaseReady', () => refreshAssignment());
 }
 
 function initAdminPanel() {

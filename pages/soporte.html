@@ -1023,7 +1023,9 @@
         // ---- TOAST ----
         function showToast(msg, type = 'info') {
             const t = document.getElementById('spToast');
-            t.textContent = msg;
+            // Algunos llamadores pasan iconos HTML: se limpia para no mostrar
+            // el marcado como texto y se conserva el mensaje legible.
+            t.textContent = String(msg == null ? '' : msg).replace(/<[^>]*>/g, '').trim();
             t.className = `show ${type}`;
             clearTimeout(t._timer);
             t._timer = setTimeout(() => t.className = '', 3000);
@@ -1314,6 +1316,12 @@
                 event.stopPropagation();
                 const action = actionBtn.dataset.staffAction;
                 if (action === 'open') { openTicketModal(t); return; }
+                if (!currentStaff) {
+                    showToast('Tu rango no permite cambiar el estado de los tickets.', 'error');
+                    return;
+                }
+                if (actionBtn.dataset.busy === 'true') return;
+                actionBtn.dataset.busy = 'true';
                 actionBtn.disabled = true;
                 try {
                     if (action === 'close') {
@@ -1326,19 +1334,23 @@
                         await window.SoporteJS.actualizarTicket(t.id, { estado: 'En Proceso' });
                         showToast('Ticket marcado en proceso', 'success');
                     }
-                    await loadStaffTickets();
                     await updateStats();
                 } catch (err) {
-                    console.error(err);
-                    showToast('No se pudo actualizar el ticket', 'error');
+                    console.error('[Soporte] Error al cambiar estado:', err);
+                    showToast(err?.message || 'No se pudo actualizar el ticket', 'error');
                     actionBtn.disabled = false;
+                } finally {
+                    delete actionBtn.dataset.busy;
                 }
             });
             return div;
         }
 
         async function cambiarEstadoDesdeModal(estado) {
-            if (!currentUser || !currentTicketId || !currentStaff) return;
+            if (!currentUser || !currentTicketId || !currentStaff) {
+                showToast('Tu rango no permite cambiar el estado de los tickets.', 'error');
+                return;
+            }
             try {
                 if (estado === 'Cerrado') {
                     await window.SoporteJS.cerrarTicket(currentTicketId, currentUser.displayName || currentUser.username || 'Staff');
@@ -1349,11 +1361,10 @@
                 }
                 showToast(`Ticket actualizado: ${estado}`, 'success');
                 closeModal();
-                await loadStaffTickets();
                 await updateStats();
             } catch (err) {
-                console.error(err);
-                showToast('No se pudo actualizar el ticket', 'error');
+                console.error('[Soporte] Error al cambiar estado desde el modal:', err);
+                showToast(err?.message || 'No se pudo actualizar el ticket', 'error');
             }
         }
 
@@ -1442,7 +1453,8 @@
 
         function closeModal() {
             [comentariosUnsub, comentariosRolesUnsub, ticketUnsub].forEach(unsubscribe => {
-                if (unsubscribe) unsubscribe();
+                if (!unsubscribe) return;
+                try { unsubscribe(); } catch (e) { /* noop */ }
             });
             comentariosUnsub = null;
             comentariosRolesUnsub = null;

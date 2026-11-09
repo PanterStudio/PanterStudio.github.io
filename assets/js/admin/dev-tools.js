@@ -646,79 +646,121 @@ function renderAnnouncementItems(items, source) {
         container.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><i class="fa-solid fa-inbox" aria-hidden="true"></i></div><div class="empty-state-text">No hay anuncios publicados.</div></div>`;
         return;
     }
+    const esc = (value) => String(value == null ? '' : value)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     container.innerHTML = items.map(d => {
         const icon = TYPE_ICONS_ANN[d.type] || '<i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>';
         const date = d.createdAt ? new Date(d.createdAt).toLocaleString('es') : '';
+        const safeId = esc(d.id).replace(/&#039;/g, '%27');
         return `
         <div class="announcement-item">
-            <button class="announcement-delete-btn" onclick="deleteAnnouncement('${d.id}','${source}')" title="Eliminar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
-            <span class="announcement-item-type atype-${d.type}">${icon} ${d.type || 'general'}</span>
-            <div class="announcement-title">${d.title}</div>
-            <div class="announcement-body">${d.body}</div>
-            <div class="announcement-meta">Por ${d.createdBy || 'admin'} · ${date}</div>
+            <button class="announcement-delete-btn" onclick="deleteAnnouncement('${safeId}','${source}')" title="Eliminar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            <span class="announcement-item-type atype-${esc(d.type)}">${icon} ${esc(d.type || 'general')}</span>
+            <div class="announcement-title">${esc(d.title)}</div>
+            <div class="announcement-body">${esc(d.body)}</div>
+            <div class="announcement-meta">Por ${esc(d.createdBy || 'admin')} · ${date}</div>
         </div>`;
     }).join('');
 }
 
 function openAnnouncementModal() { openModal('announcementModal'); }
 
+function annSetMessage(text, tone = 'info') {
+    const el = document.getElementById('annFormMsg');
+    if (!el) return;
+    el.textContent = text || '';
+    el.style.color = tone === 'error' ? '#fca5a5'
+        : tone === 'success' ? '#86efac' : '#7dd3fc';
+}
+
+function withAnnTimeout(promise, ms = 4000) {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('La base de datos tardó demasiado')), ms))
+    ]);
+}
+
+/**
+ * Publicar SIEMPRE funciona: primero se guarda y se muestra en la lista,
+ * después se intenta sincronizar con Firestore. Nunca se queda colgado ni
+ * falla en silencio.
+ */
 async function saveAnnouncement() {
     const type  = document.getElementById('annType')?.value || 'general';
-    const title = document.getElementById('annTitle')?.value.trim();
-    const body  = document.getElementById('annBody')?.value.trim();
-    if (!title || !body) { alert('Título y mensaje son obligatorios.'); return; }
+    const title = String(document.getElementById('annTitle')?.value || '').trim();
+    const body  = String(document.getElementById('annBody')?.value || '').trim();
+    if (!title || !body) { annSetMessage('Título y mensaje son obligatorios.', 'error'); return; }
+
+    const btn = document.getElementById('annPublishBtn');
+    const originalHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> Publicando...';
+    }
+    annSetMessage('Publicando...', 'info');
 
     const entry = {
         id: LS.genId(),
         type, title, body,
         createdAt: new Date().toISOString(),
-        createdBy: window._currentAdminUser?.email || 'admin'
+        createdBy: window._currentAdminUser?.email || 'admin',
+        localOnly: true
     };
 
-    if (isFirebaseReady()) {
-        // Guardar en Firestore
-        try {
-            const ref = await window.addDoc(window.collection(window.db, 'announcements'), entry);
-            entry.id = ref.id; // usa el ID de Firestore
-        } catch (err) {
-            console.warn('Firestore falló, guardando localmente:', err);
-            // Caída silenciosa → guardar localmente
-            const local = getLocalAnnouncements();
-            local.unshift(entry);
-            saveLocalAnnouncements(local);
-            closeModal('announcementModal');
-            ['annTitle','annBody'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-            loadAnnouncements();
-            return;
+    // 1) Copia local inmediata → el anuncio aparece al instante y el
+    //    usuario recibe confirmación sin esperar a la nube.
+    const local = getLocalAnnouncements().filter(a => a.id !== entry.id);
+    local.unshift(entry);
+    saveLocalAnnouncements(local);
+    loadAnnouncements();
+    annSetMessage('Anuncio publicado. Sincronizando con la nube...', 'success');
+
+    // 2) Intento de sincronización con la nube (con timeout).
+    let cloudOk = false;
+    try {
+        if (isFirebaseReady()) {
+            const remoteEntry = Object.assign({}, entry);
+            delete remoteEntry.localOnly;
+            const ref = await withAnnTimeout(
+                window.addDoc(window.collection(window.db, 'announcements'), remoteEntry)
+            );
+            const synced = getLocalAnnouncements().map(a =>
+                a.id === entry.id ? Object.assign({}, remoteEntry, { id: ref.id }) : a
+            );
+            saveLocalAnnouncements(synced);
+            cloudOk = true;
         }
-        // También actualizar caché local
-        const local = getLocalAnnouncements();
-        local.unshift(entry);
-        saveLocalAnnouncements(local);
-    } else {
-        // Solo local
-        const local = getLocalAnnouncements();
-        local.unshift(entry);
-        saveLocalAnnouncements(local);
+    } catch (err) {
+        console.warn('[Anuncios] Sincronización con Firestore no disponible:', err && err.message);
     }
 
-    closeModal('announcementModal');
-    ['annTitle','annBody'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    // 3) Feedback visible y limpieza.
+    annSetMessage(
+        cloudOk
+            ? 'Anuncio publicado y visible para toda la comunidad.'
+            : 'Anuncio publicado (guardado en este navegador; se sincronizará con la nube).',
+        'success'
+    );
+    ['annTitle', 'annBody'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
     loadAnnouncements();
 }
 
 async function deleteAnnouncement(id, source) {
     if (!confirm('¿Eliminar este anuncio?')) return;
 
-    if (source === 'cloud' && isFirebaseReady()) {
+    if (isFirebaseReady()) {
         try {
-            await window.deleteDoc(window.fsDoc(window.db, 'announcements', id));
+            await withAnnTimeout(window.deleteDoc(window.fsDoc(window.db, 'announcements', id)));
         } catch (err) {
-            console.warn('No se pudo eliminar de Firestore:', err);
+            console.warn('[Anuncios] No se pudo eliminar de la nube:', err && err.message);
         }
     }
-
-    // Siempre limpiar del caché local también
+    // Siempre se elimina de la copia local.
     saveLocalAnnouncements(getLocalAnnouncements().filter(a => a.id !== id));
     loadAnnouncements();
 }
@@ -726,33 +768,32 @@ async function deleteAnnouncement(id, source) {
 async function loadAnnouncements() {
     const container = document.getElementById('announcementsList');
     if (!container) return;
-    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></div><div class="empty-state-text">Cargando...</div></div>`;
 
-    if (!isFirebaseReady()) {
-        // Modo local
+    let remote = [];
+    if (isFirebaseReady()) {
+        try {
+            const snap = await withAnnTimeout(window.getDocs(window.collection(window.db, 'announcements')));
+            remote = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setAnnMode('cloud');
+        } catch (err) {
+            console.warn('[Anuncios] No se pudo leer la nube:', err && err.message);
+            setAnnMode('local');
+        }
+    } else {
         setAnnMode('local');
-        const local = getLocalAnnouncements();
-        renderAnnouncementItems(local, 'local');
-        return;
     }
 
-    // Modo Firestore
-    setAnnMode('cloud');
-    try {
-        const snap = await window.getDocs(window.collection(window.db, 'announcements'));
-        const docs = snap.docs
-            .map(doc => ({ id: doc.id, ...doc.data() }))
-            .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-
-        // Actualizar caché local con datos de Firestore
-        saveLocalAnnouncements(docs);
-        renderAnnouncementItems(docs, 'cloud');
-    } catch (err) {
-        console.warn('Error leyendo Firestore, usando caché local:', err);
-        setAnnMode('local');
-        const local = getLocalAnnouncements();
-        renderAnnouncementItems(local, 'local');
-    }
+    // Mezcla sin destruir los anuncios pendientes de sincronizar.
+    const local = getLocalAnnouncements();
+    const map = new Map();
+    remote.forEach(a => { if (a && a.id) map.set(a.id, a); });
+    local.forEach(a => {
+        if (!a || !a.id) return;
+        map.set(a.id, Object.assign({}, map.get(a.id) || {}, a));
+    });
+    const merged = Array.from(map.values())
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    renderAnnouncementItems(merged, 'cloud');
 }
 
 /* ═══════════════════════════════════════════════════════

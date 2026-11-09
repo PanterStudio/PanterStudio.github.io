@@ -756,6 +756,52 @@
         padding: 0.9rem 1.1rem;
     }
     .ps-admin-collapsible[open] > summary { margin-bottom: 1.2rem; }
+
+    /* ── Asignación de personal por rango ── */
+    .ps-assign-intro {
+        display: flex; align-items: flex-start; gap: 9px;
+        padding: .75rem 1rem; border-radius: 10px;
+        background: rgba(0,176,255,.07); border: 1px solid rgba(0,176,255,.2);
+        color: var(--admin-text-secondary, #cbd5e1); font-size: .8rem; line-height: 1.5;
+    }
+    .ps-assign-intro i { color: #38bdf8; margin-top: 2px; }
+    .ps-assign-msg { min-height: 1.1rem; margin: .6rem 0 0; font-size: .8rem; font-weight: 700; }
+    .ps-assign-list { display: flex; flex-direction: column; gap: .7rem; margin-top: 1rem; }
+    .ps-assign-role {
+        border: 1px solid rgba(255,255,255,.08);
+        border-left: 3px solid var(--ps-role-color, #0055ff);
+        border-radius: 12px; padding: .85rem 1.1rem; background: rgba(255,255,255,.02);
+    }
+    .ps-assign-head { display: flex; align-items: center; gap: .7rem; margin-bottom: .65rem; }
+    .ps-assign-icon {
+        width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--ps-role-color, #0055ff); color: #0b1020; font-size: .9rem;
+    }
+    .ps-assign-head strong { display: block; font-size: .92rem; }
+    .ps-assign-head small { color: var(--admin-text-muted, #8a99ad); font-size: .72rem; }
+    .ps-assign-controls { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .ps-assign-controls select {
+        flex: 1 1 240px; min-width: 0; padding: 8px 10px; border-radius: 9px;
+        background: rgba(10,14,24,.8); color: #fff; border: 1px solid rgba(255,255,255,.14);
+        font-family: inherit; font-size: .82rem;
+    }
+    .ps-assign-controls button {
+        padding: 8px 16px; border-radius: 9px; border: 1px solid var(--ps-role-color, #0055ff);
+        background: var(--ps-role-color, #0055ff); color: #0b1020;
+        font-weight: 800; font-size: .8rem; cursor: pointer;
+    }
+    .ps-assign-controls button:disabled { opacity: .55; cursor: not-allowed; }
+    .ps-assign-people { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .7rem; }
+    .ps-assign-chip {
+        display: inline-flex; align-items: center; gap: .45rem;
+        padding: 5px 10px; border-radius: 100px;
+        background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+        font-size: .76rem; color: #e2e8f0;
+    }
+    .ps-assign-chip button { background: none; border: none; color: #f87171; cursor: pointer; font-size: .85rem; line-height: 1; padding: 0; }
+    .ps-assign-empty { font-size: .75rem; color: var(--admin-text-muted, #8a99ad); }
+    .ps-assign-manual { margin-top: 1.5rem; }
     </style>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
@@ -823,7 +869,6 @@
                         <div class="sidebar-section-label">Gestión</div>
                         <button class="sidebar-tab active" data-tab="dashboard"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Resumen</button>
                         <button class="sidebar-tab" data-tab="betatesters"><i class="fa-solid fa-gears" aria-hidden="true"></i> Beta Testers</button>
-                        <button class="sidebar-tab" data-tab="accounts" id="sidebarAccountsTab" hidden><i class="fa-solid fa-users" aria-hidden="true"></i> Cuentas (CEO)</button>
                         <button class="sidebar-tab" data-tab="support"><i class="fa-solid fa-comment-dots" aria-hidden="true"></i> Soporte</button>
                         <button class="sidebar-tab" data-tab="announcements"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Anuncios</button>
                         <button class="sidebar-tab" data-tab="staff"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Personal</button>
@@ -853,7 +898,7 @@
                     <div class="tab-pane active" id="tab-dashboard">
                         <div class="stats-grid">
                             <div class="stat-card">
-                                <span class="stat-label">Total Conductores</span>
+                                <span class="stat-label">Usuarios registrados</span>
                                 <strong id="statTotalUsers">0</strong>
                             </div>
                             <div class="stat-card">
@@ -895,36 +940,8 @@
                         </div>
                     </div>
 
-                    <!-- ══ TAB: Accounts (CEO Only) ══ -->
-                    <div class="tab-pane" id="tab-accounts">
-                        <div class="admin-card">
-                            <div class="card-header-actions">
-                                <div>
-                                    <h3><i class="fa-solid fa-users" aria-hidden="true"></i> Directorio de Cuentas</h3>
-                                    <p style="margin:0;">Consulta las cuentas registradas. Para asignar rangos, colores y permisos usa el módulo <strong>Personal</strong> con el botón <strong>Gestionar en Personal</strong>.</p>
-                                </div>
-                                <button id="adminCeoRefreshUsersBtn" class="btn"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Actualizar</button>
-                            </div>
-
-                            <!-- Search + stats bar -->
-                            <div class="accounts-toolbar">
-                                <div class="accounts-search-wrap">
-                                    <span class="accounts-search-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
-                                    <input type="search" id="adminCeoEmailSearch"
-                                        placeholder="Buscar por nombre o correo..."
-                                        class="accounts-search-input">
-                                </div>
-                                <div id="accountsCountBadge" class="accounts-count-badge">
-                                    0 usuarios
-                                </div>
-                            </div>
-
-                            <p id="adminCeoUsersMessage" class="admin-message" style="margin-bottom:12px;"></p>
-
-                            <!-- Cards grid -->
-                            <div id="adminCeoUsersTableBody" class="accounts-cards-grid"></div>
-                        </div>
-                    </div>
+                    <!-- El antiguo directorio de cuentas se eliminó: la asignación
+                         de rangos se hace ahora desde Personal, por rango. -->
 
                     <!-- ══ TAB: Soporte ══ -->
                     <div class="tab-pane" id="tab-support">
@@ -945,7 +962,7 @@
                             <h3>Soporte al Jugador</h3>
                             <p>Busca un jugador por su correo electrónico, ID o nombre de usuario para visualizar y editar CUALQUIER aspecto de su cuenta (perfil, saldos, mascota, permisos, etc.).</p>
                             <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
-                                <input type="text" id="supportSearchEmail" placeholder="Introduce correo, ID de conductor o nombre de usuario" class="form-input" style="flex:1; min-width: 250px;">
+                                <input type="text" id="supportSearchEmail" placeholder="Introduce correo, ID de usuario o nombre" class="form-input" style="flex:1; min-width: 250px;">
                                 <button id="supportSearchBtn" class="btn"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Buscar Jugador</button>
                             </div>
                             <p id="supportSearchMessage" class="admin-message" style="margin-top: 10px;"></p>
@@ -1152,86 +1169,64 @@
                                 </button>
                             </div>
 
-                            <!-- Selector rápido de cuenta registrada -->
-                            <div class="ps-staff-picker">
-                                <label for="staffUserPicker">Elegir una cuenta registrada (opcional)</label>
-                                <div class="ps-staff-picker-row">
-                                    <select id="staffUserPicker">
-                                        <option value="">— Nuevo miembro manual —</option>
-                                    </select>
-                                    <button type="button" class="btn" id="staffUserPickBtn">
-                                        <i class="fa-solid fa-user-plus" aria-hidden="true"></i> Cargar
-                                    </button>
-                                </div>
+                            <!-- ASIGNACIÓN POR RANGO -->
+                            <div class="ps-assign-intro">
+                                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                                Elige un rango, selecciona un usuario en la lista y pulsa <strong>Agregar</strong>.
+                                Las personas aparecen aquí mismo y en el árbol de <strong>Personal</strong> al instante.
+                            </div>
+                            <div id="staffAssignMsg" class="ps-assign-msg" aria-live="polite"></div>
+                            <div id="roleAssignmentList" class="ps-assign-list">
+                                <div class="empty-state">Cargando rangos y usuarios...</div>
                             </div>
 
-                            <!-- Formulario simple: nombre + rango + especialidad -->
-                            <form id="staffForm" class="ps-admin-grid" style="margin-top:1rem;" onsubmit="return false;">
-                                <div class="ps-admin-staff-card">
-                                    <label>Nombre visible *
-                                        <input type="text" id="staffFieldNombre" placeholder="Ej. PanterGameY" maxlength="80" autocomplete="off">
-                                    </label>
-                                    <label>Rango *
-                                        <select id="staffFieldRole"></select>
-                                    </label>
-                                    <label>Especialidad
-                                        <input type="text" id="staffFieldEspecialidad" list="staffSpecialtyList" placeholder="Ej. Dirección creativa" maxlength="80" autocomplete="off">
-                                        <datalist id="staffSpecialtyList">
-                                            <option value="Dirección Creativa"></option>
-                                            <option value="Programador"></option>
-                                            <option value="Modelador 3D"></option>
-                                            <option value="Moderador"></option>
-                                            <option value="Soporte Técnico"></option>
-                                            <option value="Community Manager"></option>
-                                            <option value="Diseñador Gráfico"></option>
-                                        </datalist>
-                                    </label>
-
-                                    <div class="ps-admin-staff-actions">
-                                        <button type="button" class="btn" id="staffSaveBtn">
-                                            <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar
-                                        </button>
-                                        <button type="button" class="btn" id="staffResetBtn">
-                                            <i class="fa-solid fa-eraser" aria-hidden="true"></i> Limpiar
-                                        </button>
+                            <!-- Alta manual: plegada, para usuarios que no estén en la lista -->
+                            <details class="ps-admin-collapsible ps-assign-manual">
+                                <summary><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Alta manual <small>(si el usuario no aparece en el desplegable)</small></summary>
+                                <div class="ps-staff-picker">
+                                    <label for="staffUserPicker">Elegir una cuenta registrada (opcional)</label>
+                                    <div class="ps-staff-picker-row">
+                                        <select id="staffUserPicker"><option value="">— Nuevo miembro manual —</option></select>
+                                        <button type="button" class="btn" id="staffUserPickBtn"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Cargar</button>
                                     </div>
-                                    <small class="ps-field-help" id="staffFormMsg"></small>
                                 </div>
-
-                                <div class="ps-admin-staff-card">
-                                    <details class="ps-staff-advanced">
-                                        <summary>Opciones avanzadas <small>(sólo si necesitas enlazar una cuenta)</small></summary>
-                                        <label>Discord User ID
-                                            <input type="text" id="staffFieldUid" placeholder="123456789012345678" autocomplete="off">
+                                <form id="staffForm" class="ps-admin-grid" style="margin-top:1rem;" onsubmit="return false;">
+                                    <div class="ps-admin-staff-card">
+                                        <label>Nombre visible *
+                                            <input type="text" id="staffFieldNombre" placeholder="Ej. PanterGameY" maxlength="80" autocomplete="off">
                                         </label>
-                                        <label>Usuario de Discord
-                                            <input type="text" id="staffFieldUsername" placeholder="pantergamey" maxlength="60" autocomplete="off">
+                                        <label>Rango *
+                                            <select id="staffFieldRole"></select>
                                         </label>
-                                        <label>URL del avatar
-                                            <input type="text" id="staffFieldAvatar" placeholder="https://cdn.discordapp.com/..." autocomplete="off">
+                                        <label>Especialidad
+                                            <input type="text" id="staffFieldEspecialidad" placeholder="Ej. Dirección creativa" maxlength="80" autocomplete="off">
                                         </label>
-                                        <label>Estado
-                                            <select id="staffFieldEstado">
-                                                <option value="online">En línea</option>
-                                                <option value="idle">Ausente</option>
-                                                <option value="dnd">No molestar</option>
-                                                <option value="offline">Offline</option>
-                                            </select>
-                                        </label>
-                                        <label>Descripción
-                                            <textarea id="staffFieldDescripcion" rows="3" maxlength="1200" placeholder="Responsabilidades dentro del estudio…"></textarea>
-                                        </label>
-                                        <label>Orden de prioridad (menor aparece primero)
-                                            <input type="number" id="staffFieldOrden" placeholder="1" min="0" step="1">
-                                        </label>
-                                    </details>
-                                </div>
-                            </form>
-
-                            <h4 class="ps-admin-subtitle">Directorio del equipo</h4>
-                            <div id="staffAdminList" class="ps-admin-grid" style="margin-top:1rem;">
-                                <div class="empty-state"><div class="empty-state-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></div><div class="empty-state-text">Cargando personal...</div></div>
-                            </div>
+                                        <div class="ps-admin-staff-actions">
+                                            <button type="button" class="btn" id="staffSaveBtn"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar</button>
+                                            <button type="button" class="btn" id="staffResetBtn"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Limpiar</button>
+                                        </div>
+                                        <small class="ps-field-help" id="staffFormMsg"></small>
+                                    </div>
+                                    <div class="ps-admin-staff-card">
+                                        <details class="ps-staff-advanced">
+                                            <summary>Datos opcionales</summary>
+                                            <label>Discord User ID<input type="text" id="staffFieldUid" placeholder="123456789012345678" autocomplete="off"></label>
+                                            <label>Usuario de Discord<input type="text" id="staffFieldUsername" maxlength="60" autocomplete="off"></label>
+                                            <label>URL del avatar<input type="text" id="staffFieldAvatar" placeholder="https://cdn.discordapp.com/..." autocomplete="off"></label>
+                                            <label>Estado
+                                                <select id="staffFieldEstado">
+                                                    <option value="online">En línea</option><option value="idle">Ausente</option>
+                                                    <option value="dnd">No molestar</option><option value="offline">Offline</option>
+                                                </select>
+                                            </label>
+                                            <label>Descripción<textarea id="staffFieldDescripcion" rows="3" maxlength="1200"></textarea></label>
+                                            <label>Orden de prioridad<input type="number" id="staffFieldOrden" min="0" step="1"></label>
+                                        </details>
+                                    </div>
+                                </form>
+                                <h4 class="ps-admin-subtitle">Directorio del equipo</h4>
+                                <div id="staffAdminList" class="ps-admin-grid" style="margin-top:1rem;"></div>
+                            </details>
 
                             <!-- Herramientas avanzadas: plegadas para mantener el panel simple -->
                             <details class="ps-admin-collapsible">
@@ -1701,9 +1696,10 @@
                 <label>Mensaje</label>
                 <textarea id="annBody" rows="5" placeholder="Escribe el mensaje para la comunidad..."></textarea>
             </div>
+            <p id="annFormMsg" class="ps-field-help" role="status" aria-live="polite" style="min-height:1.1rem;margin:0 0 .5rem;"></p>
             <div class="modal-actions">
                 <button class="modal-btn-cancel" onclick="closeModal('announcementModal')">Cancelar</button>
-                <button class="modal-btn-save" onclick="saveAnnouncement()"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Publicar</button>
+                <button class="modal-btn-save" id="annPublishBtn" onclick="saveAnnouncement()"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Publicar</button>
             </div>
         </div>
     </div>
@@ -1826,7 +1822,7 @@
         <div class="admin-modal">
             <h3 id="ceoDeleteUserTitle"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Eliminar cuenta</h3>
             <p class="ceo-delete-warning">
-                Se eliminará el documento del usuario en la colección <code>conductores</code>. Esta acción no se puede deshacer.
+                Se eliminará la cuenta de usuario de la base de datos. Esta acción no se puede deshacer.
             </p>
             <div class="ceo-delete-target">
                 <strong id="ceoDeleteUserName">—</strong>

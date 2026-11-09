@@ -833,3 +833,35 @@
     .ps-org-branch { min-width: 100%; padding-top: .8rem; }
     .ps-org-branch-people { padding-top: .5rem; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   TEMA OSCURO INTEGRADO CON EL RESTO DE LA WEB
+   Mantiene las líneas conectoras del árbol genealógico pero con
+   la paleta azul/oscura del sitio y los colores oficiales de rango.
+   ═══════════════════════════════════════════════════════════ */
+.ps-org {
+    --ps-org-line: rgba(125, 211, 252, 0.30);
+    --ps-org-line-soft: rgba(125, 211, 252, 0.16);
+    background: linear-gradient(180deg, rgba(18, 26, 42, .96), rgba(11, 17, 29, .97));
+    color: #e2e8f0;
+    border: 1px solid rgba(0, 176, 255, .20);
+    box-shadow: 0 25px 70px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .03);
+}
+.ps-org-title { color: #f1f5f9; }
+.ps-org-sub { color: #94a3b8; }
+.ps-org-avatar {
+    background: rgba(255, 255, 255, .05);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .35);
+}
+.ps-org-name { color: #f1f5f9; }
+.ps-org-role { color: #94a3b8; }
+.ps-org-specialty { color: #64748b; }
+.ps-org-empty { color: #94a3b8; }
+.ps-org-badge .ps-role-badge {
+    background: rgba(255, 255, 255, .04) !important;
+}
+.ps-org-branch-label {
+    color: #08111f;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .3);
+}
+.ps-org-branch-label span { background: rgba(0, 0, 0, .18); }
