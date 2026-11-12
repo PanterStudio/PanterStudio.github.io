@@ -81,14 +81,19 @@ service cloud.firestore {
 
     // ═══════════════════════════════════════════════════════
     // 🚗 PERFILES / USUARIOS
-    // `conductores.role` NO otorga rango: se sincroniza con la
-    // política por correo.
+    // `conductores` sólo guarda datos de cuenta; NO otorga rango.
     // ═══════════════════════════════════════════════════════
     match /conductores/{userId} {
       allow read, write: if true;
       match /{rest=**} { allow read, write: if true; }
     }
     match /users/{userId} {
+      allow read, write: if true;
+      match /{rest=**} { allow read, write: if true; }
+    }
+
+    // Catálogo de vehículos (Wiki + Panel Admin, fotos Imgur).
+    match /vehiculos/{document} {
       allow read, write: if true;
       match /{rest=**} { allow read, write: if true; }
     }
