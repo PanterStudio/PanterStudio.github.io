@@ -1952,6 +1952,20 @@ async function loadStaffMembers() {
         return Number(a.orden || 999) - Number(b.orden || 999);
     });
 
+    // El rango lo dicta la fuente ÚNICA compartida. Si existen fichas
+    // duplicadas antiguas de la misma persona, todas muestran el MISMO
+    // rango que ven foro, soporte, perfil y personal (no se borra nada).
+    if (window.PanterStaff && typeof window.PanterStaff.findFor === 'function') {
+        staffMembersCache.forEach(member => {
+            const shared = window.PanterStaff.findFor({
+                uid: member.uid, email: member.email,
+                nombre: member.nombre || member.displayName || member.username
+            });
+            const role = window.PanterStaff.memberRole(shared);
+            if (role) member.role = role;
+        });
+    }
+
     renderStaffAdminList();
     populateStaffUserPicker();
 
@@ -2032,6 +2046,10 @@ function staffReadLocal() {
 function staffWriteLocal(list) {
     try {
         localStorage.setItem(STAFF_LOCAL_KEY, JSON.stringify(Array.isArray(list) ? list : []));
+        // Avisa a la fuente compartida: el evento `storage` NO se dispara
+        // en la misma pestaña, así que sin esto el foro / soporte / navbar
+        // no se enterarían de un cambio de rango hecho aquí mismo.
+        document.dispatchEvent(new CustomEvent('panter:staff-changed'));
     } catch (e) {
         console.warn('No se pudo guardar el personal local:', e);
     }
@@ -3086,6 +3104,15 @@ function bindRoleAssignment() {
     });
     document.addEventListener('panter:roles-config', () => renderRoleAssignment());
     document.addEventListener('firebaseReady', () => refreshAssignment());
+    // Fuente compartida: cualquier cambio de rango hecho en otra vista
+    // (o en otra pestaña) se refleja aquí sin recargar.
+    let staffRefreshTimer = null;
+    document.addEventListener('panter:staff-changed', () => {
+        clearTimeout(staffRefreshTimer);
+        staffRefreshTimer = setTimeout(() => {
+            refreshAssignment().catch(e => console.warn('[Personal] No se pudo refrescar:', e));
+        }, 120);
+    });
 }
 
 function initAdminPanel() {
@@ -3095,8 +3122,8 @@ function initAdminPanel() {
         hideWelcomeOverlay();
     }, 3000);
 
-    // Las sesiones guardadas se revalidan contra `equipo` (Personal) o el
-    // correo del Director. No se crean sesiones desde datos de Discord.
+    // Las sesiones guardadas se revalidan contra `equipo` (Personal),
+    // la única fuente de rangos. No se crean sesiones desde Discord.
     const storedSession = getStoredSession();
     if (storedSession && storedSession.isAdmin) {
         const tryRestore = (attempt = 0) => {

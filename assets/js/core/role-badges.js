@@ -72,6 +72,30 @@
         return out;
     }
 
+    /**
+     * La fuente compartida `PanterStaff` mezcla `equipo` (nube) y
+     * `ps_staff_local` (mirror del panel). Se usa para que el badge del
+     * navbar no dependa únicamente de `equipo/{uid}` y refleje al instante
+     * un cambio de rango hecho en Personal.
+     */
+    function withStaffRole(user, profile) {
+        const out = Object.assign({}, profile || {});
+        try {
+            const S = global.PanterStaff;
+            if (S && typeof S.findFor === 'function' && typeof S.memberRole === 'function') {
+                const member = S.findFor({
+                    uid: user && (user.uid || user.id),
+                    email: user && user.email,
+                    nombre: user && (user.displayName || user.username || user.globalName)
+                });
+                const role = S.memberRole(member);
+                if (role) out.teamRole = role;
+                else delete out.teamRole;
+            }
+        } catch (e) { /* la fuente compartida es opcional */ }
+        return out;
+    }
+
     function setBadgeElement(el, roleId, options) {
         const R = roles();
         if (!el || !R) return;
@@ -99,7 +123,7 @@
 
     function publishProfile(user) {
         if (!user || profileSubscriptionUid !== user.uid) return;
-        const profile = mergeProfileWithTeam(currentConductorProfile, currentTeamMember);
+        const profile = withStaffRole(user, mergeProfileWithTeam(currentConductorProfile, currentTeamMember));
         requestSeq += 1;
         lastUser = user;
         lastProfile = profile;
@@ -193,7 +217,7 @@
         const baseProfile = opts.profile !== undefined ? opts.profile : await fetchProfile(user);
         const teamMember = opts.teamMember !== undefined ? opts.teamMember : await fetchTeamMember(user);
         if (seq !== requestSeq) return; // una sesión más reciente ganó
-        const profile = mergeProfileWithTeam(baseProfile, teamMember);
+        const profile = withStaffRole(user, mergeProfileWithTeam(baseProfile, teamMember));
         lastProfile = profile;
         applyToDom(user, profile);
     }
@@ -221,6 +245,7 @@
         document.addEventListener('firebaseReady', refresh);
         document.addEventListener('panter:discord-config', refresh);
         document.addEventListener('panter:roles-config', refresh);
+        document.addEventListener('panter:staff-changed', refresh);
 
         // Algunos flujos actualizan el DOM justo después del login.
         setInterval(() => {

@@ -592,6 +592,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!user) return { isAdmin: false, role: 'usuario' };
         const R = window.PanterRoles;
 
+        // Fuente ÚNICA compartida (login + equipo + ps_staff_local + foro
+        // + soporte + personal). Así el Panel Admin y la insignia del nav
+        // muestran el mismo rango que el resto de la web, al instante.
+        if (window.PanterStaff && typeof window.PanterStaff.resolveRoleFor === 'function') {
+            const sharedRole = window.PanterStaff.resolveRoleFor(user);
+            return {
+                isAdmin: R && typeof R.canAccessAdminPanel === 'function'
+                    ? R.canAccessAdminPanel(sharedRole) : false,
+                role: sharedRole
+            };
+        }
+
         let profile = null;
         try { profile = await getUserProfile(user.uid, user); } catch (e) { /* perfil no disponible */ }
 
@@ -613,8 +625,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (!R) {
-            const role = /^oliverosgutierezjhonier@gmail\.com$/i.test(String(user.email || '')) ? 'director' : 'usuario';
-            return { isAdmin: role === 'director', role };
+            // Sin rango automático por correo: toda cuenta sin el
+            // diccionario de roles se resuelve como `usuario`.
+            return { isAdmin: false, role: 'usuario' };
         }
 
         const role = R.resolveRole(user, effectiveProfile);
@@ -2106,6 +2119,18 @@ function preventScroll(side, isOpen) {
     };
     document.addEventListener('discordAuthChanged', onSessionEvent);
     document.addEventListener('authStateChanged', onSessionEvent);
+
+    // Un cambio de rango en Panel Admin → Personal se refleja de inmediato
+    // en la insignia del nav y en el acceso al Panel Admin, sin recargar.
+    let staffUiTimer = null;
+    document.addEventListener('panter:staff-changed', () => {
+        clearTimeout(staffUiTimer);
+        staffUiTimer = setTimeout(() => {
+            const user = window.DiscordAuth && typeof window.DiscordAuth.getUser === 'function'
+                ? window.DiscordAuth.getUser() : null;
+            if (typeof window.updateAuthUi === 'function') window.updateAuthUi(user);
+        }, 60);
+    });
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initGlobalAuthAndNav);

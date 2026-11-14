@@ -174,6 +174,19 @@
             keys.forEach(key => index.set(key, position));
         });
 
+        // El rango lo dicta la fuente ÚNICA compartida (`equipo` +
+        // `ps_staff_local`), no la última ficha duplicada que se haya
+        // leído. Así el árbol coincide con foro, soporte, perfil y panel.
+        if (window.PanterStaff && typeof window.PanterStaff.findFor === 'function') {
+            result.forEach(member => {
+                const shared = window.PanterStaff.findFor({
+                    uid: member.uid, email: member.email, nombre: member.nombre
+                });
+                const role = window.PanterStaff.memberRole(shared);
+                if (role) member.role = role;
+            });
+        }
+
         return result;
     }
 
@@ -402,6 +415,12 @@
         }
     });
     document.addEventListener('panter:roles-config', () => render());
+    // El módulo compartido avisa de cualquier cambio en `equipo` o en la
+    // copia local del panel: el árbol se repinta sin recargar la página.
+    document.addEventListener('panter:staff-changed', () => {
+        allMembers = collectMembers(liveEquipoRows || [], liveProfileRows || []);
+        render();
+    });
     document.addEventListener('firebaseReady', boot);
 
     function init() {

@@ -476,19 +476,46 @@ function extraerRolDocumento(data) {
     return null;
 }
 
+/** Copia local que escribe el Panel Admin → Personal cuando la nube
+ *  aún no está disponible. Es la MISMA fuente que usa Personal y el foro. */
+function leerEquipoLocal() {
+    try {
+        const lista = JSON.parse(localStorage.getItem('ps_staff_local') || '[]');
+        return Array.isArray(lista)
+            ? lista.filter(m => m && (m.uid || m.id) && m.archivado !== true)
+                   .map(m => Object.assign({ id: String(m.uid || m.id) }, m))
+            : [];
+    } catch (e) { return []; }
+}
+
+function mezclarEquipo(remotos, locales) {
+    const mapa = new Map();
+    (Array.isArray(remotos) ? remotos : []).forEach(m => {
+        if (m) mapa.set(String(m.id || m.uid), m);
+    });
+    (Array.isArray(locales) ? locales : []).forEach(m => {
+        const k = String(m.id || m.uid);
+        mapa.set(k, Object.assign({}, mapa.get(k) || {}, m, { id: k }));
+    });
+    return Array.from(mapa.values());
+}
+
 async function cargarEquipoRoles() {
     const ahora = Date.now();
     if (equipoRolesPromise && (ahora - equipoRolesAt) < EQUIPO_ROLES_TTL) return equipoRolesPromise;
     equipoRolesAt = ahora;
+    const locales = (window.PanterStaff && typeof window.PanterStaff.allMembers === 'function')
+        ? window.PanterStaff.allMembers()
+        : leerEquipoLocal();
     if (!window.db || !window.collection || !window.getDocs) {
-        equipoRolesPromise = Promise.resolve([]);
+        equipoRolesPromise = Promise.resolve(locales);
         return equipoRolesPromise;
     }
     equipoRolesPromise = window.getDocs(window.collection(window.db, 'equipo'))
-        .then(snap => snap.docs.map(d => ({ id: d.id, ...d.data() })))
+        .then(snap => mezclarEquipo(snap.docs.map(d => ({ id: d.id, ...d.data() })), locales))
         .catch(err => {
             console.warn('[SoporteJS] No se pudo leer la colección equipo:', err?.message || err);
-            return [];
+            return locales;
         });
     return equipoRolesPromise;
 }
@@ -530,6 +557,17 @@ function buscarMiembroEquipo(equipo, claves, autorNombre, autorEmail) {
 async function resolverRolUsuario(autorId, autorNombre, autorEmail) {
     const emailInicial = String(autorEmail || '').trim().toLowerCase();
     const clave = String(autorId || autorNombre || emailInicial || 'anonimo').trim();
+
+    // Fuente compartida (equipo + ps_staff_local + sesión): siempre fresca,
+    // de modo que un cambio de rango en Personal se vea en el chat al
+    // instante, incluso en mensajes ya publicados.
+    if (window.PanterStaff && typeof window.PanterStaff.roleForAuthor === 'function') {
+        const directo = window.PanterStaff.roleForAuthor({
+            uid: autorId, email: autorEmail, nombre: autorNombre
+        });
+        if (directo) return normalizarRol(directo);
+    }
+
     const cache = rolesUsuarioCache.get(clave);
     if (cache && (Date.now() - cache.at) < ROLES_USUARIO_TTL) return cache.role;
 
@@ -608,7 +646,9 @@ async function suscribirCambiosRoles(onChange, onError) {
     equipoUnsub = window.onSnapshot(
         window.collection(window.db, 'equipo'),
         snap => {
-            equipoActual = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const locales = (window.PanterStaff && typeof window.PanterStaff.allMembers === 'function')
+                ? window.PanterStaff.allMembers() : leerEquipoLocal();
+            equipoActual = mezclarEquipo(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })), locales);
             notificarCambio();
         },
         error => {
@@ -617,17 +657,20 @@ async function suscribirCambiosRoles(onChange, onError) {
         }
     );
     document.addEventListener('panter:roles-config', notificarCambio);
+    document.addEventListener('panter:staff-changed', notificarCambio);
 
     return () => {
         active = false;
         if (equipoUnsub) equipoUnsub();
         equipoUnsub = null;
         document.removeEventListener('panter:roles-config', notificarCambio);
+        document.removeEventListener('panter:staff-changed', notificarCambio);
     };
 }
 
 if (typeof document !== 'undefined') {
     document.addEventListener('panter:roles-config', limpiarCacheRoles);
+    document.addEventListener('panter:staff-changed', limpiarCacheRoles);
 }
 
 /** Mensaje de sistema reutilizable (icono user-shield + texto exacto). */

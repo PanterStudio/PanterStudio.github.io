@@ -582,6 +582,12 @@
     async function computeRole() {
         const R = window.PanterRoles;
         if (!currentUser) { applyRole('usuario'); return; }
+        // Misma fuente que el Panel Admin, Soporte y Personal.
+        const S = window.PanterStaff;
+        if (S && typeof S.resolveRoleFor === 'function') {
+            applyRole(S.resolveRoleFor(currentUser));
+            return;
+        }
         const profile = { email: String(currentUser.email || '').trim().toLowerCase() };
         applyRole(R ? R.resolveRole(currentUser, profile) : 'usuario');
         if (window.db && window.getDoc && window.fsDoc) {
@@ -629,12 +635,23 @@
         }
         return `<span class="foro-chip">${esc(role)}</span>`;
     }
-    function authorTitle(role) {
-        const r = String(role || 'usuario');
-        if (['founder_ceo', 'director', 'administrador'].indexOf(r) !== -1) return 'Administrador Especial';
-        if (['moderador', 'soporte', 'programador', 'modelador', 'creador_contenido'].indexOf(r) !== -1) return 'Equipo Panter Studio';
-        if (r === 'vip') return 'De primera calidad';
-        return 'Miembro de la comunidad';
+    /**
+     * Rango en vivo de un autor: se consulta la MISMA fuente que el Panel
+     * Admin / Soporte / Personal. Si el rango cambia en Personal, los
+     * mensajes ya publicados del foro se repintan con el rango nuevo.
+     * No se inventa ningún rango: se usan sólo los ids oficiales.
+     */
+    function liveRole(a) {
+        const S = window.PanterStaff;
+        if (S && typeof S.roleForAuthor === 'function') {
+            const rol = S.roleForAuthor({
+                uid: a && a.autorUid,
+                email: a && a.autorEmail,
+                nombre: a && a.autorNombre
+            });
+            if (rol) return rol;
+        }
+        return (a && a.autorRol) || 'usuario';
     }
     function avatar(url, name, cls) {
         const clean = String(url || '').trim();
@@ -1047,7 +1064,7 @@
                 </div>
             </div>`;
 
-        const opDef = roleDef(t.autorRol);
+        const opDef = roleDef(liveRole(t));
         $('foroThreadTitle').innerHTML = `
             <div class="foro-thread-title">
                 ${t.prefijo ? `<span class="foro-chip prefijo">${esc(t.prefijo)}</span>` : ''}
@@ -1070,8 +1087,8 @@
         $('foroThreadTitle').style.setProperty('--author-color', opDef.color || '#00b0ff');
 
         const messages = allMessages(t.id);
-        const postsHtml = [postHtml(t, null, true, opDef)].concat(
-            messages.map((m, i) => postHtml(t, m, false, roleDef(m.autorRol), i + 2))
+        const postsHtml = [postHtml(t, null, true, 1)].concat(
+            messages.map((m, i) => postHtml(t, m, false, i + 2))
         ).join('');
         $('foroPosts').innerHTML = postsHtml;
 
@@ -1101,10 +1118,10 @@
         renderThreadSide(t, messages, sec);
     }
 
-    function postHtml(t, m, isOp, def, num) {
+    function postHtml(t, m, isOp, num) {
         const a = isOp ? t : m;
-        const role = a.autorRol || 'usuario';
-        const color = (def && def.color) || '#0055ff';
+        const role = liveRole(a);
+        const color = roleDef(role).color || '#0055ff';
         const isAuthor = String(a.autorUid || '') && String(a.autorUid) === String(t.autorUid);
         const mensajes = isOp ? (Number(t.autorMensajes) || replyCount(t) + 1) : (Number(a.autorMensajes) || 1);
         const postId = isOp ? 'op' : String(a.id);
@@ -1115,7 +1132,6 @@
                 ${avatar(a.autorAvatar, a.autorNombre, 'foro-avatar')}
                 <div class="foro-author-name">${esc(a.autorNombre)}</div>
                 <div class="foro-author-badge">${badgeHtml(role)}</div>
-                <div class="foro-author-title">${esc(authorTitle(role))}</div>
                 ${isAuthor ? '<span class="foro-author-op">Autor del tema</span>' : ''}
                 <div class="foro-author-stats">
                     <div><span>Mensajes</span><b>${mensajes}</b></div>
@@ -1129,7 +1145,6 @@
                     <span>${isOp ? '<i class="fa-solid fa-thumbtack" aria-hidden="true"></i> Tema original' : `<button type="button" class="foro-btn foro-btn-sm foro-btn-ghost" data-foro-action="ir-op"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i> Ir al tema</button>`}</span>
                 </div>
                 <div class="foro-content">${renderBB(quoteBody)}</div>
-                <div class="foro-signature">${esc(isOp ? 'Publicado por el equipo de Panter Studio · ' + secDef(t.seccion).label : 'Miembro de la comunidad Panter Studio 🐾')}</div>
                 <div class="foro-post-foot">
                     <button type="button" class="foro-btn foro-btn-sm foro-btn-ghost" data-foro-action="responder"><i class="fa-solid fa-reply" aria-hidden="true"></i> Responder</button>
                     <button type="button" class="foro-btn foro-btn-sm foro-btn-ghost" data-foro-action="citar" data-foro-id="${esc(postId)}"><i class="fa-solid fa-quote-right" aria-hidden="true"></i> Citar</button>
@@ -1144,11 +1159,11 @@
         const readers = readersFor(t.id);
         const participantsMap = new Map();
         participantsMap.set(String(t.autorUid || t.autorNombre), {
-            nombre: t.autorNombre, avatar: t.autorAvatar, rol: t.autorRol
+            nombre: t.autorNombre, avatar: t.autorAvatar, rol: liveRole(t)
         });
         messages.forEach(m => {
             const k = String(m.autorUid || m.autorNombre);
-            if (!participantsMap.has(k)) participantsMap.set(k, { nombre: m.autorNombre, avatar: m.autorAvatar, rol: m.autorRol });
+            if (!participantsMap.has(k)) participantsMap.set(k, { nombre: m.autorNombre, avatar: m.autorAvatar, rol: liveRole(m) });
         });
         const participants = Array.from(participantsMap.values());
         const related = allTopics().filter(x => x.seccion === t.seccion && String(x.id) !== String(t.id))
@@ -1485,6 +1500,15 @@
         });
         document.addEventListener(LOCAL_EVENT, scheduleRender);
         document.addEventListener('firebaseReady', reattachFeeds);
+
+        // Un cambio de rango en Personal se refleja en el foro sin recargar:
+        // se recalcula la sesión y se repintan posts, autores y participantes.
+        let staffTimer = null;
+        document.addEventListener('panter:staff-changed', () => {
+            clearTimeout(staffTimer);
+            staffTimer = setTimeout(() => { syncUser(); scheduleRender(); }, 60);
+        });
+
         const onSession = () => {
             clearTimeout(authTimer);
             authTimer = setTimeout(syncUser, 60);
