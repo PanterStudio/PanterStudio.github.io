@@ -1103,7 +1103,58 @@
   }
   
   .ref-stat strong { color: var(--text-primary); }
-  
+
+  .ref-tier {
+    margin-top: var(--space-sm);
+    padding: var(--space-xs) 0;
+  }
+  .ref-tier-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .ref-tier-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .03em;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid #94a3b866;
+    color: #94a3b8;
+    background: #94a3b81f;
+  }
+  .ref-tier-head small { font-size: .7rem; color: var(--text-muted); }
+  .ref-tier-track {
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.08);
+    overflow: hidden;
+  }
+  .ref-tier-fill {
+    height: 100%;
+    width: 4%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #94a3b8, #9d00ff);
+    transition: width .35s ease;
+  }
+  .ref-kind-note {
+    margin-top: var(--space-sm);
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(157, 0, 255, .35);
+    background: rgba(157, 0, 255, .1);
+    color: #d8b4fe;
+    font-size: .74rem;
+    line-height: 1.4;
+  }
+  .ref-kind-note[hidden] { display: none !important; }
+
   /* ========================================
      ACTIVITY LIST
      ======================================== */
@@ -2272,14 +2323,28 @@
               <span style="color:#00b0ff; font-weight:700;">INVITACIONES</span>
             </div>
             <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:var(--space-sm);line-height:1.4;">
-              Comparte tu código con amigos. Cada amigo que se registre usando tu código se acumulará en tus invitaciones para desbloquear recompensas futuras en Nuestra Tierra.
+              Comparte tu código con amigos. Tu código es aleatorio y personal: cada amigo que se registre con él suma invitaciones y monedas para ambos.
             </p>
             <div class="ref-box">
               <code id="referralCode" aria-label="Tu código de referido">——</code>
-              <button class="pb sm" id="copyReferralBtn" aria-label="Copiar código">Copiar</button>
+              <button class="pb sm" id="copyReferralBtn" aria-label="Copiar enlace de invitación">Copiar enlace</button>
             </div>
             <div class="ref-stats">
               <span class="ref-stat" style="font-size:0.95rem;">Invitaciones Acumuladas: <strong id="referralCount" style="color:#38bdf8;font-size:1.15rem;">0</strong></span>
+              <span class="ref-stat" style="font-size:0.95rem;">Monedas ganadas: <strong id="referralCoins" style="color:#f1c40f;font-size:1.15rem;">0</strong> <i class="fa-solid fa-coins" aria-hidden="true"></i></span>
+            </div>
+
+            <div class="ref-tier" id="referralTierBox">
+              <div class="ref-tier-head">
+                <span class="ref-tier-badge" id="referralTierBadge">Invitador Novato</span>
+                <small id="referralTierHint">5 invitaciones para Invitador Bronce</small>
+              </div>
+              <div class="ref-tier-track" role="progressbar" aria-label="Progreso de nivel de invitador">
+                <div class="ref-tier-fill" id="referralTierBar"></div>
+              </div>
+            </div>
+            <div class="ref-kind-note" id="referralKindNote" hidden>
+              <i class="fa-solid fa-star" aria-hidden="true"></i> Código de Creador de Contenido: tus invitaciones otorgan una recompensa mayor.
             </div>
 
             <!-- Caja manual de referido -->
@@ -2288,7 +2353,7 @@
                 ¿Fuiste invitado por un amigo? Registra su código aquí:
               </p>
               <div style="display: flex; gap: var(--space-xs);">
-                <input type="text" id="manualReferralInput" class="p-inp" placeholder="Código (ej. AB12CD)" style="text-transform: uppercase; font-size: 0.85rem;" autocomplete="off">
+                <input type="text" id="manualReferralInput" class="p-inp" maxlength="16" placeholder="Código (ej. PANTER)" style="text-transform: uppercase; font-size: 0.85rem;" autocomplete="off">
                 <button class="pb prim sm" id="manualReferralBtn">Registrar</button>
               </div>
               <div id="manualReferralMessage" style="font-size: 0.75rem; margin-top: 4px;" role="status" aria-live="polite"></div>
@@ -2506,23 +2571,8 @@
       });
     });
     
-    // Copiar código de referido
-    const copyRefBtn = document.getElementById('copyReferralBtn');
-    const refCode = document.getElementById('referralCode');
-    
-    copyRefBtn?.addEventListener('click', async () => {
-      const code = refCode?.textContent?.trim();
-      if (code && code !== '——') {
-        try {
-          await navigator.clipboard.writeText(code);
-          const original = copyRefBtn.textContent;
-          copyRefBtn.textContent = '';
-          setTimeout(() => copyRefBtn.textContent = original, 2000);
-        } catch (err) {
-          console.warn('Clipboard no disponible:', err);
-        }
-      }
-    });
+    // El botón «Copiar enlace» lo gestiona perfil.js (copia el enlace
+    // completo con ?ref=CODIGO, no sólo el código).
     
     // Touch feedback para botones en móvil
     if ('ontouchstart' in window) {

@@ -1181,6 +1181,27 @@
                                 <div class="empty-state">Cargando rangos y usuarios...</div>
                             </div>
 
+                            <!-- Códigos de referido de Creadores de Contenido -->
+                            <section class="admin-card" id="creatorCodesCard" style="margin-top:1.25rem; background:rgba(157,0,255,0.06); border:1px solid rgba(157,0,255,0.28);">
+                                <div class="card-header-actions" style="margin-bottom:.75rem;">
+                                    <div>
+                                        <h4 style="margin:0; color:#d8b4fe;"><i class="fa-solid fa-star" aria-hidden="true"></i> Códigos de Referido de Creadores</h4>
+                                        <p style="margin:4px 0 0; font-size:.82rem;">Sólo el staff puede crear o cambiar estos códigos. Otorgan una recompensa mayor por invitación (Configuración → Economía Web).</p>
+                                    </div>
+                                </div>
+                                <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:flex-end;">
+                                    <label style="flex:1 1 260px; display:flex; flex-direction:column; gap:4px; font-size:.8rem;">Creador de Contenido
+                                        <select id="creatorCodeUser" class="form-input"><option value="">Cargando creadores...</option></select>
+                                    </label>
+                                    <label style="flex:0 1 240px; display:flex; flex-direction:column; gap:4px; font-size:.8rem;">Código personalizado
+                                        <input type="text" id="creatorCodeInput" class="form-input" maxlength="16" placeholder="EJ. PANTER" autocomplete="off" style="text-transform:uppercase;" disabled>
+                                    </label>
+                                    <button type="button" class="btn" id="creatorCodeSaveBtn" disabled><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar código</button>
+                                    <button type="button" class="btn" id="creatorCodeResetBtn" disabled><i class="fa-solid fa-dice" aria-hidden="true"></i> Aleatorio</button>
+                                </div>
+                                <small id="creatorCodeMsg" class="ps-field-help" role="status" aria-live="polite" style="display:block; margin-top:8px;"></small>
+                            </section>
+
                             <!-- Alta manual: plegada, para usuarios que no estén en la lista -->
                             <details class="ps-admin-collapsible ps-assign-manual">
                                 <summary><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Alta manual <small>(si el usuario no aparece en el desplegable)</small></summary>
@@ -1346,8 +1367,13 @@
                                 <div class="admin-card" style="margin-bottom:0; padding:20px; background:rgba(0,0,0,0.15); border-color:rgba(255,255,255,0.04);">
                                     <h4 style="font-size:0.95rem; color:#40c4ff; margin-top:0; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;"><i class="fa-solid fa-coins" aria-hidden="true"></i> Economía Web</h4>
                                     <div class="form-group">
-                                        <label class="form-label">Monedas por Referido</label>
+                                        <label class="form-label">Monedas por Referido (Usuario)</label>
                                         <input type="number" id="cfgReferralCoins" class="form-input" placeholder="ej. 50">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Monedas por Referido (Creador de Contenido)</label>
+                                        <input type="number" id="cfgCreatorReferralCoins" class="form-input" placeholder="ej. 100">
+                                        <small class="form-help" style="font-size:.72rem;color:var(--admin-text-muted);">Beneficio de los códigos personalizados creados por el staff.</small>
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Monedas de Bono Diario Base</label>

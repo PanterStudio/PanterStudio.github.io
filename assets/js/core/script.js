@@ -167,8 +167,144 @@ function getPendingReferralCode() {
     }
 }
 
-function generateReferralCode(uid) {
-    return String(uid || '').slice(0, 6).toUpperCase();
+/* ═══════════════════════════════════════════════════════════════
+   SISTEMA DE REFERIDOS
+   · Usuarios: código ALEATORIO de 8 LETRAS MAYÚSCULAS (A-Z).
+   · Creadores de contenido: código PERSONALIZADO creado sólo por
+     el staff desde Panel Admin → Personal.
+   · Ventaja de los códigos de creador: recompensa mayor por cada
+     invitación (configurable en Panel Admin → Configuración).
+   ═══════════════════════════════════════════════════════════════ */
+const REFERRAL_CODE_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const USER_REFERRAL_CODE_LENGTH = 8;
+const USER_REFERRAL_CODE_PATTERN = /^[A-Z]{8}$/;
+const CREATOR_REFERRAL_CODE_PATTERN = /^(?=.*[A-Z])[A-Z0-9_-]{3,16}$/;
+const DEFAULT_CREATOR_REFERRAL_REWARD = 100;
+
+function randomReferralLetters(length = USER_REFERRAL_CODE_LENGTH) {
+    const size = Math.max(4, Math.min(20, Number(length) || USER_REFERRAL_CODE_LENGTH));
+    if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+        const bytes = new Uint32Array(size);
+        window.crypto.getRandomValues(bytes);
+        let out = '';
+        for (let i = 0; i < size; i++) out += REFERRAL_CODE_LETTERS[bytes[i] % 26];
+        return out;
+    }
+    let out = '';
+    for (let i = 0; i < size; i++) {
+        out += REFERRAL_CODE_LETTERS[Math.floor(Math.random() * REFERRAL_CODE_LETTERS.length)];
+    }
+    return out;
+}
+
+function generateReferralCode() {
+    return randomReferralLetters(USER_REFERRAL_CODE_LENGTH);
+}
+
+function isValidUserReferralCode(code) {
+    return USER_REFERRAL_CODE_PATTERN.test(normalizeReferralCode(code));
+}
+
+function isValidCreatorReferralCode(code) {
+    return CREATOR_REFERRAL_CODE_PATTERN.test(normalizeReferralCode(code));
+}
+
+async function isReferralCodeTaken(code, excludeUid = '') {
+    const normalized = normalizeReferralCode(code);
+    if (!normalized || !window.db || !window.getDocs || !window.collection) return false;
+
+    // Consulta directa + compatibilidad con códigos antiguos guardados como
+    // `referralCodeLegacy` (los enlaces ya compartidos siguen funcionando).
+    try {
+        if (window.query && window.where) {
+            const [currentSnap, legacySnap] = await Promise.all([
+                window.getDocs(window.query(
+                    window.collection(window.db, 'conductores'),
+                    window.where('referralCode', '==', normalized)
+                )).catch(() => null),
+                window.getDocs(window.query(
+                    window.collection(window.db, 'conductores'),
+                    window.where('referralCodeLegacy', 'array-contains', normalized)
+                )).catch(() => null)
+            ]);
+            const docs = []
+                .concat(currentSnap ? currentSnap.docs : [])
+                .concat(legacySnap ? legacySnap.docs : []);
+            if (docs.length) {
+                return docs.some(doc => String(doc.id) !== String(excludeUid));
+            }
+            if (currentSnap || legacySnap) return false;
+        }
+    } catch (err) {
+        console.warn('[Referidos] Consulta de código no disponible, usando lectura completa:', err);
+    }
+
+    try {
+        const snap = await window.getDocs(window.collection(window.db, 'conductores'));
+        return snap.docs.some(doc => {
+            if (String(doc.id) === String(excludeUid)) return false;
+            const data = doc.data() || {};
+            if (normalizeReferralCode(data.referralCode) === normalized) return true;
+            return Array.isArray(data.referralCodeLegacy)
+                && data.referralCodeLegacy.some(legacy => normalizeReferralCode(legacy) === normalized);
+        });
+    } catch (err) {
+        console.warn('[Referidos] No se pudo comprobar la unicidad del código:', err);
+        return false;
+    }
+}
+
+async function generateUniqueReferralCode(excludeUid = '') {
+    for (let attempt = 0; attempt < 25; attempt++) {
+        const candidate = randomReferralLetters(USER_REFERRAL_CODE_LENGTH);
+        if (!(await isReferralCodeTaken(candidate, excludeUid))) return candidate;
+    }
+    // La probabilidad es ínfima; se devuelve una última combinación válida.
+    return randomReferralLetters(USER_REFERRAL_CODE_LENGTH);
+}
+
+/**
+ * Garantiza que el usuario tenga un código válido.
+ *  · Los códigos de creador (staff) se respetan tal cual.
+ *  · Los códigos de usuario deben ser 8 letras A-Z y no estar repetidos;
+ *    los antiguos (derivados del uid) se reemplazan guardando el anterior
+ *    en `referralCodeLegacy` para no romper enlaces ya compartidos.
+ */
+async function ensureReferralCode(uid, profile = null) {
+    const safeUid = String(uid || '').trim();
+    if (!safeUid) return '';
+
+    let data = profile;
+    if (!data && typeof getUserProfile === 'function') {
+        try { data = await getUserProfile(safeUid); } catch (e) { data = null; }
+    }
+    data = data && typeof data === 'object' ? data : {};
+
+    const current = normalizeReferralCode(data.referralCode);
+    const kind = String(data.referralCodeKind || '').toLowerCase() === 'creator' ? 'creator' : 'user';
+
+    if (kind === 'creator' && current) return current;
+    if (isValidUserReferralCode(current) && !(await isReferralCodeTaken(current, safeUid))) return current;
+
+    const next = await generateUniqueReferralCode(safeUid);
+    if (window.db && window.fsDoc && window.setDoc) {
+        const patch = {
+            referralCode: next,
+            referralCodeKind: 'user',
+            referralCodeUpdatedAt: new Date().toISOString()
+        };
+        if (current && current !== next) {
+            const legacy = Array.isArray(data.referralCodeLegacy) ? data.referralCodeLegacy.slice() : [];
+            if (!legacy.includes(current)) legacy.push(current);
+            patch.referralCodeLegacy = legacy.slice(-10);
+        }
+        try {
+            await window.setDoc(window.fsDoc(window.db, 'conductores', safeUid), patch, { merge: true });
+        } catch (err) {
+            console.warn('[Referidos] Código generado en local; la nube lo guardará al reconectar:', err);
+        }
+    }
+    return next;
 }
 
 function isPermissionDeniedError(err) {
@@ -182,9 +318,31 @@ async function findReferrerByCode(refCode) {
     if (!normalized || !window.db || !window.getDocs || !window.collection) return null;
 
     try {
+        if (window.query && window.where) {
+            const currentSnap = await window.getDocs(window.query(
+                window.collection(window.db, 'conductores'),
+                window.where('referralCode', '==', normalized)
+            )).catch(() => null);
+            if (currentSnap && currentSnap.docs.length) return currentSnap.docs[0];
+
+            const legacySnap = await window.getDocs(window.query(
+                window.collection(window.db, 'conductores'),
+                window.where('referralCodeLegacy', 'array-contains', normalized)
+            )).catch(() => null);
+            if (legacySnap && legacySnap.docs.length) return legacySnap.docs[0];
+        }
+    } catch (err) {
+        console.warn('[Referidos] Búsqueda directa no disponible, usando lectura completa:', err);
+    }
+
+    try {
         const snap = await window.getDocs(window.collection(window.db, 'conductores'));
-        const referrer = snap.docs.find((doc) => normalizeReferralCode(doc.data()?.referralCode) === normalized);
-        return referrer || null;
+        return snap.docs.find((doc) => {
+            const data = doc.data() || {};
+            if (normalizeReferralCode(data.referralCode) === normalized) return true;
+            return Array.isArray(data.referralCodeLegacy)
+                && data.referralCodeLegacy.some(legacy => normalizeReferralCode(legacy) === normalized);
+        }) || null;
     } catch (err) {
         console.warn('No se pudo validar el codigo de invitacion:', err);
         return null;
@@ -193,50 +351,92 @@ async function findReferrerByCode(refCode) {
 
 async function applyReferralCode(refCode, newUserUid, currentProfile = null) {
     const normalized = normalizeReferralCode(refCode);
-    if (!normalized) return { applied: false, reason: 'not-provided', reward: 0 };
+    if (!normalized) return { applied: false, reason: 'not-provided', reward: 0, newUserReward: 0 };
     if (normalizeReferralCode(currentProfile?.referralCode) === normalized) {
-        return { applied: false, reason: 'self', reward: 0 };
+        return { applied: false, reason: 'self', reward: 0, newUserReward: 0 };
     }
     if (currentProfile?.referredBy) {
-        return { applied: false, reason: 'already-linked', reward: 0 };
+        return { applied: false, reason: 'already-linked', reward: 0, newUserReward: 0 };
+    }
+    if (!newUserUid) return { applied: false, reason: 'invalid', reward: 0, newUserReward: 0 };
+
+    // Estado FRESCO del usuario: evita doble recompensa por doble clic o
+    // por llamar al registro y al reclamo manual a la vez.
+    let freshProfile = currentProfile || {};
+    try {
+        if (window.db && window.fsDoc && window.getDoc) {
+            const freshSnap = await window.getDoc(window.fsDoc(window.db, 'conductores', newUserUid));
+            if (freshSnap.exists()) freshProfile = freshSnap.data() || {};
+        }
+    } catch (e) { /* se usa el perfil recibido */ }
+
+    if (normalizeReferralCode(freshProfile?.referralCode) === normalized) {
+        return { applied: false, reason: 'self', reward: 0, newUserReward: 0 };
+    }
+    if (freshProfile?.referredBy) {
+        return { applied: false, reason: 'already-linked', reward: 0, newUserReward: 0 };
     }
 
     const referrer = await findReferrerByCode(normalized);
-    if (!referrer) return { applied: false, reason: 'invalid', reward: 0 };
-    if (referrer.id === newUserUid) return { applied: false, reason: 'self', reward: 0 };
+    if (!referrer) return { applied: false, reason: 'invalid', reward: 0, newUserReward: 0 };
+    if (String(referrer.id) === String(newUserUid)) {
+        return { applied: false, reason: 'self', reward: 0, newUserReward: 0 };
+    }
 
+    const referrerData = referrer.data() || {};
+    const isCreatorCode = String(referrerData.referralCodeKind || '').toLowerCase() === 'creator';
+
+    // Recompensa normal vs. recompensa de creador de contenido.
     let reward = DEFAULT_REFERRAL_REWARD;
+    let creatorReward = DEFAULT_CREATOR_REFERRAL_REWARD;
     try {
         if (window.db && window.fsDoc && window.getDoc) {
             const settingsSnap = await window.getDoc(window.fsDoc(window.db, 'settings', 'site'));
             if (settingsSnap.exists()) {
-                const val = parseInt(settingsSnap.data().referralCoins, 10);
-                if (!isNaN(val) && val > 0) reward = val;
+                const settingsData = settingsSnap.data() || {};
+                const regularValue = parseInt(settingsData.referralCoins, 10);
+                const creatorValue = parseInt(settingsData.creatorReferralCoins, 10);
+                if (!isNaN(regularValue) && regularValue >= 0) reward = regularValue;
+                if (!isNaN(creatorValue) && creatorValue >= 0) creatorReward = creatorValue;
             }
         }
-    } catch(e) {
+    } catch (e) {
         console.warn('Could not load referralCoins setting:', e);
     }
 
-    const referrerData = referrer.data() || {};
+    // El código de creador nunca puede pagar menos que un código normal.
+    const effectiveReward = isCreatorCode ? Math.max(creatorReward, reward) : reward;
+    const now = new Date().toISOString();
+
     await window.setDoc(window.fsDoc(window.db, 'conductores', referrer.id), {
         referralCount: Number(referrerData.referralCount || 0) + 1,
-        referralCoins: Number(referrerData.referralCoins || 0) + reward,
-        coins: Number(referrerData.coins || 0) + reward,
-        saldo: Number(referrerData.saldo || referrerData.coins || 0) + reward,
-        updatedAt: new Date().toISOString()
+        referralCoins: Number(referrerData.referralCoins || 0) + effectiveReward,
+        coins: Number(referrerData.coins || 0) + effectiveReward,
+        saldo: Number(referrerData.saldo !== undefined ? referrerData.saldo : referrerData.coins || 0) + effectiveReward,
+        updatedAt: now
     }, { merge: true });
 
-    // Try reading current profile coin balance to award the new user correctly
-    const currentCoins = currentProfile ? (currentProfile.coins !== undefined ? currentProfile.coins : (currentProfile.saldo !== undefined ? currentProfile.saldo : 0)) : 0;
+    const currentCoins = freshProfile
+        ? (freshProfile.coins !== undefined ? freshProfile.coins : (freshProfile.saldo !== undefined ? freshProfile.saldo : 0))
+        : 0;
     await window.setDoc(window.fsDoc(window.db, 'conductores', newUserUid), {
         referredBy: normalized,
-        coins: Number(currentCoins) + reward,
-        saldo: Number(currentCoins) + reward,
-        updatedAt: new Date().toISOString()
+        referredByKind: isCreatorCode ? 'creator' : 'user',
+        referredByUid: String(referrer.id),
+        referralWelcomeCoins: Number(freshProfile?.referralWelcomeCoins || 0) + effectiveReward,
+        coins: Number(currentCoins) + effectiveReward,
+        saldo: Number(currentCoins) + effectiveReward,
+        updatedAt: now
     }, { merge: true });
 
-    return { applied: true, reason: 'applied', reward };
+    return {
+        applied: true,
+        reason: 'applied',
+        reward: effectiveReward,
+        newUserReward: effectiveReward,
+        creator: isCreatorCode,
+        referrerName: referrerData.nombre || referrerData.displayName || referrerData.username || ''
+    };
 }
 
 /* ===== PERFIL LOCAL (respaldo cuando Firestore no está disponible) ===== */
@@ -342,6 +542,15 @@ async function saveUserProfile(user, username, options = {}) {
     );
     const finalUsername = usernameResolution.username || username;
 
+    // Código de referido: los creadores conservan su código personalizado;
+    // el resto recibe uno aleatorio de 8 letras A-Z, único en `conductores`.
+    const existingReferralCode = normalizeReferralCode(baseProfile?.referralCode);
+    const existingReferralKind = String(baseProfile?.referralCodeKind || '').toLowerCase() === 'creator' ? 'creator' : 'user';
+    let referralCode = existingReferralKind === 'creator' && existingReferralCode
+        ? existingReferralCode
+        : (isValidUserReferralCode(existingReferralCode) ? existingReferralCode : '');
+    if (!referralCode) referralCode = await generateUniqueReferralCode(safeUser.uid);
+
     const profilePayload = {
         username: finalUsername,
         displayName: finalUsername,
@@ -349,7 +558,8 @@ async function saveUserProfile(user, username, options = {}) {
         email: safeUser.email || baseProfile?.email || '',
         role: R ? R.toLegacyRole(emailRole) : emailRole,
         isAdmin: R ? R.canAccessAdminPanel(emailRole) : false,
-        referralCode: baseProfile?.referralCode || generateReferralCode(safeUser.uid),
+        referralCode,
+        referralCodeKind: existingReferralKind,
         referredBy: baseProfile?.referredBy || null,
         coins: baseProfile?.coins !== undefined ? baseProfile.coins : 0,
         emeralds: baseProfile?.emeralds !== undefined ? baseProfile.emeralds : 0,
@@ -359,6 +569,14 @@ async function saveUserProfile(user, username, options = {}) {
         createdAt: baseProfile?.createdAt || now,
         updatedAt: now
     };
+
+    // Conserva el código antiguo para que los enlaces ya compartidos sigan
+    // acreditando al mismo usuario tras la migración a 8 letras.
+    if (existingReferralCode && existingReferralCode !== referralCode) {
+        const legacy = Array.isArray(baseProfile?.referralCodeLegacy) ? baseProfile.referralCodeLegacy.slice() : [];
+        if (!legacy.includes(existingReferralCode)) legacy.push(existingReferralCode);
+        profilePayload.referralCodeLegacy = legacy.slice(-10);
+    }
 
     let persistedRemotely = false;
     if (window.db && window.fsDoc && window.setDoc) {
@@ -1011,7 +1229,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else if (referralResult.reason === 'self') {
                             message.textContent = `Cuenta creada. No puedes usar tu propio codigo de invitacion.${usernameNotice}`;
                         } else if (referralResult.applied) {
-                            message.textContent = `¡Cuenta creada! Codigo aplicado correctamente. +${referralResult.reward} para quien te invito.${usernameNotice}`;
+                            const kindLabel = referralResult.creator ? ' de creador de contenido' : '';
+                            message.textContent = `¡Cuenta creada! Código${kindLabel} aplicado. +${referralResult.newUserReward || referralResult.reward || 0} monedas para ti.${usernameNotice}`;
                         } else {
                             message.textContent = `¡Cuenta creada! Bienvenido.${usernameNotice}`;
                         }

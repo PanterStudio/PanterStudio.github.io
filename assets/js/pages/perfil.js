@@ -95,6 +95,19 @@
   const copyReferralBtn = $('copyReferralBtn');
   const referralCount   = $('referralCount');
   const referralCoins   = $('referralCoins');
+  const referralTierBadge = $('referralTierBadge');
+  const referralTierBar   = $('referralTierBar');
+  const referralTierHint  = $('referralTierHint');
+  const referralKindNote  = $('referralKindNote');
+
+  // Niveles de invitador (sólo presentación: no alteran la economía).
+  const REFERRAL_TIERS = [
+    { min: 0,  label: 'Invitador Novato',   color: '#94a3b8' },
+    { min: 5,  label: 'Invitador Bronce',   color: '#cd7f32' },
+    { min: 15, label: 'Invitador Plata',    color: '#c0c0c0' },
+    { min: 30, label: 'Invitador Oro',      color: '#ffd700' },
+    { min: 60, label: 'Invitador Diamante', color: '#38bdf8' }
+  ];
 
   const redeemCoinsAvailable = $('redeemCoinsAvailable');
   const redeemDollars        = $('redeemDollars');
@@ -148,7 +161,9 @@
     return '#94a3b8';
   }
   function providerLabel(u)   { const id = u?.providerData?.[0]?.providerId || 'password'; return id.includes('google') ? 'Google' : id.includes('password') ? 'Email' : id; }
-  function generateReferralCode(uid) { return String(uid || '').slice(0, 6).toUpperCase(); }
+  function generateReferralCode() {
+    return typeof window.generateReferralCode === 'function' ? window.generateReferralCode() : '';
+  }
   function normalizeCode(c)   { return String(c || '').replace(/\s+/g,'').trim().toUpperCase().slice(0, 32); }
   function getLevelName(l) {
     const m = { visitor:'Visitante', supporter:'Apoyo', bronze:'Bronce', silver:'Plata', gold:'Oro', platinum:'Platino', founder:'Fundador' };
@@ -298,11 +313,17 @@
   async function createUserDoc(user, extras = {}) {
     const now  = new Date().toISOString();
     const name = extras.displayName || user.displayName || user.email?.split('@')[0] || 'Miembro';
+    let code = '';
+    try {
+      code = typeof window.generateUniqueReferralCode === 'function'
+        ? await window.generateUniqueReferralCode(user.uid)
+        : generateReferralCode();
+    } catch (e) { code = generateReferralCode(); }
     const payload = {
       displayName: name, nombre_usuario: name, username: extras.username || name, email: user.email || '',
       avatar: '', bio: '', favoriteProject: 'Nuestra Tierra Job Simulator',
       country: 'Colombia', coins: 0, emeralds: 0, level: 'visitor',
-      referralCode: generateReferralCode(user.uid), referredBy: null,
+      referralCode: code, referralCodeKind: 'user', referredBy: null,
       referralCount: 0, referralCoins: 0, streak: 0, lastDaily: null,
       role: extras.role || 'viewer', createdAt: now, updatedAt: now
     };
@@ -345,20 +366,75 @@
     return { username: `${desired.slice(0, 18) || 'Jugador'}${Math.floor(Math.random() * 9000 + 1000)}`.slice(0, 24), changed: true };
   }
 
-  async function processReferral(refCode, newUid) {
-    if (!refCode) return { applied: false, reason: 'not-provided', reward: 0 };
-    const n = normalizeCode(refCode); if (!n) return { applied: false, reason: 'not-provided', reward: 0 };
+  async function processReferral(refCode, newUid, profile = null) {
+    if (!refCode) return { applied: false, reason: 'not-provided', reward: 0, newUserReward: 0 };
+    if (typeof window.applyReferralCode !== 'function') {
+      return { applied: false, reason: 'error', reward: 0, newUserReward: 0 };
+    }
     try {
-      const snap = await window.getDocs(window.collection(window.db, 'conductores'));
-      const referrer = snap.docs.find(d => String(d.data()?.referralCode || '').toUpperCase() === n);
-      if (!referrer) return { applied: false, reason: 'invalid', reward: 0 };
-      if (referrer.id === newUid) return { applied: false, reason: 'self', reward: 0 };
-      const reward = Number(settings.referralCoins || 50), d = referrer.data() || {};
-      await updateUserData(referrer.id, { referralCount: Number(d.referralCount || 0) + 1, referralCoins: Number(d.referralCoins || 0) + reward, coins: Number(d.coins || 0) + reward });
-      await updateUserData(newUid, { referredBy: n });
-      await addActivity(referrer.id, 'referral', 'Nuevo referido registrado', reward);
-      return { applied: true, reason: 'applied', reward };
-    } catch (e) { console.warn('Referral:', e); return { applied: false, reason: 'error', reward: 0 }; }
+      const result = await window.applyReferralCode(refCode, newUid, profile);
+      if (result.applied) {
+        await addActivity(newUid, 'referral', result.creator
+          ? 'Invitación registrada con código de creador'
+          : 'Invitación registrada', result.newUserReward || 0);
+      }
+      return result;
+    } catch (e) {
+      console.warn('Referral:', e);
+      return { applied: false, reason: 'error', reward: 0, newUserReward: 0 };
+    }
+  }
+
+  /** Garantiza que el perfil tenga un código válido y único (8 letras A-Z). */
+  async function ensureReferralForCurrentUser() {
+    if (!currentUser || !currentUserData) return;
+    try {
+      if (typeof window.ensureReferralCode !== 'function') return;
+      const code = await window.ensureReferralCode(currentUser.uid, currentUserData);
+      if (code) {
+        if (!currentUserData.referralCode || currentUserData.referralCode !== code) {
+          currentUserData.referralCode = code;
+        }
+        if (!currentUserData.referralCodeKind) currentUserData.referralCodeKind = 'user';
+      }
+    } catch (e) {
+      console.warn('[Perfil] No se pudo garantizar el código de referido:', e);
+    }
+  }
+
+  function renderReferralProgress(data) {
+    const count = Math.max(0, Number(data?.referralCount || 0));
+    let index = 0;
+    REFERRAL_TIERS.forEach((tier, i) => { if (count >= tier.min) index = i; });
+    const tier = REFERRAL_TIERS[index];
+    const next = REFERRAL_TIERS[index + 1] || null;
+
+    if (referralTierBadge) {
+      referralTierBadge.textContent = tier.label;
+      referralTierBadge.style.color = tier.color;
+      referralTierBadge.style.borderColor = `${tier.color}66`;
+      referralTierBadge.style.background = `${tier.color}1f`;
+    }
+    if (referralTierBar) {
+      const span = next ? Math.max(1, next.min - tier.min) : 1;
+      const done = next ? Math.min(span, count - tier.min) : 1;
+      referralTierBar.style.width = `${Math.max(4, Math.round((done / span) * 100))}%`;
+      referralTierBar.style.background = `linear-gradient(90deg, ${tier.color}, #9d00ff)`;
+    }
+    if (referralTierHint) {
+      const missing = next ? Math.max(0, next.min - count) : 0;
+      referralTierHint.textContent = next
+        ? `${missing} ${missing === 1 ? 'invitación' : 'invitaciones'} para ${next.label}`
+        : 'Nivel máximo de invitador alcanzado.';
+    }
+
+    const isCreator = String(data?.referralCodeKind || '').toLowerCase() === 'creator';
+    if (referralKindNote) {
+      referralKindNote.hidden = !isCreator;
+      if (isCreator) {
+        referralKindNote.innerHTML = '<i class="fa-solid fa-star" aria-hidden="true"></i> Código de Creador de Contenido: tus invitaciones otorgan una recompensa mayor.';
+      }
+    }
   }
 
   async function loadSupportSnapshot(user) {
@@ -529,8 +605,6 @@
     const levelStr = String(d.rango || d.nivel || getLevelName(d.level));
     set(profileDisplayName, name);
     set(profileEmail, currentUser.email || '');
-    set(profileServerNick, currentUser.serverNick || name);
-    set(profileServerName, currentUser.serverName || 'PanterStudio Discord');
     set(profileUid, 'ID Juego: ' + String(d.id_usuario || d.uid || currentUser.uid || '').slice(0, 12).toUpperCase());
     set(profileCoins, String(Number(d.coins || 0)));
     set(profileLevel, levelStr);
@@ -602,9 +676,10 @@
     set(profileSupportTotal, `$${Number(supportSnapshot.total || 0).toFixed(2)}`);
     set(profileSupportCount, `${supportSnapshot.count} aportes`);
     set(profileSponsorSummary, supportSnapshot.total > 0 ? `$${Number(supportSnapshot.total || 0).toFixed(2)} aportados en ${supportSnapshot.count} movimiento(s).` : 'Sin aportes registrados.');
-    set(referralCode, d.referralCode || generateReferralCode(currentUser.uid));
+    set(referralCode, d.referralCode || '······');
     set(referralCount, String(Number(d.referralCount || 0)));
     set(referralCoins, String(Number(d.referralCoins || 0)));
+    renderReferralProgress(d);
     set(redeemCoinsAvailable, String(Number(d.coins || 0)));
     if (redeemDollars) redeemDollars.textContent = formatEmeralds(coinsToEmeralds(d.coins || 0));
     const gp = countGamesPlayedToday(currentUser.uid);
@@ -872,6 +947,7 @@
       currentUserData.role = resolvedRole;
       currentUserData.isAdmin = R ? R.canAccessAdminPanel(resolvedRole) : false;
     }
+    await ensureReferralForCurrentUser();
     subscribeProfileTeamRole(user);
     showDashboard();
     renderProfile();
@@ -937,11 +1013,15 @@
       const { username: finalName, changed } = await resolveUsername(email.split('@')[0] || 'Jugador', cred.user.uid);
       await window.updateProfile(cred.user, { displayName: finalName });
       try {
-        await createUserDoc(cred.user, { displayName: finalName, username: finalName });
-        if (referral) await processReferral(referral, cred.user.uid);
+        const createdProfile = await createUserDoc(cred.user, { displayName: finalName, username: finalName });
+        let referralResult = null;
+        if (referral) referralResult = await processReferral(referral, cred.user.uid, createdProfile);
         await addActivity(cred.user.uid, 'register', 'Cuenta creada', 0);
         setPendingCode('');
-        setAuthMessage(`¡Cuenta creada!${changed ? ' Usuario: ' + finalName : ''}`, 'success');
+        const rewardNote = referralResult && referralResult.applied
+          ? ` +${referralResult.newUserReward || referralResult.reward || 0} monedas por tu invitación.`
+          : '';
+        setAuthMessage(`¡Cuenta creada!${changed ? ' Usuario: ' + finalName : ''}${rewardNote}`, 'success');
       } catch (pe) {
         if (isPermDenied(pe)) setAuthMessage('Cuenta creada en Auth, pero Firestore bloqueó el perfil.', 'error');
         else throw pe;
@@ -1017,18 +1097,24 @@
 
   /* Copiar código de referido (Enlace Completo) */
   copyReferralBtn?.addEventListener('click', async () => {
-    const code = String(referralCode?.textContent || '').trim(); if (!code) return;
+    const code = String(referralCode?.textContent || '').trim();
+    if (!code || code === '——' || code === '······') return;
     const siteRoot = document.body?.dataset.siteRoot || '..';
     const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
-    let fullLink = baseUrl + '/' + siteRoot + '/index.html?ref=' + code;
+    let fullLink = baseUrl + '/' + siteRoot + '/index.html?ref=' + encodeURIComponent(code);
     try {
       fullLink = new URL(fullLink).href;
     } catch(e) {}
+    const restore = () => { if (copyReferralBtn) copyReferralBtn.textContent = 'Copiar enlace'; };
     try {
       await navigator.clipboard.writeText(fullLink);
       copyReferralBtn.textContent = '¡Enlace Copiado!';
-      setTimeout(() => copyReferralBtn.textContent = 'Copiar', 1800);
-    } catch {}
+      setTimeout(restore, 1800);
+    } catch (e) {
+      // Respaldo para navegadores sin permiso de portapapeles.
+      try { window.prompt('Copia tu enlace de invitación:', fullLink); } catch (_) {}
+      restore();
+    }
   });
 
   /* Reclamar código de referido manual */
@@ -1056,15 +1142,21 @@
       }
       const res = await window.applyReferralCode(code, currentUser.uid, currentUserData);
       if (res.applied) {
-        msg.textContent = '¡Código de invitación registrado con éxito!';
+        const kindLabel = res.creator ? ' de creador de contenido' : '';
+        msg.textContent = `¡Código${kindLabel} registrado! +${res.newUserReward || res.reward || 0} monedas para ti.`;
         msg.className = 'success';
         input.value = '';
         // Actualizar el perfil local
         currentUserData.referredBy = code;
+        currentUserData.referredByKind = res.creator ? 'creator' : 'user';
+        currentUserData.coins = Number(currentUserData.coins || 0) + Number(res.newUserReward || res.reward || 0);
+        currentUserData.referralWelcomeCoins = Number(currentUserData.referralWelcomeCoins || 0) + Number(res.newUserReward || res.reward || 0);
         // Re-render
         renderProfile();
         await loadDashboardData();
-        await addActivity(currentUser.uid, 'referral', 'Invitación registrada', 0);
+        await addActivity(currentUser.uid, 'referral', res.creator
+          ? 'Invitación registrada con código de creador'
+          : 'Invitación registrada', Number(res.newUserReward || res.reward || 0));
       } else {
         const errors = {
           'self': 'No puedes usar tu propio código.',

@@ -1537,6 +1537,15 @@ function bindEvents() {
             staffSetMessage('Ocurrió un error al procesar la acción.', true);
         });
     });
+    document.getElementById('creatorCodeSaveBtn')?.addEventListener('click', () => {
+        saveCreatorReferralCode().catch(error => creatorCodeSetMessage(error?.message || 'No se pudo guardar el código.', 'error'));
+    });
+    document.getElementById('creatorCodeResetBtn')?.addEventListener('click', () => {
+        resetCreatorReferralCode().catch(error => creatorCodeSetMessage(error?.message || 'No se pudo generar el código.', 'error'));
+    });
+    document.getElementById('creatorCodeUser')?.addEventListener('change', (event) => {
+        loadCreatorCodePreview(event.target?.value || '').catch(() => {});
+    });
     document.getElementById('discordMapSaveBtn')?.addEventListener('click', saveDiscordRoleMapping);
     document.getElementById('discordMapReloadBtn')?.addEventListener('click', loadDiscordRoleMapping);
     bindRoleManager();
@@ -1565,6 +1574,8 @@ async function loadSiteConfig() {
         if (siteSnap && siteSnap.exists()) {
             const siteData = siteSnap.data();
             document.getElementById('cfgReferralCoins').value = siteData.referralCoins || '';
+            const creatorCoinsField = document.getElementById('cfgCreatorReferralCoins');
+            if (creatorCoinsField) creatorCoinsField.value = siteData.creatorReferralCoins || '';
             document.getElementById('cfgDailyCoins').value = siteData.dailyBonusCoins || '';
             document.getElementById('cfgEnableNewsPage').checked = siteData.enableNewsPage !== false;
             document.getElementById('cfgAnnouncementText').value = siteData.announcement || '';
@@ -1600,6 +1611,11 @@ async function saveSiteConfig() {
         if (!window.db || !window.fsDoc || !window.setDoc) return;
 
         const referralCoins = parseInt(document.getElementById('cfgReferralCoins').value, 10) || 0;
+        const creatorReferralCoinsRaw = parseInt(document.getElementById('cfgCreatorReferralCoins')?.value, 10);
+        // El código de creador siempre debe dar, como mínimo, la recompensa normal.
+        const creatorReferralCoins = Number.isFinite(creatorReferralCoinsRaw) && creatorReferralCoinsRaw >= 0
+            ? Math.max(creatorReferralCoinsRaw, referralCoins)
+            : Math.max(100, referralCoins);
         const dailyBonusCoins = parseInt(document.getElementById('cfgDailyCoins').value, 10) || 0;
         const enableNewsPage = document.getElementById('cfgEnableNewsPage').checked;
         const announcement = document.getElementById('cfgAnnouncementText').value.trim();
@@ -1613,6 +1629,7 @@ async function saveSiteConfig() {
         await Promise.all([
             window.setDoc(window.fsDoc(window.db, 'settings', 'site'), {
                 referralCoins,
+                creatorReferralCoins,
                 dailyBonusCoins,
                 enableNewsPage,
                 announcement,
@@ -3000,7 +3017,429 @@ async function refreshAssignment() {
 
     await loadAssignmentAccounts();
     renderRoleAssignment();
+    loadCreatorCodePanel().catch(error => {
+        console.warn('[Personal] No se pudo cargar el panel de códigos de creador:', error);
+    });
     startAssignmentRealtime();
+}
+
+/* ── Códigos de referido de Creadores de Contenido ─────────────
+   SÓLO el staff puede crear o cambiar estos códigos. Se guardan en
+   `conductores/{uid}` con `referralCodeKind: 'creator'`, que activa
+   la recompensa mayor por invitación (Configuración → Economía Web).
+   Los usuarios normales reciben un código aleatorio de 8 letras A-Z. */
+const CREATOR_CODE_PATTERN = /^(?=.*[A-Z])[A-Z0-9_-]{3,16}$/;
+const CREATOR_CODE_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+let creatorCodeSettings = { referralCoins: 50, creatorReferralCoins: 100 };
+
+function creatorCodeNormalize(value) {
+    return String(value == null ? '' : value).replace(/\s+/g, '').trim().toUpperCase().slice(0, 16);
+}
+
+function creatorCodeSetMessage(text, tone = 'info') {
+    const el = document.getElementById('creatorCodeMsg');
+    if (!el) return;
+    const colors = { info: '#7dd3fc', success: '#86efac', warning: '#fbbf24', error: '#fca5a5' };
+    el.textContent = text || '';
+    el.style.color = colors[tone] || colors.info;
+}
+
+function creatorCodeRoleOf(account) {
+    const who = {
+        uid: account?.uid,
+        email: account?.email,
+        nombre: account?.nombre || account?.displayName || account?.username
+    };
+    // Fuente única de rangos: `equipo` (vía PanterStaff). El rol guardado en
+    // `conductores` NO otorga rango y no sirve para habilitar este beneficio.
+    if (window.PanterStaff && typeof window.PanterStaff.roleForAuthor === 'function') {
+        const resolved = window.PanterStaff.roleForAuthor(who);
+        if (resolved && resolved !== 'usuario') return resolved;
+    }
+    // `fromTeam` significa que la ficha viene de la colección `equipo`,
+    // la única fuente legítima de rangos.
+    return account?.fromTeam ? normalizeRole(account.role || 'usuario') : 'usuario';
+}
+
+function creatorCodeIdentityKeys(account) {
+    const keys = [];
+    const email = String(account?.email || '').trim().toLowerCase();
+    if (email) keys.push('email:' + email);
+    const nameKey = assignmentNameKey(account?.nombre || account?.displayName || account?.username || '');
+    if (nameKey) keys.push('name:' + nameKey);
+    if (!keys.length) keys.push('uid:' + String(account?.uid || ''));
+    return keys;
+}
+
+/**
+ * Personas con rango «Creador de Contenido», sin duplicados.
+ * Prefiere la cuenta de `conductores` (la que el creador usa al entrar),
+ * porque ahí es donde se guarda y se lee su código de referido.
+ */
+function creatorCodeCandidates() {
+    const byKey = new Map();
+    const result = [];
+
+    const add = (account) => {
+        if (!account || !account.uid) return;
+        const keys = creatorCodeIdentityKeys(account);
+        const existing = keys.map(key => byKey.get(key)).find(value => value !== undefined);
+        if (existing === undefined) {
+            const index = result.length;
+            result.push(Object.assign({}, account));
+            keys.forEach(key => byKey.set(key, index));
+            return;
+        }
+        const previous = result[existing];
+        if (!previous.avatarUrl && account.avatarUrl) previous.avatarUrl = account.avatarUrl;
+        if (!previous.email && account.email) previous.email = account.email;
+        if (!previous.role && account.role) previous.role = account.role;
+        if (account.fromTeam) previous.fromTeam = true;
+        keys.forEach(key => byKey.set(key, existing));
+    };
+
+    assignmentAccounts.forEach(add);
+    assignmentMembers.forEach(member => add({
+        uid: String(member.uid || ''),
+        nombre: member.nombre || member.displayName || member.username || member.uid,
+        email: member.email || '',
+        avatarUrl: staffAvatar(member),
+        role: member.role,
+        fromTeam: true
+    }));
+
+    return result
+        .filter(account => creatorCodeRoleOf(account) === 'creador_contenido')
+        .sort((a, b) => String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es'));
+}
+
+function creatorCodeRandomLetters(length = 8) {
+    let out = '';
+    const cryptoObj = window.crypto;
+    if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
+        const bytes = new Uint32Array(length);
+        cryptoObj.getRandomValues(bytes);
+        for (let i = 0; i < length; i++) out += CREATOR_CODE_LETTERS[bytes[i] % 26];
+        return out;
+    }
+    for (let i = 0; i < length; i++) {
+        out += CREATOR_CODE_LETTERS[Math.floor(Math.random() * CREATOR_CODE_LETTERS.length)];
+    }
+    return out;
+}
+
+async function creatorCodeIsTaken(code, excludeUid = '') {
+    const normalized = creatorCodeNormalize(code);
+    if (!normalized || !window.db || !window.getDocs || !window.collection) return false;
+
+    try {
+        if (window.query && window.where) {
+            const [currentSnap, legacySnap] = await Promise.all([
+                window.getDocs(window.query(
+                    window.collection(window.db, 'conductores'),
+                    window.where('referralCode', '==', normalized)
+                )).catch(() => null),
+                window.getDocs(window.query(
+                    window.collection(window.db, 'conductores'),
+                    window.where('referralCodeLegacy', 'array-contains', normalized)
+                )).catch(() => null)
+            ]);
+            const docs = []
+                .concat(currentSnap ? currentSnap.docs : [])
+                .concat(legacySnap ? legacySnap.docs : []);
+            if (docs.length) return docs.some(doc => String(doc.id) !== String(excludeUid));
+            if (currentSnap || legacySnap) return false;
+        }
+    } catch (error) {
+        console.warn('[Referidos] Consulta de unicidad no disponible:', error);
+    }
+
+    try {
+        const snap = await window.getDocs(window.collection(window.db, 'conductores'));
+        return snap.docs.some(doc => {
+            if (String(doc.id) === String(excludeUid)) return false;
+            const data = doc.data() || {};
+            if (creatorCodeNormalize(data.referralCode) === normalized) return true;
+            return Array.isArray(data.referralCodeLegacy)
+                && data.referralCodeLegacy.some(legacy => creatorCodeNormalize(legacy) === normalized);
+        });
+    } catch (error) {
+        console.warn('[Referidos] No se pudo comprobar el código:', error);
+        return false;
+    }
+}
+
+async function loadCreatorCodeSettings() {
+    try {
+        if (!window.db || !window.fsDoc || !window.getDoc) return;
+        const snap = await window.getDoc(window.fsDoc(window.db, 'settings', 'site')).catch(() => null);
+        if (!snap || !snap.exists()) return;
+        const data = snap.data() || {};
+        const regular = parseInt(data.referralCoins, 10);
+        const creator = parseInt(data.creatorReferralCoins, 10);
+        if (!isNaN(regular) && regular >= 0) creatorCodeSettings.referralCoins = regular;
+        if (!isNaN(creator) && creator >= 0) creatorCodeSettings.creatorReferralCoins = creator;
+    } catch (error) { /* se usan los valores por defecto */ }
+}
+
+let creatorCodeAccountCache = [];
+
+/**
+ * Una misma persona puede tener más de un documento en `conductores`
+ * (cuentas antiguas con uids distintos). Se elige la ficha que realmente
+ * usa: la que ya tiene código de creador, luego la que tenga cualquier
+ * código, y por último la más reciente.
+ */
+async function resolveCreatorCodeAccount(account) {
+    const direct = String(account?.uid || '');
+    const email = String(account?.email || '').trim().toLowerCase();
+    const name = assignmentNameKey(account?.nombre || account?.displayName || account?.username || '');
+    if ((!email && !name) || !window.db || !window.getDocs || !window.collection) return account;
+
+    try {
+        const snap = await window.getDocs(window.collection(window.db, 'conductores'));
+        const matches = snap.docs.filter(doc => {
+            if (String(doc.id) === direct) return true;
+            const d = doc.data() || {};
+            const docEmail = String(d.email || '').trim().toLowerCase();
+            const docName = assignmentNameKey(d.nombre || d.displayName || d.username || d.nombre_usuario || '');
+            return (email && docEmail === email) || (name && docName === name);
+        });
+        if (!matches.length) return account;
+
+        const score = (doc) => {
+            const d = doc.data() || {};
+            const hasCode = String(d.referralCode || '').trim() ? 2 : 0;
+            const isCreator = String(d.referralCodeKind || '').toLowerCase() === 'creator' ? 4 : 0;
+            const ts = new Date(d.updatedAt || d.actualizadoEn || 0).getTime() || 0;
+            return isCreator + hasCode + ts / 1e13;
+        };
+        matches.sort((a, b) => score(b) - score(a));
+        const best = matches[0];
+        return Object.assign({}, account, {
+            uid: String(best.id),
+            email: String((best.data() || {}).email || account.email || '')
+        });
+    } catch (error) {
+        return account;
+    }
+}
+
+async function loadCreatorCodePanel() {
+    const select = document.getElementById('creatorCodeUser');
+    if (!select) return;
+
+    await loadCreatorCodeSettings();
+    const base = creatorCodeCandidates();
+    const current = String(select.value || '');
+    const candidates = await Promise.all(base.map(resolveCreatorCodeAccount));
+    creatorCodeAccountCache = candidates;
+
+    select.innerHTML = candidates.length
+        ? ['<option value="">— Elegir creador —</option>'].concat(candidates.map(account =>
+            `<option value="${staffEscape(account.uid)}">${staffEscape(account.nombre || account.uid)}${account.email ? ' · ' + staffEscape(account.email) : ''}</option>`
+        )).join('')
+        : '<option value="">— No hay Creadores de Contenido —</option>';
+
+    if (current && candidates.some(account => String(account.uid) === current)) {
+        select.value = current;
+    }
+
+    const saveBtn = document.getElementById('creatorCodeSaveBtn');
+    const resetBtn = document.getElementById('creatorCodeResetBtn');
+    const input = document.getElementById('creatorCodeInput');
+    if (saveBtn) saveBtn.disabled = !candidates.length;
+    if (resetBtn) resetBtn.disabled = !candidates.length;
+    if (input) input.disabled = !candidates.length;
+
+    if (!candidates.length) {
+        creatorCodeSetMessage('Asigna primero el rango «Creador de Contenido» en la lista de rangos de arriba.', 'info');
+        if (input) input.value = '';
+        return;
+    }
+
+    // Con un solo creador (o sin selección previa) se elige el primero para
+    // mostrar su código actual sin pasos extra.
+    if (!select.value || !candidates.some(account => String(account.uid) === String(select.value))) {
+        select.value = String(candidates[0].uid);
+    }
+
+    creatorCodeSetMessage(candidates.length === 1
+        ? 'Creador detectado. Escribe su código personalizado o genera uno aleatorio.'
+        : `Elige un creador para ver o cambiar su código (${candidates.length} disponibles).`, 'info');
+    await loadCreatorCodePreview(select.value);
+}
+
+async function loadCreatorCodePreview(uid) {
+    const input = document.getElementById('creatorCodeInput');
+    const safeUid = String(uid || '');
+    if (!safeUid) {
+        if (input) input.value = '';
+        creatorCodeSetMessage('Selecciona un Creador de Contenido para ver o cambiar su código.', 'info');
+        return;
+    }
+    if (!window.db || !window.fsDoc || !window.getDoc) {
+        creatorCodeSetMessage('Firestore no está disponible ahora mismo.', 'warning');
+        return;
+    }
+    try {
+        const snap = await window.getDoc(window.fsDoc(window.db, 'conductores', safeUid));
+        const data = snap.exists() ? (snap.data() || {}) : {};
+        if (input) input.value = data.referralCode || '';
+        const isCreator = String(data.referralCodeKind || '').toLowerCase() === 'creator';
+        const benefit = Number(creatorCodeSettings.creatorReferralCoins || 100);
+        creatorCodeSetMessage(
+            isCreator
+                ? `Código de creador activo. Recompensa: ${benefit} monedas por invitación.`
+                : `Este usuario aún tiene un código automático de usuario. Guarda un código de creador para activar la recompensa de ${benefit} monedas.`,
+            isCreator ? 'success' : 'info'
+        );
+    } catch (error) {
+        creatorCodeSetMessage('No se pudo leer el código actual del creador.', 'error');
+    }
+}
+
+async function saveCreatorReferralCode() {
+    const select = document.getElementById('creatorCodeUser');
+    const input = document.getElementById('creatorCodeInput');
+    const uid = String(select?.value || '');
+    if (!uid) {
+        creatorCodeSetMessage('Elige un Creador de Contenido.', 'error');
+        return;
+    }
+
+    const account = creatorCodeAccountCache.find(item => String(item.uid) === uid);
+    if (!account || creatorCodeRoleOf(account) !== 'creador_contenido') {
+        creatorCodeSetMessage('Sólo los usuarios con rango «Creador de Contenido» pueden tener un código personalizado.', 'error');
+        return;
+    }
+
+    const code = creatorCodeNormalize(input?.value);
+    if (!CREATOR_CODE_PATTERN.test(code)) {
+        creatorCodeSetMessage('El código debe tener de 3 a 16 caracteres: letras A-Z, números, guion o guion bajo, e incluir al menos una letra.', 'error');
+        input?.focus();
+        return;
+    }
+
+    if (!window.db || !window.fsDoc || !window.setDoc) {
+        creatorCodeSetMessage('Firestore no está disponible ahora mismo.', 'error');
+        return;
+    }
+
+    const saveBtn = document.getElementById('creatorCodeSaveBtn');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> Guardando...';
+    }
+
+    try {
+        if (await creatorCodeIsTaken(code, uid)) {
+            creatorCodeSetMessage(`El código «${code}» ya está en uso por otro usuario.`, 'error');
+            return;
+        }
+
+        const ref = window.fsDoc(window.db, 'conductores', uid);
+        const snap = await window.getDoc(ref).catch(() => null);
+        const data = snap && snap.exists() ? (snap.data() || {}) : {};
+        const previous = creatorCodeNormalize(data.referralCode);
+        const now = new Date().toISOString();
+        const patch = {
+            referralCode: code,
+            referralCodeKind: 'creator',
+            referralCodeSetBy: currentUser ? (currentUser.uid || currentUser.email || 'staff') : 'staff',
+            referralCodeSetAt: now,
+            updatedAt: now
+        };
+        if (previous && previous !== code) {
+            const legacy = Array.isArray(data.referralCodeLegacy) ? data.referralCodeLegacy.slice() : [];
+            if (!legacy.includes(previous)) legacy.push(previous);
+            patch.referralCodeLegacy = legacy.slice(-10);
+        }
+
+        await window.setDoc(ref, patch, { merge: true });
+        if (input) input.value = code;
+        creatorCodeSetMessage(`Código «${code}» guardado. Recompensa de creador: ${Number(creatorCodeSettings.creatorReferralCoins || 100)} monedas por invitación.`, 'success');
+    } catch (error) {
+        console.error('[Referidos] No se pudo guardar el código de creador:', error);
+        creatorCodeSetMessage('No se pudo guardar el código. Revisa la conexión e intenta de nuevo.', 'error');
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar código';
+        }
+    }
+}
+
+async function resetCreatorReferralCode() {
+    const select = document.getElementById('creatorCodeUser');
+    const uid = String(select?.value || '');
+    if (!uid) {
+        creatorCodeSetMessage('Elige un Creador de Contenido.', 'error');
+        return;
+    }
+    const account = creatorCodeAccountCache.find(item => String(item.uid) === uid);
+    if (!account || creatorCodeRoleOf(account) !== 'creador_contenido') {
+        creatorCodeSetMessage('Sólo los usuarios con rango «Creador de Contenido» pueden tener un código personalizado.', 'error');
+        return;
+    }
+    if (!window.db || !window.fsDoc || !window.setDoc) {
+        creatorCodeSetMessage('Firestore no está disponible ahora mismo.', 'error');
+        return;
+    }
+    try {
+        if (typeof window.confirm === 'function' && !window.confirm('¿Generar un código aleatorio nuevo para este creador? El código anterior seguirá funcionando en los enlaces ya compartidos.')) {
+            return;
+        }
+    } catch (error) { /* continúa */ }
+
+    const resetBtn = document.getElementById('creatorCodeResetBtn');
+    if (resetBtn) {
+        resetBtn.disabled = true;
+        resetBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> Generando...';
+    }
+
+    try {
+        let code = '';
+        for (let attempt = 0; attempt < 25; attempt++) {
+            const candidate = creatorCodeRandomLetters(8);
+            if (!(await creatorCodeIsTaken(candidate, uid))) { code = candidate; break; }
+        }
+        if (!code) {
+            creatorCodeSetMessage('No se pudo generar un código único. Intenta de nuevo.', 'error');
+            return;
+        }
+
+        const ref = window.fsDoc(window.db, 'conductores', uid);
+        const snap = await window.getDoc(ref).catch(() => null);
+        const data = snap && snap.exists() ? (snap.data() || {}) : {};
+        const previous = creatorCodeNormalize(data.referralCode);
+        const now = new Date().toISOString();
+        const patch = {
+            referralCode: code,
+            referralCodeKind: 'creator',
+            referralCodeSetBy: currentUser ? (currentUser.uid || currentUser.email || 'staff') : 'staff',
+            referralCodeSetAt: now,
+            updatedAt: now
+        };
+        if (previous && previous !== code) {
+            const legacy = Array.isArray(data.referralCodeLegacy) ? data.referralCodeLegacy.slice() : [];
+            if (!legacy.includes(previous)) legacy.push(previous);
+            patch.referralCodeLegacy = legacy.slice(-10);
+        }
+
+        await window.setDoc(ref, patch, { merge: true });
+        const input = document.getElementById('creatorCodeInput');
+        if (input) input.value = code;
+        creatorCodeSetMessage(`Código aleatorio «${code}» generado para este creador.`, 'success');
+    } catch (error) {
+        console.error('[Referidos] No se pudo generar el código de creador:', error);
+        creatorCodeSetMessage('No se pudo generar el código. Revisa la conexión e intenta de nuevo.', 'error');
+    } finally {
+        if (resetBtn) {
+            resetBtn.disabled = false;
+            resetBtn.innerHTML = '<i class="fa-solid fa-dice" aria-hidden="true"></i> Aleatorio';
+        }
+    }
 }
 
 async function assignPerson(uid, role) {
