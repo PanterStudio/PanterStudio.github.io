@@ -154,6 +154,15 @@
         currentUser = user || null;
         if (!currentUser) { userRole = 'usuario'; canManage = false; updateAdminUI(); return; }
         const lib = R();
+        // Fuente ÚNICA compartida de rangos (Panel Admin → Personal).
+        const S = window.PanterStaff;
+        if (S && typeof S.resolveRoleFor === 'function') {
+            userRole = S.resolveRoleFor(currentUser);
+            canManage = MANAGER_ROLES.has(userRole) || Boolean(lib && typeof lib.rank === 'function'
+                && lib.rank(userRole) >= lib.rank('moderador'));
+            updateAdminUI();
+            return;
+        }
         const profile = { email: String(currentUser.email || '').trim().toLowerCase() };
         userRole = lib ? lib.resolveRole(currentUser, profile) : 'usuario';
         const rankOk = Boolean(lib && typeof lib.rank === 'function'
@@ -449,6 +458,8 @@
             if (e.key === 'Escape' && $('vehModal')?.classList.contains('active')) closeModal();
         });
         document.addEventListener('authStateChanged', (e) => computeAccess(e.detail?.user || null));
+        document.addEventListener('panter:staff-changed', () => computeAccess(
+            (window.DiscordAuth && window.DiscordAuth.getUser) ? window.DiscordAuth.getUser() : currentUser));
         window.addEventListener('storage', (e) => {
             if ([LOCAL_KEY, CAT_KEY, HIDDEN_SEEDS_KEY, HIDDEN_KEY].includes(e.key)) load();
         });

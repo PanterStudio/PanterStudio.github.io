@@ -155,11 +155,6 @@ function canRoleAccessPanel(role) {
     return PANEL_ACCESS_ROLES.has(normalizeRole(role));
 }
 
-/** @deprecated Sin rango automático por correo: siempre false. */
-function isFounderEmail(email) {
-    return false;
-}
-
 function setCeoMessage(message, isError = false) {
     if (!ceoUsersMessageEl) return;
     ceoUsersMessageEl.textContent = message || '';
@@ -1306,7 +1301,7 @@ async function applyStoredSession(storedSession) {
     // todavía, se reintentará cuando el SDK esté listo.
     if (!window.db || !window.fsDoc || !window.getDoc) return false;
 
-    // Revalida el rango guardado contra `equipo` y el correo del Director.
+    // Revalida el rango guardado contra `equipo` (única fuente de rangos).
     // Una sesión antigua no puede conservar ADMIN/OWNER automáticamente.
     const access = await resolveUserAccess({
         uid: storedSession.uid,

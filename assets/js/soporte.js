@@ -7,7 +7,6 @@
 // CONFIGURACIÓN
 // ============================================================
 const SOPORTE_COLLECTION = 'soporte_tickets';
-const COMENTARIOS_COLLECTION = 'soporte_comentarios';
 
 // Mensajes de sistema del chat (icono vectorial + texto exacto).
 const SYSTEM_ICON_HTML = '<i class="fa-solid fa-user-shield"></i>';

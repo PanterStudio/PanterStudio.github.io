@@ -79,6 +79,17 @@
         if (!currentUser) { userRole = 'usuario'; canManage = false; updateAdminUI(); return; }
 
         const lib = R();
+        // Fuente ÚNICA compartida de rangos (Panel Admin → Personal).
+        const S = window.PanterStaff;
+        if (S && typeof S.resolveRoleFor === 'function') {
+            userRole = S.resolveRoleFor(currentUser);
+            const rankOk = Boolean(lib && typeof lib.rank === 'function'
+                && lib.rank(userRole) >= lib.rank('moderador'));
+            canManage = MANAGER_ROLES.has(userRole) || rankOk;
+            updateAdminUI();
+            return;
+        }
+
         const profile = { email: String(currentUser.email || '').trim().toLowerCase() };
         if (window.db && window.getDoc && window.fsDoc) {
             try {
@@ -377,6 +388,8 @@
             if (e.key === 'Escape' && $('vidModal')?.classList.contains('active')) closeModal();
         });
         document.addEventListener('authStateChanged', (e) => computeAccess(e.detail?.user || null));
+        document.addEventListener('panter:staff-changed', () => computeAccess(
+            (window.DiscordAuth && window.DiscordAuth.getUser) ? window.DiscordAuth.getUser() : currentUser));
         window.addEventListener('storage', (e) => { if (e.key === LOCAL_KEY) loadVideos(); });
     }
 

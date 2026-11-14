@@ -69,14 +69,6 @@
         }
     }
 
-    /**
-     * @deprecated Ya no hay rango automático por correo. Los rangos se
-     * asignan manualmente en Panel Admin → Personal (`equipo`).
-     */
-    function isDirectorEmail(str) {
-        return false;
-    }
-
     function saveAccessToken(token, expiresIn) {
         if (!token) return;
         try { sessionStorage.setItem(TOKEN_KEY, token); } catch (e) { /* ignore */ }
@@ -747,7 +739,6 @@
         getPrimaryRedirectUri,
         getAccessToken,
         isDiscordSession,
-        isDirectorEmail,
         adoptFirebaseUser,
         fetchDiscordGuildContext,
         validateGuildAccess,

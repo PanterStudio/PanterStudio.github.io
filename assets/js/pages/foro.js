@@ -29,14 +29,19 @@
     const PRESENCE_PREFIX = 'ps_foro_lectores_';
     const PRESENCE_TTL = 3 * 60 * 1000;
 
+    /* Contenido EXCLUSIVO de Nuestra Tierra Job Simulator (simulador de
+       transporte, carga pesada y mundo abierto en Latinoamérica para PC
+       y móviles). La sección «Comunidad y Futuros Proyectos» deja espacio
+       flexible para los próximos proyectos de Panter Studio Game Dev. */
     const SECTIONS = [
-        { id: 'anuncios', label: 'Anuncios y Novedades', desc: 'Noticias oficiales, parches y hoja de ruta del estudio.', icon: 'fa-solid fa-bullhorn', color: '#f1c40f' },
-        { id: 'general', label: 'Discusión General', desc: 'Presentaciones, charla y comunidad de Panter Studio.', icon: 'fa-solid fa-comments', color: '#00b0ff' },
-        { id: 'roleplay', label: 'Nuestra Tierra · Roleplay', desc: 'Fichas, normativa y departamentos del servidor.', icon: 'fa-solid fa-shield-halved', color: '#e67e22' },
+        { id: 'anuncios', label: 'Anuncios y Novedades', desc: 'Parches, avances de desarrollo y comunicados oficiales del estudio.', icon: 'fa-solid fa-bullhorn', color: '#f1c40f' },
+        { id: 'general', label: 'Discusión General', desc: 'Presentaciones, rutas, capturas y charla entre conductores.', icon: 'fa-solid fa-comments', color: '#00b0ff' },
+        { id: 'nuestra-tierra', label: 'Nuestra Tierra Job Simulator', desc: 'Transporte, carga pesada y mundo abierto en Latinoamérica para PC y móviles.', icon: 'fa-solid fa-truck', color: '#e67e22' },
         { id: 'soporte', label: 'Soporte y Ayuda', desc: 'Guías, dudas técnicas y soluciones de la comunidad.', icon: 'fa-solid fa-headset', color: '#00a715' },
-        { id: 'sugerencias', label: 'Sugerencias e Ideas', desc: 'Propón mejoras, trabajos, vehículos y contenido.', icon: 'fa-solid fa-lightbulb', color: '#9d00ff' },
-        { id: 'offtopic', label: 'Off-Topic', desc: 'Todo lo demás: música, memes y vida fuera del juego.', icon: 'fa-solid fa-mug-hot', color: '#ff7ddf' }
+        { id: 'sugerencias', label: 'Sugerencias e Ideas', desc: 'Propón rutas, vehículos, trabajos y mejoras para el simulador.', icon: 'fa-solid fa-lightbulb', color: '#9d00ff' },
+        { id: 'offtopic', label: 'Comunidad y Futuros Proyectos', desc: 'Charla de la comunidad y espacio para los próximos proyectos del estudio.', icon: 'fa-solid fa-diagram-project', color: '#ff7ddf' }
     ];
+
 
     const EMOJIS = ['😀','😂','😍','😎','🤔','👍','👎','🔥','🎮','🚗','💎','🎉','🙏','👀','💬','🛠️','⚡','❤️','✅','❗','🤝','🏁','🗺️','📸','🎨','🛡️','👑','🚀','🌟','🐾','☕','🎯'];
 
@@ -47,40 +52,40 @@
        interactúa con ellos (se "materializan" entonces). */
     const SEED_TOPICS = [
         {
-            id: 't_srpd', seccion: 'roleplay', prefijo: 'OFICIAL', fijado: true, cerrado: false,
-            titulo: 'SRPD · Departamento de Policía de Santa Rosa',
+            id: 't_nuestra_tierra', seccion: 'nuestra-tierra', prefijo: 'OFICIAL', fijado: true, cerrado: false,
+            titulo: 'Nuestra Tierra Job Simulator — Rutas, Carga y Mundo Abierto',
             autorNombre: 'PanterGameY', autorUid: 'founder_pantergamey', autorEmail: '',
             autorRol: 'founder_ceo', autorAvatar: '', autorMensajes: 54, autorDesde: '2026',
             creadoEn: D(46), actualizadoEn: D(2), ultimaRespuestaEn: D(2), ultimaRespuestaAutor: 'Fénix',
             respuestas: 54, vistas: 8421, reacciones: 128,
-            etiquetas: ['srpd', 'policia', 'roleplay'],
+            etiquetas: ['nuestra-tierra', 'transporte', 'carga-pesada'],
             cuerpo: [
-                '[h2]SRPD — Departamento de Policía de Santa Rosa[/h2]',
-                '[b]Bienvenidos a la ficha oficial del departamento.[/b] Este hilo reúne la normativa, los requisitos de ingreso y el formulario de alta de la policía de Santa Rosa dentro de [i]Nuestra Tierra[/i].',
+                '[h2]Nuestra Tierra Job Simulator — Ficha oficial del proyecto[/h2]',
+                '[b]Bienvenidos al hilo oficial del simulador.[/b] Aquí reunimos la información clave sobre conducción, carga pesada y el mundo abierto en Latinoamérica para [i]PC y móviles[/i].',
                 '',
-                '[h3]📋 Requisitos de ingreso[/h3]',
+                '[h3]📋 Qué puedes hacer en el simulador[/h3]',
                 '[list]',
-                '[*]Tener 16 años o más y una cuenta verificada en el servidor oficial de Discord.',
-                '[*]Conocer y aceptar la normativa general de roleplay y el código penal vigente.',
-                '[*]Disponer de micrófono y mantener una actitud respetuosa con la comunidad.',
-                '[*]Superar la entrevista y el periodo de formación de la academia.',
+                '[*]Conducir camiones, vans y vehículos de reparto por carreteras de montaña y ciudades.',
+                '[*]Gestionar cargas pesadas con físicas de peso, inercia y suspensión dinámica.',
+                '[*]Completar trabajos de mensajería, paquetería y transporte de mercancías.',
+                '[*]Personalizar tu vehículo en el garaje: pintura, llantas, luces y motor.',
+                '[*]Conducir de noche y bajo lluvia con ciclo día/noche y clima dinámico.',
                 '[/list]',
                 '',
-                '[h3]🚓 Estructura del departamento[/h3]',
+                '[h3]🚛 Flota y vehículos[/h3]',
                 '[list=1]',
-                '[*][b]Jefatura[/b] — Dirección, planificación y relaciones institucionales.',
-                '[*][b]Patrullas[/b] — Seguridad ciudadana, controles de tráfico y asistencia.',
-                '[*][b]Investigación[/b] — Casos, diligencias y custodia de evidencias.',
-                '[*][b]Academia[/b] — Formación de nuevos agentes y evaluaciones.',
+                '[*][b]Van Sprinter de Carga[/b] — reparto urbano y mensajería urgente.',
+                '[*][b]Camiones de carga pesada[/b] — rutas de montaña y larga distancia.',
+                '[*][b]Vehículos de apoyo[/b] — grúa, asistencia en carretera y servicios.',
                 '[/list]',
                 '',
-                '[h3]📝 Formulario de alta[/h3]',
-                'Copia el siguiente formulario y publícalo como respuesta a este tema:',
-                '[code]NOMBRE IC: \nEDAD IC / OOC: \nID DE DISCORD: \nEXPERIENCIA EN ROLEPLAY: \nMOTIVO DE INGRESO: \nHORARIO DISPONIBLE: [/code]',
+                '[h3]📝 Ficha técnica[/h3]',
+                'Copia esta ficha si quieres proponer una ruta o un vehículo nuevo:',
+                '[code]PROYECTO: Nuestra Tierra Job Simulator\nGENERO: Simulador de transporte y carga pesada\nESCENARIO: Mundo abierto en Latinoamerica\nPLATAFORMAS: PC y moviles\nESTADO: En desarrollo\nESTUDIO: Panter Studio Game Dev\nRUTA / VEHICULO PROPUESTO: [/code]',
                 '',
-                '[quote=PanterGameY]La prioridad del SRPD es que cada patrulla sea una experiencia divertida, justa y coherente para todos los jugadores.[/quote]',
+                '[quote=PanterGameY]Queremos que cada ruta se sienta real: el peso de la carga, el clima y la carretera deben importar de verdad.[/quote]',
                 '',
-                '[center][i]Actualizado por el equipo de Panter Studio · Normativa sujeta a revisión.[/i][/center]'
+                '[center][i]Este hilo se actualizará con cada avance del desarrollo. 🐾[/i][/center]'
             ].join('\n')
         },
         {
@@ -171,13 +176,13 @@
             cuerpo: '[h2]Buzón de ideas[/h2]\n¿Qué te gustaría ver en el juego? Deja tu propuesta con un título claro y una descripción corta.\n\n[list][*]Reparto de comida a domicilio.[*]Grúa y rescate en carretera.[*]Transporte escolar.[/list]\n\n[b]¡Las mejores ideas se revisan en equipo cada semana![/b]'
         },
         {
-            id: 't_normativa_rp', seccion: 'roleplay', prefijo: 'OFICIAL', fijado: false, cerrado: true,
-            titulo: 'Normativa general de Roleplay (lectura obligatoria)',
+            id: 't_normativa_comunidad', seccion: 'anuncios', prefijo: 'OFICIAL', fijado: false, cerrado: true,
+            titulo: 'Normas de la comunidad y del foro (lectura obligatoria)',
             autorNombre: 'Fénix', autorUid: 'team_fenix', autorEmail: '',
             autorRol: 'administrador', autorAvatar: '', autorMensajes: 27, autorDesde: '2026',
             creadoEn: D(28), actualizadoEn: D(11), ultimaRespuestaEn: D(11), ultimaRespuestaAutor: 'Fénix',
-            respuestas: 0, vistas: 5230, reacciones: 112, etiquetas: ['normativa', 'roleplay'],
-            cuerpo: '[h2]Normativa general[/h2]\n[h3]1. Respeto[/h3]\nTrata a todos los jugadores con respeto. No se tolera el acoso ni el lenguaje discriminatorio.\n\n[h3]2. Coherencia[/h3]\nMantén tu personaje y evita el [i]metagaming[/i] y el [i]powergaming[/i].\n\n[h3]3. Reportes[/h3]\nUsa el botón [b]Reportar[/b] o abre un ticket en Soporte ante cualquier incidencia.\n\n[center][b]El incumplimiento puede conllevar sanciones.[/b][/center]'
+            respuestas: 0, vistas: 5230, reacciones: 112, etiquetas: ['normativa', 'comunidad'],
+            cuerpo: '[h2]Normas de la comunidad[/h2]\n[h3]1. Respeto[/h3]\nTrata a todos los conductores y al equipo con respeto. No se tolera el acoso ni el lenguaje discriminatorio.\n\n[h3]2. Contenido del proyecto[/h3]\nPublica en la sección correcta y centrado en [b]Nuestra Tierra Job Simulator[/b] y los proyectos de Panter Studio. Nada de spam ni enlaces sospechosos.\n\n[h3]3. Reportes[/h3]\nUsa el botón [b]Reportar[/b] o abre un ticket en Soporte ante cualquier incidencia.\n\n[center][b]El incumplimiento puede conllevar sanciones.[/b][/center]'
         },
         {
             id: 't_musica', seccion: 'offtopic', prefijo: 'DEBATE', fijado: false, cerrado: false,
@@ -191,12 +196,12 @@
     ];
 
     const SEED_MESSAGES = [
-        { id: 'm_srpd_1', temaId: 't_srpd', autorNombre: 'Fénix', autorUid: 'team_fenix', autorRol: 'administrador', autorAvatar: '', creadoEn: D(20),
-          cuerpo: '[quote=PanterGameY]La prioridad del SRPD es que cada patrulla sea una experiencia divertida, justa y coherente.[/quote]\n\nRecordatorio: [b]la academia abre entrevistas el primer lunes de cada mes[/b]. Publicad el formulario como respuesta a este hilo. 🛡️' },
-        { id: 'm_srpd_2', temaId: 't_srpd', autorNombre: 'Albert Acosta', autorUid: 'team_albert', autorRol: 'moderador', autorAvatar: '', creadoEn: D(9),
-          cuerpo: '[h3]Formulario de alta[/h3]\n[code]NOMBRE IC: Andrés Molina\nEDAD IC / OOC: 24 / 27\nID DE DISCORD: andresm\nEXPERIENCIA EN ROLEPLAY: 2 años\nMOTIVO DE INGRESO: Patrullas y tráfico\nHORARIO DISPONIBLE: Tardes[/code]\n\n¡Quedo atento a la entrevista! 🚓' },
-        { id: 'm_srpd_3', temaId: 't_srpd', autorNombre: 'Fénix', autorUid: 'team_fenix', autorRol: 'administrador', autorAvatar: '', creadoEn: D(2),
-          cuerpo: 'Recibido, [b]Andrés[/b]. Te contactaremos por Discord para agendar la entrevista. ¡Bienvenido al proceso! ✅' },
+        { id: 'm_rutas_1', temaId: 't_nuestra_tierra', autorNombre: 'Fénix', autorUid: 'team_fenix', autorRol: 'administrador', autorAvatar: '', creadoEn: D(20),
+          cuerpo: '[quote=PanterGameY]Queremos que cada ruta se sienta real: el peso de la carga, el clima y la carretera deben importar de verdad.[/quote]\n\nRecordatorio: [b]las rutas de montaña con lluvia ya están en pruebas internas[/b]. Publicad vuestras propuestas de ruta como respuesta a este hilo. 🚚' },
+        { id: 'm_rutas_2', temaId: 't_nuestra_tierra', autorNombre: 'Albert Acosta', autorUid: 'team_albert', autorRol: 'moderador', autorAvatar: '', creadoEn: D(9),
+          cuerpo: '[h3]Propuesta de ruta[/h3]\n[code]PROYECTO: Nuestra Tierra Job Simulator\nRUTA: Corredor cafetero - tramo de montaña\nVEHICULO: Camion de carga pesada\nCARGA: 8 toneladas\nPLATAFORMAS: PC y moviles[/code]\n\n¡Quedo atento a las pruebas! 🗺️' },
+        { id: 'm_rutas_3', temaId: 't_nuestra_tierra', autorNombre: 'Fénix', autorUid: 'team_fenix', autorRol: 'administrador', autorAvatar: '', creadoEn: D(2),
+          cuerpo: 'Recibida, [b]Albert[/b]. La añadimos al listado de rutas de la Temporada 1 para probar físicas de carga. ¡Gracias! ✅' },
         { id: 'm_bien_1', temaId: 't_bienvenida', autorNombre: 'Carlos Dev', autorUid: 'team_carlos', autorRol: 'programador', autorAvatar: '', creadoEn: D(1),
           cuerpo: '¡Genial tener el foro en marcha! 🐾 Si encontráis cualquier fallo, reportadlo aquí mismo o en Soporte.' },
         { id: 'm_pres_1', temaId: 't_presentaciones', autorNombre: 'Laura', autorUid: 'user_laura', autorRol: 'usuario', autorAvatar: '', creadoEn: D(0),
@@ -230,7 +235,12 @@
     function notifyLocal() {
         try { document.dispatchEvent(new CustomEvent(LOCAL_EVENT)); } catch (e) { /* noop */ }
     }
-    function secDef(id) { return SECTIONS.find(s => s.id === id) || SECTIONS[1]; }
+    /* Compatibilidad silenciosa: cualquier id de sección antiguo o
+       desconocido se resuelve a la sección del proyecto, de modo que los
+       temas ya guardados nunca desaparecen ni rompen la navegación. */
+    function secDef(id) {
+        return SECTIONS.find(s => s.id === String(id || '')) || SECTIONS[2];
+    }
     function escAttr(v) { return esc(decodeEntities(v)); }
 
     function fmtDate(value, withTime) {
@@ -429,8 +439,17 @@
         if (tb < ta) { out.ultimaRespuestaEn = seed.ultimaRespuestaEn; out.ultimaRespuestaAutor = seed.ultimaRespuestaAutor; }
         return out;
     }
+    /* Seeds de contenido retirado al enfocar el foro exclusivamente en
+       Nuestra Tierra Job Simulator. El contador de vistas había podido
+       persistirlos en `ps_foro_temas_local` / Firestore en visitas
+       anteriores; se descartan SOLO estos ids de semilla (nunca temas
+       creados por usuarios) para que no reaparezcan. */
+    const RETIRED_SEED_IDS = new Set(['t_srpd', 't_normativa_rp']);
+    const RETIRED_MESSAGE_IDS = new Set(['m_srpd_1', 'm_srpd_2', 'm_srpd_3']);
+
     function allTopics() {
-        const merged = mergeById(remoteTopics, localTopics());
+        const merged = mergeById(remoteTopics, localTopics())
+            .filter(t => !RETIRED_SEED_IDS.has(String(t.id)));
         const map = new Map(merged.map(t => [String(t.id), t]));
         SEED_TOPICS.forEach(s => {
             const k = String(s.id);
@@ -439,7 +458,7 @@
         return Array.from(map.values());
     }
     function replyCount(t) {
-        const local = localMessages().filter(m => m.temaId === t.id).length;
+        const local = localMessages().filter(m => m.temaId === t.id && !RETIRED_MESSAGE_IDS.has(String(m.id))).length;
         const seed = SEED_MESSAGES.filter(m => m.temaId === t.id).length;
         return Math.max(Number(t.respuestas || 0), local + seed);
     }
@@ -447,8 +466,8 @@
         const map = new Map();
         const add = (m) => { if (m && m.id) map.set(String(m.id), Object.assign({ temaId }, m)); };
         SEED_MESSAGES.filter(m => m.temaId === temaId).forEach(add);
-        remoteMessages.filter(m => m.temaId === temaId).forEach(add);
-        localMessages().filter(m => m.temaId === temaId).forEach(m => {
+        remoteMessages.filter(m => m.temaId === temaId && !RETIRED_MESSAGE_IDS.has(String(m.id))).forEach(add);
+        localMessages().filter(m => m.temaId === temaId && !RETIRED_MESSAGE_IDS.has(String(m.id))).forEach(m => {
             map.set(String(m.id), Object.assign({}, map.get(String(m.id)) || {}, m, { temaId }));
         });
         return Array.from(map.values()).sort((a, b) =>
@@ -920,7 +939,10 @@
         moreOpen = false;   // al volver al índice se cierra el menú del hilo
         closeCreateModal();
 
-        const sec = sectionFilter ? secDef(sectionFilter) : null;
+        // Normaliza también enlaces antiguos: cualquier id desconocido
+        // aterriza en la sección del proyecto sin dejar rastros visibles.
+        const activeSection = sectionFilter ? secDef(sectionFilter) : null;
+        const sec = activeSection;
         breadcrumb(sec ? [{ label: sec.label, href: `#seccion=${esc(sec.id)}` }] : []);
         $('foroStickyActions').innerHTML = `
             <button type="button" class="foro-btn foro-btn-sm" data-foro-action="buscar"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Buscar</button>
@@ -930,12 +952,12 @@
 
         const topics = allTopics();
         const sectionsHtml = SECTIONS.map(s => {
-            const list = topics.filter(t => t.seccion === s.id);
+            const list = topics.filter(t => secDef(t.seccion).id === s.id);
             const mensajes = list.reduce((n, t) => n + replyCount(t), 0);
             const last = list.slice().sort((a, b) =>
                 String(b.ultimaRespuestaEn || b.creadoEn || '').localeCompare(String(a.ultimaRespuestaEn || a.creadoEn || '')))[0];
             return `
-            <a class="foro-section" href="#seccion=${esc(s.id)}" style="--sec-color:${esc(s.color)}${sectionFilter === s.id ? ';border-color:' + esc(s.color) : ''}">
+            <a class="foro-section" href="#seccion=${esc(s.id)}" style="--sec-color:${esc(s.color)}${activeSection && activeSection.id === s.id ? ';border-color:' + esc(s.color) : ''}">
                 <span class="foro-section-icon"><i class="${esc(s.icon)}" aria-hidden="true"></i></span>
                 <span>
                     <span class="foro-section-name">${esc(s.label)}</span>
@@ -948,7 +970,7 @@
         $('foroSections').innerHTML = sectionsHtml;
 
         let list = topics.slice();
-        if (sectionFilter) list = list.filter(t => t.seccion === sectionFilter);
+        if (activeSection) list = list.filter(t => secDef(t.seccion).id === activeSection.id);
         if (filterMode === 'subs') list = list.filter(t => subs.has(String(t.id)));
         if (filterMode === 'bookmarks') list = list.filter(t => bookmarks.has(String(t.id)));
         if (searchTerm) {
@@ -967,7 +989,7 @@
         const panelTitle = searchTerm ? `Resultados para «${searchTerm}»`
             : filterMode === 'subs' ? 'Mis suscripciones'
             : filterMode === 'bookmarks' ? 'Mis marcadores'
-            : sectionFilter ? `Temas de ${secDef(sectionFilter).label}` : 'Temas recientes';
+            : activeSection ? `Temas de ${activeSection.label}` : 'Temas recientes';
 
         $('foroIndexTitle').textContent = panelTitle;
         $('foroIndexCount').textContent = `${list.length} tema${list.length === 1 ? '' : 's'}`;
@@ -1166,7 +1188,7 @@
             if (!participantsMap.has(k)) participantsMap.set(k, { nombre: m.autorNombre, avatar: m.autorAvatar, rol: liveRole(m) });
         });
         const participants = Array.from(participantsMap.values());
-        const related = allTopics().filter(x => x.seccion === t.seccion && String(x.id) !== String(t.id))
+        const related = allTopics().filter(x => secDef(x.seccion).id === secDef(t.seccion).id && String(x.id) !== String(t.id))
             .sort((a, b) => String(b.ultimaRespuestaEn || b.creadoEn || '').localeCompare(String(a.ultimaRespuestaEn || a.creadoEn || '')))
             .slice(0, 5);
 

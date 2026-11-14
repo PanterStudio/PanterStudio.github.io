@@ -5,9 +5,11 @@
  * · Imágenes publicadas por el equipo en Firestore `gallery_images`,
  *   sincronizadas en vivo con onSnapshot para TODOS los visitantes.
  * · Sólo Fundador, Director, Administrador y Moderador pueden publicar
- *   o eliminar. El rango se resuelve con el diccionario global
- *   (correo exacto del Director + `equipo` asignado en Personal).
+ *   o eliminar. El rango se resuelve con el diccionario global desde
+ *   `equipo` / `ps_staff_local` (Panel Admin → Personal).
  * · Acepta enlaces públicos de Imgur y URLs directas de imagen.
+ * · Copia local (`ps_gallery_local`) si Firestore rechaza la escritura,
+ *   de modo que publicar y eliminar NUNCA bloquea al usuario.
  */
 (function () {
     'use strict';
@@ -18,6 +20,9 @@
 
     const CAT_KEY = 'ps_gallery_categories';
     const HIDDEN_SEEDS_KEY = 'ps_gallery_hidden_seeds';
+    // Imágenes de la nube eliminadas localmente: si Firestore aún rechaza
+    // el borrado (reglas sin publicar), no reaparecen al re-sincronizar.
+    const HIDDEN_REMOTE_KEY = 'ps_gallery_hidden_remote';
     const DEFAULT_CATEGORIES = [
         { id: 'vehiculos', label: 'Vehículos' },
         { id: 'mapas', label: 'Mapas & Carreteras' },
@@ -83,6 +88,17 @@
         set.add(String(id));
         try { localStorage.setItem(HIDDEN_SEEDS_KEY, JSON.stringify(Array.from(set))); } catch (e) { /* noop */ }
     }
+    function readHiddenRemote() {
+        try {
+            const list = JSON.parse(localStorage.getItem(HIDDEN_REMOTE_KEY) || '[]');
+            return new Set(Array.isArray(list) ? list.map(String) : []);
+        } catch (e) { return new Set(); }
+    }
+    function writeHiddenRemote(set) {
+        try { localStorage.setItem(HIDDEN_REMOTE_KEY, JSON.stringify(Array.from(set))); } catch (e) { /* noop */ }
+    }
+    function hideRemote(id) { const s = readHiddenRemote(); s.add(String(id)); writeHiddenRemote(s); }
+    function unhideRemote(id) { const s = readHiddenRemote(); s.delete(String(id)); writeHiddenRemote(s); }
 
     // Catálogo base: garantiza que la página nunca quede vacía, incluso sin
     // conexión a Firestore. No se persiste en la BD.
@@ -187,9 +203,17 @@
 
         if (!currentUser) { applyAccess('usuario'); return; }
 
+        // Fuente ÚNICA compartida (login + `equipo` + `ps_staff_local`):
+        // un cambio de rango en Personal habilita o retira los controles
+        // de la galería al instante, igual que en foro, soporte y vídeos.
+        const S = window.PanterStaff;
+        if (S && typeof S.resolveRoleFor === 'function') {
+            applyAccess(S.resolveRoleFor(currentUser));
+            return;
+        }
+
         const profile = { email: String(currentUser.email || '').trim().toLowerCase() };
-        // Resolución INMEDIATA por correo: los controles aparecen sin esperar
-        // a Firestore (el Director se reconoce al instante).
+        // Resolución inmediata mientras se refina con `equipo`.
         applyAccess(R ? R.resolveRole(currentUser, profile) : 'usuario');
 
         // Después se refina con el rango manual de `equipo` (Personal).
@@ -338,7 +362,9 @@
         const grid = $('galleryGrid');
         if (!grid) return;
 
+        const hiddenRemote = readHiddenRemote();
         const dynamic = published.concat(readLocalImages())
+            .filter(doc => !hiddenRemote.has(String(doc.id)))
             .sort((a, b) => String(b.creadoEn || '').localeCompare(String(a.creadoEn || '')))
             .map(doc => Object.assign({}, doc, { _dynamic: true }));
         const hiddenSeeds = readHiddenSeeds();
@@ -503,7 +529,11 @@
         if (!isLocal && window.db && window.fsDoc && window.deleteDoc) {
             try {
                 await window.deleteDoc(window.fsDoc(window.db, COLLECTION, key));
+                unhideRemote(key);
             } catch (err) {
+                // Si las reglas aún no permiten borrar, se oculta en este
+                // navegador para que NO reaparezca en la siguiente sync.
+                hideRemote(key);
                 console.warn('[Galería] Borrado aplicado en copia local:', err && err.message);
             }
         }
@@ -638,36 +668,56 @@
         document.addEventListener('authStateChanged', (e) => {
             computeAccess(e.detail?.user || null);
         });
+        // Repinta los permisos cuando cambia un rango en el panel.
+        document.addEventListener('panter:staff-changed', () => {
+            computeAccess((window.DiscordAuth && window.DiscordAuth.getUser) ? window.DiscordAuth.getUser() : currentUser);
+        });
         window.addEventListener('storage', (e) => {
             if (e.key === LOCAL_KEY) render();
         });
     }
 
-    async function boot() {
-        if (booted) return;
-        if (!window.db || !window.collection) return;
-        booted = true;
+    /* Local-first: la galería, sus permisos y la publicación/eliminación
+       funcionan SIEMPRE (copia en `ps_gallery_local`). La nube se engancha
+       cuando el SDK está listo, sin bloquear ni ocultar controles. */
+    let localBooted = false;
+
+    function bootLocal() {
+        if (localBooted) return;
+        localBooted = true;
         bindEvents();
-        startLiveFeed();
+        render();
         const session = window.DiscordAuth && typeof window.DiscordAuth.getUser === 'function'
             ? window.DiscordAuth.getUser()
             : null;
         computeAccess(session || null);
     }
 
+    function bootCloud() {
+        if (booted) return;
+        if (!window.db || !window.collection) return;
+        booted = true;
+        startLiveFeed();
+    }
+
+    function boot() {
+        bootLocal();
+        bootCloud();
+    }
+
     // `firebaseReady` puede dispararse antes o después de este script.
     document.addEventListener('firebaseReady', boot);
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
-            render();
-            boot();
+            bootLocal();
+            bootCloud();
             const poll = (n = 0) => {
-                if (!booted && n < 40) { boot(); setTimeout(() => poll(n + 1), 250); }
+                if (!booted && n < 40) { bootCloud(); setTimeout(() => poll(n + 1), 250); }
             };
             poll();
         }, { once: true });
     } else {
-        render();
-        boot();
+        bootLocal();
+        bootCloud();
     }
 })();

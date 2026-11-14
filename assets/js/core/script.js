@@ -790,11 +790,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const navMenuUemail = document.getElementById('navMenuUemail');
         const navUserRoleBadge = document.getElementById('navUserRoleBadge');
         const navMenuAdminLink = document.getElementById('navMenuAdminLink');
-        // Varias páginas wiki declaran `id="adminNavLink"` DOS veces
-        // (escritorio + menú móvil). getElementById sólo alcanzaba el
-        // primero, por lo que el enlace del móvil quedaba oculto para
-        // siempre. querySelectorAll alcanza todos sin tocar los HTML.
-        const adminNavLinks = Array.from(document.querySelectorAll('#adminNavLink'));
+        // Enlaces de Panel Admin en escritorio y menú móvil. Las wikis
+        // usan ids distintos (ya no duplicados) y se alcanzan los dos
+        // para que el enlace móvil se muestre u oculte con el rango.
+        const adminNavLinks = Array.from(
+            document.querySelectorAll('#adminNavLink, #adminNavLinkMobile')
+        );
         const adminSideLink = document.getElementById('adminPanelSideLink');
         const navBrandAvatarLink = document.getElementById('navBrandAvatarLink');
         const navBrandAvatarImg = document.getElementById('navBrandAvatarImg');
@@ -2175,7 +2176,7 @@ function preventScroll(side, isOpen) {
             link.id = 'navForoMobileLink';
             if (isCurrent) link.className = 'active';
             link.textContent = 'Foro';
-            const admin = mobile.querySelector('#adminNavLink');
+            const admin = mobile.querySelector('#adminNavLink, #adminNavLinkMobile');
             if (admin) mobile.insertBefore(link, admin);
             else mobile.appendChild(link);
         }

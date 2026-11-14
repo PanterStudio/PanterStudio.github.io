@@ -194,13 +194,27 @@
         const nequiBtn = document.getElementById('nequiBtn');
         const breveBtn = document.getElementById('breveBtn');
 
-        if (nequiLinkEl && settings.nequiLink) { nequiLinkEl.href = settings.nequiLink; nequiLinkEl.classList.remove('disabled'); }
-        if (breveLinkEl && settings.breveLink) { breveLinkEl.href = settings.breveLink; breveLinkEl.classList.remove('disabled'); }
-
-        if (paypalBtn && settings.paypalLink) { paypalBtn.href = settings.paypalLink; paypalBtn.classList.remove('disabled'); }
-        if (patreonBtn && settings.patreonLink) { patreonBtn.href = settings.patreonLink; patreonBtn.classList.remove('disabled'); }
-        if (nequiBtn && settings.nequiLink) { nequiBtn.href = settings.nequiLink; nequiBtn.classList.remove('disabled'); }
-        if (breveBtn && settings.breveLink) { breveBtn.href = settings.breveLink; breveBtn.classList.remove('disabled'); }
+        // Cada botón queda conectado a `settings/donations` en Firestore.
+        // Si aún no hay URL configurada se retira el `href="#"` de marcado
+        // para que no exista un enlace muerto (el aspecto no cambia:
+        // `.method-btn` se estiliza por clase).
+        const applyLink = (el, url) => {
+            if (!el) return;
+            if (url) {
+                el.href = url;
+                el.classList.remove('disabled');
+                el.removeAttribute('aria-disabled');
+            } else {
+                el.removeAttribute('href');
+                el.setAttribute('aria-disabled', 'true');
+            }
+        };
+        applyLink(nequiLinkEl, settings.nequiLink);
+        applyLink(breveLinkEl, settings.breveLink);
+        applyLink(paypalBtn, settings.paypalLink);
+        applyLink(patreonBtn, settings.patreonLink);
+        applyLink(nequiBtn, settings.nequiLink);
+        applyLink(breveBtn, settings.breveLink);
     }
 
     async function init() {

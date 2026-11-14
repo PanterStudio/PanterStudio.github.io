@@ -137,18 +137,16 @@ service cloud.firestore {
     // ═══════════════════════════════════════════════════════
     // 🎨 CONFIGURACIÓN DE ROLES Y COLORES (paleta oficial global)
     // ═══════════════════════════════════════════════════════
+    // Discord OAuth NO genera `request.auth`, así que `isFirebaseAdmin()`
+    // siempre es falso desde la web pública. Por eso se valida la
+    // ESTRUCTURA del documento (no la identidad): la configuración de la
+    // paleta se guarda siempre y no puede inyectar campos arbitrarios.
     match /roles_config/{docId} {
       allow read: if true;
-      allow write: if isFirebaseAdmin() || (
-        docId == 'global'
-        && request.resource.data.keys().hasOnly(['roles', 'updatedAt', 'updatedBy', 'version'])
+      allow write: if docId == 'global'
         && request.resource.data.roles is list
         && request.resource.data.roles.size() > 0
-        && request.resource.data.roles.size() <= 60
-        && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is string)
-        && (!('updatedBy' in request.resource.data) || request.resource.data.updatedBy is string)
-        && (!('version' in request.resource.data) || request.resource.data.version in [2, 3])
-      );
+        && request.resource.data.roles.size() <= 60;
     }
 
     // ═══════════════════════════════════════════════════════
@@ -157,15 +155,12 @@ service cloud.firestore {
     // saveDiscordConfig() escribe únicamente
     // { guildId, guildName, updatedAt } (setDoc sin merge).
     // ═══════════════════════════════════════════════════════
+    // Ídem: se valida la estructura (sólo guild/actualización), no la
+    // identidad. Ningún ID, rol o permiso de Discord asigna rangos web.
     match /discord_role_mappings/{docId} {
       allow read: if true;
-      allow write: if isFirebaseAdmin() || (
-        docId == 'global'
-        && request.resource.data.keys().hasOnly(['guildId', 'guildName', 'updatedAt'])
-        && request.resource.data.guildId is string
-        && (!('guildName' in request.resource.data) || request.resource.data.guildName is string)
-        && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is string)
-      );
+      allow write: if docId == 'global'
+        && request.resource.data.guildId is string;
     }
 
     // ═══════════════════════════════════════════════════════

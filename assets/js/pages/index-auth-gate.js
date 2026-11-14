@@ -125,8 +125,8 @@
         };
 
         const R = window.PanterRoles;
-        // El rango manual vive en `equipo`; sin él, sólo el correo del Director
-        // recibe un rango automático.
+        // El rango manual vive en `equipo`; sin ficha asignada la cuenta
+        // es `usuario` por defecto (no hay rangos automáticos por correo).
         paintRole(R ? R.resolveRole(user) : 'usuario');
 
         if (R && window.db && window.fsDoc && window.getDoc) {

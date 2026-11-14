@@ -174,7 +174,7 @@
         }
 
         const role = R.resolveRole(user, profile);
-        // Sólo el rango manual (equipo) o el correo del Director habilitan admin.
+        // El rango manual de `equipo` es la única fuente que habilita admin.
         const isAdmin = R.canAccessAdminPanel(role);
 
         if (navBadge) {

@@ -1,7 +1,8 @@
 /**
  * personal.js — Árbol organizacional de Panter Studio
  *
- * · Cúspide: PanterGameY (Fundador / CEO) junto al Director (Fénix).
+ * · Cúspide: PanterGameY (Fundador / CEO) junto a la persona con el
+ *   rango MÁS ALTO realmente asignado en `equipo` (sin rangos forzados).
  * · Debajo, TODAS las personas con rango asignado, agrupadas por rango
  *   en orden jerárquico oficial.
  * · Fuentes conectadas: `equipo` (Firestore), `ps_staff_local` (copia

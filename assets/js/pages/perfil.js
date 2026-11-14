@@ -25,11 +25,6 @@
     'soporte', 'programador', 'modelador'
   ]);
 
-  /** @deprecated Sin rango automático por correo: siempre false. */
-  function isDirectorEmail(str) {
-    return false;
-  }
-
   /* ── DOM ── */
   const $  = id  => document.getElementById(id);
   const $$ = sel => document.querySelectorAll(sel);
@@ -479,7 +474,7 @@
       b.push(badge('<i class="fa-solid fa-paw" aria-hidden="true"></i> Entrenador', 'pu'));
     }
 
-    // Insignia de rango: se resuelve en vivo desde `equipo` o el correo del Director.
+    // Insignia de rango: se resuelve en vivo desde `equipo` (Panel Admin → Personal).
     const R = window.PanterRoles;
     const rangos = R ? R.resolveRole(user, data) : String(data.role || 'usuario').toLowerCase();
     if (SPECIAL_ACCESS_ROLES.has(rangos) || (R && R.isTeamRole(rangos))) {

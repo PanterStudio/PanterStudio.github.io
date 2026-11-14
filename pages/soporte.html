@@ -1592,7 +1592,7 @@
                 const ok = await window.SoporteJS.waitForFirebase();
                 if (!ok) throw new Error();
                 const esStaff = currentStaff;
-                // Rol fresco: equipo o correo del Director (nunca datos de Discord).
+                // Rol fresco desde `equipo` / `ps_staff_local` (nunca datos de Discord).
                 let rolFresco = currentUserRole;
                 try {
                     rolFresco = await window.SoporteJS.resolverRolUsuario(
