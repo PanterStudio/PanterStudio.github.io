@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#00b0ff">
+    <title>FORO — Panter Studio</title>
+    <meta name="description" content="Foro oficial de la comunidad de Panter Studio: crea temas, responde, comparte capturas y propón ideas sobre Nuestra Tierra Job Simulator.">
+    <link rel="icon" href="../recursos/PSGD.png" type="image/png">
+    <link rel="apple-touch-icon" href="../recursos/PSGD.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/modules.css">
+    <link rel="stylesheet" href="../assets/css/foro.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8870488962578785" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js" defer></script>
+</head>
+<body data-site-root=".." data-theme="dark" class="dark-mode">
+    <div id="tsparticles"></div>
+
+    <!-- AUTH MODAL (idéntico al de Soporte para compatibilidad con script.js) -->
+    <div id="authModal" class="auth-modal" hidden>
+        <div class="auth-modal-overlay" data-auth-close="true"></div>
+        <div class="auth-modal-card" role="dialog" aria-modal="true" aria-labelledby="authModalTitle" style="max-width:440px; border-radius:24px; background:rgba(13, 18, 31, 0.95); border:1px solid rgba(0, 210, 255, 0.2); box-shadow:0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 210, 255, 0.15); padding:2rem;">
+            <button type="button" class="auth-modal-close" id="authModalCloseBtn" aria-label="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+
+            <div style="text-align:center; margin-bottom:1.25rem;">
+                <img src="../recursos/PSGD.png" alt="PS Game Dev Logo" style="height: 75px; width: auto; filter: drop-shadow(0 0 16px rgba(0, 210, 255, 0.5)); margin-bottom: 10px;" />
+                <h3 style="font-size: 1.3rem; letter-spacing: 1px; color:#fff; font-weight:800; margin:0 0 4px;">COMUNIDAD PANTER STUDIO</h3>
+                <p style="font-size:0.85rem; color:var(--text-secondary,#94a3b8); margin:0;">Ingresa para crear temas y responder en el foro.</p>
+            </div>
+
+            <p id="authModalMessage" class="auth-modal-message" style="margin-bottom:1rem; text-align:center;"></p>
+
+            <button type="button" id="discordAuthModalBtn" class="btn" style="width:100%; display:flex; align-items:center; justify-content:center; gap:10px; background:#5865F2; color:#ffffff; border:none; box-shadow:0 4px 16px rgba(88,101,242,0.35); font-weight:700; padding:12px 20px; border-radius:10px; font-size:0.95rem; cursor:pointer;">
+                <i class="fa-brands fa-discord" aria-hidden="true"></i>
+                Ingresar con Discord
+            </button>
+
+            <div style="display:flex; align-items:center; text-align:center; color:#64748b; font-size:0.75rem; font-weight:700; letter-spacing:1.5px; margin:1.25rem 0;">
+                <span style="flex:1; border-bottom:1px solid rgba(0, 210, 255, 0.15); margin-right:0.8em;"></span>
+                O INGRESA CON CORREO
+                <span style="flex:1; border-bottom:1px solid rgba(0, 210, 255, 0.15); margin-left:0.8em;"></span>
+            </div>
+
+            <form id="authLoginForm" style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label style="display:block; font-size:0.72rem; font-weight:700; color:#64748b; letter-spacing:1px; margin-bottom:4px;">CORREO ELECTRÓNICO</label>
+                    <div style="position:relative;">
+                        <input type="email" id="authLoginEmail" name="email" required placeholder="ejemplo@psgd.me" style="width:100%; padding:10px 12px 10px 38px; background:rgba(15, 23, 42, 0.8); border:1px solid rgba(0, 210, 255, 0.2); border-radius:8px; color:#fff; font-size:0.88rem; box-sizing:border-box;" />
+                        <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#64748b;"><i class="fa-solid fa-envelope" aria-hidden="true"></i></span>
+                    </div>
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.72rem; font-weight:700; color:#64748b; letter-spacing:1px; margin-bottom:4px;">CONTRASEÑA</label>
+                    <div style="position:relative;">
+                        <input type="password" id="authLoginPassword" name="password" required placeholder="••••••••" style="width:100%; padding:10px 12px 10px 38px; background:rgba(15, 23, 42, 0.8); border:1px solid rgba(0, 210, 255, 0.2); border-radius:8px; color:#fff; font-size:0.88rem; box-sizing:border-box;" />
+                        <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#64748b;"><i class="fa-solid fa-lock" aria-hidden="true"></i></span>
+                    </div>
+                </div>
+                <button type="submit" id="authLoginSubmitBtn" style="width:100%; padding:12px; background:linear-gradient(135deg, #00f0ff, #0066ff); color:#fff; font-weight:800; border:none; border-radius:8px; font-size:0.9rem; letter-spacing:1px; cursor:pointer; margin-top:6px; box-shadow:0 4px 16px rgba(0,102,255,0.3);">
+                    INICIAR SESIÓN <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </button>
+            </form>
+
+            <div style="margin-top:1.25rem; padding-top:10px; border-top:1px solid rgba(255, 255, 255, 0.08); text-align:center;">
+                <p style="font-size:0.72rem; color:#64748b; letter-spacing:0.5px; margin:0 0 8px;">CUENTAS DE PRUEBA — el rango web se asigna en Panel Admin → Personal:</p>
+                <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:6px;">
+                    <button type="button" class="quick-account-btn" onclick="fillLoginCredentials('user@user.me', 'user123')" style="background:rgba(15, 23, 42, 0.6); border:1px solid rgba(255, 255, 255, 0.08); border-radius:8px; color:#94a3b8; font-size:0.75rem; padding:5px 10px; cursor:pointer;"><i class="fa-solid fa-user" aria-hidden="true"></i> Usuario</button>
+                    <button type="button" class="quick-account-btn" onclick="fillLoginCredentials('soporte@psgd.me', 'soporte123')" style="background:rgba(15, 23, 42, 0.6); border:1px solid rgba(255, 255, 255, 0.08); border-radius:8px; color:#94a3b8; font-size:0.75rem; padding:5px 10px; cursor:pointer;"><i class="fa-solid fa-headset" aria-hidden="true"></i> Soporte</button>
+                    <button type="button" class="quick-account-btn" onclick="fillLoginCredentials('mod@psgd.me', 'mod123')" style="background:rgba(15, 23, 42, 0.6); border:1px solid rgba(255, 255, 255, 0.08); border-radius:8px; color:#94a3b8; font-size:0.75rem; padding:5px 10px; cursor:pointer;"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Moderador</button>
+                    <button type="button" class="quick-account-btn" onclick="fillLoginCredentials('admin@psgd.me', 'admin123')" style="background:rgba(15, 23, 42, 0.6); border:1px solid rgba(255, 255, 255, 0.08); border-radius:8px; color:#94a3b8; font-size:0.75rem; padding:5px 10px; cursor:pointer;"><i class="fa-solid fa-crown" aria-hidden="true"></i> Admin</button>
+                </div>
+            </div>
+
+            <!-- Elementos ocultos para compatibilidad con script.js -->
+            <button type="button" id="authTabRegister" class="auth-tab" hidden></button>
+            <button type="button" id="authTabLogin" class="auth-tab active" hidden></button>
+            <form id="authRegisterForm" class="auth-modal-form" hidden></form>
+        </div>
+    </div>
+
+    <!-- NAV -->
+    <nav>
+        <div class="nav-left">
+            <a href="../index.html" class="nav-logo">
+                <img src="../recursos/PSGD.png" alt="Panter Studio">
+                <span>Panter Studio</span>
+            </a>
+        </div>
+        <div class="nav-middle">
+            <a href="../index.html">Inicio</a>
+            <a href="nuestra-tierra.html">Nuestra Tierra</a>
+            <div class="nav-dropdown">
+                <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">Novedades</button>
+                <div class="nav-dropdown-menu">
+                    <a href="actualizaciones.html">Actualizaciones</a>
+                    <a href="imagenes.html">Galería</a>
+                    <a href="videos.html">Videos</a>
+                </div>
+            </div>
+            <a href="donaciones.html">Apóyanos</a>
+            <a href="personal.html">Personal</a>
+            <a href="foro.html" class="active" id="navForoLink">Foro</a>
+            <a href="soporte.html">Soporte</a>
+            <a href="admin/admin.html" id="adminNavLink" hidden>Panel Admin</a>
+        </div>
+        <div class="nav-right"></div>
+        <button class="nav-hamburger" aria-label="Menú" aria-expanded="false">
+            <span></span><span></span><span></span>
+        </button>
+        <nav class="nav-mobile-menu">
+            <a href="../index.html">Inicio</a>
+            <a href="nuestra-tierra.html">Nuestra Tierra</a>
+            <hr>
+            <span style="font-size:0.75rem;color:var(--text-muted);padding:0.5rem 1rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Novedades</span>
+            <div class="nav-mobile-sub">
+                <a href="actualizaciones.html">Actualizaciones</a>
+                <a href="imagenes.html">Galería</a>
+                <a href="videos.html">Videos</a>
+            </div>
+            <hr>
+            <a href="donaciones.html">Apóyanos</a>
+            <a href="personal.html">Personal</a>
+            <a href="foro.html" class="active" id="navForoMobileLink">Foro</a>
+            <a href="perfil.html">Mi Perfil</a>
+            <a href="soporte.html">Soporte</a>
+        </nav>
+    </nav>
+
+    <main class="foro-wrap">
+
+        <!-- HERO -->
+        <header class="foro-hero">
+            <div class="foro-hero-inner">
+                <div>
+                    <div class="foro-eyebrow"><i class="fa-solid fa-comments" aria-hidden="true"></i> Comunidad Oficial</div>
+                    <h1>FORO</h1>
+                    <p>Crea temas, comparte capturas, propón ideas y conversa con la comunidad de Panter Studio y Nuestra Tierra Job Simulator.</p>
+                </div>
+                <div class="foro-hero-stats" id="foroHeroStats"></div>
+            </div>
+        </header>
+
+        <!-- BARRA STICKY -->
+        <div class="foro-sticky">
+            <nav class="foro-breadcrumb" id="foroBreadcrumb" aria-label="Ruta de navegación"></nav>
+            <div class="foro-sticky-actions" id="foroStickyActions"></div>
+        </div>
+
+        <!-- ÍNDICE -->
+        <section class="foro-view" id="foroIndexView">
+            <div class="foro-index-toolbar" style="margin-bottom:1.1rem;">
+                <div class="foro-search">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <input type="search" id="foroSearch" class="foro-input" placeholder="Buscar temas, autores o contenido..." aria-label="Buscar en el foro">
+                </div>
+                <button type="button" class="foro-btn foro-btn-primary" data-foro-action="crear"><i class="fa-solid fa-plus" aria-hidden="true"></i> Crear tema</button>
+            </div>
+
+            <div class="foro-layout">
+                <div class="foro-main">
+                    <div class="foro-sections" id="foroSections" style="margin-bottom:.2rem;"></div>
+                    <div class="foro-panel">
+                        <div class="foro-panel-head">
+                            <h2><i class="fa-regular fa-comment-dots" aria-hidden="true"></i> <span id="foroIndexTitle">Temas recientes</span></h2>
+                            <span class="count" id="foroIndexCount" style="font-size:.72rem;font-weight:800;color:var(--foro-dim);"></span>
+                        </div>
+                        <div class="foro-topic-list" id="foroTopicList"></div>
+                    </div>
+                </div>
+                <aside class="foro-side" id="foroIndexSide"></aside>
+            </div>
+        </section>
+
+        <!-- HILO -->
+        <section class="foro-view" id="foroThreadView" hidden>
+            <div class="foro-thread-head" id="foroThreadHead" style="margin-bottom:1.1rem;">
+                <div id="foroThreadTitle"></div>
+                <div class="foro-thread-meta" id="foroThreadMeta"></div>
+                <div class="foro-thread-actions" id="foroThreadActions"></div>
+            </div>
+
+            <div class="foro-layout">
+                <div class="foro-main">
+                    <div class="foro-posts" id="foroPosts"></div>
+                    <div id="foroQuickReply"></div>
+                </div>
+                <aside class="foro-side" id="foroThreadSide"></aside>
+            </div>
+        </section>
+
+        <!-- FOOTER DEL FORO -->
+        <footer class="foro-footer" id="foroFooter">
+            <div class="foro-footer-col">
+                <h4>FORO</h4>
+                <a href="#indice">Índice de secciones</a>
+                <a href="#crear">Crear un tema</a>
+                <a href="#seccion=anuncios">Anuncios y Novedades</a>
+                <a href="#seccion=roleplay">Nuestra Tierra · Roleplay</a>
+                <a href="#seccion=soporte">Soporte y Ayuda</a>
+            </div>
+            <div class="foro-footer-col">
+                <h4>COMUNIDAD</h4>
+                <a href="../pages/personal.html">Nuestro Personal</a>
+                <a href="../pages/actualizaciones.html">Actualizaciones</a>
+                <a href="../pages/imagenes.html">Galería de imágenes</a>
+                <a href="../pages/videos.html">Vídeos</a>
+                <a href="../pages/donaciones.html">Apóyanos</a>
+            </div>
+            <div class="foro-footer-col">
+                <h4>DOCUMENTOS</h4>
+                <a href="../pages/wiki/como-comenzar.html">Cómo comenzar</a>
+                <a href="../pages/wiki/faq.html">Preguntas frecuentes</a>
+                <a href="../pages/wiki/mecanicas.html">Mecánicas del juego</a>
+                <a href="../pages/soporte.html">Centro de Soporte</a>
+                <p style="margin-top:.6rem;">© 2026 Panter Studio Game Dev. Foro de la comunidad. 🐾</p>
+            </div>
+        </footer>
+    </main>
+
+    <!-- MODAL CREAR TEMA -->
+    <div class="foro-modal" id="foroModal" hidden role="dialog" aria-modal="true" aria-labelledby="foroModalTitle">
+        <div class="foro-modal-card">
+            <div class="foro-modal-head">
+                <h2 id="foroModalTitle"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Crear un nuevo tema</h2>
+                <button type="button" class="foro-modal-close" data-foro-action="close-modal" aria-label="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </div>
+            <form class="foro-form" id="foroTopicForm" onsubmit="return false;">
+                <div class="foro-row">
+                    <div class="foro-field">
+                        <label for="foroTopicSection">Sección</label>
+                        <select class="foro-select" id="foroTopicSection"></select>
+                    </div>
+                    <div class="foro-field">
+                        <label for="foroTopicPrefix">Prefijo</label>
+                        <select class="foro-select" id="foroTopicPrefix">
+                            <option value="">Sin prefijo</option>
+                            <option value="ANUNCIO">ANUNCIO</option>
+                            <option value="OFICIAL">OFICIAL</option>
+                            <option value="GUÍA">GUÍA</option>
+                            <option value="AYUDA">AYUDA</option>
+                            <option value="DEBATE">DEBATE</option>
+                            <option value="IDEA">IDEA</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="foro-field">
+                    <label for="foroTopicTitle">Título del tema</label>
+                    <input type="text" class="foro-input" id="foroTopicTitle" maxlength="120" placeholder="Escribe un título claro y descriptivo">
+                </div>
+                <div class="foro-field">
+                    <label for="foroTopicTags">Etiquetas (opcional, separadas por comas)</label>
+                    <input type="text" class="foro-input" id="foroTopicTags" maxlength="120" placeholder="ej. guia, vehiculos, roleplay">
+                </div>
+                <div class="foro-field">
+                    <label for="foroTopicBody">Contenido</label>
+                    <div id="foroTopicEditor" style="border:1px solid var(--foro-line);border-radius:12px;overflow:hidden;"></div>
+                </div>
+                <div class="foro-form-msg" id="foroTopicFormMsg" role="status"></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="foro-toast" id="foroToast" role="status" aria-live="polite"></div>
+
+    <!-- SCRIPTS (mismo orden que pages/soporte.html) -->
+    <script src="../assets/js/core/roles.js"></script>
+    <script src="../assets/js/core/discord-auth.js"></script>
+    <script src="../assets/js/core/role-badges.js"></script>
+    <script src="../assets/js/core/firebase-config.js"></script>
+    <script src="../assets/js/site-visibility.js"></script>
+    <script src="../assets/js/ui-enhancements.js"></script>
+    <script src="../assets/js/core/script.js"></script>
+    <script src="../assets/js/pages/foro.js"></script>
+</body>
+</html>

@@ -5,8 +5,8 @@
 
 @font-face {
   font-family: 'Moderniz';
-  src: url('../fonts/Moderniz.otf') format('opentype'),
-       url('../fonts/Moderniz.ttf') format('truetype');
+  /* Sólo existe el archivo .otf; se elimina el .ttf inexistente (404). */
+  src: url('../fonts/Moderniz.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;

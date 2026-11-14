@@ -777,7 +777,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const navMenuUemail = document.getElementById('navMenuUemail');
         const navUserRoleBadge = document.getElementById('navUserRoleBadge');
         const navMenuAdminLink = document.getElementById('navMenuAdminLink');
-        const adminNavLink = document.getElementById('adminNavLink');
+        // Varias páginas wiki declaran `id="adminNavLink"` DOS veces
+        // (escritorio + menú móvil). getElementById sólo alcanzaba el
+        // primero, por lo que el enlace del móvil quedaba oculto para
+        // siempre. querySelectorAll alcanza todos sin tocar los HTML.
+        const adminNavLinks = Array.from(document.querySelectorAll('#adminNavLink'));
         const adminSideLink = document.getElementById('adminPanelSideLink');
         const navBrandAvatarLink = document.getElementById('navBrandAvatarLink');
         const navBrandAvatarImg = document.getElementById('navBrandAvatarImg');
@@ -850,7 +854,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        if (adminNavLink) adminNavLink.hidden = !isAdmin;
+        adminNavLinks.forEach(link => { link.hidden = !isAdmin; });
         if (adminSideLink) adminSideLink.hidden = !isAdmin;
     }
 
@@ -2107,6 +2111,55 @@ function preventScroll(side, isOpen) {
         document.addEventListener('DOMContentLoaded', initGlobalAuthAndNav);
     } else {
         initGlobalAuthAndNav();
+    }
+})();
+
+/* ─────────────────────────────────────────────────────────────
+   Enlace global «Foro» — PUNTO ÚNICO para todas las páginas que
+   cargan script.js. Es idempotente: si la página ya define
+   #navForoLink / #navForoMobileLink (pages/foro.html) no hace nada,
+   y nunca duplica el enlace aunque se invoque varias veces.
+   ───────────────────────────────────────────────────────────── */
+(function () {
+    'use strict';
+
+    function injectGlobalForumLink() {
+        if (typeof toSitePath !== 'function') return;
+        const href = toSitePath('pages/foro.html');
+        const isCurrent = /foro\.html/i.test(String(location.pathname || ''));
+        const nav = document.querySelector('nav');
+        if (!nav) return;
+
+        const middle = nav.querySelector('.nav-middle');
+        if (middle && !document.getElementById('navForoLink')) {
+            const link = document.createElement('a');
+            link.href = href;
+            link.id = 'navForoLink';
+            if (isCurrent) link.className = 'active';
+            link.textContent = 'Foro';
+            const admin = middle.querySelector('#adminNavLink');
+            if (admin) middle.insertBefore(link, admin);
+            else middle.appendChild(link);
+        }
+
+        const mobile = nav.querySelector('.nav-mobile-menu')
+            || document.querySelector('.nav-mobile-menu');
+        if (mobile && !document.getElementById('navForoMobileLink')) {
+            const link = document.createElement('a');
+            link.href = href;
+            link.id = 'navForoMobileLink';
+            if (isCurrent) link.className = 'active';
+            link.textContent = 'Foro';
+            const admin = mobile.querySelector('#adminNavLink');
+            if (admin) mobile.insertBefore(link, admin);
+            else mobile.appendChild(link);
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', injectGlobalForumLink, { once: true });
+    } else {
+        injectGlobalForumLink();
     }
 })();
 

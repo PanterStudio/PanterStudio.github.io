@@ -21,6 +21,7 @@ const pages = [
   'betatester',
   'dashboard',
   'donaciones',
+  'foro',
   'imagenes',
   'meinteresa',
   'nuestra-tierra',

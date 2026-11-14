@@ -117,58 +117,69 @@
             .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     }
 
-    async function load() {
-        let remote = [];
-        try {
-            if (window.db && window.collection && window.getDocs) {
-                const snap = await Promise.race([
-                    window.getDocs(window.collection(window.db, 'announcements')),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
-                ]);
-                remote = snap.docs.map(d => Object.assign({ id: d.id }, d.data() || {}));
-            }
-        } catch (e) {
-            console.warn('[Anuncios] Lectura de la nube no disponible; se usa la copia local.', e);
-        }
-        render(merge(remote));
-    }
-
     let unsub = null;
+    let booted = false;
+    let remoteStarted = false;
+    let lastRemote = [];
+
     function startRealtime() {
         if (unsub || !window.db || !window.collection || typeof window.onSnapshot !== 'function') return;
         try {
             unsub = window.onSnapshot(
                 window.collection(window.db, 'announcements'),
-                snap => render(merge(snap.docs.map(d => Object.assign({ id: d.id }, d.data() || {})))),
+                snap => {
+                    lastRemote = snap.docs.map(d => Object.assign({ id: d.id }, d.data() || {}));
+                    render(merge(lastRemote));
+                },
                 err => console.warn('[Anuncios] Suscripción no disponible:', err)
             );
         } catch (e) { /* noop */ }
     }
 
+    /* UNA sola lectura a la nube. `remoteStarted` la hace idempotente:
+       antes se lanzaban hasta ~30 getDocs por visita. */
+    async function loadRemote() {
+        if (remoteStarted || !window.db || !window.collection || typeof window.getDocs !== 'function') return;
+        remoteStarted = true;
+        try {
+            const snap = await Promise.race([
+                window.getDocs(window.collection(window.db, 'announcements')),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
+            ]);
+            lastRemote = snap.docs.map(d => Object.assign({ id: d.id }, d.data() || {}));
+        } catch (e) {
+            console.warn('[Anuncios] Lectura de la nube no disponible; se usa la copia local.', e);
+        }
+        render(merge(lastRemote));
+        startRealtime();
+    }
+
     function boot() {
-        if (!container()) return;
-        render(merge([])); // pinta la copia local de inmediato
-        load().then(startRealtime);
+        if (booted || !container()) return;
+        booted = true;
+        render(merge(lastRemote)); // copia local inmediata
+        loadRemote();
         window.addEventListener('storage', (e) => {
-            if (e.key === LS_KEY) render(merge([]));
+            if (e.key === LS_KEY) render(merge(lastRemote));
         });
     }
 
-    document.addEventListener('firebaseReady', boot);
-    function init() {
-        boot();
-        let tries = 0;
-        const poll = () => {
-            if (!container() || tries >= 30) return;
-            tries++;
-            load();
-            if (tries < 30) setTimeout(poll, 400);
-        };
-        setTimeout(poll, 400);
-    }
+    document.addEventListener('firebaseReady', loadRemote);
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init, { once: true });
+        document.addEventListener('DOMContentLoaded', boot, { once: true });
     } else {
-        init();
+        boot();
     }
+
+    // Reintento ACOTADO y barato (máx. 12 comprobaciones de 300 ms) por si
+    // `firebaseReady` se disparó antes de que existiera el contenedor.
+    // No repite lecturas: loadRemote() es idempotente.
+    let tries = 0;
+    const poll = setInterval(() => {
+        tries += 1;
+        if (!container()) { if (tries >= 12) clearInterval(poll); return; }
+        if (!remoteStarted) loadRemote();
+        if (remoteStarted || tries >= 12) clearInterval(poll);
+    }, 300);
 })();

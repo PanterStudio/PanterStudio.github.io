@@ -1,16 +1,22 @@
 (function () {
-    const titleEl = document.getElementById('projectTitle');
-    const summaryEl = document.getElementById('projectSummary');
-    const typeTagEl = document.getElementById('projectTypeTag');
-    const statusEl = document.getElementById('projectStatus');
-    const progressEl = document.getElementById('projectProgress');
-    const platformEl = document.getElementById('projectPlatform');
-    const updatesCountEl = document.getElementById('projectUpdatesCount');
-    const lastUpdateEl = document.getElementById('projectLastUpdate');
-    const actionAreaEl = document.getElementById('projectActionArea');
-    const metaTagsEl = document.getElementById('projectMetaTags');
-    const heroCardEl = document.getElementById('projectHeroCard');
-    const updatesListEl = document.getElementById('projectUpdatesList');
+    // Varios ids históricos (projectTypeTag, projectStatus,
+    // projectProgress, projectPlatform, projectHeroCard) YA NO EXISTEN en
+    // proyecto.html. Se resuelven de forma tolerante y se reutilizan los
+    // elementos reales del hero para que la página nunca lance un
+    // "Cannot set properties of null".
+    const el = (id) => document.getElementById(id);
+    const setText = (node, value) => { if (node) node.textContent = value; };
+    const titleEl = el('projectTitle');
+    const summaryEl = el('projectSummary');
+    const updatesCountEl = el('projectUpdatesCount');
+    const lastUpdateEl = el('projectLastUpdate');
+    const actionAreaEl = el('projectActionArea');
+    const metaTagsEl = el('projectMetaTags');
+    const heroTitleEl = el('projectHeroTitle');
+    const heroDescEl = el('projectHeroDesc');
+    const heroImageEl = el('projectHeroImage');
+    const extraInfoEl = el('projectExtraInfo');
+    const updatesListEl = el('projectUpdatesList');
 
     function esc(value) {
         return String(value || '')
@@ -57,17 +63,16 @@
     }
 
     function renderProject(project) {
-        titleEl.textContent = project.title;
-        summaryEl.textContent = project.summary || 'Sin resumen disponible.';
-        typeTagEl.textContent = project.type === 'juego' ? 'VIDEOJUEGO' : 'APLICACION';
-        statusEl.textContent = String(project.status || 'development').toUpperCase();
-        progressEl.textContent = `${Math.max(0, Math.min(100, Number(project.progress || 0) || 0))}%`;
-        platformEl.textContent = String(project.platform || 'General');
+        setText(titleEl, project.title || 'Proyecto');
+        setText(summaryEl, project.summary || project.description || 'Sin resumen disponible.');
 
         const tags = asArrayTags(project.tags)
             .map(tag => `<span class="juego-tag">${esc(tag)}</span>`)
             .join('');
         const metaTags = [
+            `<span class="juego-tag">${esc(project.type === 'juego' ? 'VIDEOJUEGO' : 'APLICACIÓN')}</span>`,
+            `<span class="juego-tag">${esc(String(project.status || 'development').toUpperCase())}</span>`,
+            `<span class="juego-tag">${esc(Math.max(0, Math.min(100, Number(project.progress || 0) || 0)) + '%')}</span>`,
             project.platform ? `<span class="juego-tag">${esc(project.platform)}</span>` : '',
             project.featuredPublic ? '<span class="juego-tag">Destacado</span>' : '',
             project.externalUrl ? '<span class="juego-tag">Enlace externo</span>' : '',
@@ -75,19 +80,11 @@
             tags
         ].filter(Boolean).join('');
 
-        heroCardEl.innerHTML = `
-            <article class="juego-featured-card">
-                <div class="juego-featured-media">
-                    <img src="${esc(project.image || 'https://cdn.discordapp.com/attachments/1475940325280321556/1482731754845638717/SFPS.png?ex=6a1e314e&is=6a1cdfce&hm=00f4dcd2863bf9fe79611b05ede40067327283e0ffa5cf647f36dcc981de68e1&')}" alt="${esc(project.title)}" loading="lazy">
-                    <span class="juego-status-badge">${esc(String(project.status || 'activo').toUpperCase())}</span>
-                </div>
-                <div class="juego-featured-body">
-                    <h3>${esc(project.title)}</h3>
-                    <p>${esc(project.description || project.summary || 'Sin descripcion disponible.')}</p>
-                    ${tags ? `<div class="juego-tags">${tags}</div>` : ''}
-                </div>
-            </article>
-        `;
+        // Se pintan los contenedores que SÍ existen en proyecto.html.
+        setText(heroTitleEl, project.title || 'Proyecto');
+        setText(heroDescEl, project.description || project.summary || 'Sin descripción disponible.');
+        if (heroImageEl && project.image) heroImageEl.src = project.image;
+        if (extraInfoEl && project.description) extraInfoEl.textContent = project.description;
 
         const actions = [];
         if (project.preregisterUrl) {
@@ -100,14 +97,15 @@
             actions.push(`<a href="${esc(project.discordUrl)}" class="btn btn-ghost" target="_blank" rel="noopener">Comunidad</a>`);
         }
         actions.push('<a href="actualizaciones.html" class="btn btn-ghost">Ver todas las novedades</a>');
-        actionAreaEl.innerHTML = actions.join('');
+        if (actionAreaEl) actionAreaEl.innerHTML = actions.join('');
         if (metaTagsEl) metaTagsEl.innerHTML = metaTags;
     }
 
     function renderUpdates(updates) {
-        updatesCountEl.textContent = String(updates.length);
-        lastUpdateEl.textContent = updates.length ? formatDate(updates[0].date || updates[0].updatedAt || updates[0].createdAt) : '—';
+        setText(updatesCountEl, String(updates.length));
+        setText(lastUpdateEl, updates.length ? formatDate(updates[0].date || updates[0].updatedAt || updates[0].createdAt) : '—');
 
+        if (!updatesListEl) return;
         if (!updates.length) {
             updatesListEl.innerHTML = '<p>No hay actualizaciones publicadas para este proyecto.</p>';
             return;
@@ -174,26 +172,44 @@
 
     async function init() {
         const { projectId, projectType } = getParams();
+        const setFallback = (title, summary, listMsg) => {
+            setText(titleEl, title);
+            setText(summaryEl, summary);
+            if (updatesListEl) updatesListEl.innerHTML = `<p>${esc(listMsg)}</p>`;
+        };
+
         if (!projectId) {
-            titleEl.textContent = 'Proyecto no especificado';
-            summaryEl.textContent = 'Abre esta pagina desde la lista de Juegos o Aplicaciones.';
-            updatesListEl.innerHTML = '<p>No se encontro projectId en la URL.</p>';
+            setFallback('Proyecto no especificado',
+                'Abre esta página desde la lista de Juegos o Aplicaciones.',
+                'No se encontró projectId en la URL.');
             return;
         }
 
         const ready = await waitForFirebase();
         if (!ready) {
-            titleEl.textContent = 'No se pudo conectar';
-            summaryEl.textContent = 'Firebase no esta disponible por ahora.';
-            updatesListEl.innerHTML = '<p>Intenta recargar la pagina.</p>';
+            setFallback('Sin conexión', 'Firebase no está disponible por ahora.', 'Intenta recargar la página.');
             return;
         }
 
-        const project = await findProject(projectId, projectType);
+        let project = await findProject(projectId, projectType);
         if (!project) {
-            titleEl.textContent = 'Proyecto no encontrado';
-            summaryEl.textContent = 'Este proyecto no existe o fue removido.';
-            updatesListEl.innerHTML = '<p>No hay informacion disponible para este proyecto.</p>';
+            // Las colecciones games / applications / apps pueden no existir:
+            // se reconstruye una ficha mínima desde project_updates para que
+            // la página siga siendo útil en lugar de quedar vacía.
+            const updates = await loadProjectUpdates(projectId);
+            if (updates.length) {
+                project = {
+                    id: projectId,
+                    title: String(updates[0].projectTitle || updates[0].title || projectId),
+                    summary: 'Actualizaciones publicadas para este proyecto.',
+                    type: projectType === 'aplicacion' ? 'aplicacion' : 'juego'
+                };
+            }
+        }
+        if (!project) {
+            setFallback('Proyecto no encontrado',
+                'Este proyecto no existe o fue removido.',
+                'No hay información disponible para este proyecto.');
             return;
         }
 

@@ -129,6 +129,11 @@ service cloud.firestore {
       match /{rest=**}            { allow read, write: if true; }
     }
 
+    // Fichas de proyecto (páginas proyecto.html / actualizaciones.html).
+    match /games/{document}         { allow read, write: if true; }
+    match /applications/{document}  { allow read, write: if true; }
+    match /apps/{document}          { allow read, write: if true; }
+
     // ═══════════════════════════════════════════════════════
     // 🎨 CONFIGURACIÓN DE ROLES Y COLORES (paleta oficial global)
     // ═══════════════════════════════════════════════════════
@@ -161,6 +166,20 @@ service cloud.firestore {
         && (!('guildName' in request.resource.data) || request.resource.data.guildName is string)
         && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is string)
       );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // 💬 FORO DE LA COMUNIDAD (foro_temas + respuestas)
+    // Temas y mensajes en tiempo real para todos los visitantes.
+    // Discord OAuth NO genera `request.auth`; la moderación se
+    // resuelve en la aplicación con los rangos de `equipo`.
+    // La web además guarda copia local si la regla aún no está
+    // publicada, así que el foro nunca deja de funcionar.
+    // ═══════════════════════════════════════════════════════
+    match /foro_temas/{temaId} {
+      allow read, write: if true;
+      match /mensajes/{mensajeId} { allow read, write: if true; }
+      match /{rest=**}            { allow read, write: if true; }
     }
 
     // ═══════════════════════════════════════════════════════

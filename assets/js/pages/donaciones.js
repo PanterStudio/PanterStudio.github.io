@@ -211,32 +211,35 @@
         }
         await refreshAll();
 
-        // Attach real-time listeners if available to auto-update the page
+        // Suscripciones en tiempo real: se guardan para liberarlas al salir
+        // de la página y se les añade callback de error para que un eventual
+        // `permission-denied` no quede como excepción sin tratar.
+        const unsubs = [];
+        const subscribe = (ref, label, handler) => {
+            try {
+                const off = window.onSnapshot(ref, handler, (err) =>
+                    console.warn(`[Donaciones] Suscripción a ${label} no disponible:`, err && err.message));
+                if (typeof off === 'function') unsubs.push(off);
+            } catch (err) {
+                console.warn(`[Donaciones] No se pudo subscribir a ${label}:`, err);
+            }
+        };
+        const safeRefresh = () => Promise.resolve(refreshAll()).catch(e => console.warn('[Donaciones]', e));
+
         try {
             if (window.db && window.fsDoc && window.collection && window.onSnapshot) {
-                // Listen for settings changes
-                try {
-                    const settingsRef = window.fsDoc(window.db, 'settings', 'donations');
-                    window.onSnapshot(settingsRef, (snap) => {
-                        try { if (snap && snap.exists && snap.exists()) refreshAll(); } catch (e) { console.warn(e); }
-                    });
-                } catch (err) {
-                    console.warn('No se pudo subscribir a settings/donations:', err);
-                }
-
-                // Listen for new/changed donations
-                try {
-                    const donationsRef = window.collection(window.db, 'donations');
-                    window.onSnapshot(donationsRef, (snap) => {
-                        try { refreshAll(); } catch (e) { console.warn(e); }
-                    });
-                } catch (err) {
-                    console.warn('No se pudo subscribir a donations collection:', err);
-                }
+                subscribe(window.fsDoc(window.db, 'settings', 'donations'), 'settings/donations', (snap) => {
+                    try { if (snap && snap.exists && snap.exists()) safeRefresh(); } catch (e) { console.warn(e); }
+                });
+                subscribe(window.collection(window.db, 'donations'), 'donations', safeRefresh);
             }
         } catch (err) {
             console.warn('Error configuring realtime listeners:', err);
         }
+
+        window.addEventListener('pagehide', () => {
+            unsubs.forEach(off => { try { off(); } catch (e) { /* noop */ } });
+        }, { once: true });
     }
 
     async function refreshAll() {
@@ -264,9 +267,10 @@
 
     // Listen for admin events to refresh totals immediately
     try {
-        document.addEventListener('donationAdded', (e) => { try { refreshAll(); } catch(e){} });
-        document.addEventListener('donationAddedLocal', (e) => { try { refreshAll(); } catch(e){} });
-        document.addEventListener('donationsConfigSaved', (e) => { try { refreshAll(); } catch(e){} });
+        const onAdminEvent = () => Promise.resolve(refreshAll()).catch(e => console.warn('[Donaciones]', e));
+        document.addEventListener('donationAdded', onAdminEvent);
+        document.addEventListener('donationAddedLocal', onAdminEvent);
+        document.addEventListener('donationsConfigSaved', onAdminEvent);
     } catch (err) {
         console.warn('Could not bind donation events:', err);
     }
