@@ -1669,7 +1669,9 @@
             }, 1200);
           } else {
             // Fallback de creación si SoporteJS no está en window todavía
-            const codigo = `TKT-${Math.floor(Math.random() * 90000) + 10000}`;
+            const codigo = window.SoporteJS && typeof window.SoporteJS.generateTicketCode === 'function'
+              ? window.SoporteJS.generateTicketCode()
+              : '#' + Array.from({ length: 12 }, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]).join('');
             const docData = {
               codigo,
               titulo,

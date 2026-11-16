@@ -187,7 +187,7 @@ function mergeTickets(remote) {
         }
     });
     return Array.from(map.values())
-        .filter(Boolean)
+        .filter(ticketVisible)
         .map(t => normalizarTicket(t))
         .sort((a, b) => String(b.creadoEn || '').localeCompare(String(a.creadoEn || '')));
 }
@@ -262,9 +262,69 @@ function waitForFirebase(timeout = 12000) {
     });
 }
 
+/* ── Código de ticket ───────────────────────────────────────────
+   Formato: # + 12 caracteres aleatorios A-Z / 0-9 (ej. #NZ4ZNLC70PAE).
+   Se usa crypto.getRandomValues para que sea imprevisible y se comprueba
+   la unicidad contra Firestore antes de darlo por bueno. */
+const TICKET_CODE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const TICKET_CODE_LENGTH = 12;
+
 function generateTicketCode() {
-    const rand = Math.floor(Math.random() * 90000) + 10000;
-    return `TKT-${rand}`;
+    const bytes = new Uint32Array(TICKET_CODE_LENGTH);
+    if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+        window.crypto.getRandomValues(bytes);
+    } else {
+        for (let i = 0; i < bytes.length; i += 1) {
+            bytes[i] = Math.floor(Math.random() * 0xffffffff);
+        }
+    }
+    let code = '#';
+    for (let i = 0; i < TICKET_CODE_LENGTH; i += 1) {
+        code += TICKET_CODE_ALPHABET[bytes[i] % TICKET_CODE_ALPHABET.length];
+    }
+    return code;
+}
+
+function normalizarCodigoTicket(valor) {
+    const limpio = String(valor || '').toUpperCase().replace(/[^A-Z0-9]/g, '').trim();
+    return limpio ? '#' + limpio : '';
+}
+
+async function codigoTicketExiste(codigo) {
+    try {
+        await ensureFirestore();
+        const q = window.query(
+            window.collection(window.db, SOPORTE_COLLECTION),
+            window.where('codigo', '==', codigo)
+        );
+        const snap = await window.getDocs(q);
+        return !snap.empty;
+    } catch (e) {
+        return false; // sin nube: se acepta el código generado
+    }
+}
+
+async function generateUniqueTicketCode() {
+    for (let intento = 0; intento < 10; intento += 1) {
+        const code = generateTicketCode();
+        if (!(await codigoTicketExiste(code))) return code;
+    }
+    return generateTicketCode();
+}
+
+/** Códigos del formato anterior (TKT-#####): tickets de prueba viejos. */
+function esCodigoTicketAntiguo(t) {
+    return /^TKT-/i.test(String(t && t.codigo || '').trim());
+}
+
+/**
+ * No se muestran: documentos marcados `eliminado`, ni los tickets del
+ * formato anterior. Así la web queda limpia para probar en TODOS los
+ * clientes incluso si las reglas de Firestore aún no permiten borrar.
+ * Cuando se publiquen las reglas, «Limpiar todo» los elimina de verdad.
+ */
+function ticketVisible(t) {
+    return Boolean(t) && t.eliminado !== true && !esCodigoTicketAntiguo(t);
 }
 
 function formatDate(isoStr) {
@@ -476,12 +536,34 @@ function normalizarUrlImagen(raw) {
  * @param {object} comentario
  * @param {boolean} esStaffViewer si quien está mirando pertenece al equipo
  */
+/**
+ * Color del aviso de sistema: el del RANGO que actuó (toma/desasignación) o
+ * el del rango al que se ELEVÓ el ticket. El cierre conserva su rojo fijo.
+ * Se guarda ya resuelto en el mensaje para que viaje igual a Firestore y no
+ * dependa de que roles.js esté cargado en el momento de pintar.
+ */
+function colorSistemaDe(comentario, tipo) {
+    if (tipo === 'cerrado') return '';
+    const guardado = String(comentario.sistemaRolColor || '');
+    if (/^#[0-9a-f]{6}$/i.test(guardado)) return guardado;
+    // Compatibilidad con elevaciones antiguas que sólo guardaban el label.
+    const rol = String(comentario.sistemaRol || comentario.sistemaDestinoRol
+        || normalizarRol(comentario.sistemaDestino || '') || '');
+    if (!rol || rol === 'usuario') return '';
+    const color = String(obtenerRolBadge(rol).color || '');
+    return /^#[0-9a-f]{6}$/i.test(color) ? color : '';
+}
+
 function renderTextoComentario(comentario, esStaffViewer = false) {
     if (!comentario) return '';
     if (comentario.esSistema) {
         const tipo = String(comentario.tipoSistema || 'aviso');
         const icono = ICONOS_SISTEMA[tipo] || ICONOS_SISTEMA.aviso;
         const fecha = formatoFechaSistema(comentario.sistemaFecha || comentario.creadoEn);
+        const estilo = (() => {
+            const color = colorSistemaDe(comentario, tipo);
+            return color ? ` style="color:${color}"` : '';
+        })();
         let texto;
         if (esStaffViewer && comentario.textoStaff) {
             texto = comentario.textoStaff;
@@ -494,7 +576,7 @@ function renderTextoComentario(comentario, esStaffViewer = false) {
         const fechaHtml = esStaffViewer && fecha
             ? `<span class="sp-system-fecha">${escapeHtmlSoporte(fecha)}</span>`
             : '';
-        return `<div class="sp-system-line sp-system-${escapeHtmlSoporte(tipo)}">`
+        return `<div class="sp-system-line sp-system-${escapeHtmlSoporte(tipo)}"${estilo}>`
             + `${icono}<span class="sp-system-texto">${escapeHtmlSoporte(texto)}</span>${fechaHtml}`
             + `</div>`;
     }
@@ -896,9 +978,27 @@ async function agregarMensajeSistema(ticketId, mensaje, meta = {}) {
             tipoSistema: data.tipo || 'aviso',
             sistemaNombre: data.nombre || '',
             sistemaDestino: data.destino || '',
-            sistemaFecha: now
+            sistemaFecha: now,
+            sistemaRol: data.rol || '',
+            sistemaRolColor: data.color || '',
+            sistemaDestinoRol: data.destinoRol || ''
         }
     );
+}
+
+function colorRangoSistema(rol) {
+    const color = String(obtenerRolBadge(rol).color || '');
+    return /^#[0-9a-f]{6}$/i.test(color) ? color : '';
+}
+
+/** Rol del staff que actúa: se usa el resuelto en vivo o el que mande la UI. */
+async function resolverRolStaff(staffUid, staffName, staffRol) {
+    if (staffRol) return normalizarRol(staffRol);
+    try {
+        return normalizarRol(await resolverRolUsuario(staffUid || '', staffName || '', null));
+    } catch (e) {
+        return 'soporte';
+    }
 }
 
 /** Una acción sólo está sincronizada si TANTO el ticket COMO su aviso
@@ -910,9 +1010,10 @@ function resultadoSincronizado(ticketResult, messageResult) {
 }
 
 /** El staff toma el ticket: pasa a En Proceso e inyecta el aviso en el chat. */
-async function tomarTicket(ticketId, staffName, staffUid) {
+async function tomarTicket(ticketId, staffName, staffUid, staffRol) {
     const now = new Date().toISOString();
     const nombre = staffName || 'Staff';
+    const rol = await resolverRolStaff(staffUid, nombre, staffRol);
     const actualizado = await actualizarTicket(ticketId, {
         estado: 'En Proceso',
         staffAsignadoId: staffUid || null,
@@ -923,6 +1024,7 @@ async function tomarTicket(ticketId, staffName, staffUid) {
     });
     const aviso = await agregarMensajeSistema(ticketId, SYSTEM_MSG_TOMADO, {
         tipo: 'tomado', nombre, fecha: now,
+        rol, color: colorRangoSistema(rol),
         textoStaff: `${nombre} ha tomado el ticket`
     });
     return resultadoSincronizado(actualizado, aviso);
@@ -962,13 +1064,14 @@ async function reabrirTicket(ticketId) {
  * los rangos del equipo; sólo se marca el área responsable y se deja
  * constancia en la bitácora del chat.
  */
-async function elevarTicket(ticketId, destino, staffName, staffUid) {
+async function elevarTicket(ticketId, destino, staffName, staffUid, staffRol) {
     const key = String(destino || '').trim().toLowerCase();
     if (!ESCALADO_ROLES.has(key)) {
         throw new Error('Selecciona un área válida para elevar el ticket.');
     }
     const now = new Date().toISOString();
     const nombre = staffName || 'Staff';
+    const rol = await resolverRolStaff(staffUid, nombre, staffRol);
     const label = ESCALADO_LABELS[key];
     // Elevar es una ASIGNACIÓN de área, no un cambio de estado: un ticket
     // cerrado o resuelto no se reabre por derivarlo a otro rango.
@@ -981,15 +1084,19 @@ async function elevarTicket(ticketId, destino, staffName, staffUid) {
     });
     const aviso = await agregarMensajeSistema(ticketId, SYSTEM_MSG_ELEVADO, {
         tipo: 'asignado', nombre, destino: label, fecha: now,
+        rol, destinoRol: key,
+        // El color lo manda el RANGO AL QUE SE ELEVÓ, no quien elevó.
+        color: colorRangoSistema(key),
         textoStaff: `ha sido asignado por ${nombre} a ${label}`
     });
     return resultadoSincronizado(actualizado, aviso);
 }
 
 /** Quita la asignación de área y devuelve el ticket a la cola de Soporte. */
-async function desasignarTicket(ticketId, staffName, staffUid) {
+async function desasignarTicket(ticketId, staffName, staffUid, staffRol) {
     const now = new Date().toISOString();
     const nombre = staffName || 'Staff';
+    const rol = await resolverRolStaff(staffUid, nombre, staffRol);
     const actualizado = await actualizarTicket(ticketId, {
         escaladoA: null,
         escaladoLabel: null,
@@ -999,6 +1106,7 @@ async function desasignarTicket(ticketId, staffName, staffUid) {
     });
     const aviso = await agregarMensajeSistema(ticketId, SYSTEM_MSG_DESELEVADO, {
         tipo: 'desasignado', nombre, fecha: now,
+        rol, color: colorRangoSistema(rol),
         textoStaff: `ha sido desasignado por ${nombre}`
     });
     return resultadoSincronizado(actualizado, aviso);
@@ -1102,7 +1210,7 @@ async function ensureFirestore() {
 async function crearTicket(data) {
     await ensureFirestore();
 
-    const codigo = generateTicketCode();
+    const codigo = await generateUniqueTicketCode();
     const now = new Date().toISOString();
     const docData = {
         codigo,
@@ -1200,6 +1308,7 @@ async function getMisTickets(userId, userEmail = '') {
     });
 
     return Array.from(encontrados.values())
+        .filter(ticketVisible)
         .map(t => normalizarTicket(t))
         .sort((a, b) => String(b.creadoEn || '').localeCompare(String(a.creadoEn || '')));
 }
@@ -1213,30 +1322,102 @@ async function getTicketById(ticketId) {
         if (snap.exists()) remote = normalizarTicket({ id: snap.id, ...snap.data() });
     } catch (e) { /* nube no disponible */ }
     const combinado = combinarTicket(remote, local);
-    return combinado ? normalizarTicket(combinado) : null;
+    return combinado && ticketVisible(combinado) ? normalizarTicket(combinado) : null;
 }
 
 async function buscarPorCodigo(codigo) {
-    const code = String(codigo || '').toUpperCase().trim();
-    const localMatch = Object.values(localTickets())
-        .find(t => String(t.codigo || '').toUpperCase() === code);
+    const code = normalizarCodigoTicket(codigo);
+    if (!code) return null;
+    // Se acepta con o sin '#', y también códigos antiguos sin el prefijo.
+    const variantes = [code, code.slice(1)];
+    const coincide = valor => variantes.includes(String(valor || '').toUpperCase().trim())
+        || normalizarCodigoTicket(valor) === code;
+    const localMatch = Object.values(localTickets()).find(t => coincide(t.codigo));
+
     try {
         await ensureFirestore();
-        const q = window.query(
-            window.collection(window.db, SOPORTE_COLLECTION),
-            window.where('codigo', '==', code)
-        );
-        const snap = await window.getDocs(q);
-        if (!snap.empty) {
-            const d = snap.docs[0];
-            const combinado = combinarTicket(
-                { id: d.id, ...d.data() },
-                localTickets()[d.id] || null
+        for (const variante of variantes) {
+            const q = window.query(
+                window.collection(window.db, SOPORTE_COLLECTION),
+                window.where('codigo', '==', variante)
             );
-            return combinado ? normalizarTicket(combinado) : null;
+            const snap = await window.getDocs(q);
+            if (!snap.empty) {
+                const d = snap.docs[0];
+                const combinado = combinarTicket(
+                    { id: d.id, ...d.data() },
+                    localTickets()[d.id] || null
+                );
+                if (combinado && ticketVisible(combinado)) return normalizarTicket(combinado);
+            }
         }
     } catch (e) { /* nube no disponible */ }
-    return localMatch ? normalizarTicket(localMatch) : null;
+    return localMatch && ticketVisible(localMatch) ? normalizarTicket(localMatch) : null;
+}
+
+/**
+ * LIMPIEZA GLOBAL: deja el sistema de tickets listo para probar desde cero.
+ * Intenta borrar de verdad en Firestore (ticket + comentarios). Si las reglas
+ * aún no permiten `deleteDoc`, marca `eliminado: true`, que el motor ya filtra
+ * en TODAS las vistas. Siempre vacía los respaldos locales de este navegador.
+ */
+async function limpiarTickets() {
+    const resultado = {
+        total: 0, borrados: 0, ocultos: 0, comentarios: 0,
+        sinPermisos: 0, legacyOcultos: 0, errores: []
+    };
+    try {
+        await ensureFirestore();
+        const snap = await window.getDocs(window.collection(window.db, SOPORTE_COLLECTION));
+        resultado.total = snap.docs.length;
+
+        for (const d of snap.docs) {
+            const id = d.id;
+            if (esCodigoTicketAntiguo(d.data())) resultado.legacyOcultos += 1;
+            let borrado = false;
+            // 1) Intentar el borrado real del documento padre.
+            try {
+                await window.deleteDoc(window.fsDoc(window.db, SOPORTE_COLLECTION, id));
+                resultado.borrados += 1;
+                borrado = true;
+            } catch (e) { /* las reglas aún no permiten deleteDoc */ }
+
+            if (borrado) {
+                // 2) Sólo si el borrado funciona tiene sentido limpiar la
+                //    subcolección (en paralelo, para no encadenar timeouts).
+                try {
+                    const cs = await window.getDocs(
+                        window.collection(window.db, SOPORTE_COLLECTION, id, 'comentarios')
+                    );
+                    await Promise.all(cs.docs.map(c => window.deleteDoc(
+                        window.fsDoc(window.db, SOPORTE_COLLECTION, id, 'comentarios', c.id)
+                    ).catch(() => {})));
+                    resultado.comentarios += cs.docs.length;
+                } catch (e) { /* sin permisos sobre la subcolección */ }
+            } else {
+                // 3) Sin permisos de borrado: ocultar de inmediato en TODAS
+                //    las vistas. Operación rápida y reversible.
+                try {
+                    await window.setDoc(
+                        window.fsDoc(window.db, SOPORTE_COLLECTION, id),
+                        { eliminado: true, actualizadoEn: new Date().toISOString() },
+                        { merge: true }
+                    );
+                    resultado.ocultos += 1;
+                } catch (e2) {
+                    resultado.sinPermisos += 1;
+                    resultado.errores.push(id + ': ' + String(e2 && e2.message || e2));
+                }
+            }
+        }
+    } catch (e) {
+        resultado.errores.push(String(e && e.message || e));
+    }
+
+    writeJson(LOCAL_TICKETS_KEY, {});
+    writeJson(LOCAL_COMMENTS_KEY, {});
+    notifyLocalChange();
+    return resultado;
 }
 
 async function getTodosLosTickets() {
@@ -1308,7 +1489,8 @@ async function agregarComentario(ticketId, texto, autor, autorId, esStaff = fals
     // Metadatos de los avisos de sistema (texto staff/usuario, tipo, fecha...).
     // Se guardan planos para que viajen igual a Firestore y a la copia local.
     if (meta && typeof meta === 'object') {
-        ['textoUsuario', 'textoStaff', 'tipoSistema', 'sistemaNombre', 'sistemaDestino', 'sistemaFecha']
+        ['textoUsuario', 'textoStaff', 'tipoSistema', 'sistemaNombre', 'sistemaDestino',
+         'sistemaFecha', 'sistemaRol', 'sistemaRolColor', 'sistemaDestinoRol']
             .forEach(key => { if (meta[key] !== undefined) comentario[key] = meta[key]; });
     }
 
@@ -1431,9 +1613,9 @@ async function suscribirTicket(ticketId, onData, onError) {
         // La nube manda: un cierre hecho por otro cliente llega aquí y ya
         // no puede ser tapado por la copia local de este navegador.
         const combinado = combinarTicket(remote, local);
-        if (!combinado) {
-            // Firestore confirmó que no existe: no se cierra el modal,
-            // simplemente no hay datos frescos que pintar.
+        if (!combinado || !ticketVisible(combinado)) {
+            // Firestore confirmó que no existe (o fue eliminado): no se
+            // cierra el modal, simplemente no hay datos frescos que pintar.
             if (remoteResolved) onData(null);
             return;
         }
@@ -1505,7 +1687,7 @@ async function suscribirMisTickets(userId, userEmail, onData, onError) {
                 encontrados.set(t.id, combinarTicket(encontrados.get(t.id) || null, t));
             }
         });
-        onData(Array.from(encontrados.values()).filter(Boolean)
+        onData(Array.from(encontrados.values()).filter(ticketVisible)
             .map(t => normalizarTicket(t))
             .sort((a, b) => String(b.creadoEn || '').localeCompare(String(a.creadoEn || ''))));
     };
@@ -1632,6 +1814,10 @@ window.SoporteJS = {
     SYSTEM_MSG_ELEVADO,
     SYSTEM_MSG_DESELEVADO,
     generateTicketCode,
+    generateUniqueTicketCode,
+    normalizarCodigoTicket,
+    limpiarTickets,
+    ticketVisible,
     // Roles globales / insignias dinámicas
     ROLE_BADGE_DEFS,
     normalizarRol,

@@ -884,9 +884,9 @@
                         <div class="sp-card-header">
                             <h2 class="sp-card-title"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Consultar Estado de Ticket</h2>
                         </div>
-                        <p style="font-size:0.85rem; color:var(--text-muted); margin:0 0 1rem;">Ingresa el código de tu ticket (ej: TKT-12345) para ver su estado actual sin necesidad de iniciar sesión.</p>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin:0 0 1rem;">Ingresa el código de tu ticket (ej: #NZ4ZNLC70PAE) para ver su estado actual sin necesidad de iniciar sesión.</p>
                         <div class="sp-search-row">
-                            <input type="text" id="buscarCodigo" class="sp-input" placeholder="TKT-XXXXX" style="text-transform:uppercase; font-family:monospace; font-weight:700; letter-spacing:1px;">
+                            <input type="text" id="buscarCodigo" class="sp-input" placeholder="#NZ4ZNLC70PAE" maxlength="16" style="text-transform:uppercase; font-family:monospace; font-weight:700; letter-spacing:1px;">
                             <button class="sp-btn sp-btn-outline" id="buscarBtn" style="white-space:nowrap; padding:12px 18px;">Buscar</button>
                         </div>
                         <div id="buscarResult" style="margin-top:1.2rem;"></div>
@@ -923,6 +923,9 @@
                             <span id="staffOnlineCount" class="ps-support-stat" style="white-space:nowrap;" title="Personal conectado en tiempo real">
                                 <i class="fa-solid fa-circle" aria-hidden="true"></i> —
                             </span>
+                            <button type="button" class="ps-btn-mini" id="staffTicketClear" style="color:#fca5a5; border-color:rgba(248,113,113,.35);" title="Borrar todos los tickets y comentarios para empezar de cero">
+                                <i class="fa-solid fa-trash-can" aria-hidden="true"></i> Limpiar todo
+                            </button>
                         </div>
                         <div id="staffTicketsList">
                             <div class="sp-empty">
@@ -1496,7 +1499,8 @@
                         resultado = await window.SoporteJS.tomarTicket(
                             t.id,
                             currentUser?.displayName || currentUser?.username || 'Staff',
-                            currentUser?.uid
+                            currentUser?.uid,
+                            currentUserRole
                         );
                         showToast('Ticket tomado por el soporte', 'success');
                     }
@@ -1533,7 +1537,8 @@
                     resultado = await window.SoporteJS.tomarTicket(
                         currentTicketId,
                         currentUser.displayName || currentUser.username || 'Staff',
-                        currentUser.uid
+                        currentUser.uid,
+                        currentUserRole
                     );
                 } else {
                     resultado = await window.SoporteJS.actualizarTicket(currentTicketId, { estado });
@@ -1580,7 +1585,7 @@
             if (btn) btn.disabled = true;
             try {
                 const actor = staffActor();
-                const resultado = await window.SoporteJS.elevarTicket(currentTicketId, destino, actor.name, actor.uid);
+                const resultado = await window.SoporteJS.elevarTicket(currentTicketId, destino, actor.name, actor.uid, currentUserRole);
                 avisarSincronizacion(resultado);
                 showToast('Ticket elevado correctamente.', 'success');
                 const fresh = await window.SoporteJS.getTicketById(currentTicketId);
@@ -1603,7 +1608,7 @@
             if (btn) btn.disabled = true;
             try {
                 const actor = staffActor();
-                const resultado = await window.SoporteJS.desasignarTicket(currentTicketId, actor.name, actor.uid);
+                const resultado = await window.SoporteJS.desasignarTicket(currentTicketId, actor.name, actor.uid, currentUserRole);
                 avisarSincronizacion(resultado);
                 showToast('Asignación removida; el ticket vuelve a Soporte.', 'success');
                 const fresh = await window.SoporteJS.getTicketById(currentTicketId);
@@ -1621,6 +1626,38 @@
         document.getElementById('staffTicketStatus')?.addEventListener('change', renderStaffTickets);
         document.getElementById('staffTicketEscalado')?.addEventListener('change', renderStaffTickets);
         document.getElementById('staffTicketRefresh')?.addEventListener('click', loadStaffTickets);
+
+        /* Limpieza global: deja el sistema listo para probar desde cero. */
+        document.getElementById('staffTicketClear')?.addEventListener('click', async () => {
+            if (!currentStaff) {
+                showToast('Tu rango no permite limpiar los tickets.', 'error');
+                return;
+            }
+            if (!window.confirm('¿Borrar TODOS los tickets y sus comentarios? Se usarán para empezar de cero. Esta acción no se puede deshacer.')) return;
+            const btn = document.getElementById('staffTicketClear');
+            if (btn) btn.disabled = true;
+            try {
+                const r = await window.SoporteJS.limpiarTickets();
+                const partes = [
+                    `${r.borrados} borrados`,
+                    `${r.ocultos} ocultos`,
+                    `${r.comentarios} comentarios`
+                ];
+                if (r.sinPermisos) {
+                    console.warn('[Soporte] Limpieza parcial:', r.errores);
+                    showToast(`Quedan ${r.sinPermisos} tickets antiguos ocultos en la web. Publica las reglas de Firestore y vuelve a pulsar «Limpiar todo» para borrarlos definitivamente.`, 'error');
+                } else {
+                    showToast(`Limpieza: ${partes.join(' · ')}.`, 'success');
+                }
+                await loadStaffTickets();
+                await updateStats();
+            } catch (err) {
+                console.error('[Soporte] Error en la limpieza:', err);
+                showToast(err?.message || 'No se pudo limpiar.', 'error');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        });
 
         // ---- TICKET MODAL ----
         /** Refresca el bloque «Elevar ticket» con el estado real del ticket. */
