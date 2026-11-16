@@ -474,6 +474,22 @@
         border-color: rgba(245,158,11,0.15);
     }
 
+    /* Mensaje de staff visto por el USUARIO: neutro, sin nombre ni rango.
+       El único identificador visual es el COLOR del rango que atiende,
+       aplicado en línea al icono, al nombre y al borde de la burbuja. */
+    .comentario-item.staff-anonimo .comentario-avatar {
+        background: rgba(255,255,255,0.03);
+        border-color: rgba(255,255,255,0.1);
+    }
+    .comentario-item.staff-anonimo .comentario-bubble {
+        background: rgba(255,255,255,0.025);
+        border-color: rgba(255,255,255,0.08);
+    }
+    .comentario-item.staff-anonimo .comentario-meta strong {
+        letter-spacing: .04em;
+        font-size: .72rem;
+    }
+
     .comentario-meta {
         display: flex;
         align-items: center;
@@ -1092,6 +1108,7 @@
         let currentUserRole = 'usuario';
         let currentStaff = false;
         let currentTicketId = null;
+        let currentTicketArea = '';   // rango al que se elevó el ticket (color del chat)
         let comentariosUnsub = null;
         let comentariosRolesUnsub = null;
         let comentariosActuales = [];
@@ -1598,6 +1615,11 @@
             const box = document.getElementById('modalEscaladoBox');
             if (box) box.style.display = currentStaff ? 'block' : 'none';
             const area = String(ticket?.escaladoA || '').trim().toLowerCase();
+            // Si cambió el área, el color de los mensajes del staff se repinta.
+            if (area !== currentTicketArea) {
+                currentTicketArea = area;
+                if (comentariosActuales.length) renderComentariosList(comentariosActuales);
+            }
             const sel = document.getElementById('modalEscaladoDestino');
             if (sel) sel.value = area || 'soporte';
             const info = document.getElementById('modalEscaladoInfo');
@@ -1786,23 +1808,42 @@
 
         function buildComentario(c, rol) {
             const div = document.createElement('div');
-            const sistema = Boolean(c.esSistema);
-            // El staff ve el nombre de quien actuó; el usuario sólo el aviso
-            // institucional exacto. Lo decide el motor con este flag.
-            const cuerpo = window.SoporteJS.renderTextoComentario(c, Boolean(currentStaff));
-            div.className = `comentario-item${sistema ? ' sistema' : (c.esStaff ? ' staff' : '')}`;
-            if (sistema) {
+            const verComoStaff = Boolean(currentStaff);
+            const cuerpo = window.SoporteJS.renderTextoComentario(c, verComoStaff);
+
+            // Avisos de sistema: línea centrada, texto institucional para el
+            // usuario y detalle con nombre para el staff (sin cambios).
+            if (c.esSistema) {
+                div.className = 'comentario-item sistema';
                 div.innerHTML = `<div class="comentario-bubble">${cuerpo}</div>`;
                 return div;
             }
-            const inicial = String(c.autor || 'U')[0].toUpperCase();
-            const badge = window.SoporteJS.rolBadgeHtml(rol || (c.esStaff ? 'soporte' : 'usuario'));
+
+            // Mensajes del staff: el usuario ve «SOPORTE PANTER STUDIO» con
+            // el icono de escudo y SIN rango, pero coloreado con la paleta
+            // oficial del rango que atiende. El staff ve nombre + insignia.
+            const id = window.SoporteJS.identidadComentario(
+                c, verComoStaff, rol || 'usuario', currentTicketArea
+            );
+            // El color sale de la paleta oficial (hex sanitizado).
+            const color = /^#[0-9a-f]{3,8}$/i.test(id.color) ? id.color : '#94a3b8';
+            div.className = 'comentario-item'
+                + (id.anonimo ? ' staff-anonimo' : (id.esStaffMsg ? ' staff' : ''));
+
+            const avatarStyle = id.anonimo
+                ? ` style="color:${color};border-color:${color}66;background:${color}18;"`
+                : '';
+            const burbujaStyle = id.anonimo
+                ? ` style="border-left:3px solid ${color};"`
+                : '';
+            const nombreStyle = id.anonimo ? ` style="color:${color};"` : '';
+
             div.innerHTML = `
-                <div class="comentario-avatar">${inicial}</div>
-                <div class="comentario-bubble">
+                <div class="comentario-avatar"${avatarStyle}>${id.avatarHtml}</div>
+                <div class="comentario-bubble"${burbujaStyle}>
                     <div class="comentario-meta">
-                        <strong>${escHtml(c.autor)}</strong>
-                        ${badge}
+                        <strong${nombreStyle}>${escHtml(id.nombre)}</strong>
+                        ${id.badgeHtml}
                         <span>${window.SoporteJS.formatDate(c.creadoEn)}</span>
                     </div>
                     <div class="comentario-texto">${cuerpo}</div>

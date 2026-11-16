@@ -509,6 +509,71 @@ function rolBadgeHtml(rol) {
     return `<span class="ps-ticket-role-badge" data-role="${def.id}" title="Rol: ${escapeHtmlSoporte(def.label)}" style="display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:100px;font-size:0.62rem;font-weight:800;letter-spacing:.35px;text-transform:uppercase;line-height:1.5;color:${texto};background:${def.color};border:1px solid ${def.color};"><i class="${def.icon}" aria-hidden="true"></i><span>${escapeHtmlSoporte(def.label)}</span></span>`;
 }
 
+/* ── Identidad de los mensajes del chat ────────────────────────
+   El USUARIO nunca ve el nombre ni el rango del staff: ve siempre
+   «SOPORTE PANTER STUDIO» con el icono de escudo. Lo único que cambia
+   es el COLOR, que sale de la paleta oficial del rango que atiende
+   (soporte verde, moderador naranja, administrador dorado,
+   programador ámbar...). El STAFF sí ve quién responde y su insignia.
+   El nombre real sigue guardado en Firestore; el velado es sólo de
+   presentación, igual que en la bitácora de sistema. */
+const STAFF_PUBLIC_NAME = 'SOPORTE PANTER STUDIO';
+const STAFF_PUBLIC_ICON = '<i class="fa-solid fa-user-shield" aria-hidden="true"></i>';
+
+/**
+ * @param {object} comentario
+ * @param {boolean} esStaffViewer  quien está mirando el chat
+ * @param {string} rol             rol resuelto del autor (en vivo)
+ * @param {string} areaElevada     `escaladoA` del ticket (fallback de color)
+ * @returns {{esStaffMsg:boolean, anonimo:boolean, nombre:string,
+ *            badgeHtml:string, avatarHtml:string, color:string, rolId:string}}
+ */
+function identidadComentario(comentario, esStaffViewer, rol, areaElevada) {
+    const c = comentario || {};
+    const esStaffMsg = Boolean(c.esStaff)
+        || Boolean(c.autorRol && normalizarRol(c.autorRol) !== 'usuario');
+
+    // El color identifica el ÁREA RESPONSABLE, no a la persona: si el ticket
+    // se elevó a Soporte/Moderador/Administrador/Programador, ese es el color
+    // que verá el usuario («si se eleva a soporte → color de soporte»).
+    // Sólo cuando no hay elevación se usa el rango real del autor.
+    let rolColor = areaElevada ? normalizarRol(areaElevada) : normalizarRol(rol || 'usuario');
+    if (rolColor === 'usuario' && rol) rolColor = normalizarRol(rol);
+    if (rolColor === 'usuario') rolColor = 'soporte';
+    const def = obtenerRolBadge(rolColor);
+    const color = def.color || '#94a3b8';
+
+    if (!esStaffMsg || esStaffViewer) {
+        // Para el staff manda el rol resuelto EN VIVO; si un mensaje antiguo
+        // no se puede resolver, se usa el `autorRol` guardado y, como último
+        // recurso, «Soporte» (nunca «Usuario» en un mensaje de staff).
+        let rolBadge = normalizarRol(rol || 'usuario');
+        if (esStaffMsg && rolBadge === 'usuario') {
+            const guardado = normalizarRol(c.autorRol || 'usuario');
+            rolBadge = guardado !== 'usuario' ? guardado : 'soporte';
+        }
+        return {
+            esStaffMsg,
+            anonimo: false,
+            nombre: String(c.autor || 'Usuario'),
+            badgeHtml: rolBadgeHtml(rolBadge),
+            avatarHtml: escapeHtmlSoporte(String(c.autor || 'U')[0].toUpperCase()),
+            color,
+            rolId: rolColor
+        };
+    }
+
+    return {
+        esStaffMsg,
+        anonimo: true,
+        nombre: STAFF_PUBLIC_NAME,
+        badgeHtml: '',                 // sin rango escrito para el usuario
+        avatarHtml: STAFF_PUBLIC_ICON, // mismo icono que la bitácora
+        color,
+        rolId: rolColor
+    };
+}
+
 function claveAutorComentario(comentario) {
     if (!comentario) return 'anonimo';
     return String(comentario.autorId || comentario.autor || 'anonimo');
@@ -1438,6 +1503,9 @@ window.SoporteJS = {
     obtenerRolBadge,
     refreshRoleBadgeDefs,
     rolBadgeHtml,
+    identidadComentario,
+    STAFF_PUBLIC_NAME,
+    STAFF_PUBLIC_ICON,
     resolverRolUsuario,
     resolverRolesComentarios,
     claveAutorComentario,
