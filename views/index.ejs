@@ -663,7 +663,7 @@
             // Fecha
             if (u.createdAt) {
                 const date = new Date(u.createdAt);
-                joinedEl.textContent = isNaN(date) ? '—' : date.toLocaleDateString('es-ES', { year:'numeric', month:'long', day:'numeric' });
+                joinedEl.textContent = isNaN(date) ? '—' : date.toLocaleDateString('es-ES', { timeZone:'UTC', year:'numeric', month:'long', day:'numeric' });
             } else {
                 joinedEl.textContent = '—';
             }
@@ -694,7 +694,7 @@
                     const title = d.title || 'Sin título';
                     const summary = d.summary || d.body?.substring(0,120) || '';
                     const img = d.imageUrl || 'https://i.imgur.com/1IRRyFY.jpeg';
-                    const date = d.createdAt ? new Date(d.createdAt.toDate ? d.createdAt.toDate() : d.createdAt).toLocaleDateString('es-CO', {day:'numeric',month:'short'}) : '';
+                    const date = d.createdAt ? new Date(d.createdAt.toDate ? d.createdAt.toDate() : d.createdAt).toLocaleDateString('es-CO', {timeZone:'UTC', day:'numeric',month:'short'}) : '';
                     const tag = d.tag || 'UPDATE';
                     grid.innerHTML += `
                         <a href="pages/actualizaciones" class="ix-news-card">
@@ -920,7 +920,7 @@
                     <div class="ann-banner-grid">
                         ${sorted.map(d => {
                             const icon = icons[d.type] || '📢';
-                            const date = d.createdAt ? new Date(d.createdAt).toLocaleDateString('es-CO', {day:'numeric', month:'short'}) : '';
+                            const date = d.createdAt ? new Date(d.createdAt).toLocaleDateString('es-CO', {timeZone:'UTC', day:'numeric', month:'short'}) : '';
                             const likes = Array.isArray(d.likes) ? d.likes : [];
                             const hasLiked = uid && likes.includes(uid);
                             const likesCount = likes.length;

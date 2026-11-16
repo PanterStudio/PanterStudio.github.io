@@ -13,6 +13,21 @@ const LS = {
     genId: () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
 };
 
+/**
+ * Hora global del sitio: UTC+0. Todas las fechas del panel se muestran
+ * en UTC para que coincidan con el resto de la web y con Firestore.
+ */
+function fmtUTC(value, withTime = false) {
+    if (!value) return '';
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return '';
+    const opts = withTime
+        ? { timeZone: 'UTC', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }
+        : { timeZone: 'UTC', day: '2-digit', month: 'short', year: 'numeric' };
+    const text = withTime ? d.toLocaleString('es', opts) : d.toLocaleDateString('es', opts);
+    return text + (withTime ? ' UTC' : '');
+}
+
 function openModal(id) { document.getElementById(id)?.classList.add('open'); }
 function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
 
@@ -203,7 +218,7 @@ function renderIdeas() {
 
     container.innerHTML = ideas.map(idea => {
         const icon = CAT_ICONS[idea.category] || '<i class="fa-solid fa-thumbtack" aria-hidden="true"></i>';
-        const date = new Date(idea.createdAt).toLocaleDateString('es');
+        const date = fmtUTC(idea.createdAt);
         return `
         <div class="idea-item${idea.discarded ? ' discarded' : ''}">
             <div style="font-size:1.5rem; flex-shrink:0;">${icon}</div>
@@ -263,7 +278,7 @@ function deleteChangelog(id) {
 function copyChangelog(id) {
     const cl = getChangelogs().find(c => c.id === id);
     if (!cl) return;
-    const text = ` ${cl.version} — ${new Date(cl.createdAt).toLocaleDateString('es')}\n[${cl.type.toUpperCase()}] ${cl.desc}`;
+    const text = ` ${cl.version} — ${fmtUTC(cl.createdAt)}\n[${cl.type.toUpperCase()}] ${cl.desc}`;
     navigator.clipboard.writeText(text).then(() => alert('¡Copiado al portapapeles!'));
 }
 
@@ -281,7 +296,7 @@ function renderChangelog() {
         const icon = CL_TYPE_ICONS[entry.type] || '<i class="fa-solid fa-thumbtack" aria-hidden="true"></i>';
         const typeClass = `type-${entry.type}`;
         const dotClass = entry.type;
-        const date = new Date(entry.createdAt).toLocaleDateString('es');
+        const date = fmtUTC(entry.createdAt);
         return `
         <div class="changelog-entry">
             <div class="changelog-dot ${dotClass}">${icon}</div>
@@ -366,7 +381,7 @@ function renderBugs() {
     const PLAT_LABELS = { android:'<i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> Android', web:'<i class="fa-solid fa-globe" aria-hidden="true"></i> Web', ambas:'<i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i><i class="fa-solid fa-globe" aria-hidden="true"></i> Ambas' };
 
     container.innerHTML = bugs.map(bug => {
-        const date = new Date(bug.createdAt).toLocaleDateString('es');
+        const date = fmtUTC(bug.createdAt);
         return `
         <div class="bug-item">
             <div class="bug-status-dot ${bug.status}"></div>
@@ -651,7 +666,7 @@ function renderAnnouncementItems(items, source) {
         .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     container.innerHTML = items.map(d => {
         const icon = TYPE_ICONS_ANN[d.type] || '<i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>';
-        const date = d.createdAt ? new Date(d.createdAt).toLocaleString('es') : '';
+        const date = d.createdAt ? fmtUTC(d.createdAt, true) : '';
         const safeId = esc(d.id).replace(/&#039;/g, '%27');
         return `
         <div class="announcement-item">

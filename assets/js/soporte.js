@@ -210,15 +210,20 @@ function formatDate(isoStr) {
         d = new Date(isoStr);
     }
     if (isNaN(d.getTime())) return '—';
-    return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    // Hora global del sitio: UTC+0 (igual para usuarios y staff).
+    return d.toLocaleString('es-CO', {
+        timeZone: 'UTC', day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: false
+    }) + ' UTC';
 }
 
-/** Fecha compacta para las líneas de sistema: 13/1/2025, 17:20:16 */
+/** Bitácora: 13/1/2025, 17:20:16 UTC (siempre UTC+0). */
 function formatoFechaSistema(value) {
     const d = value instanceof Date ? value : new Date(value || Date.now());
     if (isNaN(d.getTime())) return '';
     const pad = (n) => String(n).padStart(2, '0');
-    return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    return `${d.getUTCDate()}/${d.getUTCMonth() + 1}/${d.getUTCFullYear()}, `
+        + `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`;
 }
 
 /**

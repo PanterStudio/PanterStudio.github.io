@@ -1077,7 +1077,13 @@ async function loadGlobalRedeemLogs() {
         tbody.innerHTML = '';
         snap.forEach(docSnap => {
             const data = docSnap.data();
-            const date = data.createdAt ? new Date(data.createdAt).toLocaleString('es-CO') : '—';
+            // Hora global del sitio: UTC+0.
+            const date = data.createdAt
+                ? new Date(data.createdAt).toLocaleString('es-CO', {
+                    timeZone: 'UTC', day: '2-digit', month: 'short', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit', hour12: false
+                }) + ' UTC'
+                : '—';
             const player = data.username || data.email || 'Anónimo';
             const coins = data.coins ? data.coins.toLocaleString() : '0';
             const emeralds = data.esmeraldas || data.emeralds || 0;

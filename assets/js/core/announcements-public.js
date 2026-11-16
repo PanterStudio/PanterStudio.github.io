@@ -84,8 +84,11 @@
         el.style.display = '';
         const cards = items.slice(0, 6).map(a => {
             const kind = normalizeType(a.type);
+            // Hora global del sitio: UTC+0.
             const date = a.createdAt
-                ? new Date(a.createdAt).toLocaleString('es', { dateStyle: 'medium', timeStyle: 'short' })
+                ? new Date(a.createdAt).toLocaleString('es', {
+                    timeZone: 'UTC', dateStyle: 'medium', timeStyle: 'short'
+                }) + ' UTC'
                 : '';
             return `
                 <article class="ann-banner-item type-${kind}">

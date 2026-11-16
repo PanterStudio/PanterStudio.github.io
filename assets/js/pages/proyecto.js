@@ -59,7 +59,10 @@
         if (!value) return '—';
         const d = new Date(value);
         if (Number.isNaN(d.getTime())) return String(value);
-        return d.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: '2-digit' });
+        // Hora global del sitio: UTC+0.
+        return d.toLocaleDateString('es-ES', {
+            timeZone: 'UTC', year: 'numeric', month: 'short', day: '2-digit'
+        });
     }
 
     function renderProject(project) {

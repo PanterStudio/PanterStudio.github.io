@@ -132,15 +132,29 @@
   function esc(v) {
     return String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
+  /* ── Hora global del sitio: UTC+0 ───────────────────────────
+     Todo lo que muestra fecha/hora, y todos los cálculos de «día»
+     (bonus diario, racha, minijuegos), usan medianoche UTC para que
+     sea idéntico para todos los usuarios sin importar su zona horaria. */
+  function utcDayKey(v) {
+    const d = new Date(v);
+    if (isNaN(d.getTime())) return '';
+    const p = n => String(n).padStart(2, '0');
+    return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}`;
+  }
+  function utcMidnight(v) {
+    const d = new Date(v);
+    return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  }
   function formatDate(v) {
     if (!v) return '-';
     const d = new Date(v);
-    return isNaN(d) ? '-' : d.toLocaleDateString('es-ES', { year:'numeric', month:'short' });
+    return isNaN(d) ? '-' : d.toLocaleDateString('es-ES', { timeZone:'UTC', year:'numeric', month:'short' });
   }
   function formatDateLong(v) {
     if (!v) return '-';
     const d = new Date(v);
-    return isNaN(d) ? '-' : d.toLocaleDateString('es-ES', { year:'numeric', month:'short', day:'2-digit' });
+    return isNaN(d) ? '-' : d.toLocaleDateString('es-ES', { timeZone:'UTC', year:'numeric', month:'short', day:'2-digit' });
   }
   function coinsToEmeralds(c) { return Math.floor((Number(c || 0) / COINS_PER_EXCHANGE) * EMERALDS_PER_EXCHANGE); }
   function formatEmeralds(v)  { return `${Number(v || 0)} Esmeraldas`; }
@@ -174,9 +188,9 @@
     return c.includes('permission-denied') || m.includes('permission-denied');
   }
   function countGamesPlayedToday(uid) {
-    const today = new Date().toDateString(); let n = 0;
+    const today = utcDayKey(Date.now()); let n = 0;
     ['game1','game2','game3'].forEach(id => {
-      try { const k = `panterMG_${id}_${uid}`, s = localStorage.getItem(k); if (s && new Date(s).toDateString() === today) n++; } catch {}
+      try { const k = `panterMG_${id}_${uid}`, s = localStorage.getItem(k); if (s && utcDayKey(s) === today) n++; } catch {}
     });
     return n;
   }
@@ -581,10 +595,8 @@
 
   function checkDailyCooldown(lastDaily) {
     if (!lastDaily) { if (claimDailyBtn) claimDailyBtn.disabled = false; return; }
-    const last = new Date(lastDaily), now = new Date();
-    const ld   = new Date(last.getFullYear(), last.getMonth(), last.getDate());
-    const td   = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    if (claimDailyBtn) claimDailyBtn.disabled = td.getTime() <= ld.getTime();
+    const ld = utcMidnight(lastDaily), td = utcMidnight(Date.now());
+    if (claimDailyBtn) claimDailyBtn.disabled = td <= ld;
   }
 
   function renderProfile() {
@@ -693,7 +705,10 @@
       set(gameEmeralds, currentConductorData.esmeraldas !== undefined ? String(currentConductorData.esmeraldas) : '—');
       if (currentConductorData.last_sync_unix) {
         const syncDate = new Date(currentConductorData.last_sync_unix * 1000);
-        set(gameLastSync, syncDate.toLocaleString());
+        set(gameLastSync, syncDate.toLocaleString('es-ES', {
+          timeZone: 'UTC', day: '2-digit', month: 'short', year: 'numeric',
+          hour: '2-digit', minute: '2-digit', hour12: false
+        }) + ' UTC');
       } else {
         set(gameLastSync, '—');
       }
@@ -1075,9 +1090,9 @@
     const last  = currentUserData.lastDaily ? new Date(currentUserData.lastDaily) : null;
     let streak  = 1;
     if (last) {
-      const yest = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-      const ld   = new Date(last.getFullYear(), last.getMonth(), last.getDate());
-      if (ld.getTime() === yest.getTime()) streak = Number(currentUserData.streak || 0) + 1;
+      const yest = utcMidnight(now) - 86400000;
+      const ld   = utcMidnight(last);
+      if (ld === yest) streak = Number(currentUserData.streak || 0) + 1;
     }
     const bonus    = base + (streak >= 7 ? base : 0);
     const newCoins = Number(currentUserData.coins || 0) + bonus;

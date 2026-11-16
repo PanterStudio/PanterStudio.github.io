@@ -1234,7 +1234,10 @@
                                 if (metaAndroid) metaAndroid.textContent = data.betaTesterAndroidVersion || 'Actual';
                                 if (metaDate) {
                                     const ts = data.betaTesterTimestamp || data.updatedAt;
-                                    metaDate.textContent = ts ? new Date(ts).toLocaleDateString() : 'Activa';
+                                    // Hora global del sitio: UTC+0.
+                                    metaDate.textContent = ts
+                                        ? new Date(ts).toLocaleDateString('es', { timeZone: 'UTC', day: '2-digit', month: 'short', year: 'numeric' })
+                                        : 'Activa';
                                 }
                                 if (activeSummary) {
                                     activeSummary.innerHTML = `Pase firmado por <strong>@${data.betaTesterDiscord || user.username}</strong>. Tu acceso a las pruebas cerradas está confirmado.`;
@@ -1347,7 +1350,8 @@
                     if (metaDevice) metaDevice.textContent = device || 'Android';
                     if (metaRam) metaRam.textContent = ram ? (ram + ' GB') : 'Optimizada';
                     if (metaAndroid) metaAndroid.textContent = androidVersion || 'Actual';
-                    if (metaDate) metaDate.textContent = new Date().toLocaleDateString();
+                    // Hora global del sitio: UTC+0.
+                    if (metaDate) metaDate.textContent = new Date().toLocaleDateString('es', { timeZone: 'UTC', day: '2-digit', month: 'short', year: 'numeric' });
                     if (activeSummary) {
                         activeSummary.innerHTML = `Pase firmado por <strong>@${discord || currentUser.username}</strong>. Tu acceso a las pruebas cerradas está confirmado.`;
                     }

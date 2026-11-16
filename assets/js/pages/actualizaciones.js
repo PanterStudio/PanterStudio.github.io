@@ -19,7 +19,9 @@
         if (!value) return '-';
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) return esc(value);
+        // Hora global del sitio: UTC+0.
         return date.toLocaleDateString('es-ES', {
+            timeZone: 'UTC',
             year: 'numeric',
             month: 'long',
             day: 'numeric'
@@ -31,12 +33,14 @@
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) return esc(value);
         return date.toLocaleString('es-ES', {
+            timeZone: 'UTC',
             year: 'numeric',
             month: 'short',
             day: '2-digit',
             hour: '2-digit',
-            minute: '2-digit'
-        });
+            minute: '2-digit',
+            hour12: false
+        }) + ' UTC';
     }
 
     function waitForFirebase(timeout = 7000) {

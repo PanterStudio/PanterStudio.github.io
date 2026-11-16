@@ -248,8 +248,12 @@
         if (!value) return '—';
         const d = new Date(value);
         if (isNaN(d.getTime())) return esc(value);
-        const opts = { day: '2-digit', month: 'short', year: 'numeric' };
-        if (withTime) { opts.hour = '2-digit'; opts.minute = '2-digit'; }
+        // Hora global del sitio: UTC+0.
+        const opts = { timeZone: 'UTC', day: '2-digit', month: 'short', year: 'numeric' };
+        if (withTime) {
+            opts.hour = '2-digit'; opts.minute = '2-digit'; opts.hour12 = false;
+            return esc(d.toLocaleString('es-ES', opts) + ' UTC');
+        }
         return esc(d.toLocaleDateString('es-ES', opts));
     }
     function timeAgo(value) {
@@ -706,7 +710,7 @@
             autorRol: userRole,
             autorAvatar: avatarUrl,
             autorMensajes: 1,
-            autorDesde: String(new Date().getFullYear())
+            autorDesde: String(new Date().getUTCFullYear())
         };
     }
     function roleDef(role) {
