@@ -4,14 +4,19 @@ service cloud.firestore {
 
     // ═══════════════════════════════════════════════════════
     // 🔐 HELPERS — Política de rangos (roles.js)
+    //   • 9 rangos oficiales: Fundador/CEO, Administrador (rojo #ff0000),
+    //     Programador, Modelador, Moderador, Soporte, Creador de Contenido,
+    //     VIP y Usuario. El rango «Director» se ELIMINÓ.
     //   • SIN rango automático por correo. Toda cuenta es Usuario.
-    //   • Fundador, Director, Administrador, Moderador, Soporte, etc.
-    //     se asignan MANUALMENTE en Panel Admin → Personal (`equipo`).
-    //   • Ningún ID, rol o permiso de Discord otorga rangos web.
+    //   • Los rangos se asignan MANUALMENTE en Panel Admin → Personal
+    //     (`equipo`); ningún ID, rol o permiso de Discord otorga rangos web.
+    //   • Panel de Soporte = lista cerrada de 5: soporte, programador,
+    //     moderador, administrador, founder_ceo (isTicketStaff en roles.js).
     //
     // Discord OAuth NO genera `request.auth`. Por eso la autorización
     // de rangos se resuelve en la aplicación (UI + `equipo`) y las
     // colecciones operativas no exigen autenticación de Firebase.
+    // Todas las marcas de tiempo del sitio son UTC+0 (ISO).
     // ═══════════════════════════════════════════════════════
 
     // Rango manual vigente, leído de `equipo/{uid}` (no de conductores).
@@ -25,7 +30,7 @@ service cloud.firestore {
 
     function isFirebaseAdmin() {
       return teamRole() in [
-        'founder_ceo', 'director', 'administrador', 'programador', 'modelador'
+        'founder_ceo', 'administrador', 'programador', 'modelador'
       ];
     }
 
@@ -34,8 +39,8 @@ service cloud.firestore {
     // Lectura pública + sincronización en vivo para todos.
     // Escritura sin fricción para administradores / autenticados;
     // desde la web sin request.auth se valida la estructura del doc.
-    // La UI sólo muestra "Agregar/Eliminar" a Fundador, Director,
-    // Administrador y Moderador.
+    // La UI sólo muestra "Agregar/Eliminar" a Fundador, Administrador
+    // y Moderador.
     // ═══════════════════════════════════════════════════════
     match /gallery_images/{imageId} {
       allow read: if true;
@@ -55,11 +60,15 @@ service cloud.firestore {
     // visibles para usuarios finales y administradores.
     //
     // En el documento del ticket se guardan también los campos de
-    // ELEVACIÓN (escaladoA, escaladoPor, escaladoEn...) y de TOMA/CIERRE
+    // ELEVACIÓN (escaladoA, escaladoPor, escaladoEn...; destinos válidos:
+    // soporte / moderador / administrador / programador) y de TOMA/CIERRE
     // (tomadoPor, cerradoPor...). En la subcolección `comentarios` se
     // guarda la BITÁCORA de sistema (textoUsuario / textoStaff, tipo,
-    // fecha UTC). `match /{rest=**}` ya cubre todo eso sin cambios.
-    // Todas las marcas de tiempo del sitio son UTC+0 (ISO).
+    // fecha UTC) y los mensajes del staff (autor, autorRol, esStaff...).
+    // El cliente vela el nombre/rango del staff al usuario y colorea con
+    // la paleta oficial del área que atiende; estos datos NO se filtran
+    // en las reglas, sino en la presentación.
+    // `match /{rest=**}` cubre todo eso sin cambios.
     // ═══════════════════════════════════════════════════════
     match /soporte_tickets/{ticketId} {
       allow read, write: if true;
@@ -79,13 +88,16 @@ service cloud.firestore {
     // ═══════════════════════════════════════════════════════
     match /equipo/{memberId} {
       allow read: if true;
-      // Sólo se permiten los 10 ids oficiales de roles.js. Esto impide
-      // inventar rangos nuevos desde el cliente. (La autorización real por
-      // identidad requiere request.auth -> Fase 2 con backend.)
+      // Sólo los 9 ids oficiales de roles.js. Esto impide inventar rangos
+      // nuevos desde el cliente. (La autorización real por identidad
+      // requiere request.auth -> Fase 2 con backend.)
+      // `director` se tolera ÚNICAMENTE como valor LEGACY: fichas antiguas
+      // guardadas con ese rol deben poder seguir editándose. Ya no es un
+      // rango: PanterRoles.normalize() lo convierte en `administrador`.
       allow create, update: if request.resource.data.get('role', 'usuario') in [
-        'founder_ceo', 'director', 'administrador', 'programador', 'modelador',
+        'founder_ceo', 'administrador', 'programador', 'modelador',
         'moderador', 'soporte', 'creador_contenido', 'vip', 'usuario'
-      ];
+      ] || request.resource.data.get('role', 'usuario') == 'director';
       allow delete: if true;
       match /{rest=**} { allow read, write: if true; }
     }
