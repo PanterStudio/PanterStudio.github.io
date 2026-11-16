@@ -1146,6 +1146,13 @@
             t._timer = setTimeout(() => t.className = '', 3000);
         }
 
+        /** Avisa si el cambio NO llegó a Firestore (no está sincronizado). */
+        function avisarSincronizacion(resultado) {
+            if (resultado && resultado.cloudOk === false) {
+                showToast('El cambio quedó sólo en este navegador: Firestore rechazó la escritura. Publica las reglas actualizadas.', 'error');
+            }
+        }
+
         // ---- BUILD CATEGORÍAS UI ----
         function buildCategoriasUI() {
             const grid = document.getElementById('categoriasGrid');
@@ -1474,24 +1481,26 @@
                 actionBtn.dataset.busy = 'true';
                 actionBtn.disabled = true;
                 try {
+                    let resultado = null;
                     if (action === 'close') {
-                        await window.SoporteJS.cerrarTicket(
+                        resultado = await window.SoporteJS.cerrarTicket(
                             t.id,
                             currentUser?.displayName || currentUser?.username || 'Staff',
                             currentUser?.uid
                         );
                         showToast('Ticket cerrado correctamente', 'success');
                     } else if (action === 'reopen') {
-                        await window.SoporteJS.reabrirTicket(t.id);
+                        resultado = await window.SoporteJS.reabrirTicket(t.id);
                         showToast('Ticket reabierto', 'success');
                     } else if (action === 'progress') {
-                        await window.SoporteJS.tomarTicket(
+                        resultado = await window.SoporteJS.tomarTicket(
                             t.id,
                             currentUser?.displayName || currentUser?.username || 'Staff',
                             currentUser?.uid
                         );
                         showToast('Ticket tomado por el soporte', 'success');
                     }
+                    avisarSincronizacion(resultado);
                     await updateStats();
                 } catch (err) {
                     console.error('[Soporte] Error al cambiar estado:', err);
@@ -1510,24 +1519,26 @@
                 return;
             }
             try {
+                let resultado = null;
                 if (estado === 'Cerrado') {
-                    await window.SoporteJS.cerrarTicket(
+                    resultado = await window.SoporteJS.cerrarTicket(
                         currentTicketId,
                         currentUser.displayName || currentUser.username || 'Staff',
                         currentUser.uid
                     );
                 } else if (estado === 'Abierto') {
-                    await window.SoporteJS.reabrirTicket(currentTicketId);
+                    resultado = await window.SoporteJS.reabrirTicket(currentTicketId);
                 } else if (estado === 'En Proceso') {
                     // Tomar el ticket inyecta el mensaje de sistema en el chat.
-                    await window.SoporteJS.tomarTicket(
+                    resultado = await window.SoporteJS.tomarTicket(
                         currentTicketId,
                         currentUser.displayName || currentUser.username || 'Staff',
                         currentUser.uid
                     );
                 } else {
-                    await window.SoporteJS.actualizarTicket(currentTicketId, { estado });
+                    resultado = await window.SoporteJS.actualizarTicket(currentTicketId, { estado });
                 }
+                avisarSincronizacion(resultado);
                 showToast(`Ticket actualizado: ${estado}`, 'success');
                 closeModal();
                 await updateStats();
@@ -1569,7 +1580,8 @@
             if (btn) btn.disabled = true;
             try {
                 const actor = staffActor();
-                await window.SoporteJS.elevarTicket(currentTicketId, destino, actor.name, actor.uid);
+                const resultado = await window.SoporteJS.elevarTicket(currentTicketId, destino, actor.name, actor.uid);
+                avisarSincronizacion(resultado);
                 showToast('Ticket elevado correctamente.', 'success');
                 const fresh = await window.SoporteJS.getTicketById(currentTicketId);
                 if (fresh) applyTicketSnapshot(fresh);
@@ -1591,7 +1603,8 @@
             if (btn) btn.disabled = true;
             try {
                 const actor = staffActor();
-                await window.SoporteJS.desasignarTicket(currentTicketId, actor.name, actor.uid);
+                const resultado = await window.SoporteJS.desasignarTicket(currentTicketId, actor.name, actor.uid);
+                avisarSincronizacion(resultado);
                 showToast('Asignación removida; el ticket vuelve a Soporte.', 'success');
                 const fresh = await window.SoporteJS.getTicketById(currentTicketId);
                 if (fresh) applyTicketSnapshot(fresh);
@@ -1870,7 +1883,7 @@
                         currentUser.email
                     );
                 } catch (e) { /* se usa el rol de sesión */ }
-                await window.SoporteJS.agregarComentario(
+                const resultado = await window.SoporteJS.agregarComentario(
                     currentTicketId,
                     txt,
                     currentUser.displayName || currentUser.email,
@@ -1879,6 +1892,7 @@
                     rolFresco,
                     currentUser.email
                 );
+                avisarSincronizacion(resultado);
                 document.getElementById('nuevoComentario').value = '';
                 if (!comentariosUnsub) await loadComentarios(currentTicketId);
                 showToast('Comentario enviado', 'success');

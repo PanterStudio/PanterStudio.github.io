@@ -114,14 +114,80 @@ function patchLocalTicket(id, patch) {
     notifyLocalChange();
     return merged;
 }
+/* ═════════════════════════════════════════════════════════════
+   AUTORIDAD DE SINCRONIZACIÓN
+   · Firestore es la fuente de verdad para TODOS los clientes.
+   · La copia en localStorage es SÓLO un respaldo offline: nunca puede
+     pisar el estado que llega de la nube (si no, un ticket cerrado por
+     el staff seguiría «Abierto» en las demás cuentas).
+   · El cambio optimista que hace quien pulsa el botón vive ÚNICAMENTE
+     en memoria y expira en cuanto el snapshot de Firestore lo confirma.
+     Así no parpadea la UI, pero jamás se propaga a otros navegadores.
+   ═════════════════════════════════════════════════════════════ */
+const PENDING_OVERRIDE_TTL = 6000;
+const pendingTicketOverrides = new Map();
+
+function setPendingTicketOverride(ticketId, fields) {
+    pendingTicketOverrides.set(String(ticketId), { fields: Object.assign({}, fields), at: Date.now() });
+}
+
+function pendingOverrideFor(ticketId, remote) {
+    const entry = pendingTicketOverrides.get(String(ticketId));
+    if (!entry) return null;
+    const remoteTs = new Date(remote && (remote.actualizadoEn || remote.updatedAt || 0)).getTime() || 0;
+    // El snapshot ya confirma el cambio (o pasó el tiempo): se descarta.
+    if (remoteTs >= entry.at || (Date.now() - entry.at) > PENDING_OVERRIDE_TTL) {
+        pendingTicketOverrides.delete(String(ticketId));
+        return null;
+    }
+    return entry.fields;
+}
+
+/**
+ * Combina el documento remoto con la copia local.
+ * @param {object|null} remote documento de Firestore (autoridad)
+ * @param {object|null} local  copia localStorage (sólo respaldo)
+ */
+function combinarTicket(remote, local) {
+    let base;
+    if (remote) {
+        base = Object.assign({}, remote);
+        if (local) {
+            // Sólo rellenar huecos; NUNCA sobrescribir estado, fechas ni
+            // campos de elevación/asignación que ya trae la nube.
+            Object.keys(local).forEach(key => {
+                const value = base[key];
+                if (value === undefined || value === null || value === '') base[key] = local[key];
+            });
+        }
+    } else {
+        base = local ? Object.assign({}, local) : null;
+    }
+    const override = base ? pendingOverrideFor(base.id, remote) : null;
+    return override && base ? Object.assign({}, base, override) : base;
+}
+
+function marcaTiempoTicket(t) {
+    return new Date(t && (t.actualizadoEn || t.updatedAt || t.creadoEn || 0)).getTime() || 0;
+}
+
 function mergeTickets(remote) {
     const map = new Map();
     (Array.isArray(remote) ? remote : []).forEach(t => { if (t && t.id) map.set(t.id, t); });
-    Object.values(localTickets()).forEach(t => {
-        if (!t || !t.id) return;
-        map.set(t.id, Object.assign({}, map.get(t.id) || {}, t));
+    const locales = localTickets();
+    Object.keys(locales).forEach(id => {
+        const local = locales[id];
+        if (!local || !local.id) return;
+        if (map.has(id)) {
+            map.set(id, combinarTicket(map.get(id), local));
+        } else {
+            // Sin contrapartida en la nube (creado offline o nube caída):
+            // se conserva como respaldo, pero nunca pisa a un doc remoto.
+            map.set(id, combinarTicket(null, local));
+        }
     });
     return Array.from(map.values())
+        .filter(Boolean)
         .map(t => normalizarTicket(t))
         .sort((a, b) => String(b.creadoEn || '').localeCompare(String(a.creadoEn || '')));
 }
@@ -143,8 +209,9 @@ function mergeComments(ticketId, remote) {
     const stored = localComments()[ticketId];
     const local = Array.isArray(stored) ? stored : [];
     const map = new Map();
+    // La nube manda; la copia local sólo aporta mensajes que aún no subieron.
     (Array.isArray(remote) ? remote : []).forEach(c => { if (c && c.id) map.set(c.id, c); });
-    local.forEach(c => { if (c && c.id) map.set(c.id, c); });
+    local.forEach(c => { if (c && c.id && !map.has(c.id)) map.set(c.id, c); });
     return Array.from(map.values())
         .sort((a, b) => String(a.creadoEn || '').localeCompare(String(b.creadoEn || '')));
 }
@@ -834,6 +901,14 @@ async function agregarMensajeSistema(ticketId, mensaje, meta = {}) {
     );
 }
 
+/** Una acción sólo está sincronizada si TANTO el ticket COMO su aviso
+ *  llegaron a Firestore; así el aviso nunca finge éxito a medias. */
+function resultadoSincronizado(ticketResult, messageResult) {
+    return Object.assign({}, ticketResult, {
+        cloudOk: Boolean(ticketResult && ticketResult.cloudOk && messageResult && messageResult.cloudOk)
+    });
+}
+
 /** El staff toma el ticket: pasa a En Proceso e inyecta el aviso en el chat. */
 async function tomarTicket(ticketId, staffName, staffUid) {
     const now = new Date().toISOString();
@@ -846,11 +921,11 @@ async function tomarTicket(ticketId, staffName, staffUid) {
         tomadoPorUid: staffUid || null,
         tomadoEn: now
     });
-    await agregarMensajeSistema(ticketId, SYSTEM_MSG_TOMADO, {
+    const aviso = await agregarMensajeSistema(ticketId, SYSTEM_MSG_TOMADO, {
         tipo: 'tomado', nombre, fecha: now,
         textoStaff: `${nombre} ha tomado el ticket`
     });
-    return actualizado;
+    return resultadoSincronizado(actualizado, aviso);
 }
 
 async function cerrarTicket(ticketId, staffName, staffUid) {
@@ -865,11 +940,11 @@ async function cerrarTicket(ticketId, staffName, staffUid) {
     // Al CERRAR el aviso es institucional para TODOS (usuarios y staff),
     // igual que el de toma: mismo tipo de línea de sistema, texto exacto
     // y color rojo. No se revela el nombre de quien cerró.
-    await agregarMensajeSistema(ticketId, SYSTEM_MSG_CERRADO, {
+    const aviso = await agregarMensajeSistema(ticketId, SYSTEM_MSG_CERRADO, {
         tipo: 'cerrado', nombre, fecha: now,
         textoStaff: SYSTEM_MSG_CERRADO
     });
-    return actualizado;
+    return resultadoSincronizado(actualizado, aviso);
 }
 
 async function reabrirTicket(ticketId) {
@@ -904,11 +979,11 @@ async function elevarTicket(ticketId, destino, staffName, staffUid) {
         escaladoPorUid: staffUid || null,
         escaladoEn: now
     });
-    await agregarMensajeSistema(ticketId, SYSTEM_MSG_ELEVADO, {
+    const aviso = await agregarMensajeSistema(ticketId, SYSTEM_MSG_ELEVADO, {
         tipo: 'asignado', nombre, destino: label, fecha: now,
         textoStaff: `ha sido asignado por ${nombre} a ${label}`
     });
-    return actualizado;
+    return resultadoSincronizado(actualizado, aviso);
 }
 
 /** Quita la asignación de área y devuelve el ticket a la cola de Soporte. */
@@ -922,11 +997,11 @@ async function desasignarTicket(ticketId, staffName, staffUid) {
         escaladoPorUid: null,
         escaladoEn: null
     });
-    await agregarMensajeSistema(ticketId, SYSTEM_MSG_DESELEVADO, {
+    const aviso = await agregarMensajeSistema(ticketId, SYSTEM_MSG_DESELEVADO, {
         tipo: 'desasignado', nombre, fecha: now,
         textoStaff: `ha sido desasignado por ${nombre}`
     });
-    return actualizado;
+    return resultadoSincronizado(actualizado, aviso);
 }
 
 
@@ -1120,7 +1195,7 @@ async function getMisTickets(userId, userEmail = '') {
         const matchesId = ids.some(id => String(t.usuarioId || '') === id);
         const matchesEmail = Boolean(email && String(t.usuarioEmail || '').trim().toLowerCase() === email);
         if (matchesId || matchesEmail) {
-            encontrados.set(t.id, Object.assign({}, encontrados.get(t.id) || {}, t));
+            encontrados.set(t.id, combinarTicket(encontrados.get(t.id) || null, t));
         }
     });
 
@@ -1137,8 +1212,8 @@ async function getTicketById(ticketId) {
         const snap = await window.getDoc(window.fsDoc(window.db, SOPORTE_COLLECTION, ticketId));
         if (snap.exists()) remote = normalizarTicket({ id: snap.id, ...snap.data() });
     } catch (e) { /* nube no disponible */ }
-    if (!remote && !local) return null;
-    return normalizarTicket(Object.assign({}, remote || {}, local || {}, { id: ticketId }));
+    const combinado = combinarTicket(remote, local);
+    return combinado ? normalizarTicket(combinado) : null;
 }
 
 async function buscarPorCodigo(codigo) {
@@ -1154,9 +1229,11 @@ async function buscarPorCodigo(codigo) {
         const snap = await window.getDocs(q);
         if (!snap.empty) {
             const d = snap.docs[0];
-            return normalizarTicket(Object.assign(
-                {}, { id: d.id, ...d.data() }, localTickets()[d.id] || {}
-            ));
+            const combinado = combinarTicket(
+                { id: d.id, ...d.data() },
+                localTickets()[d.id] || null
+            );
+            return combinado ? normalizarTicket(combinado) : null;
         }
     } catch (e) { /* nube no disponible */ }
     return localMatch ? normalizarTicket(localMatch) : null;
@@ -1197,8 +1274,12 @@ async function actualizarTicket(ticketId, updates = {}) {
     payload.actualizadoEn = now;
     payload.updatedAt = now;
 
+    // 1) Respuesta inmediata SÓLO en este navegador (memoria + respaldo local).
+    setPendingTicketOverride(ticketId, payload);
     const merged = patchLocalTicket(ticketId, payload);
 
+    // 2) Escritura real en la nube: es la que ven TODOS los demás clientes.
+    let cloudOk = false;
     try {
         await ensureFirestore();
         await window.setDoc(
@@ -1206,11 +1287,12 @@ async function actualizarTicket(ticketId, updates = {}) {
             payload,
             { merge: true }
         );
+        cloudOk = true;
     } catch (err) {
-        console.warn('[SoporteJS] Cambio aplicado en copia local (Firestore rechazó):', err);
+        console.warn('[SoporteJS] Firestore rechazó la escritura; sólo copia local:', err);
     }
 
-    return { id: ticketId, ...(merged || payload) };
+    return { id: ticketId, ...(merged || payload), cloudOk };
 }
 
 async function agregarComentario(ticketId, texto, autor, autorId, esStaff = false, autorRol = null, autorEmail = null, esSistema = false, meta = {}) {
@@ -1232,6 +1314,7 @@ async function agregarComentario(ticketId, texto, autor, autorId, esStaff = fals
 
     // El comentario SIEMPRE se guarda (nube si puede, copia local si no).
     let savedId = `local_${Date.now().toString(36)}`;
+    let cloudOk = false;
     try {
         await ensureFirestore();
         const ref = await window.addDoc(
@@ -1239,30 +1322,32 @@ async function agregarComentario(ticketId, texto, autor, autorId, esStaff = fals
             comentario
         );
         savedId = ref.id;
+        cloudOk = true;
     } catch (err) {
         console.warn('[SoporteJS] Comentario guardado en copia local:', err);
     }
     appendLocalComment(ticketId, Object.assign({ id: savedId }, comentario));
 
     // El contador es informativo: si falla, el comentario ya quedó guardado.
-    try {
-        if (!window.db || !window.fsDoc || !window.setDoc) return;
-        let contador = null;
-        if (window.increment) {
-            contador = window.increment(1);
-        } else {
-            const snap = await window.getDoc(window.fsDoc(window.db, SOPORTE_COLLECTION, ticketId));
-            contador = Number(snap.data()?.comentariosCount || 0) + 1;
+    if (window.db && window.fsDoc && window.setDoc) {
+        try {
+            let contador = null;
+            if (window.increment) {
+                contador = window.increment(1);
+            } else {
+                const snap = await window.getDoc(window.fsDoc(window.db, SOPORTE_COLLECTION, ticketId));
+                contador = Number(snap.data()?.comentariosCount || 0) + 1;
+            }
+            await window.setDoc(
+                window.fsDoc(window.db, SOPORTE_COLLECTION, ticketId),
+                { actualizadoEn: now, comentariosCount: contador },
+                { merge: true }
+            );
+        } catch (counterErr) {
+            console.warn('[SoporteJS] El comentario se guardó, pero no se pudo actualizar el contador:', counterErr);
         }
-        await window.setDoc(
-            window.fsDoc(window.db, SOPORTE_COLLECTION, ticketId),
-            { actualizadoEn: now, comentariosCount: contador },
-            { merge: true }
-        );
-    } catch (counterErr) {
-        console.warn('[SoporteJS] El comentario se guardó, pero no se pudo actualizar el contador:', counterErr);
     }
-    return { id: savedId, ...comentario };
+    return { id: savedId, ...comentario, cloudOk };
 }
 
 async function getComentarios(ticketId) {
@@ -1287,26 +1372,40 @@ async function getComentarios(ticketId) {
 
 async function suscribirTickets(onData, onError) {
     let remote = [];
+    let remoteResolved = false;
+    let cloudAttached = false;
     let unsub = null;
-    const emit = () => { if (typeof onData === 'function') onData(mergeTickets(remote)); };
+    const emit = () => {
+        if (typeof onData !== 'function') return;
+        // Se espera al primer snapshot de la nube antes de pintar: así la
+        // lista nunca arranca con estados de una copia local desactualizada.
+        if (cloudAttached && !remoteResolved) return;
+        onData(mergeTickets(remote));
+    };
 
     try {
         await ensureFirestore();
         if (typeof window.onSnapshot === 'function') {
+            cloudAttached = true;
             unsub = window.onSnapshot(
                 window.collection(window.db, SOPORTE_COLLECTION),
                 snap => {
+                    remoteResolved = true;
                     remote = snap.docs.map(d => normalizarTicket({ id: d.id, ...d.data() }));
                     emit();
                 },
                 err => {
                     console.warn('[SoporteJS] onSnapshot tickets:', err);
+                    cloudAttached = false;
+                    remoteResolved = true;
+                    emit(); // sin nube: respaldo local
                     if (typeof onError === 'function') onError(new Error(traducirErrorFirestore(err)));
                 }
             );
         }
     } catch (e) {
         console.warn('[SoporteJS] Suscripción de tickets no disponible; se usa copia local.', e);
+        cloudAttached = false;
     }
 
     emit();
@@ -1320,23 +1419,31 @@ async function suscribirTickets(onData, onError) {
 async function suscribirTicket(ticketId, onData, onError) {
     let remote = null;
     let remoteResolved = false;
+    let cloudAttached = false;
     let unsub = null;
     const emit = () => {
         if (typeof onData !== 'function') return;
+        // Con listener de nube activo, se espera al PRIMER snapshot antes de
+        // emitir: el modal ya fue pintado al abrirlo y así se evita un
+        // parpadeo hacia atrás con una copia local desactualizada.
+        if (cloudAttached && !remoteResolved) return;
         const local = localTickets()[ticketId];
-        if (!remote && !local) {
-            // Todavía no llegó el primer snapshot: NO se interpreta como
-            // "ticket borrado" (cerraría el modal recién abierto).
-            // Sólo se avisa cuando Firestore ya confirmó que no existe.
+        // La nube manda: un cierre hecho por otro cliente llega aquí y ya
+        // no puede ser tapado por la copia local de este navegador.
+        const combinado = combinarTicket(remote, local);
+        if (!combinado) {
+            // Firestore confirmó que no existe: no se cierra el modal,
+            // simplemente no hay datos frescos que pintar.
             if (remoteResolved) onData(null);
             return;
         }
-        onData(normalizarTicket(Object.assign({}, remote || {}, local || {}, { id: ticketId })));
+        onData(normalizarTicket(combinado));
     };
 
     try {
         await ensureFirestore();
         if (typeof window.onSnapshot === 'function') {
+            cloudAttached = true;
             unsub = window.onSnapshot(
                 window.fsDoc(window.db, SOPORTE_COLLECTION, ticketId),
                 snap => {
@@ -1346,12 +1453,16 @@ async function suscribirTicket(ticketId, onData, onError) {
                 },
                 err => {
                     console.warn('[SoporteJS] onSnapshot ticket:', err);
+                    cloudAttached = false;
+                    remoteResolved = true;
+                    emit(); // sin nube: se usa el respaldo local
                     if (typeof onError === 'function') onError(new Error(traducirErrorFirestore(err)));
                 }
             );
         }
     } catch (e) {
         console.warn('[SoporteJS] Suscripción del ticket no disponible.', e);
+        cloudAttached = false;
     }
 
     emit();
@@ -1367,20 +1478,34 @@ async function suscribirMisTickets(userId, userEmail, onData, onError) {
     const email = String(userEmail || '').trim().toLowerCase();
     const buckets = new Map();
     const unsubs = [];
+    let cloudAttached = false;
+    let esperadas = 0;
+    let respondidas = 0;
 
     const emit = () => {
         if (typeof onData !== 'function') return;
+        // Esperar a que TODAS las queries den su primer snapshot: evita
+        // pintar una lista a medias o con estados locales antiguos.
+        if (cloudAttached && respondidas < esperadas) return;
         const encontrados = new Map();
-        buckets.forEach(list => list.forEach(t => { if (t && t.id) encontrados.set(t.id, t); }));
+        // El mismo ticket puede venir por DOS queries (uid y correo). Si uno
+        // de los snapshots aún no llegó, no debe pisar al más reciente.
+        buckets.forEach(list => list.forEach(t => {
+            if (!t || !t.id) return;
+            const previo = encontrados.get(t.id);
+            if (!previo || marcaTiempoTicket(t) >= marcaTiempoTicket(previo)) {
+                encontrados.set(t.id, t);
+            }
+        }));
         Object.values(localTickets()).forEach(t => {
             if (!t || !t.id) return;
             const matchesId = ids.some(id => String(t.usuarioId || '') === id);
             const matchesEmail = Boolean(email && String(t.usuarioEmail || '').trim().toLowerCase() === email);
             if (matchesId || matchesEmail) {
-                encontrados.set(t.id, Object.assign({}, encontrados.get(t.id) || {}, t));
+                encontrados.set(t.id, combinarTicket(encontrados.get(t.id) || null, t));
             }
         });
-        onData(Array.from(encontrados.values())
+        onData(Array.from(encontrados.values()).filter(Boolean)
             .map(t => normalizarTicket(t))
             .sort((a, b) => String(b.creadoEn || '').localeCompare(String(a.creadoEn || ''))));
     };
@@ -1388,12 +1513,18 @@ async function suscribirMisTickets(userId, userEmail, onData, onError) {
     try {
         await ensureFirestore();
         if (typeof window.onSnapshot === 'function') {
+            cloudAttached = true;
             const attach = (key, q) => {
+                esperadas += 1;
                 unsubs.push(window.onSnapshot(q, snap => {
                     buckets.set(key, snap.docs.map(d => normalizarTicket({ id: d.id, ...d.data() })));
+                    respondidas += 1;
                     emit();
                 }, err => {
                     console.warn('[SoporteJS] onSnapshot mis tickets:', err);
+                    buckets.set(key, []);
+                    respondidas += 1;
+                    emit(); // sin nube: respaldo local
                     if (typeof onError === 'function') onError(new Error(traducirErrorFirestore(err)));
                 }));
             };
@@ -1405,9 +1536,11 @@ async function suscribirMisTickets(userId, userEmail, onData, onError) {
                 window.collection(window.db, SOPORTE_COLLECTION),
                 window.where('usuarioEmail', '==', email)
             ));
+            if (!esperadas) cloudAttached = false;
         }
     } catch (e) {
         console.warn('[SoporteJS] Suscripción de mis tickets no disponible.', e);
+        cloudAttached = false;
     }
 
     emit();
