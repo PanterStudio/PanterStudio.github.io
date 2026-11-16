@@ -744,7 +744,10 @@ if (typeof document !== 'undefined') {
  * Mensaje de sistema reutilizable.
  * @param {string} mensaje  Texto EXACTO que ve el usuario (sin nombres).
  * @param {object} meta     { tipo, nombre, destino, textoStaff, fecha }
- *                          `textoStaff` es lo que ve el equipo (con nombre).
+ *                          `textoStaff` es lo que ve el equipo; en toma,
+ *                          asignación y desasignación incluye el nombre,
+ *                          pero en el CIERRE es el texto institucional
+ *                          exacto (igual que para el usuario).
  */
 async function agregarMensajeSistema(ticketId, mensaje, meta = {}) {
     const data = meta && typeof meta === 'object' ? meta : {};
@@ -792,9 +795,12 @@ async function cerrarTicket(ticketId, staffName, staffUid) {
         cerradoPorUid: staffUid || null,
         cerradoEn: now
     });
+    // Al CERRAR el aviso es institucional para TODOS (usuarios y staff),
+    // igual que el de toma: mismo tipo de línea de sistema, texto exacto
+    // y color rojo. No se revela el nombre de quien cerró.
     await agregarMensajeSistema(ticketId, SYSTEM_MSG_CERRADO, {
         tipo: 'cerrado', nombre, fecha: now,
-        textoStaff: `${nombre} ha cerrado el ticket`
+        textoStaff: SYSTEM_MSG_CERRADO
     });
     return actualizado;
 }

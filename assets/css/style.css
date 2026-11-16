@@ -3444,3 +3444,20 @@ select option .fa-regular,
 select option .fa-brands {
   display: none;
 }
+
+/* ── Opciones legibles en el desplegable nativo de los <select> ──
+   El popup nativo de Chrome/Edge en Windows se dibuja con fondo blanco.
+   Como los <select> del tema oscuro tienen el texto claro, las opciones
+   heredaban ese color y quedaban INVISIBLES (sólo se veía la fila azul
+   seleccionada). Se fijan colores propios para todas las opciones:
+   fondo oscuro + texto claro, y azul para la opción marcada.
+   Aplica a TODOS los selects del sitio (filtros, estados, elevar...). */
+select option,
+select optgroup {
+  background-color: #101827;
+  color: #e8eef9;
+}
+select option:checked {
+  background-color: #1d4ed8;
+  color: #ffffff;
+}

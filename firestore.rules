@@ -53,6 +53,13 @@ service cloud.firestore {
     // 🎟️ TICKETS DE SOPORTE (colección canónica)
     // Respuestas del staff y cambios de estado en tiempo real,
     // visibles para usuarios finales y administradores.
+    //
+    // En el documento del ticket se guardan también los campos de
+    // ELEVACIÓN (escaladoA, escaladoPor, escaladoEn...) y de TOMA/CIERRE
+    // (tomadoPor, cerradoPor...). En la subcolección `comentarios` se
+    // guarda la BITÁCORA de sistema (textoUsuario / textoStaff, tipo,
+    // fecha UTC). `match /{rest=**}` ya cubre todo eso sin cambios.
+    // Todas las marcas de tiempo del sitio son UTC+0 (ISO).
     // ═══════════════════════════════════════════════════════
     match /soporte_tickets/{ticketId} {
       allow read, write: if true;
