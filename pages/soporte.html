@@ -1430,7 +1430,9 @@
                     ticketId,
                     ticket => {
                         if (currentTicketId !== ticketId) return;
-                        if (!ticket) { closeModal(); return; }
+                        // Un snapshot vacío no debe cerrar el modal: puede
+                        // llegar antes que el documento o fallar por permisos.
+                        if (!ticket) return;
                         applyTicketSnapshot(ticket);
                     },
                     err => console.warn('[Soporte] No se pudo observar el ticket:', err)
@@ -1469,8 +1471,16 @@
                 addSection.style.display = 'none';
             }
 
-            await loadComentarios(ticket.id);
-            await subscribeCurrentTicket(ticket.id);
+            try {
+                await loadComentarios(ticket.id);
+            } catch (err) {
+                console.warn('[Soporte] No se pudieron cargar los comentarios:', err);
+            }
+            try {
+                await subscribeCurrentTicket(ticket.id);
+            } catch (err) {
+                console.warn('[Soporte] No se pudo suscribir al ticket:', err);
+            }
         }
 
         document.getElementById('closeTicketModal')?.addEventListener('click', closeModal);

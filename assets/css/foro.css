@@ -378,6 +378,7 @@
 .foro-modal-close:hover { background: rgba(239,68,68,.18); }
 .foro-form { padding: 1.1rem 1.2rem 1.3rem; display: flex; flex-direction: column; gap: .85rem; }
 .foro-field label { display: block; font-size: .72rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--foro-muted); margin-bottom: .35rem; }
+.foro-field[hidden] { display: none; }
 .foro-row { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
 .foro-form-msg { font-size: .76rem; min-height: 1em; color: #f87171; }
 .foro-form-foot { display: flex; justify-content: flex-end; gap: .5rem; flex-wrap: wrap; }

@@ -263,6 +263,31 @@
         </div>
     </div>
 
+    <!-- Modal de edición (temas y respuestas) -->
+    <div class="foro-modal" id="foroEditModal" hidden role="dialog" aria-modal="true" aria-labelledby="foroEditModalTitle">
+        <div class="foro-modal-card">
+            <div class="foro-modal-head">
+                <h2 id="foroEditModalTitle"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> <span id="foroEditTitleText">Editar</span></h2>
+                <button type="button" class="foro-modal-close" data-foro-action="close-edit-modal" aria-label="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </div>
+            <form class="foro-form" id="foroEditForm" onsubmit="return false;">
+                <div class="foro-field" id="foroEditTitleField">
+                    <label for="foroEditTitle">Título del tema</label>
+                    <input type="text" class="foro-input" id="foroEditTitle" maxlength="120" placeholder="Escribe un título claro y descriptivo">
+                </div>
+                <div class="foro-field">
+                    <label for="foroEditBody">Contenido (BBCode permitido)</label>
+                    <textarea class="foro-input" id="foroEditBody" maxlength="12000" style="min-height:240px;resize:vertical;line-height:1.55;font-family:inherit;" placeholder="Escribe aquí el contenido..."></textarea>
+                </div>
+                <div class="foro-form-msg" id="foroEditMsg" role="status"></div>
+                <div style="display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap;">
+                    <button type="button" class="foro-btn foro-btn-sm" data-foro-action="close-edit-modal"><i class="fa-solid fa-xmark" aria-hidden="true"></i> Cancelar</button>
+                    <button type="button" class="foro-btn foro-btn-primary foro-btn-sm" id="foroEditSaveBtn" data-foro-action="guardar-edicion"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="foro-toast" id="foroToast" role="status" aria-live="polite"></div>
 
     <!-- SCRIPTS (mismo orden que pages/soporte.html) -->

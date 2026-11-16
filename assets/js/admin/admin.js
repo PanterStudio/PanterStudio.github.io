@@ -1214,22 +1214,50 @@ async function resolveUserAccess(user) {
     }
 
     // Rango manual vigente en `equipo` (Panel Admin → Personal).
-    let teamMember = null;
-    if (window.db && window.fsDoc && window.getDoc) {
+    // IMPORTANTE: la ficha canónica NO siempre tiene el id de la sesión
+    // (p. ej. `team_fenix` agrupa varios uids). Se resuelve por uid/correo
+    // con PanterStaff, la fuente única de rangos, que además funciona con
+    // el espejo local si Firestore aún rechaza la lectura.
+    let teamRole = null;
+    const S = window.PanterStaff;
+    if (S) {
+        try {
+            if (typeof S.ensureFenixAdmin === 'function') S.ensureFenixAdmin();
+            if (typeof S.refresh === 'function') S.refresh();
+            const found = typeof S.findFor === 'function'
+                ? S.findFor({
+                    uid: String(user.uid || user.id || ''),
+                    email: String(user.email || '')
+                })
+                : null;
+            if (found && typeof S.memberRole === 'function') {
+                const resolved = S.memberRole(found);
+                if (resolved && resolved !== 'usuario') teamRole = resolved;
+            }
+        } catch (err) {
+            console.warn('No se pudo resolver el rango del equipo:', err);
+        }
+    }
+
+    // Compatibilidad con fichas cuyo id SÍ es el uid de sesión.
+    let directRole = null;
+    if (!teamRole && window.db && window.fsDoc && window.getDoc) {
         try {
             const teamSnap = await window.getDoc(window.fsDoc(window.db, 'equipo', user.uid));
-            if (teamSnap.exists()) teamMember = teamSnap.data() || null;
+            if (teamSnap.exists()) {
+                const team = teamSnap.data() || {};
+                if (team.archivado !== true && team.role) directRole = team.role;
+            }
         } catch (err) {
-            console.error('No se pudo leer el rango del equipo:', err);
+            console.warn('No se pudo leer el rango directo del equipo:', err);
         }
     }
 
     const effectiveProfile = Object.assign({}, profileData || {});
-    if (teamMember && teamMember.archivado !== true && teamMember.role) {
-        effectiveProfile.teamRole = teamMember.role;
-    }
+    const finalTeamRole = teamRole || directRole;
+    if (finalTeamRole) effectiveProfile.teamRole = finalTeamRole;
     if (!effectiveProfile.email) {
-        effectiveProfile.email = (teamMember && teamMember.email) || user.email || '';
+        effectiveProfile.email = user.email || '';
     }
 
     const role = R

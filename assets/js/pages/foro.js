@@ -25,6 +25,7 @@
     const LS_SUBS = 'ps_foro_suscripciones';
     const LS_BOOKMARKS = 'ps_foro_marcadores';
     const LS_REPORTS = 'ps_foro_reportes';
+    const LS_DELETED = 'ps_foro_eliminados';
     const LOCAL_EVENT = 'psForoLocal';
     const PRESENCE_PREFIX = 'ps_foro_lectores_';
     const PRESENCE_TTL = 3 * 60 * 1000;
@@ -396,6 +397,52 @@
         return out;
     }
 
+    /* ── Eliminaciones ─────────────────────────────────────────
+       El borrado se guarda SIEMPRE en local (tombstone) para que el
+       contenido no reaparezca desde las semillas ni desde la caché,
+       y se intenta propagar a Firestore. Así funciona incluso si las
+       reglas de producción aún no están publicadas. */
+    function deletedStore() {
+        const v = readJson(LS_DELETED, null);
+        if (!v || typeof v !== 'object' || Array.isArray(v)) return { temas: [], mensajes: [] };
+        return {
+            temas: Array.isArray(v.temas) ? v.temas.map(String) : [],
+            mensajes: Array.isArray(v.mensajes) ? v.mensajes.map(String) : []
+        };
+    }
+    function deletedTopicIds() { return new Set(deletedStore().temas); }
+    function deletedMessageIds() { return new Set(deletedStore().mensajes); }
+    function markDeleted(kind, id) {
+        const store = deletedStore();
+        const key = kind === 'tema' ? 'temas' : 'mensajes';
+        if (store[key].indexOf(String(id)) === -1) store[key].push(String(id));
+        writeJson(LS_DELETED, store);
+        notifyLocal();
+    }
+    function removeLocalTopic(id) {
+        writeJson(LS_TOPICS, localTopics().filter(x => String(x.id) !== String(id)));
+        notifyLocal();
+    }
+    function removeLocalMessage(id) {
+        writeJson(LS_MESSAGES, localMessages().filter(x => String(x.id) !== String(id)));
+        notifyLocal();
+    }
+    async function markRemoteDeleted(kind, id, temaId) {
+        if (!firebaseReady()) return;
+        const ref = kind === 'tema'
+            ? window.fsDoc(window.db, COLLECTION, String(id))
+            : window.fsDoc(window.db, COLLECTION, String(temaId), 'mensajes', String(id));
+        const patch = { eliminado: true, actualizadoEn: new Date().toISOString() };
+        try {
+            await withTimeout(window.setDoc(ref, patch, { merge: true }), 4000);
+        } catch (e) {
+            console.warn('[Foro] Borrado remoto no disponible; se conserva la copia local:', e && e.message);
+        }
+        if (typeof window.deleteDoc === 'function') {
+            try { await withTimeout(window.deleteDoc(ref), 3000); } catch (e) { /* el marcado ya basta */ }
+        }
+    }
+
     /* Mezcla remoto + local por id, conservando el más reciente y
        tomando el MAYOR de los contadores para no perder respuestas. */
     function mergeById(remote, local) {
@@ -448,14 +495,18 @@
     const RETIRED_MESSAGE_IDS = new Set(['m_srpd_1', 'm_srpd_2', 'm_srpd_3']);
 
     function allTopics() {
+        const gone = deletedTopicIds();
         const merged = mergeById(remoteTopics, localTopics())
-            .filter(t => !RETIRED_SEED_IDS.has(String(t.id)));
+            .filter(t => !RETIRED_SEED_IDS.has(String(t.id))
+                && !gone.has(String(t.id))
+                && t.eliminado !== true);
         const map = new Map(merged.map(t => [String(t.id), t]));
         SEED_TOPICS.forEach(s => {
             const k = String(s.id);
+            if (gone.has(k)) return;
             map.set(k, map.has(k) ? mergeWithSeed(s, map.get(k)) : Object.assign({}, s));
         });
-        return Array.from(map.values());
+        return Array.from(map.values()).filter(t => t.eliminado !== true);
     }
     function replyCount(t) {
         const local = localMessages().filter(m => m.temaId === t.id && !RETIRED_MESSAGE_IDS.has(String(m.id))).length;
@@ -463,6 +514,7 @@
         return Math.max(Number(t.respuestas || 0), local + seed);
     }
     function allMessages(temaId) {
+        const gone = deletedMessageIds();
         const map = new Map();
         const add = (m) => { if (m && m.id) map.set(String(m.id), Object.assign({ temaId }, m)); };
         SEED_MESSAGES.filter(m => m.temaId === temaId).forEach(add);
@@ -470,8 +522,11 @@
         localMessages().filter(m => m.temaId === temaId && !RETIRED_MESSAGE_IDS.has(String(m.id))).forEach(m => {
             map.set(String(m.id), Object.assign({}, map.get(String(m.id)) || {}, m, { temaId }));
         });
-        return Array.from(map.values()).sort((a, b) =>
-            String(a.creadoEn || '').localeCompare(String(b.creadoEn || '')));
+        return Array.from(map.values())
+            .filter(m => !gone.has(String(m.id))
+                && m.eliminado !== true
+                && !RETIRED_MESSAGE_IDS.has(String(m.id)))
+            .sort((a, b) => String(a.creadoEn || '').localeCompare(String(b.creadoEn || '')));
     }
 
     /* ── Firestore (local-first, nunca bloquea) ─────────────── */
@@ -588,6 +643,23 @@
         return remoteOk;
     }
 
+    /** Editar una respuesta NO debe tocar los contadores del tema. */
+    async function saveMessageEdit(m) {
+        upsertLocalMessage(m);
+        if (!firebaseReady()) return false;
+        try {
+            await withTimeout(
+                window.setDoc(
+                    window.fsDoc(window.db, COLLECTION, m.temaId, 'mensajes', m.id),
+                    stripForFirestore(m)
+                ), 4000);
+            return true;
+        } catch (e) {
+            console.warn('[Foro] Edición guardada en copia local:', e && e.message);
+            return false;
+        }
+    }
+
     /* ── Usuario / rangos ───────────────────────────────────── */
     function syncUser() {
         currentUser = (window.DiscordAuth && typeof window.DiscordAuth.getUser === 'function')
@@ -671,6 +743,39 @@
             if (rol) return rol;
         }
         return (a && a.autorRol) || 'usuario';
+    }
+
+    /* ── Permisos de edición / borrado ─────────────────────────
+       · Usuario: sólo su propio contenido (uid, alias Discord o correo).
+       · Equipo: cualquier contenido, usando la fuente única de rangos.
+       Nunca se inventan rangos: sólo los 10 ids oficiales de roles.js. */
+    const FORO_TEAM_ROLES = new Set([
+        'founder_ceo', 'director', 'administrador', 'programador',
+        'modelador', 'moderador', 'soporte', 'creador_contenido'
+    ]);
+    function esEquipo() {
+        const R = window.PanterRoles;
+        const role = String(userRole || 'usuario');
+        if (R && typeof R.isTeamRole === 'function') {
+            try { return R.isTeamRole(role) === true; } catch (e) { /* noop */ }
+        }
+        return FORO_TEAM_ROLES.has(role);
+    }
+    function mismoAutor(a) {
+        if (!currentUser || !a) return false;
+        const uid = String(currentUser.uid || currentUser.id || '').trim();
+        const auid = String(a.autorUid || '').trim();
+        if (uid && auid) {
+            if (uid === auid) return true;
+            const bare = (s) => String(s).replace(/^discord_/, '');
+            if (bare(uid) && bare(uid) === bare(auid)) return true;
+        }
+        const email = String(currentUser.email || '').trim().toLowerCase();
+        const aemail = String(a.autorEmail || '').trim().toLowerCase();
+        return Boolean(email && aemail && email === aemail);
+    }
+    function puedeGestionar(a) {
+        return Boolean(currentUser) && (esEquipo() || mismoAutor(a));
     }
     function avatar(url, name, cls) {
         const clean = String(url || '').trim();
@@ -1163,7 +1268,7 @@
             </div>
             <div class="foro-body">
                 <div class="foro-post-head">
-                    <span><span class="num">#${num || 1}</span> · ${esc(fmtDate(a.creadoEn, true))} · ${esc(timeAgo(a.creadoEn))}</span>
+                    <span><span class="num">#${num || 1}</span> · ${esc(fmtDate(a.creadoEn, true))} · ${esc(timeAgo(a.creadoEn))}${a.editadoEn ? ' · <span class="foro-chip">Editado</span>' : ''}</span>
                     <span>${isOp ? '<i class="fa-solid fa-thumbtack" aria-hidden="true"></i> Tema original' : `<button type="button" class="foro-btn foro-btn-sm foro-btn-ghost" data-foro-action="ir-op"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i> Ir al tema</button>`}</span>
                 </div>
                 <div class="foro-content">${renderBB(quoteBody)}</div>
@@ -1172,6 +1277,9 @@
                     <button type="button" class="foro-btn foro-btn-sm foro-btn-ghost" data-foro-action="citar" data-foro-id="${esc(postId)}"><i class="fa-solid fa-quote-right" aria-hidden="true"></i> Citar</button>
                     <button type="button" class="foro-btn foro-btn-sm foro-btn-ghost" data-foro-action="compartir"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i> Compartir</button>
                     <button type="button" class="foro-btn foro-btn-sm foro-btn-ghost" data-foro-action="reportar" data-foro-id="${esc(postId)}"><i class="fa-solid fa-flag" aria-hidden="true"></i> Reportar</button>
+                    ${puedeGestionar(a) ? `
+                    <button type="button" class="foro-btn foro-btn-sm foro-btn-ghost" data-foro-action="editar" data-foro-id="${esc(postId)}"><i class="fa-solid fa-pen" aria-hidden="true"></i> Editar</button>
+                    <button type="button" class="foro-btn foro-btn-sm foro-btn-ghost" data-foro-action="eliminar" data-foro-id="${esc(postId)}" style="color:#f87171;"><i class="fa-solid fa-trash" aria-hidden="true"></i> Eliminar</button>` : ''}
                 </div>
             </div>
         </article>`;
@@ -1382,6 +1490,143 @@
         if (ta) { ta.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => ta.focus(), 250); }
     }
 
+    /* ── Editar / eliminar ──────────────────────────────────── */
+    let editState = null;
+
+    function currentThreadTopic() {
+        if (routeState.view !== 'tema') return null;
+        return allTopics().find(x => String(x.id) === String(routeState.id)) || null;
+    }
+
+    function closeEditModal() {
+        const modal = $('foroEditModal');
+        if (modal) modal.hidden = true;
+        editState = null;
+    }
+
+    function openEditModal(kind, id) {
+        if (!currentUser) { toast('Inicia sesión para editar contenido.', 'error'); return; }
+        const t = currentThreadTopic();
+        if (!t) return;
+        const item = kind === 'tema'
+            ? t
+            : allMessages(t.id).find(m => String(m.id) === String(id));
+        if (!item) { toast('No encontramos el contenido a editar.', 'error'); return; }
+        if (!puedeGestionar(item)) {
+            toast('Sólo el autor o el equipo pueden editar este contenido.', 'error');
+            return;
+        }
+
+        const modal = $('foroEditModal');
+        if (!modal) return;
+        const label = $('foroEditTitleText');
+        const titleField = $('foroEditTitleField');
+        const titleInput = $('foroEditTitle');
+        const body = $('foroEditBody');
+        const msg = $('foroEditMsg');
+
+        editState = { kind, id: kind === 'tema' ? String(t.id) : String(id), temaId: String(t.id) };
+        if (label) label.textContent = kind === 'tema' ? 'Editar tema' : 'Editar respuesta';
+        if (titleField) titleField.hidden = kind !== 'tema';
+        if (titleInput) titleInput.value = kind === 'tema' ? String(item.titulo || '') : '';
+        // Los valores se asignan por DOM (nunca con innerHTML): el BBCode
+        // del usuario no puede inyectar marcado en el editor.
+        if (body) body.value = String(item.cuerpo || '');
+        if (msg) { msg.textContent = ''; msg.style.color = ''; }
+        modal.hidden = false;
+        setTimeout(() => { if (body) body.focus(); }, 30);
+    }
+
+    async function submitEdit() {
+        if (!editState || !currentUser) return;
+        const msg = $('foroEditMsg');
+        const fail = (text) => {
+            if (msg) { msg.textContent = text; msg.style.color = '#f87171'; }
+        };
+        const titulo = String($('foroEditTitle')?.value || '').trim().slice(0, 120);
+        const cuerpo = String($('foroEditBody')?.value || '').trim().slice(0, 12000);
+        if (editState.kind === 'tema' && !titulo) return fail('Escribe un título para el tema.');
+        if (!cuerpo) return fail('El contenido no puede quedar vacío.');
+
+        const now = new Date().toISOString();
+        const by = authorData();
+        const editInfo = {
+            editadoEn: now,
+            editadoPor: by.autorNombre,
+            editadoPorUid: by.autorUid
+        };
+        const btn = $('foroEditSaveBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> Guardando...';
+        }
+        try {
+            if (editState.kind === 'tema') {
+                const t = allTopics().find(x => String(x.id) === editState.id);
+                if (!t) throw new Error('Tema no encontrado');
+                const updated = Object.assign({}, t, {
+                    titulo, cuerpo, actualizadoEn: now
+                }, editInfo);
+                const ok = await saveTopic(updated);
+                toast(ok ? 'Tema actualizado.' : 'Tema actualizado (guardado en este navegador).', 'success');
+            } else {
+                const m = allMessages(editState.temaId).find(x => String(x.id) === editState.id);
+                if (!m) throw new Error('Respuesta no encontrada');
+                const updated = Object.assign({}, m, { cuerpo, actualizadoEn: now }, editInfo);
+                const ok = await saveMessageEdit(updated);
+                toast(ok ? 'Respuesta actualizada.' : 'Respuesta actualizada (guardada en este navegador).', 'success');
+            }
+            closeEditModal();
+            scheduleRender();
+        } catch (e) {
+            fail('No se pudo guardar el cambio. Inténtalo de nuevo.');
+            console.warn('[Foro] Error al editar:', e);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar cambios';
+            }
+        }
+    }
+
+    async function deleteForumItem(kind, id) {
+        if (!currentUser) { toast('Inicia sesión para eliminar contenido.', 'error'); return; }
+        const t = currentThreadTopic();
+        if (!t) return;
+        const item = kind === 'tema'
+            ? t
+            : allMessages(t.id).find(m => String(m.id) === String(id));
+        if (!item) { toast('No encontramos el contenido a eliminar.', 'error'); return; }
+        if (!puedeGestionar(item)) {
+            toast('Sólo el autor o el equipo pueden eliminar este contenido.', 'error');
+            return;
+        }
+        const etiqueta = kind === 'tema' ? 'este tema y sus respuestas' : 'esta respuesta';
+        if (!window.confirm(`¿Eliminar ${etiqueta}? Esta acción no se puede deshacer.`)) return;
+
+        markDeleted(kind, kind === 'tema' ? String(t.id) : String(id));
+        // La propagación a Firestore se lanza en segundo plano: la UI nunca
+        // espera a la red (las reglas antiguas pueden rechazar la escritura).
+        if (kind === 'tema') {
+            removeLocalTopic(t.id);
+            markRemoteDeleted('tema', t.id, t.id);
+            closeEditModal();
+            go('indice');
+        } else {
+            removeLocalMessage(id);
+            markRemoteDeleted('mensaje', id, t.id);
+            const fresh = allTopics().find(x => String(x.id) === String(t.id));
+            if (fresh) {
+                upsertLocalTopic(Object.assign({}, fresh, {
+                    respuestas: Math.max(0, Number(fresh.respuestas || 0) - 1),
+                    actualizadoEn: new Date().toISOString()
+                }));
+            }
+        }
+        toast(kind === 'tema' ? 'Tema eliminado.' : 'Respuesta eliminada.', 'success');
+        scheduleRender();
+    }
+
     /* ── Eventos (delegados: sobreviven a cada re-render) ────── */
     function bindEvents() {
         document.addEventListener('click', (e) => {
@@ -1460,6 +1705,18 @@
                     case 'citar': e.preventDefault(); quotePost(id); break;
                     case 'compartir': e.preventDefault(); copyLink(); break;
                     case 'reportar': e.preventDefault(); reportItem(id); break;
+                    case 'editar':
+                        e.preventDefault();
+                        if (id === 'op') openEditModal('tema', null);
+                        else openEditModal('mensaje', id);
+                        break;
+                    case 'eliminar':
+                        e.preventDefault();
+                        if (id === 'op') deleteForumItem('tema', null);
+                        else deleteForumItem('mensaje', id);
+                        break;
+                    case 'close-edit-modal': e.preventDefault(); closeEditModal(); break;
+                    case 'guardar-edicion': e.preventDefault(); submitEdit(); break;
                     case 'more': {
                         e.preventDefault();
                         moreOpen = !moreOpen;
@@ -1473,8 +1730,9 @@
                 return;
             }
 
-            // Cerrar el modal al pulsar el fondo.
+            // Cerrar los modales al pulsar el fondo.
             if (target.id === 'foroModal') closeCreateAndGoIndex();
+            if (target.id === 'foroEditModal') closeEditModal();
         });
 
         document.addEventListener('change', (e) => {
@@ -1486,6 +1744,8 @@
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
+                const editModal = $('foroEditModal');
+                if (editModal && !editModal.hidden) { closeEditModal(); return; }
                 const modal = $('foroModal');
                 if (modal && !modal.hidden) { closeCreateAndGoIndex(); return; }
                 moreOpen = false;

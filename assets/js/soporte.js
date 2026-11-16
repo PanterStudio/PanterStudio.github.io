@@ -1086,11 +1086,18 @@ async function suscribirTickets(onData, onError) {
 
 async function suscribirTicket(ticketId, onData, onError) {
     let remote = null;
+    let remoteResolved = false;
     let unsub = null;
     const emit = () => {
         if (typeof onData !== 'function') return;
         const local = localTickets()[ticketId];
-        if (!remote && !local) return onData(null);
+        if (!remote && !local) {
+            // Todavía no llegó el primer snapshot: NO se interpreta como
+            // "ticket borrado" (cerraría el modal recién abierto).
+            // Sólo se avisa cuando Firestore ya confirmó que no existe.
+            if (remoteResolved) onData(null);
+            return;
+        }
         onData(normalizarTicket(Object.assign({}, remote || {}, local || {}, { id: ticketId })));
     };
 
@@ -1100,6 +1107,7 @@ async function suscribirTicket(ticketId, onData, onError) {
             unsub = window.onSnapshot(
                 window.fsDoc(window.db, SOPORTE_COLLECTION, ticketId),
                 snap => {
+                    remoteResolved = true;
                     remote = snap.exists() ? normalizarTicket({ id: snap.id, ...snap.data() }) : null;
                     emit();
                 },
