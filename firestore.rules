@@ -78,12 +78,32 @@ service cloud.firestore {
     // 👥 PERSONAL / EQUIPO — fuente ÚNICA de rangos manuales
     // ═══════════════════════════════════════════════════════
     match /equipo/{memberId} {
-      allow read, write: if true;
+      allow read: if true;
+      // Sólo se permiten los 10 ids oficiales de roles.js. Esto impide
+      // inventar rangos nuevos desde el cliente. (La autorización real por
+      // identidad requiere request.auth -> Fase 2 con backend.)
+      allow create, update: if request.resource.data.get('role', 'usuario') in [
+        'founder_ceo', 'director', 'administrador', 'programador', 'modelador',
+        'moderador', 'soporte', 'creador_contenido', 'vip', 'usuario'
+      ];
+      allow delete: if true;
       match /{rest=**} { allow read, write: if true; }
     }
     match /personal/{memberId} {
       allow read, write: if true;
       match /{rest=**} { allow read, write: if true; }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // 🟢 PRESENCIA EN TIEMPO REAL (presencia/{uid})
+    // Latido del cliente cada 60 s; los lectores aplican TTL de 2 min.
+    // No se guarda el correo en este documento público.
+    // ═══════════════════════════════════════════════════════
+    match /presencia/{uid} {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasOnly([
+        'uid', 'online', 'ultimaVez', 'nombre', 'avatarUrl', 'temaId'
+      ]);
     }
 
     // ═══════════════════════════════════════════════════════
@@ -116,6 +136,10 @@ service cloud.firestore {
     match /sponsors/{document}          { allow read, write: if true; }
     match /coin_redemptions/{document}  { allow read, write: if true; }
     match /redenciones/{document}       { allow read, write: if true; }
+    // settings: se deja permisivo a propósito. Un `hasOnly` aquí validaría
+    // el documento COMPLETO (por los setDoc con merge) y podría rechazar el
+    // guardado si existiera alguna clave legacy, rompiendo la configuración.
+    // Su endurecimiento real pertenece a la Fase 2 (request.auth + backend).
     match /settings/{document}          { allow read, write: if true; }
     match /admin/{document}             { allow read, write: if true; }
 

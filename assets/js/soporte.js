@@ -866,9 +866,16 @@ async function desasignarTicket(ticketId, staffName, staffUid) {
 // ============================================================
 // DISCORD WEBHOOK — Notificación profesional de nuevo ticket
 // ============================================================
+// SEGURIDAD: la URL del webhook es un SECRETO y ya NO vive en el cliente.
+// Un webhook expuesto en el JS público puede ser leído y spameado por
+// cualquiera. La notificación se envía únicamente si el despliegue define
+// un PROXY del mismo origen (backend / Cloud Function) que guarde el secreto:
+//   window.PANTER_SUPPORT_WEBHOOK_PROXY = '/api/support/notify'
+// Hasta entonces la creación del ticket funciona igual y este envío se omite.
 async function enviarNotificacionDiscordWebhook(ticket) {
-    const WEBHOOK_URL = 'https://discord.com/api/webhooks/1520119576006754517/D8sHMslbxELINUyBb-nJjrcEiFuyi90OiiHXRNoTyya1sVTKdN5vRvtzc3KTv6MLbpi_';
-    
+    const WEBHOOK_PROXY = String(window.PANTER_SUPPORT_WEBHOOK_PROXY || '').trim();
+    if (!WEBHOOK_PROXY) return;
+
     const prioColor = {
         'baja': 0x64748b,
         'normal': 0x00b0ff,
@@ -918,7 +925,7 @@ async function enviarNotificacionDiscordWebhook(ticket) {
     };
 
     try {
-        const response = await fetch(WEBHOOK_URL, {
+        const response = await fetch(WEBHOOK_PROXY, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)

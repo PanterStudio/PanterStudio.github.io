@@ -132,6 +132,11 @@
   function esc(v) {
     return String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
+  /** Sólo URLs http(s): evita javascript:/data: en el avatar personalizado. */
+  function safeAvatarUrl(v) {
+    const u = String(v || '').trim();
+    return /^https?:\/\//i.test(u) ? u.slice(0, 300) : '';
+  }
   /* ── Hora global del sitio: UTC+0 ───────────────────────────
      Todo lo que muestra fecha/hora, y todos los cálculos de «día»
      (bonus diario, racha, minijuegos), usan medianoche UTC para que
@@ -600,13 +605,17 @@
   }
 
   function renderProfile() {
-    if (!currentUser || !currentUserData) return;
-    const d    = currentUserData;
-    const name = String(d.nombre_usuario || d.displayName || d.username || currentUser.displayName || currentUser.username || currentUser.email?.split('@')[0] || 'Usuario Discord');
+    if (!currentUser) return;
+    // Si Firestore aún no respondió, se pinta igual con la sesión: así el
+    // alias editado se ve de inmediato y no depende de la red.
+    const d    = currentUserData || {};
+    // El alias personalizado gana para MOSTRAR, pero jamás se envía a
+    // PanterStaff.findFor(): la identidad (correo/uid) sigue siendo Discord.
+    const name = String(d.displayNameCustom || d.nombre_usuario || d.displayName || d.username || currentUser.displayName || currentUser.username || currentUser.email?.split('@')[0] || 'Usuario Discord');
     const role = String(d.role || 'viewer').toLowerCase();
     const set  = (el, v) => { if (el) el.textContent = v; };
 
-    const avatarImage = d.avatarImg || currentUser.photoURL || currentUser.avatarUrl;
+    const avatarImage = safeAvatarUrl(d.avatarCustom || d.avatarImg || currentUser.photoURL || currentUser.avatarUrl);
     if (profileAvatarLetter) {
       if (avatarImage) {
         profileAvatarLetter.innerHTML = `<img src="${esc(avatarImage)}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
@@ -1328,21 +1337,29 @@
     btn.disabled = false;
   });
 
-  /* Editar perfil */
+  /* Editar perfil: identidad fija + alias de visualización editables */
   editProfileBtn?.addEventListener('click', () => {
-    if (!currentUserData || !editProfileModal) return;
-    const discordName = currentUserData.displayName || currentUser?.displayName || 'Usuario';
-    const discordAvatar = currentUserData.avatarImg || currentUser?.photoURL || 'https://cdn.discordapp.com/embed/avatars/0.png';
+    if (!editProfileModal) return;
+    // Aunque el documento de Firestore tarde o falle, la identidad de la
+    // sesión basta para mostrar el correo y permitir editar el alias.
+    const d = currentUserData || {};
+    const discordName = d.discordDisplayName || d.displayName || currentUser?.displayName || 'Usuario';
+    const discordAvatar = safeAvatarUrl(d.discordAvatarUrl || d.avatarImg || currentUser?.photoURL)
+      || 'https://cdn.discordapp.com/embed/avatars/0.png';
+    const customName = String(d.displayNameCustom || '').trim();
+    const customAvatar = String(d.avatarCustom || '').trim();
 
-    const previewName = $('editDiscordNamePreview');
-    if (previewName) previewName.textContent = discordName;
-    const previewImg = $('editDiscordAvatarPreview');
-    if (previewImg) previewImg.src = discordAvatar;
+    if ($('editDiscordNamePreview')) $('editDiscordNamePreview').textContent = discordName;
+    if ($('editDiscordAvatarPreview')) $('editDiscordAvatarPreview').src = customAvatar ? safeAvatarUrl(customAvatar) || discordAvatar : discordAvatar;
+    // El correo es de SOLO LECTURA: clave de identidad para rangos y Beta Testers.
+    if ($('editEmailReadonly')) $('editEmailReadonly').textContent = String(d.email || currentUser?.email || 'No disponible');
 
-    if ($('editDisplayName')) $('editDisplayName').value = discordName;
-    if ($('editBio')) $('editBio').value = currentUserData.bio || '';
-    if ($('editFavoriteProject')) $('editFavoriteProject').value = currentUserData.favoriteProject || '';
-    if ($('editCountry')) $('editCountry').value = currentUserData.country || '';
+    if ($('editProfileName')) $('editProfileName').value = customName;
+    if ($('editProfileName')) $('editProfileName').placeholder = discordName;
+    if ($('editProfileAvatar')) $('editProfileAvatar').value = customAvatar;
+    if ($('editBio')) $('editBio').value = d.bio || '';
+    if ($('editFavoriteProject')) $('editFavoriteProject').value = d.favoriteProject || '';
+    if ($('editCountry')) $('editCountry').value = d.country || '';
 
     editProfileModal.showModal();
   });
@@ -1354,10 +1371,21 @@
 
   editProfileForm?.addEventListener('submit', async e => {
     e.preventDefault(); if (!currentUser) return;
+
+    const rawAvatar = String($('editProfileAvatar')?.value || '').trim();
+    if (rawAvatar && !/^https?:\/\//i.test(rawAvatar)) {
+      if (window.alert) window.alert('El avatar debe ser una URL que empiece por https://');
+      return;
+    }
+
     const p = {
-      bio:             String($('editBio')?.value             || '').trim(),
-      favoriteProject: String($('editFavoriteProject')?.value || '').trim(),
-      country:         String($('editCountry')?.value         || '').trim()
+      // Alias de VISUALIZACIÓN: no alimentan PanterStaff.findFor(), por lo que
+      // no pueden suplantar rangos ni alterar el índice de Beta Testers.
+      displayNameCustom: String($('editProfileName')?.value || '').trim().slice(0, 60),
+      avatarCustom:      safeAvatarUrl(rawAvatar),
+      bio:               String($('editBio')?.value             || '').trim().slice(0, 500),
+      favoriteProject:   String($('editFavoriteProject')?.value || '').trim().slice(0, 80),
+      country:           String($('editCountry')?.value         || '').trim().slice(0, 60)
     };
 
     const petNameInput = $('editPetName');
@@ -1616,7 +1644,7 @@
           return;
         }
 
-        if (msgEl) { msgEl.textContent = ' Enviando ticket y notificando a Discord...'; msgEl.style.color = '#38bdf8'; }
+        if (msgEl) { msgEl.textContent = ' Enviando ticket...'; msgEl.style.color = '#38bdf8'; }
 
         try {
           if (!window.SoporteJS || typeof window.SoporteJS.crearTicket !== 'function') {
@@ -1633,7 +1661,7 @@
               usuarioEmail: currentUser.email
             });
 
-            if (msgEl) { msgEl.textContent = ` Ticket ${ticket.codigo} creado y enviado a Discord exitosamente!`; msgEl.style.color = '#4ade80'; }
+            if (msgEl) { msgEl.textContent = ` Ticket ${ticket.codigo} creado exitosamente!`; msgEl.style.color = '#4ade80'; }
             form.reset();
             setTimeout(() => {
               closeModal();
@@ -1668,7 +1696,7 @@
           console.error('[Perfil] Error enviando ticket:', err);
           let errMsg = err?.message || 'Error de conexión';
           if (String(err?.code || '').includes('permission-denied')) {
-            errMsg = 'Permiso denegado en Firestore. El webhook de Discord pudo haberse enviado. Contacta al admin para verificar las reglas de seguridad.';
+            errMsg = 'Permiso denegado en Firestore. Contacta al administrador para verificar las reglas de seguridad.';
           } else if (errMsg.includes('Firebase') || errMsg.includes('Firestore')) {
             errMsg = 'No se pudo conectar con el servidor. Recarga la página e intenta de nuevo.';
           }
@@ -1676,6 +1704,39 @@
         }
       };
     }
+  }
+
+  /* ── Presencia en tiempo real (Firestore presencia/{uid}) ── */
+  let presenceUnsub = null;
+  function bindPresenceUI(user) {
+    if (window.PanterPresence && window.PanterPresence.start) window.PanterPresence.start();
+    const pill = $('profilePresence');
+    const txt  = $('profilePresenceText');
+    if (!pill || !txt) return;
+    pill.style.display = 'inline-flex';
+    if (!user || !user.uid || !window.db || !window.fsDoc || !window.onSnapshot) {
+      txt.textContent = 'En línea';
+      return;
+    }
+    if (presenceUnsub) { try { presenceUnsub(); } catch (e) { /* noop */ } }
+    try {
+      presenceUnsub = window.onSnapshot(
+        window.fsDoc(window.db, 'presencia', String(user.uid)),
+        snap => {
+          const d = snap.exists() ? (snap.data() || {}) : null;
+          const ttl = window.PanterPresence ? window.PanterPresence.TTL : 120000;
+          const fresh = Boolean(d && d.online === true
+            && (Date.now() - new Date(d.ultimaVez || 0).getTime()) < ttl);
+          pill.style.color = fresh ? '#4ade80' : '#94a3b8';
+          txt.textContent = fresh ? 'En línea' : 'Desconectado';
+          if (d && d.ultimaVez) {
+            pill.title = 'Última actividad (UTC+0): '
+              + new Date(d.ultimaVez).toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+          }
+        },
+        () => { txt.textContent = 'En línea'; }
+      );
+    } catch (e) { txt.textContent = 'En línea'; }
   }
 
   /* ── Init ── */
@@ -1688,6 +1749,7 @@
     if (dailyBonusAmount) dailyBonusAmount.textContent = String(Number(settings.dailyBonusCoins || 10));
     window.onAuthStateChanged(window.auth, user => {
       handleAuthStateChange(user).catch(err => { console.error('Auth:', err); setAuthMessage('No se pudo cargar tu perfil.', 'error'); });
+      bindPresenceUI(user);
     });
   }
 

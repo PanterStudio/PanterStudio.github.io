@@ -27,11 +27,18 @@
     const INVITE_URL = 'https://discord.gg/MukZeJmgky';
     const STORAGE_KEY = 'discord_user_session';
     const TOKEN_KEY = 'discord_access_token';
-    const TOKEN_STORE_KEY = 'discord_access_token_store';
+    const TOKEN_STORE_KEY = 'discord_access_token_store'; // sólo migración de sesiones antiguas
     const AUTH_ERROR_KEY = 'discord_auth_error';
     const GUILD_CACHE_KEY = 'panterDiscordGuildContext';
     const SCOPES = 'identify email guilds guilds.members.read';
     const API_BASE = 'https://discord.com/api/v10';
+
+    // Presencia global en Firestore (`presencia/{uid}`): latido cada 60 s,
+    // TTL de 2 min para descartar pestañas cerradas sin aviso. Firestore no
+    // tiene `onDisconnect`, por eso se marca offline en visibilitychange.
+    const PRESENCE_COLLECTION = 'presencia';
+    const PRESENCE_TTL = 2 * 60 * 1000;
+    const PRESENCE_HEARTBEAT = 60 * 1000;
 
     const listeners = new Set();
     let hashCallbackPromise = Promise.resolve(false);
@@ -71,30 +78,22 @@
 
     function saveAccessToken(token, expiresIn) {
         if (!token) return;
+        // El token de Discord NO se persiste en localStorage: sólo vive en
+        // sessionStorage (se pierde al cerrar la pestaña), reduciendo la
+        // superficie de exposición ante XSS. La sesión de la web sí persiste.
         try { sessionStorage.setItem(TOKEN_KEY, token); } catch (e) { /* ignore */ }
-
-        // La sesión "guardada" del requisito vive en localStorage. El token se
-        // conserva con su caducidad (implicit grant) para poder revalidar la
-        // membresía al volver a abrir la web.
-        try {
-            const seconds = Number(expiresIn);
-            const expiresAt = Number.isFinite(seconds) && seconds > 0
-                ? Date.now() + (seconds * 1000)
-                : 0;
-            localStorage.setItem(TOKEN_STORE_KEY, JSON.stringify({ token, expiresAt }));
-        } catch (e) { /* storage no disponible */ }
     }
 
+    /** Migración de sesiones antiguas que guardaron el token en localStorage. */
     function readStoredToken() {
         try {
             const raw = localStorage.getItem(TOKEN_STORE_KEY);
             if (!raw) return '';
             const data = JSON.parse(raw);
+            // Se elimina siempre: ya no queremos secretos en almacenamiento persistente.
+            localStorage.removeItem(TOKEN_STORE_KEY);
             if (!data || !data.token) return '';
-            if (data.expiresAt && Date.now() >= Number(data.expiresAt)) {
-                localStorage.removeItem(TOKEN_STORE_KEY);
-                return '';
-            }
+            if (data.expiresAt && Date.now() >= Number(data.expiresAt)) return '';
             return String(data.token);
         } catch (e) {
             return '';
@@ -132,7 +131,11 @@
         const displayName = rawUser.global_name || rawUser.username;
 
         const R = rolesLib();
-        const email = rawUser.email || `${rawUser.id}@discord.local`;
+        // NUNCA se inventa un correo: un `@discord.local` falso rompería el
+        // emparejamiento de rangos y el índice de Beta Testers. Si Discord no
+        // entrega email (permiso denegado / cuenta sin correo), queda vacío y
+        // `syncProfile` no sobrescribe el que ya hubiera.
+        const email = String(rawUser.email || '').trim().toLowerCase();
         // Sin rango automático por correo: el rango real se resuelve en vivo
         // desde `equipo` mediante PanterRoles.resolveRole().
         const sessionRole = 'usuario';
@@ -145,11 +148,14 @@
             displayName: displayName,
             globalName: rawUser.global_name,
             email: email,
+            emailVerified: Boolean(email) && Boolean(rawUser.verified),
+            discordUsername: rawUser.username,
+            discordDisplayName: displayName,
+            discordAvatarUrl: avatarUrl,
             photoURL: avatarUrl,
             avatarUrl: avatarUrl,
             avatar: rawUser.avatar,
             discriminator: rawUser.discriminator,
-            emailVerified: true,
             providerId: 'discord.com',
             role: R ? R.toLegacyRole(sessionRole) : sessionRole,
             isAdmin: false,
@@ -196,6 +202,9 @@
             user = applySessionRole(user);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
             notifyListeners(user);
+            // Presencia en tiempo real: se enciende al iniciar sesión y se
+            // mantiene con el latido (idempotente gracias a presenceStarting).
+            startPresence().catch(() => {});
         } catch (e) {
             console.error('[DiscordAuth] Error guardando sesión:', e);
         }
@@ -403,16 +412,21 @@
         // `conductores.role` se sincroniza con la política por correo. El rango
         // manual vive en `equipo.role` y se resuelve en vivo, nunca se pisa aquí.
         const emailRole = R ? R.roleForEmail(user.email) : 'usuario';
+        const email = String(user.email || '').trim().toLowerCase();
         const payload = {
             uid: user.uid,
             discordId: user.discordId || user.id || null,
             username: user.username || null,
             displayName: user.displayName || user.username || null,
             nombre_usuario: user.displayName || user.username || null,
-            email: user.email || null,
             avatarUrl: user.avatarUrl || user.photoURL || null,
             avatarImg: user.avatarImg || user.avatarUrl || user.photoURL || null,
             photoURL: user.photoURL || user.avatarUrl || null,
+            // Espejo inmutable de la identidad de Discord (para auditoría y
+            // para poder restaurar el alias personalizado si hiciera falta).
+            discordUsername: user.discordUsername || user.username || null,
+            discordDisplayName: user.discordDisplayName || user.displayName || null,
+            discordAvatarUrl: user.discordAvatarUrl || user.avatarUrl || null,
             role: R ? R.toLegacyRole(emailRole) : emailRole,
             isAdmin: R ? R.canAccessAdminPanel(emailRole) : false,
             discordAdmin: false,
@@ -421,6 +435,12 @@
             lastLoginAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
+        // El correo es la CLAVE DE IDENTIDAD: se guarda siempre que Discord lo
+        // aporte, pero jamás se borra ni se sustituye por un valor inventado.
+        // Los alias editables (`displayNameCustom`, `avatarCustom`, bio,
+        // country, favoriteProject, betaTester*) NO se incluyen aquí: con
+        // `merge: true` quedan intactos entre inicios de sesión.
+        if (email && !email.endsWith('@discord.local')) payload.email = email;
         try {
             await window.setDoc(window.fsDoc(window.db, 'conductores', user.uid), payload, { merge: true });
             // El roster `equipo` sólo se gestiona manualmente desde el panel.
@@ -677,7 +697,91 @@
         return getCurrentSession();
     }
 
+    /* ═════════════════════════════════════════════════════════════
+       PRESENCIA GLOBAL (Firestore: presencia/{uid})
+       · Latido cada 60 s mientras la pestaña esté visible.
+       · offline al ocultar/cerrar (Firestore no tiene onDisconnect).
+       · Los consumidores descartan registros con más de PRESENCE_TTL.
+       · No se guarda el correo en este documento público.
+       ═════════════════════════════════════════════════════════════ */
+    let presenceTimer = null;
+    let presenceBound = false;
+    let presenceTemaId = '';
+
+    function presenceRef(uid) {
+        return window.fsDoc(window.db, PRESENCE_COLLECTION, uid);
+    }
+
+    async function writePresence(online) {
+        if (!window.db || !window.fsDoc || !window.setDoc) return;
+        const u = getCurrentSession();
+        if (!u || !u.uid) return;
+        const payload = {
+            uid: String(u.uid),
+            online: Boolean(online),
+            ultimaVez: new Date().toISOString(),
+            nombre: String(u.displayName || u.username || 'Miembro').slice(0, 60),
+            avatarUrl: String(u.avatarUrl || u.photoURL || '').slice(0, 300)
+        };
+        if (presenceTemaId && online) payload.temaId = presenceTemaId;
+        else if (online) payload.temaId = null;
+        try {
+            await window.setDoc(presenceRef(String(u.uid)), payload, { merge: true });
+        } catch (e) { /* sin red: se reintenta en el siguiente latido */ }
+    }
+
+    function bindPresenceEvents() {
+        if (presenceBound) return;
+        presenceBound = true;
+        document.addEventListener('visibilitychange', () => {
+            writePresence(document.visibilityState === 'visible');
+        });
+        window.addEventListener('pagehide', () => writePresence(false));
+    }
+
+    let presenceStarting = false;
+    async function startPresence() {
+        if (presenceStarting || !getCurrentSession()) return;
+        presenceStarting = true;
+        try {
+            const ok = await waitForFirestore(8000);
+            if (!ok) return;
+            bindPresenceEvents();
+            await writePresence(true);
+            if (presenceTimer) clearInterval(presenceTimer);
+            presenceTimer = setInterval(() => {
+                if (document.visibilityState === 'visible') writePresence(true);
+            }, PRESENCE_HEARTBEAT);
+        } finally {
+            presenceStarting = false;
+        }
+    }
+
+    function stopPresence() {
+        if (presenceTimer) { clearInterval(presenceTimer); presenceTimer = null; }
+        writePresence(false);
+    }
+
+    /** Marca el tema del foro que se está leyendo (para "Leyendo ahora"). */
+    function setPresenceTema(temaId) {
+        presenceTemaId = String(temaId || '');
+        if (document.visibilityState !== 'hidden') writePresence(true);
+    }
+
+    /** Lista de usuarios realmente en línea (TTL aplicado). */
+    async function getOnlineUsers() {
+        if (!window.db || !window.collection || !window.getDocs) return [];
+        try {
+            const snap = await window.getDocs(window.collection(window.db, PRESENCE_COLLECTION));
+            const now = Date.now();
+            return snap.docs.map(d => Object.assign({ id: d.id }, d.data() || {}))
+                .filter(p => p.online === true
+                    && (now - new Date(p.ultimaVez || 0).getTime()) < PRESENCE_TTL);
+        } catch (e) { return []; }
+    }
+
     function logout() {
+        stopPresence();
         clearSession();
         return Promise.resolve();
     }
@@ -752,6 +856,18 @@
         refreshRoles: refreshGuildMembership,
         syncProfile
     };
+
+    // API de presencia compartida por perfil, foro y panel admin.
+    window.PanterPresence = {
+        start: startPresence,
+        stop: stopPresence,
+        setTema: setPresenceTema,
+        online: getOnlineUsers,
+        TTL: PRESENCE_TTL
+    };
+
+    // Sesión ya existente al cargar la página (no pasa por saveSession).
+    if (getCurrentSession()) startPresence().catch(() => {});
 
     console.log('[DiscordAuth] Motor nativo Discord OAuth 2.0 listo (Client ID:', DISCORD_CLIENT_ID, ')');
 })();

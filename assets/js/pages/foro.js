@@ -790,7 +790,42 @@
         return `<div class="${cls}">${initial}</div>`;
     }
 
-    /* ── Presencia "Leyendo ahora" ──────────────────────────── */
+    /* ── Presencia "Leyendo ahora" (Firestore + respaldo local) ── */
+    let presenceFeed = [];
+    let presenceFeedKey = '';
+    let presenceFeedStarted = false;
+    let lastTemaWritten = '';
+    let lastTemaWriteAt = 0;
+
+    /** Suscripción global a `presencia`. Sólo repinta si cambia la LISTA
+     *  (se ignora `ultimaVez` del latido para no realimentar el render). */
+    function startPresenceFeed() {
+        if (presenceFeedStarted) return;
+        if (!window.db || !window.collection || !window.onSnapshot) return;
+        presenceFeedStarted = true;
+        try {
+            window.onSnapshot(window.collection(window.db, 'presencia'), snap => {
+                const now = Date.now();
+                const ttl = window.PanterPresence ? window.PanterPresence.TTL : 120000;
+                presenceFeed = snap.docs.map(d => Object.assign({ id: d.id }, d.data() || {}))
+                    .filter(p => p.online === true
+                        && (now - new Date(p.ultimaVez || 0).getTime()) < ttl)
+                    .map(p => ({
+                        id: String(p.id),
+                        nombre: String(p.nombre || 'Invitado').slice(0, 60),
+                        avatar: String(p.avatarUrl || '').slice(0, 300),
+                        temaId: String(p.temaId || '')
+                    }));
+                const key = presenceFeed.map(p => p.id + '|' + p.temaId + '|' + p.nombre)
+                    .sort().join(';');
+                if (key !== presenceFeedKey) {
+                    presenceFeedKey = key;
+                    scheduleRender();
+                }
+            }, () => { /* sin red: se conserva el respaldo local */ });
+        } catch (e) { presenceFeedStarted = false; }
+    }
+
     function visitorInfo() {
         let id = sessionStorage.getItem('ps_foro_visitor');
         if (!id) {
@@ -816,16 +851,39 @@
             list.push({ id: me.id, nombre: me.nombre, avatar: me.avatar, at: now });
             writeJson(key, list.slice(-40));
         } catch (e) { /* noop */ }
+
+        // Presencia ONLINE en Firestore. Se limita a 1 escritura por minuto
+        // (o al cambiar de tema) para que el latido no realimente el render.
+        if (window.PanterPresence && typeof window.PanterPresence.setTema === 'function') {
+            const nowTs = Date.now();
+            if (String(temaId) !== lastTemaWritten || (nowTs - lastTemaWriteAt) > 60000) {
+                lastTemaWritten = String(temaId);
+                lastTemaWriteAt = nowTs;
+                window.PanterPresence.setTema(temaId);
+            }
+        }
     }
     function readersFor(temaId) {
+        const seen = new Map();
+        // 1) Nube: visible para TODOS los visitantes, en tiempo real.
+        presenceFeed.filter(p => p.temaId === String(temaId)).forEach(p => {
+            seen.set(p.id, { id: p.id, nombre: p.nombre, avatar: p.avatar });
+        });
+        // 2) Respaldo local (sin conexión / reglas aún no publicadas).
         try {
             const now = Date.now();
             const list = readJson(PRESENCE_PREFIX + temaId, []);
-            return (Array.isArray(list) ? list : []).filter(x => x && (now - (x.at || 0)) < PRESENCE_TTL);
-        } catch (e) { return []; }
+            (Array.isArray(list) ? list : [])
+                .filter(x => x && (now - (x.at || 0)) < PRESENCE_TTL)
+                .forEach(r => { if (!seen.has(r.id)) seen.set(r.id, r); });
+        } catch (e) { /* noop */ }
+        return Array.from(seen.values());
     }
     function allReaders() {
         const seen = new Map();
+        presenceFeed.forEach(p => {
+            if (!seen.has(p.id)) seen.set(p.id, { id: p.id, nombre: p.nombre, avatar: p.avatar });
+        });
         try {
             for (let i = 0; i < localStorage.length; i++) {
                 const k = localStorage.key(i);
@@ -1848,7 +1906,9 @@
         bindEvents();
         syncUser();
         render();
-        waitForFirebase().then(ok => { if (ok) reattachFeeds(); });
+        waitForFirebase().then(ok => {
+            if (ok) { reattachFeeds(); startPresenceFeed(); }
+        });
         // El callback OAuth de Discord resuelve la sesión unos ms después.
         setTimeout(syncUser, 800);
         setInterval(() => {

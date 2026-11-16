@@ -904,6 +904,9 @@
                             <button type="button" class="ps-btn-mini" id="staffTicketRefresh">
                                 <i class="fa-solid fa-rotate" aria-hidden="true"></i> Actualizar
                             </button>
+                            <span id="staffOnlineCount" class="ps-support-stat" style="white-space:nowrap;" title="Personal conectado en tiempo real">
+                                <i class="fa-solid fa-circle" aria-hidden="true"></i> —
+                            </span>
                         </div>
                         <div id="staffTicketsList">
                             <div class="sp-empty">
@@ -1097,6 +1100,8 @@
         let misTicketsUnsub = null;
         let equipoRoleUnsub = null;
         let staffTicketsUnsub = null;
+        let pendingStaffTab = false;
+        let onlineStaffAt = 0;
 
         // ---- TABS ----
         document.querySelectorAll('.sp-tab').forEach(tab => {
@@ -1339,9 +1344,29 @@
             }
         }
 
+        /** Personal del equipo conectado en tiempo real (Firestore `presencia`). */
+        async function updateOnlineStaff(force = false) {
+            const el = document.getElementById('staffOnlineCount');
+            if (!el || !window.PanterPresence || !window.PanterPresence.online) return;
+            const now = Date.now();
+            if (!force && (now - onlineStaffAt) < 30000) return;
+            onlineStaffAt = now;
+            try {
+                const usuarios = await window.PanterPresence.online();
+                const S = window.PanterStaff, R = window.PanterRoles;
+                const conectados = usuarios.filter(p => {
+                    if (!S || !S.roleForAuthor || !R || !R.isTicketStaff) return false;
+                    const rol = S.roleForAuthor({ uid: p.uid || p.id, nombre: p.nombre });
+                    return Boolean(rol && R.isTicketStaff(rol));
+                }).length;
+                el.innerHTML = `<i class="fa-solid fa-circle" aria-hidden="true"></i> ${conectados} staff en línea`;
+            } catch (e) { /* sin red: se conserva el valor anterior */ }
+        }
+
         function renderStaffTickets() {
             const list = document.getElementById('staffTicketsList');
             if (!list) return;
+            updateOnlineStaff();
             const search = (document.getElementById('staffTicketSearch')?.value || '').trim().toLowerCase();
             const status = document.getElementById('staffTicketStatus')?.value || '';
             const escalado = document.getElementById('staffTicketEscalado')?.value || '';
@@ -1956,6 +1981,14 @@
 
                 applyRole();
 
+                // Enlace directo desde el Panel Admin (soporte.html?tab=staff):
+                // abre la pestaña de atención en cuanto el rango esté resuelto.
+                if (pendingStaffTab && currentStaff) {
+                    pendingStaffTab = false;
+                    const staffBtn = document.getElementById('staffTabBtn');
+                    if (staffBtn && !staffBtn.hidden) staffBtn.click();
+                }
+
                 // Cambios manuales de rango desde Personal se reflejan en vivo
                 // con el bus compartido (funciona con nube y con espejo local).
                 if (equipoRoleUnsub) {
@@ -2019,6 +2052,9 @@
         function bootSoporte() {
             if (soporteBooted || !window.SoporteJS || !window.db) return;
             soporteBooted = true;
+            try {
+                pendingStaffTab = new URLSearchParams(window.location.search).get('tab') === 'staff';
+            } catch (e) { pendingStaffTab = false; }
             // UNA sola sincronización inicial del roster. A partir de aquí
             // `panter:staff-changed` avisa de cualquier cambio real.
             const S = window.PanterStaff;

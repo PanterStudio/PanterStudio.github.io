@@ -2096,6 +2096,11 @@
             <span class="role-pill" id="profileRoleText">Miembro</span>
             <span class="ph-divider">•</span>
             <span id="profileUid" class="uid-chip" aria-label="ID de usuario"></span>
+            <span class="ph-divider">•</span>
+            <span id="profilePresence" style="display:none;align-items:center;gap:5px;font-size:0.76rem;font-weight:800;color:#4ade80;" title="Estado en tiempo real (UTC+0)">
+              <i class="fa-solid fa-circle" aria-hidden="true" style="font-size:0.55rem;"></i>
+              <span id="profilePresenceText">En línea</span>
+            </span>
           </div>
           <div class="ph-level-bar-wrap">
             <div class="ph-level-header">
@@ -2413,7 +2418,7 @@
     <form id="editProfileForm" method="dialog" style="padding: 24px;">
       <div class="pm-b" style="display: flex; flex-direction: column; gap: 16px;">
         
-        <!-- Identidad Discord (Bloqueada / Solo Lectura) -->
+        <!-- Identidad Discord: el CORREO es la clave de identidad (solo lectura) -->
         <div class="pm-grp" style="background: rgba(88, 101, 242, 0.12); border: 1.5px solid rgba(88, 101, 242, 0.35); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 14px;">
           <img id="editDiscordAvatarPreview" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="Avatar Discord" style="width: 52px; height: 52px; border-radius: 50%; border: 2px solid #5865F2; object-fit: cover; flex-shrink: 0; box-shadow: 0 0 12px rgba(88,101,242,0.4);">
           <div style="flex: 1; min-width: 0;">
@@ -2421,13 +2426,26 @@
               <span id="editDiscordNamePreview" style="font-weight: 800; font-size: 1.05rem; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Usuario Discord</span>
               <span style="font-size: 0.7rem; background: #5865F2; color: #fff; padding: 2px 8px; border-radius: 20px; font-weight: 700;">Discord</span>
             </div>
-            <p style="font-size: 0.76rem; color: #94a3b8; margin: 3px 0 0 0; line-height: 1.3;">
-              <i class="fa-solid fa-lock" aria-hidden="true"></i> Nombre y fotografía sincronizados directamente desde tu cuenta de Discord.
+            <div style="font-size: 0.76rem; color: #cbd5e1; margin-top: 4px; word-break: break-all;">
+              <i class="fa-solid fa-envelope" aria-hidden="true"></i> <span id="editEmailReadonly">—</span>
+            </div>
+            <p style="font-size: 0.72rem; color: #94a3b8; margin: 4px 0 0 0; line-height: 1.3;">
+              <i class="fa-solid fa-lock" aria-hidden="true"></i> El correo es fijo: se usa para sincronizar rangos y Beta Testers. El nombre y el avatar de abajo son sólo de visualización.
             </p>
           </div>
         </div>
-        <input type="hidden" id="editDisplayName" value="">
-        <input type="hidden" id="editAvatarValue" value="">
+
+        <!-- Alias editables (NUNCA se usan para resolver rangos) -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="pm-grp">
+            <label for="editProfileName" style="display: block; font-size: 0.85rem; font-weight: 700; color: #94a3b8; margin-bottom: 6px;">Nombre visible</label>
+            <input type="text" id="editProfileName" class="p-inp" maxlength="60" placeholder="Tu nombre en la web" style="width: 100%; padding: 10px 12px; border-radius: 10px; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); color: #f8fafc; font-family: inherit;">
+          </div>
+          <div class="pm-grp">
+            <label for="editProfileAvatar" style="display: block; font-size: 0.85rem; font-weight: 700; color: #94a3b8; margin-bottom: 6px;">Avatar (URL https)</label>
+            <input type="url" id="editProfileAvatar" class="p-inp" maxlength="300" placeholder="https://..." style="width: 100%; padding: 10px 12px; border-radius: 10px; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); color: #f8fafc; font-family: inherit;">
+          </div>
+        </div>
         
         <!-- País y Proyecto -->
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">

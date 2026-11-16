@@ -49,7 +49,7 @@
             id: 'director',
             label: 'Director',
             shortLabel: 'Director',
-            rank: 90,
+            rank: 80,
             color: '#ff0000',
             bg: 'rgba(255, 0, 0, 0.12)',
             border: 'rgba(255, 0, 0, 0.35)',
@@ -61,7 +61,7 @@
             id: 'administrador',
             label: 'Administrador',
             shortLabel: 'Admin',
-            rank: 80,
+            rank: 90,
             color: '#f1c40f',
             bg: 'rgba(241, 196, 15, 0.12)',
             border: 'rgba(241, 196, 15, 0.35)',
@@ -190,8 +190,8 @@
      */
     const ROLE_HIERARCHY = [
         'founder_ceo',
-        'director',
         'administrador',
+        'director',
         'moderador',
         'programador',
         'modelador',
