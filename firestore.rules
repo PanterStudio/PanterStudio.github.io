@@ -64,10 +64,16 @@ service cloud.firestore {
     // soporte / moderador / administrador / programador) y de TOMA/CIERRE
     // (tomadoPor, cerradoPor...). En la subcolección `comentarios` se
     // guarda la BITÁCORA de sistema (textoUsuario / textoStaff, tipo,
-    // fecha UTC) y los mensajes del staff (autor, autorRol, esStaff...).
+    // fecha UTC, sistemaRol / sistemaRolColor para colorear el aviso
+    // según el rango que toma o al que se eleva) y los mensajes del staff
+    // (autor, autorRol, esStaff...).
     // El cliente vela el nombre/rango del staff al usuario y colorea con
     // la paleta oficial del área que atiende; estos datos NO se filtran
     // en las reglas, sino en la presentación.
+    // `codigo` = # + 12 caracteres A-Z/0-9 (ej. #NZ4ZNLC70PAE).
+    // `allow write` incluye create/update/delete: necesario para el botón
+    // «Limpiar todo» (borra ticket + comentarios) y para la bandera
+    // `eliminado: true` que oculta un ticket si el borrado no es posible.
     // `match /{rest=**}` cubre todo eso sin cambios.
     // ═══════════════════════════════════════════════════════
     match /soporte_tickets/{ticketId} {
