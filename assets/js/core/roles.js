@@ -45,26 +45,14 @@
             description: 'Fundador y máxima autoridad del estudio.',
             aliases: ['founder', 'ceo', 'fundador', 'fundador_ceo', 'founder_ceo', 'propietario']
         },
-        director: {
-            id: 'director',
-            label: 'Director',
-            shortLabel: 'Director',
-            rank: 80,
-            color: '#ff0000',
-            bg: 'rgba(255, 0, 0, 0.12)',
-            border: 'rgba(255, 0, 0, 0.35)',
-            icon: 'fa-solid fa-user-tie',
-            description: 'Dirección de proyectos y supervisión general.',
-            aliases: ['director', 'directora', 'project_director']
-        },
         administrador: {
             id: 'administrador',
             label: 'Administrador',
             shortLabel: 'Admin',
             rank: 90,
-            color: '#f1c40f',
-            bg: 'rgba(241, 196, 15, 0.12)',
-            border: 'rgba(241, 196, 15, 0.35)',
+            color: '#ff0000',
+            bg: 'rgba(255, 0, 0, 0.12)',
+            border: 'rgba(255, 0, 0, 0.35)',
             icon: 'fa-solid fa-shield-halved',
             description: 'Gestión de la plataforma, contenido y comunidad.',
             aliases: ['admin', 'administrador', 'administrator', 'admin_general', 'owner_admin']
@@ -160,8 +148,7 @@
        ───────────────────────────────────────────────────────────── */
     const OFFICIAL_ROLE_COLORS = Object.freeze({
         founder_ceo:       '#f1c40f',
-        director:          '#ff0000',
-        administrador:     '#f1c40f',
+        administrador:     '#ff0000',
         programador:       '#ffbc00',
         modelador:         '#6f5cff',
         moderador:         '#e67e22',
@@ -191,7 +178,6 @@
     const ROLE_HIERARCHY = [
         'founder_ceo',
         'administrador',
-        'director',
         'moderador',
         'programador',
         'modelador',
@@ -209,9 +195,21 @@
         owner: 'founder_ceo'
     };
 
+    // El rango «Director» se ELIMINÓ. Estos ids antiguos se normalizan a
+    // Administrador para que las fichas de `equipo` guardadas con ese valor
+    // conserven su acceso y no aparezcan como «Usuario». No son rangos nuevos.
+    const RETIRED_ROLE_IDS = {
+        director: 'administrador',
+        directora: 'administrador',
+        project_director: 'administrador'
+    };
+
     function addLegacyAliases(map) {
         Object.keys(LEGACY_ALIASES).forEach(key => {
             map[aliasKey(key)] = LEGACY_ALIASES[key];
+        });
+        Object.keys(RETIRED_ROLE_IDS).forEach(key => {
+            map[aliasKey(key)] = RETIRED_ROLE_IDS[key];
         });
         return map;
     }
@@ -234,9 +232,15 @@
     const BASE_ROLE_DEFS = JSON.parse(JSON.stringify(ROLE_DEFS));
     const BASE_ROLE_IDS = new Set(Object.keys(BASE_ROLE_DEFS));
 
+    // LISTA CERRADA: los ÚNICOS rangos que pueden ver el Panel de Soporte.
+    // Ni la configuración guardada en Firestore ni un rol personalizado
+    // pueden ampliarla (isTicketStaff consulta este set, no los permisos).
+    const TICKET_STAFF_IDS = Object.freeze(new Set([
+        'soporte', 'programador', 'moderador', 'administrador', 'founder_ceo'
+    ]));
+
     const DEFAULT_ROLE_PERMISSIONS = {
         founder_ceo:       { team: true,  ticketStaff: true,  adminPanel: true,  manageTeam: true  },
-        director:          { team: true,  ticketStaff: true,  adminPanel: true,  manageTeam: true  },
         administrador:     { team: true,  ticketStaff: true,  adminPanel: true,  manageTeam: true  },
         programador:       { team: true,  ticketStaff: true,  adminPanel: true,  manageTeam: false },
         modelador:         { team: true,  ticketStaff: false, adminPanel: true,  manageTeam: false },
@@ -399,6 +403,9 @@
         });
 
         roles.forEach(raw => {
+            const rawId = roleSlug(raw && raw.id);
+            // Un config antiguo no puede resucitar el rango eliminado.
+            if (RETIRED_ROLE_IDS[rawId]) return;
             const def = sanitizeRoleDefinition(raw, raw && raw.id);
             if (!def) return;
             ROLE_DEFS[def.id] = def;
@@ -522,6 +529,12 @@
 
     function rolesWithPermission(permission) {
         const key = String(permission || '').trim();
+        // La lista de tickets es cerrada: no se deriva de permisos editables.
+        if (key === 'ticketStaff') {
+            return Array.from(TICKET_STAFF_IDS)
+                .filter(id => ROLE_DEFS[id])
+                .sort((a, b) => Number(ROLE_DEFS[b].rank || 0) - Number(ROLE_DEFS[a].rank || 0));
+        }
         return Object.values(ROLE_DEFS)
             .filter(def => rolePermissions(def)[key] === true)
             .sort((a, b) => Number(b.rank || 0) - Number(a.rank || 0))
@@ -533,9 +546,10 @@
         ADMIN_PANEL_ROLES.clear();
         TEAM_ROLES.clear();
         MANAGE_TEAM_ROLES.clear();
+        // El set de tickets es CERRADO: no se deriva de permisos editables.
+        TICKET_STAFF_IDS.forEach(id => { if (ROLE_DEFS[id]) TICKET_STAFF_ROLES.add(id); });
         Object.values(ROLE_DEFS).forEach(def => {
             const perms = rolePermissions(def);
-            if (perms.ticketStaff === true) TICKET_STAFF_ROLES.add(def.id);
             if (perms.adminPanel === true) ADMIN_PANEL_ROLES.add(def.id);
             if (perms.team === true) TEAM_ROLES.add(def.id);
             if (perms.manageTeam === true) MANAGE_TEAM_ROLES.add(def.id);
@@ -612,7 +626,9 @@
     }
 
     function isTicketStaff(role) {
-        return rolePermissions(normalize(role)).ticketStaff === true;
+        // Lista cerrada: Soporte, Programador, Moderador, Administrador,
+        // Fundador. Un `roles_config` manipulado no puede ampliarla.
+        return TICKET_STAFF_IDS.has(normalize(role));
     }
 
     function isTeamRole(role) {
@@ -628,8 +644,8 @@
     }
 
     /**
-     * Compatibilidad con roles heredados. `director` se conserva para que
-     * `conductores.role` y la sesión reflejen exactamente el rango mostrado.
+     * Compatibilidad con datos heredados: cualquier id retirado (p. ej. el
+     * antiguo `director`) se normaliza al rango vigente que lo sustituye.
      */
     function toLegacyRole(role) {
         return normalize(role);
@@ -797,6 +813,7 @@
         ROLE_ORDER,
         ROLE_HIERARCHY,
         orderedRoleIds,
+        TICKET_STAFF_IDS,
         TICKET_STAFF_ROLES,
         ADMIN_PANEL_ROLES,
         TEAM_ROLES,

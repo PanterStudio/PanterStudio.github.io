@@ -13,7 +13,7 @@
 
     const COLLECTION = 'videos';
     const LOCAL_KEY = 'ps_videos_local';
-    const MANAGER_ROLES = new Set(['founder_ceo', 'director', 'administrador', 'moderador']);
+    const MANAGER_ROLES = new Set(['founder_ceo', 'administrador', 'moderador']);
 
     const $ = (id) => document.getElementById(id);
     const esc = (value) => String(value == null ? '' : value)

@@ -16,7 +16,7 @@
     const CAT_KEY = 'ps_vehiculos_categorias';
     const HIDDEN_SEEDS_KEY = 'ps_vehiculos_hidden_seeds';
     const HIDDEN_KEY = 'ps_vehiculos_hidden';
-    const MANAGER_ROLES = new Set(['founder_ceo', 'director', 'administrador', 'moderador']);
+    const MANAGER_ROLES = new Set(['founder_ceo', 'administrador', 'moderador']);
 
     const DEFAULT_CATEGORIES = [
         { id: 'carga', label: 'Carga / Van' },

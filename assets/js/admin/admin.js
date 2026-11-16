@@ -40,7 +40,6 @@ function toSitePath(path) {
 
 const ROLE_LABELS = {
     founder_ceo: 'Fundador / CEO',
-    director: 'Director',
     administrador: 'Administrador',
     soporte: 'Personal de Soporte',
     programador: 'Programador',
@@ -52,7 +51,7 @@ const ROLE_LABELS = {
     viewer: 'Solo lectura'
 };
 
-const PANEL_ACCESS_ROLES = new Set(['founder_ceo', 'director', 'administrador', 'programador', 'modelador']);
+const PANEL_ACCESS_ROLES = new Set(['founder_ceo', 'administrador', 'programador', 'modelador']);
 const EMAIL_ANALYSIS_COLLECTIONS = ['conductores', 'preregistros'];
 
 const gate = document.getElementById('adminGate');
@@ -198,8 +197,7 @@ function addEmailToIndex(indexMap, email, patch = {}) {
 // Role visual config for account cards (espejo de roles.js / paleta oficial)
 const ROLE_CARD_FALLBACK = {
     founder_ceo:   { color: '#f1c40f', border: 'rgba(241,196,15,0.4)',   bg: 'rgba(241,196,15,0.08)',  icon: '<i class="fa-solid fa-crown" aria-hidden="true"></i>' },
-    director:      { color: '#ff0000', border: 'rgba(255,0,0,0.4)',      bg: 'rgba(255,0,0,0.08)',     icon: '<i class="fa-solid fa-user-tie" aria-hidden="true"></i>' },
-    administrador: { color: '#f1c40f', border: 'rgba(241,196,15,0.4)',   bg: 'rgba(241,196,15,0.08)',  icon: '<i class="fa-solid fa-shield-halved" aria-hidden="true"></i>' },
+    administrador: { color: '#ff0000', border: 'rgba(255,0,0,0.4)',      bg: 'rgba(255,0,0,0.08)',     icon: '<i class="fa-solid fa-shield-halved" aria-hidden="true"></i>' },
     soporte:       { color: '#00a715', border: 'rgba(0,167,21,0.4)',     bg: 'rgba(0,167,21,0.08)',    icon: '<i class="fa-solid fa-headset" aria-hidden="true"></i>' },
     programador:   { color: '#ffbc00', border: 'rgba(255,188,0,0.4)',    bg: 'rgba(255,188,0,0.08)',   icon: '<i class="fa-solid fa-code" aria-hidden="true"></i>' },
     modelador:     { color: '#6f5cff', border: 'rgba(111,92,255,0.4)',   bg: 'rgba(111,92,255,0.08)',  icon: '<i class="fa-solid fa-cube" aria-hidden="true"></i>' },
@@ -1778,7 +1776,7 @@ async function saveSiteVisibilitySettings() {
 // ---------- Personal del Estudio (colección equipo) ----------
 
 const STAFF_COLLECTION = 'equipo';
-const STAFF_FALLBACK_ROLES = ['founder_ceo', 'director', 'administrador', 'programador', 'modelador', 'moderador', 'soporte', 'creador_contenido', 'vip', 'usuario'];
+const STAFF_FALLBACK_ROLES = ['founder_ceo', 'administrador', 'programador', 'modelador', 'moderador', 'soporte', 'creador_contenido', 'vip', 'usuario'];
 
 let staffMembersCache = [];
 let staffDirectoryCache = [];
@@ -2546,6 +2544,15 @@ function openRoleEditor(roleId, template) {
     setRoleEditorField('rolePermAdminPanel', permissions.adminPanel);
     setRoleEditorField('rolePermManageTeam', permissions.manageTeam);
 
+    // El acceso al Panel de Soporte es una LISTA CERRADA y no se puede
+    // modificar desde el editor de roles (ni siquiera con un config antiguo).
+    const ticketPerm = document.getElementById('rolePermTicketStaff');
+    if (ticketPerm) {
+        ticketPerm.checked = typeof R.isTicketStaff === 'function' ? R.isTicketStaff(id) : false;
+        ticketPerm.disabled = true;
+        ticketPerm.title = 'Lista cerrada: Soporte, Programador, Moderador, Administrador y Fundador.';
+    }
+
     const keyInput = document.getElementById('roleEditorKey');
     if (keyInput) keyInput.disabled = isEditing || isDuplicate;
 
@@ -2609,7 +2616,8 @@ function collectRoleDraft() {
         description: String(document.getElementById('roleEditorDescription')?.value || '').trim().slice(0, 240),
         permissions: {
             team: Boolean(document.getElementById('rolePermTeam')?.checked),
-            ticketStaff: Boolean(document.getElementById('rolePermTicketStaff')?.checked),
+            // CERRADO: sólo estos 5 rangos pueden ver el Panel de Soporte.
+            ticketStaff: typeof R.isTicketStaff === 'function' ? R.isTicketStaff(id) : false,
             adminPanel: Boolean(document.getElementById('rolePermAdminPanel')?.checked),
             manageTeam: Boolean(document.getElementById('rolePermManageTeam')?.checked)
         }

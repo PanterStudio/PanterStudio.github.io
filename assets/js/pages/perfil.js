@@ -11,7 +11,7 @@
 
   const ROLE_LABELS = {
     founder_ceo: 'Fundador / CEO',
-    director: 'Director', administrador: 'Administrador',
+    administrador: 'Administrador',
     moderador: 'Moderador',
     soporte: 'Soporte', support_ops: 'Soporte',
     programador: 'Programador',    modelador: 'Modelador',
@@ -21,7 +21,7 @@
     youtuber: 'Creador de Contenido', streamer: 'Creador de Contenido'
   };
   const SPECIAL_ACCESS_ROLES = new Set([
-    'founder_ceo', 'director', 'administrador', 'moderador',
+    'founder_ceo', 'administrador', 'moderador',
     'soporte', 'programador', 'modelador'
   ]);
 

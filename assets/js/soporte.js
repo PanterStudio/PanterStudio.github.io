@@ -60,7 +60,8 @@ const ESTADOS = {
     'Cerrado':    { label: 'Cerrado',    color: '#64748b', bg: 'rgba(100,116,139,0.12)', faIcon: 'fa-solid fa-lock' }
 };
 
-const STAFF_ROLES = new Set(['founder_ceo', 'director', 'administrador', 'programador', 'moderador', 'soporte']);
+// Respaldo si roles.js no cargó. La lista cerrada oficial vive allí.
+const STAFF_ROLES = new Set(['soporte', 'programador', 'moderador', 'administrador', 'founder_ceo']);
 
 // ============================================================
 // PERSISTENCIA LOCAL — el soporte SIEMPRE funciona
@@ -338,8 +339,7 @@ function puedeVerTicket(ticket, user, role) {
  */
 const ROLE_BADGE_FALLBACK = {
     founder_ceo:       { label: 'Fundador',             color: '#f1c40f', icon: 'fa-solid fa-crown' },
-    director:          { label: 'Director',             color: '#ff0000', icon: 'fa-solid fa-user-tie' },
-    administrador:     { label: 'Administrador',        color: '#f1c40f', icon: 'fa-solid fa-shield-halved' },
+    administrador:     { label: 'Administrador',        color: '#ff0000', icon: 'fa-solid fa-shield-halved' },
     programador:       { label: 'Programador',          color: '#ffbc00', icon: 'fa-solid fa-code' },
     modelador:         { label: 'Modelador',            color: '#6f5cff', icon: 'fa-solid fa-cube' },
     moderador:         { label: 'Moderador',            color: '#e67e22', icon: 'fa-solid fa-gavel' },
@@ -462,7 +462,9 @@ function normalizarRol(valor) {
     const mapa = {
         admin_owner: 'founder_ceo', owner: 'founder_ceo', administrator_owner: 'founder_ceo',
         founder_ceo: 'founder_ceo', founder: 'founder_ceo', ceo: 'founder_ceo', fundador: 'founder_ceo',
-        director: 'director', administrador: 'administrador', admin: 'administrador', administrator: 'administrador',
+        // «Director» se eliminó: los datos antiguos se equiparan a Administrador.
+        director: 'administrador', directora: 'administrador', project_director: 'administrador',
+        administrador: 'administrador', admin: 'administrador', administrator: 'administrador',
         programador: 'programador', developer: 'programador', dev: 'programador',
         modelador: 'modelador', moderador: 'moderador', mod: 'moderador',
         soporte: 'soporte', support: 'soporte',

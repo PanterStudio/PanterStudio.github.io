@@ -16,7 +16,7 @@
 
     const COLLECTION = 'gallery_images';
     const LOCAL_KEY = 'ps_gallery_local';
-    const MANAGER_ROLES = new Set(['founder_ceo', 'director', 'administrador', 'moderador']);
+    const MANAGER_ROLES = new Set(['founder_ceo', 'administrador', 'moderador']);
 
     const CAT_KEY = 'ps_gallery_categories';
     const HIDDEN_SEEDS_KEY = 'ps_gallery_hidden_seeds';

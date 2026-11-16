@@ -1036,12 +1036,13 @@
                                                 <option value="vip">VIP</option>
                                                 <option value="programador">Dev / Programador</option>
                                                 <option value="modelador">Modelador 3D</option>
+                                                <option value="moderador">Moderador</option>
                                                 <option value="support_ops">Soporte Ops</option>
+                                                <option value="creador_contenido">Creador de Contenido</option>
                                                 <option value="community_manager">CM / Community Manager</option>
                                                 <option value="youtuber">Youtuber</option>
                                                 <option value="streamer">Streamer</option>
                                                 <option value="administrador">Administrador</option>
-                                                <option value="director">Director</option>
                                                 <option value="founder_ceo">Fundador / CEO</option>
                                             </select>
                                         </div>
@@ -1302,9 +1303,12 @@
                                     <fieldset class="ps-role-permissions">
                                         <legend>Permisos del rango</legend>
                                         <label><input type="checkbox" id="rolePermTeam"> Aparece en Personal</label>
-                                        <label><input type="checkbox" id="rolePermTicketStaff"> Staff de tickets</label>
+                                        <label title="Lista cerrada: Soporte, Programador, Moderador, Administrador y Fundador"><input type="checkbox" id="rolePermTicketStaff"> Staff de tickets</label>
                                         <label><input type="checkbox" id="rolePermAdminPanel"> Acceso al panel admin</label>
                                         <label><input type="checkbox" id="rolePermManageTeam"> Gestionar equipo</label>
+                                        <small class="form-help" style="display:block;font-size:.7rem;color:var(--admin-text-muted);margin-top:6px;">
+                                            El Panel de Soporte es una lista cerrada: Soporte, Programador, Moderador, Administrador y Fundador. No se puede ampliar desde aquí.
+                                        </small>
                                     </fieldset>
                                     <div class="ps-admin-staff-actions">
                                         <button type="button" class="btn" id="roleEditorSaveBtn">

@@ -8,10 +8,9 @@
  *   guilds                → lista de servidores (comprobación de membresía)
  *   guilds.members.read   → confirmar que el usuario pertenece al servidor
  *
- * El rango web NO se deduce de Discord: sólo el correo oficial del Director
- * recibe `director` automáticamente y el resto de rangos se asignan desde
- * Panel Admin → Personal (`equipo`). Discord se usa únicamente para validar
- * la membresía al servidor oficial.
+ * El rango web NO se deduce de Discord ni del correo: TODOS los rangos se
+ * asignan manualmente desde Panel Admin → Personal (`equipo`). Discord se
+ * usa únicamente para validar la membresía al servidor oficial.
  */
 
 (function() {

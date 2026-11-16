@@ -752,9 +752,9 @@
     /* ── Permisos de edición / borrado ─────────────────────────
        · Usuario: sólo su propio contenido (uid, alias Discord o correo).
        · Equipo: cualquier contenido, usando la fuente única de rangos.
-       Nunca se inventan rangos: sólo los 10 ids oficiales de roles.js. */
+       Nunca se inventan rangos: sólo los ids oficiales de roles.js. */
     const FORO_TEAM_ROLES = new Set([
-        'founder_ceo', 'director', 'administrador', 'programador',
+        'founder_ceo', 'administrador', 'programador',
         'modelador', 'moderador', 'soporte', 'creador_contenido'
     ]);
     function esEquipo() {

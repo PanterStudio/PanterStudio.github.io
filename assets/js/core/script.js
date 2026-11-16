@@ -765,7 +765,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.PanterRoles) return window.PanterRoles.get(role).label;
         const labels = {
             founder_ceo: 'Fundador / CEO',
-            director: 'Director',
             administrador: 'Administrador',
             moderador: 'Moderador',
             soporte: 'Soporte',
