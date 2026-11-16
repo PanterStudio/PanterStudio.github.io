@@ -9,9 +9,32 @@
 const SOPORTE_COLLECTION = 'soporte_tickets';
 
 // Mensajes de sistema del chat (icono vectorial + texto exacto).
+// Lo ve el USUARIO: texto institucional, sin nombres del staff.
+// Lo ve el STAFF: mismo evento pero con el nombre de quien actuó y la fecha.
 const SYSTEM_ICON_HTML = '<i class="fa-solid fa-user-shield"></i>';
 const SYSTEM_MSG_TOMADO = 'SOPORTE PANTER STUDIO HA TOMADO EL TICKET';
 const SYSTEM_MSG_CERRADO = 'SOPORTE PANTER STUDIO HA CERRADO EL TICKET';
+const SYSTEM_MSG_ELEVADO = 'SOPORTE PANTER STUDIO HA ELEVADO EL TICKET';
+const SYSTEM_MSG_DESELEVADO = 'SOPORTE PANTER STUDIO HA DEVUELTO EL TICKET A SOPORTE';
+
+const ICONOS_SISTEMA = {
+    tomado:      '<i class="fa-solid fa-user-shield" aria-hidden="true"></i>',
+    cerrado:     '<i class="fa-solid fa-lock" aria-hidden="true"></i>',
+    asignado:    '<i class="fa-solid fa-user-plus" aria-hidden="true"></i>',
+    desasignado: '<i class="fa-solid fa-user-minus" aria-hidden="true"></i>',
+    aviso:       SYSTEM_ICON_HTML
+};
+
+// Destinos de escalado: sólo rangos oficiales (roles.js). Todos los tickets
+// llegan a Soporte y cualquier rango del equipo puede verlos; al elevar se
+// marca el área responsable sin ocultárselos a los demás.
+const ESCALADO_LABELS = {
+    soporte: 'Soporte',
+    moderador: 'Moderador',
+    administrador: 'Administrador',
+    programador: 'Programador'
+};
+const ESCALADO_ROLES = new Set(Object.keys(ESCALADO_LABELS));
 
 const CATEGORIAS = [
     { id: 'bug',        label: 'Bug / Error',      icon: '<i class="fa-solid fa-bug" aria-hidden="true"></i>',              faIcon: 'fa-solid fa-bug', color: '#ef4444' },
@@ -190,6 +213,14 @@ function formatDate(isoStr) {
     return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
+/** Fecha compacta para las líneas de sistema: 13/1/2025, 17:20:16 */
+function formatoFechaSistema(value) {
+    const d = value instanceof Date ? value : new Date(value || Date.now());
+    if (isNaN(d.getTime())) return '';
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 /**
  * Normaliza el estado de un ticket. Los tickets antiguos pueden guardar
  * `status` (open/closed/...) en vez de `estado` ("Abierto"/"Cerrado").
@@ -262,6 +293,19 @@ function estadoBadge(estado) {
 function prioridadBadge(prio) {
     const p = getPrioridad(prio);
     return `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;font-size:0.72rem;font-weight:700;background:${p.bg};color:${p.color};"><i class="${p.faIcon}" aria-hidden="true"></i>${p.label}</span>`;
+}
+
+/** Insignia visible cuando Soporte elevó el ticket a otra área.
+ *  No incluye el nombre de quien elevó: ese dato sólo se muestra al staff
+ *  dentro de su panel de gestión. */
+function escaladoBadgeHtml(ticket) {
+    const destino = String(ticket && ticket.escaladoA || '').trim().toLowerCase();
+    if (!destino || !ESCALADO_LABELS[destino]) return '';
+    const def = obtenerRolBadge(destino);
+    const label = ESCALADO_LABELS[destino];
+    return `<span class="sp-escalado-badge" style="--sp-escalado-color:${def.color};" title="Ticket elevado a ${escapeHtmlSoporte(label)}">`
+        + `<i class="fa-solid fa-arrow-up" aria-hidden="true"></i> ${escapeHtmlSoporte(label)}`
+        + `</span>`;
 }
 
 function isStaff(role) {
@@ -353,15 +397,34 @@ function normalizarUrlImagen(raw) {
 
 /**
  * Construye el HTML del cuerpo de un comentario.
- *  · Mensaje de sistema: icono user-shield + texto exacto, con estilo propio.
+ *  · Mensaje de sistema: línea centrada estilo bitácora. El USUARIO ve el
+ *    texto institucional exacto; el STAFF ve además quién actuó y la fecha.
  *  · Mensaje normal: texto escapado + previsualización de imágenes Imgur/URL
  *    directa pegadas en el mensaje.
+ * @param {object} comentario
+ * @param {boolean} esStaffViewer si quien está mirando pertenece al equipo
  */
-function renderTextoComentario(comentario) {
+function renderTextoComentario(comentario, esStaffViewer = false) {
     if (!comentario) return '';
     if (comentario.esSistema) {
-        // Contenido constante generado por el motor (nunca input del usuario).
-        return `<div class="sp-system-msg">${comentario.texto}</div>`;
+        const tipo = String(comentario.tipoSistema || 'aviso');
+        const icono = ICONOS_SISTEMA[tipo] || ICONOS_SISTEMA.aviso;
+        const fecha = formatoFechaSistema(comentario.sistemaFecha || comentario.creadoEn);
+        let texto;
+        if (esStaffViewer && comentario.textoStaff) {
+            texto = comentario.textoStaff;
+        } else if (comentario.textoUsuario) {
+            texto = comentario.textoUsuario;
+        } else {
+            // Compatibilidad con avisos antiguos que guardaban el icono HTML.
+            texto = String(comentario.texto || '').replace(/<[^>]*>/g, '').trim();
+        }
+        const fechaHtml = esStaffViewer && fecha
+            ? `<span class="sp-system-fecha">${escapeHtmlSoporte(fecha)}</span>`
+            : '';
+        return `<div class="sp-system-line sp-system-${escapeHtmlSoporte(tipo)}">`
+            + `${icono}<span class="sp-system-texto">${escapeHtmlSoporte(texto)}</span>${fechaHtml}`
+            + `</div>`;
     }
 
     const texto = String(comentario.texto || '');
@@ -672,41 +735,120 @@ if (typeof document !== 'undefined') {
     document.addEventListener('panter:staff-changed', limpiarCacheRoles);
 }
 
-/** Mensaje de sistema reutilizable (icono user-shield + texto exacto). */
-async function agregarMensajeSistema(ticketId, mensaje) {
+/**
+ * Mensaje de sistema reutilizable.
+ * @param {string} mensaje  Texto EXACTO que ve el usuario (sin nombres).
+ * @param {object} meta     { tipo, nombre, destino, textoStaff, fecha }
+ *                          `textoStaff` es lo que ve el equipo (con nombre).
+ */
+async function agregarMensajeSistema(ticketId, mensaje, meta = {}) {
+    const data = meta && typeof meta === 'object' ? meta : {};
+    const now = data.fecha || new Date().toISOString();
     return agregarComentario(
         ticketId,
         `${SYSTEM_ICON_HTML} ${mensaje}`,
-        'Sistema', 'sistema', true, null, null, true
+        'Sistema', 'sistema', false, null, null, true,
+        {
+            textoUsuario: mensaje,
+            textoStaff: data.textoStaff || mensaje,
+            tipoSistema: data.tipo || 'aviso',
+            sistemaNombre: data.nombre || '',
+            sistemaDestino: data.destino || '',
+            sistemaFecha: now
+        }
     );
 }
 
 /** El staff toma el ticket: pasa a En Proceso e inyecta el aviso en el chat. */
 async function tomarTicket(ticketId, staffName, staffUid) {
+    const now = new Date().toISOString();
+    const nombre = staffName || 'Staff';
     const actualizado = await actualizarTicket(ticketId, {
         estado: 'En Proceso',
         staffAsignadoId: staffUid || null,
-        staffNombre: staffName || 'Staff'
+        staffNombre: nombre,
+        tomadoPor: nombre,
+        tomadoPorUid: staffUid || null,
+        tomadoEn: now
     });
-    await agregarMensajeSistema(ticketId, SYSTEM_MSG_TOMADO);
+    await agregarMensajeSistema(ticketId, SYSTEM_MSG_TOMADO, {
+        tipo: 'tomado', nombre, fecha: now,
+        textoStaff: `${nombre} ha tomado el ticket`
+    });
     return actualizado;
 }
 
-async function cerrarTicket(ticketId, staffName) {
-    await actualizarTicket(ticketId, {
+async function cerrarTicket(ticketId, staffName, staffUid) {
+    const now = new Date().toISOString();
+    const nombre = staffName || 'Staff';
+    const actualizado = await actualizarTicket(ticketId, {
         estado: 'Cerrado',
-        cerradoPor: staffName || 'Staff',
-        cerradoEn: new Date().toISOString()
+        cerradoPor: nombre,
+        cerradoPorUid: staffUid || null,
+        cerradoEn: now
     });
-    await agregarMensajeSistema(ticketId, SYSTEM_MSG_CERRADO);
+    await agregarMensajeSistema(ticketId, SYSTEM_MSG_CERRADO, {
+        tipo: 'cerrado', nombre, fecha: now,
+        textoStaff: `${nombre} ha cerrado el ticket`
+    });
+    return actualizado;
 }
 
 async function reabrirTicket(ticketId) {
-    await actualizarTicket(ticketId, {
+    return actualizarTicket(ticketId, {
         estado: 'Abierto',
         cerradoPor: null,
+        cerradoPorUid: null,
         cerradoEn: null
     });
+}
+
+/**
+ * ELEVAR TICKET: Soporte atiende y deriva a Moderador / Administrador /
+ * Programador según el motivo. El ticket sigue siendo visible para TODOS
+ * los rangos del equipo; sólo se marca el área responsable y se deja
+ * constancia en la bitácora del chat.
+ */
+async function elevarTicket(ticketId, destino, staffName, staffUid) {
+    const key = String(destino || '').trim().toLowerCase();
+    if (!ESCALADO_ROLES.has(key)) {
+        throw new Error('Selecciona un área válida para elevar el ticket.');
+    }
+    const now = new Date().toISOString();
+    const nombre = staffName || 'Staff';
+    const label = ESCALADO_LABELS[key];
+    // Elevar es una ASIGNACIÓN de área, no un cambio de estado: un ticket
+    // cerrado o resuelto no se reabre por derivarlo a otro rango.
+    const actualizado = await actualizarTicket(ticketId, {
+        escaladoA: key,
+        escaladoLabel: label,
+        escaladoPor: nombre,
+        escaladoPorUid: staffUid || null,
+        escaladoEn: now
+    });
+    await agregarMensajeSistema(ticketId, SYSTEM_MSG_ELEVADO, {
+        tipo: 'asignado', nombre, destino: label, fecha: now,
+        textoStaff: `ha sido asignado por ${nombre} a ${label}`
+    });
+    return actualizado;
+}
+
+/** Quita la asignación de área y devuelve el ticket a la cola de Soporte. */
+async function desasignarTicket(ticketId, staffName, staffUid) {
+    const now = new Date().toISOString();
+    const nombre = staffName || 'Staff';
+    const actualizado = await actualizarTicket(ticketId, {
+        escaladoA: null,
+        escaladoLabel: null,
+        escaladoPor: null,
+        escaladoPorUid: null,
+        escaladoEn: null
+    });
+    await agregarMensajeSistema(ticketId, SYSTEM_MSG_DESELEVADO, {
+        tipo: 'desasignado', nombre, fecha: now,
+        textoStaff: `ha sido desasignado por ${nombre}`
+    });
+    return actualizado;
 }
 
 
@@ -986,7 +1128,7 @@ async function actualizarTicket(ticketId, updates = {}) {
     return { id: ticketId, ...(merged || payload) };
 }
 
-async function agregarComentario(ticketId, texto, autor, autorId, esStaff = false, autorRol = null, autorEmail = null, esSistema = false) {
+async function agregarComentario(ticketId, texto, autor, autorId, esStaff = false, autorRol = null, autorEmail = null, esSistema = false, meta = {}) {
     const now = new Date().toISOString();
     const comentario = {
         texto, autor, autorId,
@@ -996,6 +1138,12 @@ async function agregarComentario(ticketId, texto, autor, autorId, esStaff = fals
     };
     if (autorRol) comentario.autorRol = normalizarRol(autorRol);
     if (autorEmail) comentario.autorEmail = String(autorEmail).trim().toLowerCase();
+    // Metadatos de los avisos de sistema (texto staff/usuario, tipo, fecha...).
+    // Se guardan planos para que viajen igual a Firestore y a la copia local.
+    if (meta && typeof meta === 'object') {
+        ['textoUsuario', 'textoStaff', 'tipoSistema', 'sistemaNombre', 'sistemaDestino', 'sistemaFecha']
+            .forEach(key => { if (meta[key] !== undefined) comentario[key] = meta[key]; });
+    }
 
     // El comentario SIEMPRE se guarda (nube si puede, copia local si no).
     let savedId = `local_${Date.now().toString(36)}`;
@@ -1241,6 +1389,7 @@ window.SoporteJS = {
     suscribirMisTickets,
     suscribirComentarios,
     formatDate,
+    formatoFechaSistema,
     normalizarEstado,
     normalizarTicket,
     traducirErrorFirestore,
@@ -1249,13 +1398,21 @@ window.SoporteJS = {
     getEstado,
     estadoBadge,
     prioridadBadge,
+    escaladoBadgeHtml,
     isStaff,
     puedeVerTicket,
     cerrarTicket,
     reabrirTicket,
     tomarTicket,
+    elevarTicket,
+    desasignarTicket,
     agregarMensajeSistema,
     renderTextoComentario,
+    ESCALADO_LABELS,
+    SYSTEM_MSG_TOMADO,
+    SYSTEM_MSG_CERRADO,
+    SYSTEM_MSG_ELEVADO,
+    SYSTEM_MSG_DESELEVADO,
     generateTicketCode,
     // Roles globales / insignias dinámicas
     ROLE_BADGE_DEFS,

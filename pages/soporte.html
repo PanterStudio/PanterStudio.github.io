@@ -501,6 +501,50 @@
     .comentario-item.sistema .comentario-avatar { background: rgba(0,176,255,.12); border-color: rgba(0,176,255,.35); color: #38bdf8; }
     .comentario-item.sistema .comentario-bubble { background: rgba(0,176,255,.05); border-color: rgba(0,176,255,.18); }
 
+    /* ── Bitácora de sistema (estilo línea centrada con fecha) ── */
+    .comentario-item.sistema {
+        justify-content: center;
+        position: relative;
+        padding: 6px 0;
+        margin: 2px 0;
+    }
+    .comentario-item.sistema::before,
+    .comentario-item.sistema::after {
+        content: ''; position: absolute; left: 50%; width: 1px; height: 12px;
+        background: rgba(0,176,255,.32); transform: translateX(-50%);
+    }
+    .comentario-item.sistema::before { top: -12px; }
+    .comentario-item.sistema::after { bottom: -12px; }
+    .comentario-item.sistema .comentario-bubble {
+        flex: 0 1 auto; background: transparent; border: 0; padding: 0 10px;
+        text-align: center; max-width: 100%;
+    }
+    .sp-system-line {
+        display: inline-flex; align-items: center; justify-content: center;
+        gap: 7px; flex-wrap: wrap;
+        font-size: .74rem; font-weight: 800; letter-spacing: .035em;
+        text-transform: uppercase; color: #7dd3fc;
+    }
+    .sp-system-line i { font-size: .82rem; }
+    .sp-system-tomado { color: #4ade80; }
+    .sp-system-cerrado { color: #f87171; }
+    .sp-system-asignado, .sp-system-desasignado { color: #fbbf24; }
+    .sp-system-fecha {
+        color: var(--text-muted, #6b7a90); font-weight: 600;
+        text-transform: none; letter-spacing: 0; font-size: .7rem;
+    }
+
+    /* ── Insignia de ticket elevado a otra área ── */
+    .sp-escalado-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 2px 9px; border-radius: 100px;
+        font-size: .68rem; font-weight: 800; letter-spacing: .03em;
+        text-transform: uppercase; white-space: nowrap;
+        color: var(--sp-escalado-color, #f59e0b);
+        background: color-mix(in srgb, var(--sp-escalado-color, #f59e0b) 14%, transparent);
+        border: 1px solid color-mix(in srgb, var(--sp-escalado-color, #f59e0b) 45%, transparent);
+    }
+
     /* Search */
     .sp-search-row { display: flex; gap: 10px; }
     .sp-search-row .sp-input { flex: 1; }
@@ -849,6 +893,14 @@
                                 <option value="Resuelto">Resuelto</option>
                                 <option value="Cerrado">Cerrado</option>
                             </select>
+                            <select id="staffTicketEscalado" aria-label="Filtrar por área asignada">
+                                <option value="">Todas las áreas</option>
+                                <option value="sin-elevar">Sin elevar (Soporte)</option>
+                                <option value="soporte">Elevado a Soporte</option>
+                                <option value="moderador">Elevado a Moderador</option>
+                                <option value="administrador">Elevado a Administrador</option>
+                                <option value="programador">Elevado a Programador</option>
+                            </select>
                             <button type="button" class="ps-btn-mini" id="staffTicketRefresh">
                                 <i class="fa-solid fa-rotate" aria-hidden="true"></i> Actualizar
                             </button>
@@ -949,6 +1001,31 @@
                     <button type="button" class="ps-btn-mini" id="modalProgressTicketBtn">
                         <i class="fa-solid fa-spinner" aria-hidden="true"></i> Marcar en proceso
                     </button>
+                    <button type="button" class="ps-btn-mini" id="modalElevarFocusBtn">
+                        <i class="fa-solid fa-arrow-up" aria-hidden="true"></i> Elevar a…
+                    </button>
+                </div>
+
+                <!-- Elevar ticket a otra área (Soporte → Moderador / Admin / Programador) -->
+                <div id="modalEscaladoBox" style="display:none; margin:-0.4rem 0 1.2rem; padding:10px 12px; border:1px solid rgba(245,158,11,.28); background:rgba(245,158,11,.06); border-radius:10px;">
+                    <div style="font-size:.72rem;font-weight:800;color:#fbbf24;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">
+                        <i class="fa-solid fa-arrow-up" aria-hidden="true"></i> Elevar ticket
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                        <select id="modalEscaladoDestino" class="sp-input" style="flex:1 1 180px;min-width:160px;" aria-label="Área destino">
+                            <option value="soporte">Soporte</option>
+                            <option value="moderador">Moderador</option>
+                            <option value="administrador">Administrador</option>
+                            <option value="programador">Programador</option>
+                        </select>
+                        <button type="button" class="ps-btn-mini primary" id="modalElevarBtn">
+                            <i class="fa-solid fa-arrow-up" aria-hidden="true"></i> Elevar
+                        </button>
+                        <button type="button" class="ps-btn-mini" id="modalDesasignarBtn">
+                            <i class="fa-solid fa-arrow-rotate-left" aria-hidden="true"></i> Quitar asignación
+                        </button>
+                    </div>
+                    <div id="modalEscaladoInfo" style="font-size:.74rem;color:var(--text-muted,#6b7a90);margin-top:8px;"></div>
                 </div>
 
                 <!-- Descripción -->
@@ -1267,9 +1344,16 @@
             if (!list) return;
             const search = (document.getElementById('staffTicketSearch')?.value || '').trim().toLowerCase();
             const status = document.getElementById('staffTicketStatus')?.value || '';
+            const escalado = document.getElementById('staffTicketEscalado')?.value || '';
 
             let tickets = staffTicketsCache.slice();
             if (status) tickets = tickets.filter(t => String(t.estado || '') === status);
+            if (escalado) {
+                tickets = tickets.filter(t => {
+                    const area = String(t.escaladoA || '').trim().toLowerCase();
+                    return escalado === 'sin-elevar' ? !area : area === escalado;
+                });
+            }
             if (search) {
                 tickets = tickets.filter(t => [
                     t.titulo, t.codigo, t.usuarioNombre, t.usuarioEmail, t.categoria
@@ -1309,6 +1393,7 @@
                         <span class="ticket-card-code"><i class="fa-solid fa-hashtag"></i> ${escHtml(t.codigo)}</span>
                         ${window.SoporteJS.estadoBadge(t.estado)}
                         ${window.SoporteJS.prioridadBadge(t.prioridad)}
+                        ${window.SoporteJS.escaladoBadgeHtml(t)}
                     </div>
                     <div class="ticket-card-meta" style="margin-top:4px;">
                         <span class="ps-ticket-user"><i class="fa-solid fa-user"></i> ${escHtml(t.usuarioNombre || 'Usuario')}</span>
@@ -1319,6 +1404,7 @@
                         ${closed
                             ? '<button type="button" class="ps-btn-mini" data-staff-action="reopen"><i class="fa-solid fa-lock-open"></i> Reabrir</button>'
                             : '<button type="button" class="ps-btn-mini" data-staff-action="progress"><i class="fa-solid fa-spinner"></i> En proceso</button><button type="button" class="ps-btn-mini danger" data-staff-action="close"><i class="fa-solid fa-lock"></i> Cerrar</button>'}
+                        <button type="button" class="ps-btn-mini" data-staff-action="elevar"><i class="fa-solid fa-arrow-up"></i> Elevar</button>
                     </div>
                 </div>
                 <i class="fa-solid fa-chevron-right" style="flex-shrink:0;color:var(--text-muted);font-size:0.8rem;"></i>
@@ -1332,6 +1418,12 @@
                 event.stopPropagation();
                 const action = actionBtn.dataset.staffAction;
                 if (action === 'open') { openTicketModal(t); return; }
+                if (action === 'elevar') {
+                    // Abre el ticket y deja listo el selector de destino.
+                    openTicketModal(t);
+                    setTimeout(() => document.getElementById('modalEscaladoDestino')?.focus(), 150);
+                    return;
+                }
                 if (!currentStaff) {
                     showToast('Tu rango no permite cambiar el estado de los tickets.', 'error');
                     return;
@@ -1341,7 +1433,11 @@
                 actionBtn.disabled = true;
                 try {
                     if (action === 'close') {
-                        await window.SoporteJS.cerrarTicket(t.id, currentUser?.displayName || currentUser?.username || 'Staff');
+                        await window.SoporteJS.cerrarTicket(
+                            t.id,
+                            currentUser?.displayName || currentUser?.username || 'Staff',
+                            currentUser?.uid
+                        );
                         showToast('Ticket cerrado correctamente', 'success');
                     } else if (action === 'reopen') {
                         await window.SoporteJS.reabrirTicket(t.id);
@@ -1373,7 +1469,11 @@
             }
             try {
                 if (estado === 'Cerrado') {
-                    await window.SoporteJS.cerrarTicket(currentTicketId, currentUser.displayName || currentUser.username || 'Staff');
+                    await window.SoporteJS.cerrarTicket(
+                        currentTicketId,
+                        currentUser.displayName || currentUser.username || 'Staff',
+                        currentUser.uid
+                    );
                 } else if (estado === 'Abierto') {
                     await window.SoporteJS.reabrirTicket(currentTicketId);
                 } else if (estado === 'En Proceso') {
@@ -1398,12 +1498,93 @@
         document.getElementById('modalCloseTicketBtn')?.addEventListener('click', () => cambiarEstadoDesdeModal('Cerrado'));
         document.getElementById('modalReopenTicketBtn')?.addEventListener('click', () => cambiarEstadoDesdeModal('Abierto'));
         document.getElementById('modalProgressTicketBtn')?.addEventListener('click', () => cambiarEstadoDesdeModal('En Proceso'));
+        document.getElementById('modalElevarFocusBtn')?.addEventListener('click', () => {
+            const destino = document.getElementById('modalEscaladoDestino');
+            if (destino) {
+                destino.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => destino.focus(), 200);
+            }
+        });
+
+        /* ── ELEVAR TICKET ───────────────────────────────────────
+           Soporte deriva a Moderador / Administrador / Programador
+           según el motivo. Todos los rangos siguen viendo el ticket;
+           sólo cambia el área marcada como responsable. */
+        function staffActor() {
+            return {
+                name: currentUser?.displayName || currentUser?.username || currentUser?.email || 'Staff',
+                uid: currentUser?.uid || null
+            };
+        }
+
+        document.getElementById('modalElevarBtn')?.addEventListener('click', async () => {
+            if (!currentUser || !currentTicketId || !currentStaff) {
+                showToast('Tu rango no permite elevar tickets.', 'error');
+                return;
+            }
+            const destino = document.getElementById('modalEscaladoDestino')?.value;
+            const btn = document.getElementById('modalElevarBtn');
+            if (btn) btn.disabled = true;
+            try {
+                const actor = staffActor();
+                await window.SoporteJS.elevarTicket(currentTicketId, destino, actor.name, actor.uid);
+                showToast('Ticket elevado correctamente.', 'success');
+                const fresh = await window.SoporteJS.getTicketById(currentTicketId);
+                if (fresh) applyTicketSnapshot(fresh);
+                await updateStats();
+            } catch (err) {
+                console.error('[Soporte] Error al elevar:', err);
+                showToast(err?.message || 'No se pudo elevar el ticket', 'error');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        });
+
+        document.getElementById('modalDesasignarBtn')?.addEventListener('click', async () => {
+            if (!currentUser || !currentTicketId || !currentStaff) {
+                showToast('Tu rango no permite quitar la asignación.', 'error');
+                return;
+            }
+            const btn = document.getElementById('modalDesasignarBtn');
+            if (btn) btn.disabled = true;
+            try {
+                const actor = staffActor();
+                await window.SoporteJS.desasignarTicket(currentTicketId, actor.name, actor.uid);
+                showToast('Asignación removida; el ticket vuelve a Soporte.', 'success');
+                const fresh = await window.SoporteJS.getTicketById(currentTicketId);
+                if (fresh) applyTicketSnapshot(fresh);
+                await updateStats();
+            } catch (err) {
+                console.error('[Soporte] Error al desasignar:', err);
+                showToast(err?.message || 'No se pudo quitar la asignación', 'error');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        });
 
         document.getElementById('staffTicketSearch')?.addEventListener('input', renderStaffTickets);
         document.getElementById('staffTicketStatus')?.addEventListener('change', renderStaffTickets);
+        document.getElementById('staffTicketEscalado')?.addEventListener('change', renderStaffTickets);
         document.getElementById('staffTicketRefresh')?.addEventListener('click', loadStaffTickets);
 
         // ---- TICKET MODAL ----
+        /** Refresca el bloque «Elevar ticket» con el estado real del ticket. */
+        function applyEscaladoUI(ticket) {
+            const box = document.getElementById('modalEscaladoBox');
+            if (box) box.style.display = currentStaff ? 'block' : 'none';
+            const area = String(ticket?.escaladoA || '').trim().toLowerCase();
+            const sel = document.getElementById('modalEscaladoDestino');
+            if (sel) sel.value = area || 'soporte';
+            const info = document.getElementById('modalEscaladoInfo');
+            if (info) {
+                info.innerHTML = area
+                    ? `${window.SoporteJS.escaladoBadgeHtml(ticket)} <span>· elevado por ${escHtml(ticket.escaladoPor || 'Staff')} el ${escHtml(window.SoporteJS.formatDate(ticket.escaladoEn))}</span>`
+                    : 'Sin elevar: lo atiende Soporte. Todos los rangos del equipo pueden verlo.';
+            }
+            const quitar = document.getElementById('modalDesasignarBtn');
+            if (quitar) quitar.style.display = area ? '' : 'none';
+        }
+
         function applyTicketSnapshot(ticket) {
             if (!ticket) return;
             document.getElementById('modalTitulo').textContent = ticket.titulo || '';
@@ -1412,12 +1593,15 @@
             document.getElementById('modalDescripcion').textContent = ticket.descripcion || '';
             const badges = document.getElementById('modalBadges');
             if (badges) {
-                badges.innerHTML = window.SoporteJS.estadoBadge(ticket.estado) + ' ' + window.SoporteJS.prioridadBadge(ticket.prioridad);
+                badges.innerHTML = window.SoporteJS.estadoBadge(ticket.estado) + ' '
+                    + window.SoporteJS.prioridadBadge(ticket.prioridad) + ' '
+                    + window.SoporteJS.escaladoBadgeHtml(ticket);
             }
             const addSection = document.getElementById('addComentarioSection');
             if (addSection) {
                 addSection.style.display = (currentUser && (currentUser.uid === ticket.usuarioId || currentStaff)) ? 'block' : 'none';
             }
+            applyEscaladoUI(ticket);
         }
 
         async function subscribeCurrentTicket(ticketId) {
@@ -1456,13 +1640,16 @@
             document.getElementById('modalUsuario').textContent = ticket.usuarioNombre || '—';
             document.getElementById('modalDescripcion').textContent = ticket.descripcion;
             const badges = document.getElementById('modalBadges');
-            badges.innerHTML = window.SoporteJS.estadoBadge(ticket.estado) + ' ' + window.SoporteJS.prioridadBadge(ticket.prioridad);
+            badges.innerHTML = window.SoporteJS.estadoBadge(ticket.estado) + ' '
+                + window.SoporteJS.prioridadBadge(ticket.prioridad) + ' '
+                + window.SoporteJS.escaladoBadgeHtml(ticket);
 
             document.getElementById('ticketModal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
 
             const staffActions = document.getElementById('modalStaffActions');
             if (staffActions) staffActions.style.display = currentStaff ? 'flex' : 'none';
+            applyEscaladoUI(ticket);
 
             const addSection = document.getElementById('addComentarioSection');
             if (currentUser && (currentUser.uid === ticket.usuarioId || currentStaff)) {
@@ -1575,10 +1762,16 @@
         function buildComentario(c, rol) {
             const div = document.createElement('div');
             const sistema = Boolean(c.esSistema);
+            // El staff ve el nombre de quien actuó; el usuario sólo el aviso
+            // institucional exacto. Lo decide el motor con este flag.
+            const cuerpo = window.SoporteJS.renderTextoComentario(c, Boolean(currentStaff));
             div.className = `comentario-item${sistema ? ' sistema' : (c.esStaff ? ' staff' : '')}`;
-            const inicial = sistema ? '<i class="fa-solid fa-user-shield" aria-hidden="true"></i>' : String(c.autor || 'U')[0].toUpperCase();
-            const badge = sistema ? '' : window.SoporteJS.rolBadgeHtml(rol || (c.esStaff ? 'soporte' : 'usuario'));
-            const cuerpo = window.SoporteJS.renderTextoComentario(c);
+            if (sistema) {
+                div.innerHTML = `<div class="comentario-bubble">${cuerpo}</div>`;
+                return div;
+            }
+            const inicial = String(c.autor || 'U')[0].toUpperCase();
+            const badge = window.SoporteJS.rolBadgeHtml(rol || (c.esStaff ? 'soporte' : 'usuario'));
             div.innerHTML = `
                 <div class="comentario-avatar">${inicial}</div>
                 <div class="comentario-bubble">
@@ -1741,8 +1934,8 @@
                     let role = 'usuario';
                     if (S && typeof S.resolveRoleFor === 'function') {
                         try {
-                            if (typeof S.ensureFenixAdmin === 'function') S.ensureFenixAdmin();
-                            if (typeof S.refresh === 'function') S.refresh();
+                            // Sólo LECTURA: refresh() aquí re-dispararía el
+                            // evento `panter:staff-changed` y crearían un bucle.
                             role = S.resolveRoleFor(user) || 'usuario';
                         } catch (e) { /* se usa usuario */ }
                     }
@@ -1826,6 +2019,15 @@
         function bootSoporte() {
             if (soporteBooted || !window.SoporteJS || !window.db) return;
             soporteBooted = true;
+            // UNA sola sincronización inicial del roster. A partir de aquí
+            // `panter:staff-changed` avisa de cualquier cambio real.
+            const S = window.PanterStaff;
+            if (S) {
+                try {
+                    if (typeof S.ensureFenixAdmin === 'function') S.ensureFenixAdmin();
+                    if (typeof S.refresh === 'function') S.refresh();
+                } catch (e) { /* noop */ }
+            }
             buildCategoriasUI();
             buildPrioridadUI();
             updateStats();

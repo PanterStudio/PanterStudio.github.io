@@ -268,11 +268,29 @@
             ? lib.canAccessAdminPanel(role) : false;
     }
 
-    function notify() {
-        const detail = { members: allMembers() };
-        try { document.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail })); } catch (e) { /* noop */ }
-        try { global.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail })); } catch (e) { /* noop */ }
-        listeners.forEach(fn => { try { fn(detail); } catch (e) { /* noop */ } });
+    let lastNotifyKey = '';
+
+    /**
+     * Emite el cambio SÓLO si el roster realmente cambió. `refresh()` puede
+     * ser invocado desde un handler de `panter:staff-changed` (para releer el
+     * espejo local); sin este dedupe se produciría un bucle infinito
+     * refresh → notify → handler → refresh → ...
+     */
+    function notify(force = false) {
+        const members = allMembers();
+        let key = '';
+        try { key = JSON.stringify(members); } catch (e) { key = String(Date.now()); }
+        const changed = force || key !== lastNotifyKey;
+        lastNotifyKey = key;
+        const detail = { members };
+
+        if (changed) {
+            try { document.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail })); } catch (e) { /* noop */ }
+            try { global.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail })); } catch (e) { /* noop */ }
+            listeners.forEach(fn => { try { fn(detail); } catch (e) { /* noop */ } });
+        }
+        // Las insignias se repintan siempre (puede haber cambiado la paleta
+        // aunque el roster sea idéntico).
         try {
             if (global.PanterRoleBadges && typeof global.PanterRoleBadges.refresh === 'function') {
                 global.PanterRoleBadges.refresh();

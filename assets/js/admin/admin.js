@@ -1222,8 +1222,9 @@ async function resolveUserAccess(user) {
     const S = window.PanterStaff;
     if (S) {
         try {
+            // Sólo lectura del roster: refresh() dentro de un flujo que puede
+            // re-dispararse crearía un bucle con `panter:staff-changed`.
             if (typeof S.ensureFenixAdmin === 'function') S.ensureFenixAdmin();
-            if (typeof S.refresh === 'function') S.refresh();
             const found = typeof S.findFor === 'function'
                 ? S.findFor({
                     uid: String(user.uid || user.id || ''),

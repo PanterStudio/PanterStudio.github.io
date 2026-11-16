@@ -129,8 +129,8 @@
             const R = window.PanterRoles;
             if (S) {
                 try {
-                    if (typeof S.ensureFenixAdmin === 'function') S.ensureFenixAdmin();
-                    if (typeof S.refresh === 'function') S.refresh();
+                    // Sólo lectura: llamar a refresh() aquí re-dispararía
+                    // `panter:staff-changed` desde su propio listener.
                     if (typeof S.resolveRoleFor === 'function') {
                         const role = S.resolveRoleFor(user);
                         if (role) { paintRole(role); return; }
@@ -299,6 +299,15 @@
         // El motor de auth ya está activo: el failsafe inline de index.html no
         // debe retirar el overlay por su cuenta. Solo unlock() decide.
         window.__psAuthGateReady = true;
+
+        // Sincronización inicial ÚNICA del roster de rangos.
+        const S = window.PanterStaff;
+        if (S) {
+            try {
+                if (typeof S.ensureFenixAdmin === 'function') S.ensureFenixAdmin();
+                if (typeof S.refresh === 'function') S.refresh();
+            } catch (e) { /* noop */ }
+        }
 
         if (els.avatar) {
             els.avatar.addEventListener('error', function () {

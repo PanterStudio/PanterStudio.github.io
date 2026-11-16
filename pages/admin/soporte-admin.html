@@ -437,6 +437,42 @@
         text-transform: uppercase;
     }
     .sp-system-msg i { color: #38bdf8; font-size: .9rem; }
+
+    /* ── Bitácora de sistema: línea centrada, con nombre del staff y fecha ── */
+    .sadm-system-row {
+        position: relative; display: flex; justify-content: center;
+        padding: 6px 0; margin: 2px 0; text-align: center;
+    }
+    .sadm-system-row::before,
+    .sadm-system-row::after {
+        content: ''; position: absolute; left: 50%; width: 1px; height: 12px;
+        background: rgba(0,176,255,.32); transform: translateX(-50%);
+    }
+    .sadm-system-row::before { top: -12px; }
+    .sadm-system-row::after { bottom: -12px; }
+    .sp-system-line {
+        display: inline-flex; align-items: center; justify-content: center;
+        gap: 7px; flex-wrap: wrap;
+        font-size: .74rem; font-weight: 800; letter-spacing: .035em;
+        text-transform: uppercase; color: #7dd3fc;
+    }
+    .sp-system-line i { font-size: .82rem; }
+    .sp-system-tomado { color: #4ade80; }
+    .sp-system-cerrado { color: #f87171; }
+    .sp-system-asignado, .sp-system-desasignado { color: #fbbf24; }
+    .sp-system-fecha {
+        color: rgba(176,188,206,.55); font-weight: 600;
+        text-transform: none; letter-spacing: 0; font-size: .7rem;
+    }
+    .sp-escalado-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 2px 9px; border-radius: 100px;
+        font-size: .68rem; font-weight: 800; letter-spacing: .03em;
+        text-transform: uppercase; white-space: nowrap;
+        color: var(--sp-escalado-color, #f59e0b);
+        background: rgba(245,158,11,.12);
+        border: 1px solid var(--sp-escalado-color, #f59e0b);
+    }
     </style>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
@@ -587,6 +623,22 @@
             <button class="sadm-btn" id="asignarmeBtn" style="margin-top:8px;"><i class="fa-solid fa-user-shield" aria-hidden="true"></i> Tomar ticket</button>
         </div>
 
+        <!-- ELEVAR TICKET: Soporte deriva según el motivo del usuario -->
+        <div>
+            <div class="sadm-section-label">Elevar Ticket a otra área</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                <select id="drawerEscaladoSelect" class="sadm-select" aria-label="Área destino">
+                    <option value="soporte">Soporte</option>
+                    <option value="moderador">Moderador</option>
+                    <option value="administrador">Administrador</option>
+                    <option value="programador">Programador</option>
+                </select>
+                <button class="sadm-btn success" id="elevarTicketBtn"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i> Elevar</button>
+                <button class="sadm-btn" id="desasignarTicketBtn"><i class="fa-solid fa-arrow-rotate-left" aria-hidden="true"></i> Quitar asignación</button>
+            </div>
+            <div id="drawerEscaladoInfo" style="font-size:0.78rem;color:rgba(176,188,206,0.55);margin-top:8px;"></div>
+        </div>
+
         <!-- Comentarios -->
         <div>
             <div class="sadm-section-label">Comentarios</div>
@@ -673,8 +725,9 @@
         const S = window.PanterStaff;
         if (S) {
             try {
+                // Sólo lectura: refresh() aquí podría realimentar el bus
+                // `panter:staff-changed` que vuelve a llamar a esta función.
                 if (typeof S.ensureFenixAdmin === 'function') S.ensureFenixAdmin();
-                if (typeof S.refresh === 'function') S.refresh();
                 const found = typeof S.findFor === 'function'
                     ? S.findFor({ uid: String(user.uid || ''), email: String(user.email || '') })
                     : null;
@@ -814,7 +867,7 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="sadm-code">${escHtml(t.codigo)}</td>
-                <td><strong>${escHtml(t.titulo)}</strong><small>${window.SoporteJS.formatDate(t.creadoEn)}</small></td>
+                <td><strong>${escHtml(t.titulo)}</strong> ${window.SoporteJS.escaladoBadgeHtml(t)}<small>${window.SoporteJS.formatDate(t.creadoEn)}</small></td>
                 <td><strong>${escHtml(t.usuarioNombre || '—')}</strong><small>${escHtml(t.usuarioEmail || '')}</small></td>
                 <td>${cat.icon} ${cat.label}</td>
                 <td>${window.SoporteJS.estadoBadge(t.estado)}</td>
@@ -830,7 +883,9 @@
         if (!ticket) return;
         document.getElementById('drawerCodigo').textContent = ticket.codigo || '';
         document.getElementById('drawerTitulo').textContent = ticket.titulo || '';
-        document.getElementById('drawerBadges').innerHTML = window.SoporteJS.estadoBadge(ticket.estado) + ' ' + window.SoporteJS.prioridadBadge(ticket.prioridad);
+        document.getElementById('drawerBadges').innerHTML = window.SoporteJS.estadoBadge(ticket.estado) + ' '
+            + window.SoporteJS.prioridadBadge(ticket.prioridad) + ' '
+            + window.SoporteJS.escaladoBadgeHtml(ticket);
         document.getElementById('drawerDesc').textContent = ticket.descripcion || '';
 
         const select = document.getElementById('drawerEstadoSelect');
@@ -839,6 +894,18 @@
         document.getElementById('drawerStaffInfo').innerHTML = ticket.staffNombre
             ? `<strong style="color:#fff;">${escHtml(ticket.staffNombre)}</strong>`
             : '<em>Sin asignar</em>';
+
+        const area = String(ticket.escaladoA || '').trim().toLowerCase();
+        const areaSel = document.getElementById('drawerEscaladoSelect');
+        if (areaSel && document.activeElement !== areaSel) areaSel.value = area || 'soporte';
+        const escaladoInfo = document.getElementById('drawerEscaladoInfo');
+        if (escaladoInfo) {
+            escaladoInfo.innerHTML = area
+                ? `${window.SoporteJS.escaladoBadgeHtml(ticket)} · elevado por ${escHtml(ticket.escaladoPor || 'Staff')} el ${escHtml(window.SoporteJS.formatDate(ticket.escaladoEn))}`
+                : 'Sin elevar: lo atiende Soporte. Visible para todos los rangos del equipo.';
+        }
+        const quitarBtn = document.getElementById('desasignarTicketBtn');
+        if (quitarBtn) quitarBtn.style.display = area ? '' : 'none';
 
         const cat = window.SoporteJS.getCategoria(ticket.categoria);
         document.getElementById('drawerInfoGrid').innerHTML = `
@@ -949,21 +1016,29 @@
         cont.innerHTML = '';
         comentarios.forEach(c => {
             const sistema = Boolean(c.esSistema);
+            // Este panel SIEMPRE lo ve el equipo: se muestra el nombre de
+            // quien tomó / elevó / cerró el ticket, con la fecha.
+            const cuerpo = window.SoporteJS.renderTextoComentario(c, true);
+            if (sistema) {
+                const fila = document.createElement('div');
+                fila.className = 'sadm-system-row';
+                fila.innerHTML = cuerpo;
+                cont.appendChild(fila);
+                return;
+            }
             const rol = roles.get(window.SoporteJS.claveAutorComentario(c)) || 'usuario';
-            const badge = sistema ? '' : window.SoporteJS.rolBadgeHtml(rol);
+            const badge = window.SoporteJS.rolBadgeHtml(rol);
             const banda = window.SoporteJS.obtenerRolBadge(rol).color || '#00a715';
             const div = document.createElement('div');
-            div.style.cssText = sistema
-                ? 'padding:10px;background:rgba(0,176,255,0.05);border:1px solid rgba(0,176,255,0.18);border-radius:8px;'
-                : 'padding:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:8px;';
-            if (c.esStaff && !sistema) div.style.borderColor = `${banda}33`;
+            div.style.cssText = 'padding:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:8px;';
+            if (c.esStaff) div.style.borderColor = `${banda}33`;
             div.innerHTML = `
                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap;">
                     <strong style="font-size:0.8rem;color:#fff;">${escHtml(c.autor)}</strong>
                     ${badge}
                     <span style="font-size:0.7rem;color:rgba(176,188,206,0.4);margin-left:auto;">${window.SoporteJS.formatDate(c.creadoEn)}</span>
                 </div>
-                <div style="font-size:0.82rem;color:rgba(176,188,206,0.8);line-height:1.5;">${window.SoporteJS.renderTextoComentario(c)}</div>`;
+                <div style="font-size:0.82rem;color:rgba(176,188,206,0.8);line-height:1.5;">${cuerpo}</div>`;
             cont.appendChild(div);
         });
         cont.scrollTop = cont.scrollHeight;
@@ -1001,7 +1076,9 @@
         try {
             let updated;
             if (nuevoEstado === 'Cerrado') {
-                updated = await window.SoporteJS.cerrarTicket(currentTicket.id, currentStaff?.nombre || 'Staff');
+                updated = await window.SoporteJS.cerrarTicket(
+                    currentTicket.id, currentStaff?.nombre || 'Staff', currentStaff?.uid
+                );
             } else if (nuevoEstado === 'En Proceso') {
                 updated = await window.SoporteJS.tomarTicket(
                     currentTicket.id, currentStaff?.nombre || 'Staff', currentStaff?.uid
@@ -1036,7 +1113,7 @@
         btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> Cerrando...';
         try {
             const staffName = currentStaff?.nombre || 'Staff';
-            await window.SoporteJS.cerrarTicket(currentTicket.id, staffName);
+            await window.SoporteJS.cerrarTicket(currentTicket.id, staffName, currentStaff?.uid);
             const updated = {
                 estado: 'Cerrado',
                 status: 'Cerrado',
@@ -1086,6 +1163,59 @@
         } finally {
             btn.disabled = false;
             btn.innerHTML = originalHtml;
+        }
+    });
+
+    // ---- ELEVAR / DESASIGNAR TICKET ----
+    // Soporte deriva a Moderador / Administrador / Programador según el
+    // motivo. El ticket sigue visible para TODOS los rangos del equipo.
+    function refrescarTicketElevado(updated) {
+        if (!currentTicket) return;
+        currentTicket = { ...currentTicket, ...updated };
+        applyTicketToDrawer(currentTicket);
+        const idx = allTickets.findIndex(t => t.id === currentTicket.id);
+        if (idx !== -1) allTickets[idx] = { ...allTickets[idx], ...updated };
+        updateKPIs();
+        renderTable();
+    }
+
+    document.getElementById('elevarTicketBtn')?.addEventListener('click', async () => {
+        if (!currentTicket || !currentStaff) return;
+        const destino = document.getElementById('drawerEscaladoSelect')?.value;
+        const btn = document.getElementById('elevarTicketBtn');
+        const originalHtml = btn ? btn.innerHTML : '';
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Elevando...'; }
+        try {
+            const updated = await window.SoporteJS.elevarTicket(
+                currentTicket.id, destino,
+                currentStaff.nombre || 'Staff', currentStaff.uid
+            );
+            refrescarTicketElevado(updated);
+            showToast('Ticket elevado a ' + (window.SoporteJS.ESCALADO_LABELS[destino] || destino), 'success');
+        } catch (err) {
+            console.error('[Soporte admin] Error al elevar:', err);
+            showToast(err.message || 'No se pudo elevar el ticket', 'error');
+        } finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
+        }
+    });
+
+    document.getElementById('desasignarTicketBtn')?.addEventListener('click', async () => {
+        if (!currentTicket || !currentStaff) return;
+        const btn = document.getElementById('desasignarTicketBtn');
+        const originalHtml = btn ? btn.innerHTML : '';
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Quitando...'; }
+        try {
+            const updated = await window.SoporteJS.desasignarTicket(
+                currentTicket.id, currentStaff.nombre || 'Staff', currentStaff.uid
+            );
+            refrescarTicketElevado(updated);
+            showToast('Asignación removida; vuelve a Soporte.', 'success');
+        } catch (err) {
+            console.error('[Soporte admin] Error al desasignar:', err);
+            showToast(err.message || 'No se pudo quitar la asignación', 'error');
+        } finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
         }
     });
 
