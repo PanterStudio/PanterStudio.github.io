@@ -665,23 +665,48 @@
             if (snap.exists()) profile = snap.data() || null;
         } catch (e) { /* perfil opcional */ }
 
+        // Fuente ÚNICA de rangos: `equipo` vía PanterStaff. La ficha
+        // canónica puede tener un id distinto al uid de sesión (p. ej.
+        // `team_fenix`), así que se empareja por uid/alias/correo.
         let team = null;
-        try {
-            const teamSnap = await window.getDoc(window.fsDoc(window.db, 'equipo', user.uid));
-            if (teamSnap.exists()) team = teamSnap.data() || null;
-        } catch (e) { /* roster opcional */ }
+        let role = 'usuario';
+        const S = window.PanterStaff;
+        if (S) {
+            try {
+                if (typeof S.ensureFenixAdmin === 'function') S.ensureFenixAdmin();
+                if (typeof S.refresh === 'function') S.refresh();
+                const found = typeof S.findFor === 'function'
+                    ? S.findFor({ uid: String(user.uid || ''), email: String(user.email || '') })
+                    : null;
+                if (found) {
+                    team = found;
+                    const resolved = typeof S.memberRole === 'function' ? S.memberRole(found) : null;
+                    if (resolved && resolved !== 'usuario') role = resolved;
+                }
+            } catch (e) { console.warn('[SoporteAdmin] No se pudo resolver el equipo:', e); }
+        }
+
+        // Compatibilidad con fichas cuyo id SÍ coincide con el uid.
+        if (role === 'usuario' && window.db && window.fsDoc && window.getDoc) {
+            try {
+                const direct = await window.getDoc(window.fsDoc(window.db, 'equipo', user.uid));
+                if (direct.exists()) {
+                    const data = direct.data() || {};
+                    if (data.archivado !== true && data.role) {
+                        team = data;
+                        role = data.role;
+                    }
+                }
+            } catch (e) { /* roster opcional */ }
+        }
 
         const effectiveProfile = Object.assign({}, profile || {});
-        if (team && team.archivado !== true && team.role) {
-            effectiveProfile.teamRole = team.role;
-        }
+        if (role && role !== 'usuario') effectiveProfile.teamRole = role;
         if (!effectiveProfile.email) {
             effectiveProfile.email = (team && team.email) || user.email || '';
         }
+        if (R) role = R.resolveRole(user, effectiveProfile);
 
-        const role = R
-            ? R.resolveRole(user, effectiveProfile)
-            : 'usuario';
         const isStaff = R ? R.isTicketStaff(role) : false;
         if (!isStaff) return null;
 
@@ -698,35 +723,28 @@
         currentStaff = await resolveStaffContext(user);
         if (!currentStaff) return false;
 
-        // Cambios de rango desde Panel Admin → Personal se reflejan en vivo.
-        if (staffRoleUnsub) {
-            try { staffRoleUnsub(); } catch (e) { /* noop */ }
-            staffRoleUnsub = null;
-        }
-        if (window.onSnapshot && window.fsDoc && window.db) {
-            try {
-                staffRoleUnsub = window.onSnapshot(
-                    window.fsDoc(window.db, 'equipo', user.uid),
-                    async () => {
-                        const refreshed = await resolveStaffContext(user);
-                        if (!refreshed) {
-                            stopAllListeners();
-                            document.getElementById('adminRoot').style.display = 'none';
-                            const gate = document.getElementById('accessGate');
-                            gate.style.display = 'flex';
-                            gate.querySelector('h2').textContent = 'Sin Permiso';
-                            gate.querySelector('p').textContent = 'Tu rango ya no tiene acceso al panel de soporte.';
-                            return;
-                        }
-                        currentStaff = refreshed;
-                        const label = document.getElementById('staffName');
-                        if (label) label.textContent = `${currentStaff.nombre} (${currentStaff.role})`;
-                    },
-                    err => console.warn('[SoporteAdmin] No se pudo observar el rango:', err)
-                );
-            } catch (e) {
-                console.warn('[SoporteAdmin] Suscripción de rango no disponible:', e);
-            }
+        // Cambios de rango desde Panel Admin → Personal se reflejan en vivo
+        // con el bus compartido (funciona con `equipo` y con el espejo local).
+        if (!window.__soporteAdminRoleBound) {
+            window.__soporteAdminRoleBound = true;
+            document.addEventListener('panter:staff-changed', async () => {
+                const active = window.DiscordAuth && window.DiscordAuth.getUser
+                    ? window.DiscordAuth.getUser() : null;
+                if (!active) return;
+                const refreshed = await resolveStaffContext(active);
+                if (!refreshed) {
+                    stopAllListeners();
+                    document.getElementById('adminRoot').style.display = 'none';
+                    const gate = document.getElementById('accessGate');
+                    gate.style.display = 'flex';
+                    gate.querySelector('h2').textContent = 'Sin Permiso';
+                    gate.querySelector('p').textContent = 'Tu rango ya no tiene acceso al panel de soporte.';
+                    return;
+                }
+                currentStaff = refreshed;
+                const label = document.getElementById('staffName');
+                if (label) label.textContent = `${currentStaff.nombre} (${currentStaff.role})`;
+            });
         }
         return true;
     }

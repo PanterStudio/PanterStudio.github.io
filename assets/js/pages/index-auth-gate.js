@@ -124,24 +124,42 @@
             }
         };
 
-        const R = window.PanterRoles;
-        // El rango manual vive en `equipo`; sin ficha asignada la cuenta
-        // es `usuario` por defecto (no hay rangos automáticos por correo).
-        paintRole(R ? R.resolveRole(user) : 'usuario');
+        const resolveLiveRole = () => {
+            const S = window.PanterStaff;
+            const R = window.PanterRoles;
+            if (S) {
+                try {
+                    if (typeof S.ensureFenixAdmin === 'function') S.ensureFenixAdmin();
+                    if (typeof S.refresh === 'function') S.refresh();
+                    if (typeof S.resolveRoleFor === 'function') {
+                        const role = S.resolveRoleFor(user);
+                        if (role) { paintRole(role); return; }
+                    }
+                } catch (e) { /* se usa el valor por defecto */ }
+            }
+            paintRole(R ? R.resolveRole(user) : 'usuario');
+        };
 
-        if (R && window.db && window.fsDoc && window.getDoc) {
-            const uid = user.uid;
-            window.getDoc(window.fsDoc(window.db, 'equipo', uid))
-                .then(snap => {
-                    const current = api() && api().getUser ? api().getUser() : null;
-                    if (!current || String(current.uid) !== String(uid)) return;
-                    const team = snap.exists() ? (snap.data() || {}) : null;
-                    const profile = team && team.archivado !== true && team.role
-                        ? { teamRole: team.role, email: team.email || user.email }
-                        : { email: user.email };
-                    paintRole(R.resolveRole(user, profile));
-                })
-                .catch(() => { /* roster no disponible */ });
+        // El rango manual vive en `equipo` / espejo local, resuelto por la
+        // fuente única compartida (no por correo ni por Discord).
+        resolveLiveRole();
+
+        // Si el rango cambia en Personal mientras el gate está visible,
+        // la insignia se repinta al instante.
+        if (!window.__psAuthGateRoleBound) {
+            window.__psAuthGateRoleBound = true;
+            document.addEventListener('panter:staff-changed', () => {
+                const current = api() && api().getUser ? api().getUser() : null;
+                if (current && !gate.hidden) resolveLiveRole();
+            });
+            document.addEventListener('authStateChanged', () => {
+                const current = api() && api().getUser ? api().getUser() : null;
+                if (current && !gate.hidden) renderProfile(current);
+            });
+            document.addEventListener('discordAuthChanged', () => {
+                const current = api() && api().getUser ? api().getUser() : null;
+                if (current && !gate.hidden) renderProfile(current);
+            });
         }
     }
 
@@ -226,9 +244,14 @@
 
         try {
             // El callback del hash ocurre dentro de discord-auth.js; esperarlo
-            // garantiza que el gate evalúe la sesión recién creada.
+            // garantiza que el gate evalúe la sesión recién creada. Nunca se
+            // espera indefinidamente: un backend/Discord lento no debe dejar
+            // la portada congelada en «Verificando membresía…».
             if (typeof auth.whenReady === 'function') {
-                await auth.whenReady();
+                await Promise.race([
+                    Promise.resolve(auth.whenReady()),
+                    new Promise(resolve => setTimeout(resolve, 5000))
+                ]);
             }
 
             if (!shouldVerify && !(auth.getUser && auth.getUser())) {
@@ -237,7 +260,13 @@
                 return;
             }
 
-            const result = await auth.validateGuildAccess({ force: Boolean(force) });
+            const result = await Promise.race([
+                Promise.resolve(auth.validateGuildAccess({ force: Boolean(force) })),
+                new Promise(resolve => setTimeout(
+                    () => resolve({ state: 'error', error: 'La verificación tardó demasiado.' }),
+                    9000
+                ))
+            ]);
 
             if (result.state === 'member') {
                 unlock();

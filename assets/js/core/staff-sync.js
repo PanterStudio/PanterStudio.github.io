@@ -94,18 +94,44 @@
      */
     function allMembers() {
         const byUid = new Map();
+        const archivedRemote = new Set();
         remoteMembers.forEach(m => {
-            if (!m || m.archivado === true) return;
+            if (!m) return;
             const k = String(m.uid || m.id || '');
-            if (k) byUid.set(k, Object.assign({ uid: k, id: k }, m));
+            if (!k) return;
+            if (m.archivado === true) { archivedRemote.add(k); return; }
+            byUid.set(k, Object.assign({ uid: k, id: k }, m));
         });
+        // Con la nube disponible, `equipo` es la fuente para TODOS los
+        // visitantes: el espejo local sólo aporta alias de sesión y se usa
+        // como respaldo cuando Firestore aún no devuelve datos.
+        const hasRemote = byUid.size > 0;
         localMembers.forEach(m => {
             if (!m || m.archivado === true) return;
             const k = String(m.uid || m.id || '');
-            if (!k) return;
-            // El mirror local es el que escribe el Panel Admin cuando la nube
-            // rechaza la escritura: tiene prioridad sobre el documento remoto.
-            byUid.set(k, Object.assign({}, byUid.get(k) || {}, m, { uid: k, id: k }));
+            if (!k || archivedRemote.has(k)) return;
+            const prev = byUid.get(k);
+            if (hasRemote && prev) {
+                const uids = Array.from(new Set([]
+                    .concat(Array.isArray(prev.uids) ? prev.uids : [])
+                    .concat(Array.isArray(m.uids) ? m.uids : [])
+                    .concat([k])
+                    .filter(Boolean)));
+                // La nube manda, pero un documento remoto incompleto (p. ej.
+                // `equipo/team_fenix` creado sólo con aliases) se completa
+                // con el espejo local para no perder el rango asignado.
+                const merged = Object.assign({}, prev);
+                Object.keys(m || {}).forEach(key => {
+                    const value = merged[key];
+                    if (value === undefined || value === null || value === '') {
+                        merged[key] = m[key];
+                    }
+                });
+                merged.uids = uids;
+                byUid.set(k, merged);
+                return;
+            }
+            byUid.set(k, Object.assign({}, prev || {}, m, { uid: k, id: k }));
         });
 
         const result = [];
@@ -299,8 +325,22 @@
         try {
             const ref = global.fsDoc(global.db, 'equipo', FENIX_UID);
             const snap = await global.getDoc(ref);
-            if (snap && snap.exists()) return;   // se respeta lo ya existente
-            await global.setDoc(ref, fenixRecord(FENIX_UID));
+            const existing = snap && snap.exists() ? (snap.data() || {}) : null;
+            if (!existing) {
+                await global.setDoc(ref, fenixRecord(FENIX_UID));
+                return;
+            }
+            // `syncSessionRole` pudo crear el documento ANTES con sólo los
+            // aliases. Se completan los campos que falten SIN pisar un rango
+            // que el usuario haya cambiado a mano desde Personal.
+            const patch = {};
+            if (!existing.role) patch.role = FENIX_ROLE;
+            if (!existing.email) patch.email = FENIX_EMAIL;
+            if (!existing.nombre && !existing.displayName) patch.nombre = FENIX_NAME;
+            if (!existing.especialidad) patch.especialidad = 'Administración';
+            if (Object.keys(patch).length) {
+                await global.setDoc(ref, patch, { merge: true });
+            }
         } catch (e) {
             console.warn('[PanterStaff] Ficha de Fénix disponible en copia local:', e && e.message);
         }

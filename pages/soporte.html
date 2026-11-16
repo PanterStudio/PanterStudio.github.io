@@ -1733,15 +1733,23 @@
                 }
                 if (seq !== authSeq) return;
 
-                // El rango vigente vive en `equipo` (Panel Admin → Personal).
+                // El rango vigente vive en `equipo` (Panel Admin → Personal),
+                // resuelto por la fuente ÚNICA compartida (uid/alias/correo).
                 const applyRole = () => {
                     const R = window.PanterRoles;
-                    currentUserRole = R
-                        ? R.resolveRole(user, currentUserProfile)
-                        : 'usuario';
+                    const S = window.PanterStaff;
+                    let role = 'usuario';
+                    if (S && typeof S.resolveRoleFor === 'function') {
+                        try {
+                            if (typeof S.ensureFenixAdmin === 'function') S.ensureFenixAdmin();
+                            if (typeof S.refresh === 'function') S.refresh();
+                            role = S.resolveRoleFor(user) || 'usuario';
+                        } catch (e) { /* se usa usuario */ }
+                    }
+                    currentUserRole = role;
                     currentStaff = R
-                        ? R.isTicketStaff(currentUserRole)
-                        : window.SoporteJS.isStaff(currentUserRole);
+                        ? R.isTicketStaff(role)
+                        : window.SoporteJS.isStaff(role);
 
                     if (staffTab) staffTab.hidden = !currentStaff;
                     if (!currentStaff) {
@@ -1753,51 +1761,21 @@
                     }
                 };
 
-                try {
-                    if (window.getDoc && window.fsDoc && window.db) {
-                        const teamSnap = await window.getDoc(window.fsDoc(window.db, 'equipo', user.uid));
-                        const team = teamSnap.exists() ? (teamSnap.data() || {}) : null;
-                        currentUserProfile = Object.assign({}, currentUserProfile || {});
-                        if (team && team.archivado !== true && team.role) {
-                            currentUserProfile.teamRole = team.role;
-                        } else {
-                            delete currentUserProfile.teamRole;
-                        }
-                    }
-                } catch (err) {
-                    console.warn('[Soporte] No se pudo leer el rango del equipo:', err);
-                }
-                if (seq !== authSeq) return;
-
                 applyRole();
 
-                // Cambios manuales de rango desde Personal se reflejan en vivo.
+                // Cambios manuales de rango desde Personal se reflejan en vivo
+                // con el bus compartido (funciona con nube y con espejo local).
                 if (equipoRoleUnsub) {
                     try { equipoRoleUnsub(); } catch (e) { /* noop */ }
                     equipoRoleUnsub = null;
                 }
-                if (window.onSnapshot && window.fsDoc && window.db) {
-                    try {
-                        equipoRoleUnsub = window.onSnapshot(
-                            window.fsDoc(window.db, 'equipo', user.uid),
-                            snap => {
-                                if (seq !== authSeq) return;
-                                const team = snap.exists() ? (snap.data() || {}) : null;
-                                currentUserProfile = Object.assign({}, currentUserProfile || {});
-                                if (team && team.archivado !== true && team.role) {
-                                    currentUserProfile.teamRole = team.role;
-                                } else {
-                                    delete currentUserProfile.teamRole;
-                                }
-                                applyRole();
-                                if (currentStaff) loadStaffTickets();
-                            },
-                            err => console.warn('[Soporte] No se pudo observar el rango:', err)
-                        );
-                    } catch (e) {
-                        console.warn('[Soporte] Suscripción de rango no disponible:', e);
-                    }
-                }
+                const onStaffChanged = () => {
+                    if (seq !== authSeq) return;
+                    applyRole();
+                    if (currentStaff) loadStaffTickets();
+                };
+                document.addEventListener('panter:staff-changed', onStaffChanged);
+                equipoRoleUnsub = () => document.removeEventListener('panter:staff-changed', onStaffChanged);
 
                 if (nuevoGate) nuevoGate.style.display = 'none';
                 if (form) form.style.display = 'flex';

@@ -610,8 +610,13 @@
         base.guildName = context.guildName || base.guildName;
         {
             const R = rolesLib();
-            const sessionRole = user && R ? R.roleForEmail(user.email) : 'usuario';
-            base.isAdmin = Boolean(R && R.canAccessAdminPanel(sessionRole));
+            // Permisos desde la fuente única (`equipo`), nunca por correo.
+            let role = 'usuario';
+            const S = window.PanterStaff;
+            if (S && typeof S.resolveRoleFor === 'function') {
+                try { role = S.resolveRoleFor(user) || 'usuario'; } catch (e) { /* noop */ }
+            }
+            base.isAdmin = Boolean(R && R.canAccessAdminPanel(role));
         }
 
         if (context.tokenInvalid) {

@@ -19,10 +19,15 @@
     const LOCAL_KEY = 'ps_staff_local';
     const HIDDEN_KEY = 'ps_staff_hidden';
 
+    // ÚNICO Fundador / CEO: la cuenta oficial con este correo. Ningún
+    // otro registro (ni una ficha semilla sin correo) puede mostrarse
+    // como Fundador en el árbol.
+    const FOUNDER_EMAIL = 'pantergamey@gmail.com';
+    const FOUNDER_NAME_KEY = 'pantergamey';
     const FOUNDER = {
         uid: 'founder_pantergamey',
         nombre: 'PanterGameY',
-        email: '',
+        email: FOUNDER_EMAIL,
         role: 'founder_ceo',
         especialidad: 'Fundador y CEO',
         avatarUrl: '../recursos/PSGD.png',
@@ -192,27 +197,48 @@
     }
 
     /**
-     * Cúspide: PanterGameY (Fundador / CEO) junto a la persona con el rango
-     * MÁS ALTO realmente asignado en `equipo`. Su insignia muestra el rango
-     * vigente, por lo que un cambio en Personal se refleja de inmediato.
-     * No se fuerza ningún rango por correo.
+     * Cúspide ÚNICA: el Fundador / CEO es exclusivamente la cuenta oficial
+     * `pantergamey@gmail.com`. Si `equipo` ya trae esa ficha, se usa tal cual
+     * (nombre, avatar y especialidad reales); si aún no hay datos en vivo se
+     * muestra la ficha base con el MISMO correo. Se descartan duplicados con
+     * el mismo nombre/correo y cualquier otra ficha marcada founder_ceo,
+     * para que nunca aparezcan dos «PanterGameY» en lo más alto.
      */
     function leadership() {
-        const founder = Object.assign({}, FOUNDER);
-        const ranked = sortByRole(allMembers);
-        const coLeader = ranked.length
-            ? Object.assign({}, ranked[0])
-            : {
-                uid: 'cofounder_fenix', nombre: 'Fénix', email: '',
-                role: 'usuario', especialidad: '', avatarUrl: '',
-                orden: 0, _fixed: true
-            };
-
-        const topKeys = new Set(memberKeys(founder).concat(memberKeys(coLeader)));
-        const branches = allMembers.filter(member =>
-            !memberKeys(member).some(key => topKeys.has(key))
+        const lib = R();
+        const official = allMembers.find(member =>
+            String(member.email || '').trim().toLowerCase() === FOUNDER_EMAIL
+        ) || allMembers.find(member =>
+            nameKey(member.nombre) === FOUNDER_NAME_KEY &&
+            (lib ? lib.normalize(member.role) : String(member.role || '')) === 'founder_ceo'
         );
-        return { founder, coLeader, branches };
+
+        const founder = official
+            ? Object.assign({}, FOUNDER, official, {
+                role: 'founder_ceo',
+                email: FOUNDER_EMAIL,
+                nombre: official.nombre || FOUNDER.nombre,
+                especialidad: official.especialidad || FOUNDER.especialidad,
+                avatarUrl: official.avatarUrl || FOUNDER.avatarUrl,
+                _fixed: false
+            })
+            : Object.assign({}, FOUNDER);
+
+        // Identidad del fundador (ficha base + ficha real) para excluirla de
+        // los niveles inferiores y evitar el «doble PanterGameY».
+        const founderKeys = new Set(memberKeys(FOUNDER).concat(memberKeys(official || {})));
+        founderKeys.add('email:' + FOUNDER_EMAIL);
+        founderKeys.add('name:' + FOUNDER_NAME_KEY);
+
+        const branches = allMembers.filter(member => {
+            if (memberKeys(member).some(key => founderKeys.has(key))) return false;
+            const role = lib ? lib.normalize(member.role) : String(member.role || '');
+            // Sólo hay un Fundador / CEO en el árbol.
+            if (role === 'founder_ceo') return false;
+            return true;
+        });
+
+        return { founder, branches };
     }
 
     function sortByRole(list) {
@@ -254,7 +280,7 @@
         const grid = $('staffGrid');
         if (!grid) return;
         const lib = R();
-        const { founder, coLeader, branches } = leadership();
+        const { founder, branches } = leadership();
 
         // Agrupar por rango en orden jerárquico oficial (mayor → menor).
         const groups = new Map();
@@ -283,10 +309,11 @@
                 </section>`;
         }).join('');
 
-        const totalCount = branches.length + 2;
+        const totalCount = branches.length + 1;
+        const rangos = order.length + 1;
         const summary = $('teamFilters');
         if (summary) {
-            summary.innerHTML = `<span class="ps-team-summary"><i class="fa-solid fa-sitemap" aria-hidden="true"></i> ${totalCount} personas · ${order.length + 1} rangos · en vivo</span>`;
+            summary.innerHTML = `<span class="ps-team-summary"><i class="fa-solid fa-sitemap" aria-hidden="true"></i> ${totalCount} ${totalCount === 1 ? 'persona' : 'personas'} · ${rangos} ${rangos === 1 ? 'rango' : 'rangos'} · en vivo</span>`;
         }
 
         grid.innerHTML = `
@@ -296,8 +323,6 @@
 
                 <div class="ps-org-top">
                     ${personNode(founder, true)}
-                    <span class="ps-org-link" aria-hidden="true"></span>
-                    ${personNode(coLeader, true)}
                 </div>
                 <div class="ps-org-trunk" aria-hidden="true"></div>
 

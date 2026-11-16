@@ -1677,7 +1677,18 @@ async function saveSiteConfig() {
         actionMsg.className = 'admin-message success';
     } catch (err) {
         console.error('Error guardando configuración:', err);
-        actionMsg.textContent = ' No se pudo guardar la configuración.';
+        const code = String(err && err.code || '').toLowerCase();
+        const raw = String(err && err.message || err || '').toLowerCase();
+        const denied = code.includes('permission-denied')
+            || raw.includes('permission-denied')
+            || raw.includes('missing or insufficient permissions');
+        const offline = code.includes('unavailable') || raw.includes('network')
+            || raw.includes('failed to get document') || raw.includes('offline');
+        actionMsg.textContent = denied
+            ? ' Firestore rechazó la escritura: publica las reglas actualizadas (Firebase Console → Firestore → Reglas) y vuelve a guardar.'
+            : offline
+                ? ' No se pudo conectar con Firestore. Revisa tu conexión e inténtalo de nuevo.'
+                : ' No se pudo guardar la configuración: ' + (err && err.message ? err.message.slice(0, 120) : 'error desconocido') + '.';
         actionMsg.className = 'admin-message error';
     }
 }
