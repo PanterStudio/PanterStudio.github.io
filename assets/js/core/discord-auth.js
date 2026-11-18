@@ -67,16 +67,38 @@
        secretos), `phase2` es false y TODO sigue funcionando en Fase 1.
        Nunca se bloquea el arranque: timeout corto y fallo silencioso.
        ═════════════════════════════════════════════════════════════ */
+    /**
+     * La Fase 2 es OPT-IN: el backend debe anunciarse explícitamente con
+     * `window.PANTER_PHASE2_API`. En hosting estático (GitHub Pages,
+     * panterstudio.lat sin backend) esa variable NO existe, así que NO se
+     * hace ninguna petición a /api/* y no aparece el 404 en consola.
+     * El servidor server.js inyecta la bandera al servir el HTML cuando
+     * Fase 2 está configurada (ver FASE2.md).
+     */
     function backendBase() {
+        const configured = String(window.PANTER_PHASE2_API || '').trim();
+        if (configured) return configured.replace(/\/$/, '');
         const host = String(window.location.hostname || '');
+        // En local el backend Express sí escucha en 5000; se sondea allí.
         return (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0')
             ? 'http://localhost:5000'
             : '';
     }
 
+    function phase2Habilitada() {
+        // Sin bandera explícita y fuera de local: Fase 1 pura, sin fetch.
+        if (String(window.PANTER_PHASE2_API || '').trim()) return true;
+        const host = String(window.location.hostname || '');
+        return host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0';
+    }
+
     let phase2ConfigPromise = null;
     function getPhase2Config() {
         if (!phase2ConfigPromise) {
+            if (!phase2Habilitada()) {
+                phase2ConfigPromise = Promise.resolve({ phase2: false, reason: 'sin-backend' });
+                return phase2ConfigPromise;
+            }
             phase2ConfigPromise = (async () => {
                 try {
                     const controller = new AbortController();
@@ -765,6 +787,10 @@
     }
 
     async function checkSession() {
+        // Sin backend anunciado no se hace NINGÚN fetch: evita el 404 de
+        // /api/auth/me en hosting estático y no contamina la consola.
+        const cfg = await getPhase2Config();
+        if (!cfg.phase2) return getCurrentSession();
         try {
             const res = await fetch(`${backendBase()}/api/auth/me`, {
                 credentials: 'include', headers: { Accept: 'application/json' }

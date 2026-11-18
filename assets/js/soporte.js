@@ -114,6 +114,30 @@ function patchLocalTicket(id, patch) {
     notifyLocalChange();
     return merged;
 }
+
+/* Cambio local NO sincronizado: cuando Firestore rechaza la escritura
+   (reglas aún no publicadas), el estado optimista debe permanecer en la
+   UI en lugar de desaparecer a los 6 s y contradecir los avisos del chat.
+   Se guarda junto al ticket y se descarta en cuanto la nube lo confirma. */
+function marcarPendienteLocal(ticketId, campos) {
+    patchLocalTicket(ticketId, {
+        _psPendiente: { at: Date.now(), campos: Object.assign({}, campos) }
+    });
+}
+function limpiarPendienteLocal(ticketId) {
+    // localStorage es JSON plano: se reescribe el ticket sin el marcador.
+    // Sin notifyLocalChange(): esta limpieza ocurre DENTRO de combinarTicket
+    // y notificar aquí provocaría un bucle con los listeners en vivo.
+    const all = localTickets();
+    if (all[String(ticketId)]) {
+        delete all[String(ticketId)]._psPendiente;
+        writeJson(LOCAL_TICKETS_KEY, all);
+    }
+}
+function limpiarPendienteLocalSiExiste(ticketId) {
+    const t = localTickets()[String(ticketId)];
+    if (t && t._psPendiente) limpiarPendienteLocal(ticketId);
+}
 /* ═════════════════════════════════════════════════════════════
    AUTORIDAD DE SINCRONIZACIÓN
    · Firestore es la fuente de verdad para TODOS los clientes.
@@ -163,8 +187,27 @@ function combinarTicket(remote, local) {
     } else {
         base = local ? Object.assign({}, local) : null;
     }
-    const override = base ? pendingOverrideFor(base.id, remote) : null;
-    return override && base ? Object.assign({}, base, override) : base;
+    if (!base) return null;
+
+    // Cambio local NO sincronizado: manda mientras la nube no lo confirme.
+    // Así el estado de la lista no contradice los avisos del chat cuando
+    // Firestore rechazó la escritura (reglas aún no publicadas).
+    const pendiente = local && local._psPendiente;
+    if (pendiente && pendiente.campos && typeof pendiente.campos === 'object') {
+        // La nube recupera autoridad en cuanto escribe DESPUÉS del cambio
+        // local (o cuando otro cliente lo actualiza). Mientras el documento
+        // remoto siga siendo más viejo, manda el cambio no sincronizado.
+        const remoteTs = new Date(remote && (remote.actualizadoEn || remote.updatedAt || 0)).getTime() || 0;
+        const confirmado = Boolean(remote) && remoteTs >= Number(pendiente.at || 0);
+        if (confirmado) {
+            limpiarPendienteLocal(base.id);
+        } else {
+            base = Object.assign({}, base, pendiente.campos);
+        }
+    }
+
+    const override = pendingOverrideFor(base.id, remote);
+    return override ? Object.assign({}, base, override) : base;
 }
 
 function marcaTiempoTicket(t) {
@@ -1470,7 +1513,12 @@ async function actualizarTicket(ticketId, updates = {}) {
             { merge: true }
         );
         cloudOk = true;
+        // La nube confirmó: cualquier cambio pendiente anterior ya no aplica.
+        limpiarPendienteLocalSiExiste(ticketId);
     } catch (err) {
+        // Sin permisos: el cambio queda persistente en este navegador hasta
+        // que la nube lo confirme. Evita que un snapshot viejo lo revierta.
+        marcarPendienteLocal(ticketId, payload);
         console.warn('[SoporteJS] Firestore rechazó la escritura; sólo copia local:', err);
     }
 

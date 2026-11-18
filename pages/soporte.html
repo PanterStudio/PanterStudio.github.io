@@ -1164,11 +1164,19 @@
             t._timer = setTimeout(() => t.className = '', 3000);
         }
 
-        /** Avisa si el cambio NO llegó a Firestore (no está sincronizado). */
+        /** Avisa si el cambio NO llegó a Firestore (no está sincronizado).
+         *  Una sola vez por sesión: mientras las reglas no se publiquen,
+         *  repetirlo en cada clic sólo tapa la interfaz. */
+        let avisoSincronizacionMostrado = false;
         function avisarSincronizacion(resultado) {
-            if (resultado && resultado.cloudOk === false) {
-                showToast('El cambio quedó sólo en este navegador: Firestore rechazó la escritura. Publica las reglas actualizadas.', 'error');
-            }
+            if (!resultado || resultado.cloudOk !== false) return;
+            if (avisoSincronizacionMostrado) return;
+            avisoSincronizacionMostrado = true;
+            try {
+                if (sessionStorage.getItem('ps_aviso_reglas_v1')) return;
+                sessionStorage.setItem('ps_aviso_reglas_v1', '1');
+            } catch (e) { /* ignore */ }
+            showToast('Cambio guardado en este navegador. Para sincronizarlo con todos, publica firestore.rules en Firebase Console.', 'info');
         }
 
         // ---- BUILD CATEGORÍAS UI ----

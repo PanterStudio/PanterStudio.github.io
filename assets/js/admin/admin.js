@@ -829,7 +829,10 @@ function betaPatchBorrado() {
 }
 
 window.limpiarPostulacionesBeta = async function () {
-    const out = { postulaciones: 0, correosDuplicados: 0, preregistros: 0, activosConservados: 0, errores: [] };
+    const out = {
+        postulaciones: 0, correosDuplicados: 0, preregistros: 0,
+        activosConservados: 0, legadoProtegido: 0, errores: []
+    };
     if (!window.db || !window.collection || !window.getDocs) {
         out.errores.push('Firestore no disponible');
         return out;
@@ -889,7 +892,18 @@ window.limpiarPostulacionesBeta = async function () {
             try {
                 await window.setDoc(window.fsDoc(window.db, 'conductores', x.id), patch, { merge: true });
             } catch (e) {
-                out.errores.push(x.id + ': ' + String(e && e.code || e && e.message || e));
+                const denegado = /permission-denied|insufficient permissions/i.test(
+                    String((e && e.code) || '') + ' ' + String((e && e.message) || e || '')
+                );
+                // Las cuentas protegidas por las reglas (p. ej. Fundador/CEO)
+                // no se pueden editar, pero son legado SIN ID de Discord: ya
+                // son invisibles por el criterio de vigencia. No es un fallo.
+                if (denegado && !esPostulacionVigente(d)) {
+                    out.legadoProtegido += 1;
+                    if (out.postulaciones > 0) out.postulaciones -= 1;
+                } else {
+                    out.errores.push(x.id + ': ' + String(e && e.code || e && e.message || e));
+                }
             }
         }
 
@@ -1649,8 +1663,9 @@ function bindEvents() {
             if (msg) msg.textContent = 'Limpiando...';
             try {
                 const r = await window.limpiarPostulacionesBeta();
-                const texto = `Limpieza: ${r.postulaciones} postulaciones · ${r.correosDuplicados} correos repetidos · ${r.preregistros} pre-registros · ${r.activosConservados} cuentas activas conservadas.`
-                    + (r.errores.length ? ` ${r.errores.length} errores (ver consola).` : '');
+                const texto = `Limpieza: ${r.postulaciones} postulaciones · ${r.correosDuplicados} correos repetidos · ${r.preregistros} pre-registros · ${r.activosConservados} cuentas activas conservadas`
+                    + (r.legadoProtegido ? ` · ${r.legadoProtegido} legado protegido (ya invisible)` : '')
+                    + (r.errores.length ? ` · ${r.errores.length} errores (ver consola).` : ' · 0 errores.');
                 if (msg) { msg.textContent = texto; msg.style.color = r.errores.length ? '#fca5a5' : '#86efac'; }
                 if (r.errores.length) console.warn('[Admin] Limpieza Beta parcial:', r.errores);
                 await loadBetaTesters();

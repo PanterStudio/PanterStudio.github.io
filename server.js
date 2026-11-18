@@ -23,6 +23,28 @@ app.get('/api/phase2/status', (_req, res) => {
   res.json(phase2Status());
 });
 
+// Cuando Fase 2 está activa, se inyecta la bandera en el HTML servido para
+// que el cliente sepa que SÍ existe backend y consulte /api/auth/config.
+// Si Fase 2 está apagada, este middleware no toca nada: el hosting estático
+// sigue exactamente igual y no genera peticiones 404.
+app.use((req, res, next) => {
+  if (!phase2Status().enabled) return next();
+  const ruta = String(req.path || '');
+  if (!/\.html?$/i.test(ruta) && ruta !== '/') return next();
+  const relativo = ruta === '/' ? 'index.html' : ruta.replace(/^\/+/, '');
+  const absoluto = path.join(__dirname, relativo);
+  if (!absoluto.startsWith(__dirname) || !fs.existsSync(absoluto)) return next();
+  fs.readFile(absoluto, 'utf8', (err, html) => {
+    if (err) return next();
+    const bandera = '<script>window.PANTER_PHASE2_API = window.location.origin;</script>';
+    const conBandera = /<\/head>/i.test(html)
+      ? html.replace(/<\/head>/i, bandera + '</head>')
+      : bandera + html;
+    res.set('Cache-Control', 'no-store');
+    res.type('html').send(conBandera);
+  });
+});
+
 // Serve all static files (index.html, pages/*.html, assets, recursos, etc.)
 app.use(express.static(__dirname, { extensions: ['html', 'htm'] }));
 

@@ -189,8 +189,45 @@ function safeReturn(value) {
     return '/';
 }
 
+/** Orígenes autorizados para el handshake (local + los que configures). */
+function allowedOrigins() {
+    const extra = env('PHASE2_ALLOWED_ORIGINS')
+        .split(',').map(s => s.trim()).filter(Boolean);
+    return new Set([
+        'http://localhost', 'http://127.0.0.1',
+        'https://panterstudio.lat', 'https://panterstudio.github.io',
+        ...extra
+    ]);
+}
+
+function originPermitido(origin) {
+    if (!origin) return true; // mismo origen: no aplica CORS
+    try {
+        const u = new URL(origin);
+        return allowedOrigins().has(`${u.protocol}//${u.hostname}`) ||
+            allowedOrigins().has(origin);
+    } catch (e) { return false; }
+}
+
 export function phase2Router() {
     const router = express.Router();
+
+    // CORS para el sondeo /api/auth/config y /api/auth/me cuando la web y el
+    // backend no comparten origen (desarrollo local o backend separado).
+    router.use((req, res, next) => {
+        const origin = String(req.headers.origin || '');
+        if (origin && originPermitido(origin)) {
+            res.set('Access-Control-Allow-Origin', origin);
+            res.set('Access-Control-Allow-Credentials', 'true');
+            res.set('Vary', 'Origin');
+            res.set('Access-Control-Allow-Headers', 'Content-Type, Accept');
+            res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        }
+        if (req.method === 'OPTIONS' && req.path.startsWith('/api/auth/')) {
+            return res.status(204).end();
+        }
+        next();
+    });
 
     router.get('/api/auth/config', (req, res) => {
         res.set('Cache-Control', 'no-store');

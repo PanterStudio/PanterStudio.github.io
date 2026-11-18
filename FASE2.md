@@ -17,14 +17,27 @@ ahí cada escritura lleva un `request.auth.uid` verificado criptográficamente.
 | Pieza | Archivo | Estado |
 |---|---|---|
 | Backend OAuth + custom token | `server/phase2-auth.js` | Listo |
-| Registro de rutas | `server.js` | Listo |
+| Registro de rutas + bandera automática | `server.js` | Listo |
 | Canje en el cliente | `assets/js/core/firebase-config.js`, `assets/js/core/discord-auth.js` | Listo |
 | Reglas endurecidas | `firestore.rules.phase2` | **NO publicadas** |
 | Reglas activas | `firestore.rules` | Sin cambios (Fase 1) |
 
-**Degradación automática:** si el backend no responde o no tiene secretos,
-`/api/auth/config` devuelve `phase2: false` y el cliente sigue usando el flujo
-implícito de siempre. La web no se rompe en ningún momento.
+**Degradación automática:** la Fase 2 es *opt-in*. El cliente **no hace ninguna
+petición a `/api/*`** salvo que exista `window.PANTER_PHASE2_API`. En hosting
+estático eso no ocurre, así que no hay 404 en consola y el login implícito de
+siempre sigue funcionando. `server.js` inyecta esa bandera él mismo en el HTML
+que sirve cuando Fase 2 está configurada: **no hay que editar ningún `.html`**.
+
+**Autodiagnóstico de reglas (Fase 1):** en la consola del navegador ejecuta
+
+```js
+await window.PanterRules.check()
+// → { create:true, update:true, delete:true, publicadas:true } cuando ya publicaste
+// → { create:false, update:false, delete:false, publicadas:false } si aún no
+```
+
+Los avisos `permission-denied` se agrupan en un único mensaje por sesión mientras
+las reglas no estén publicadas. Para verlos todos: `window.PANTER_RULES_VERBOSE = true`.
 
 ---
 
