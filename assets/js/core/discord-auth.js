@@ -61,6 +61,61 @@
         return PRODUCTION_REDIRECT_URI;
     }
 
+    /* ═════════════════════════════════════════════════════════════
+       FASE 2 — Detección de backend de autenticación real.
+       Si el servidor no está configurado (GitHub Pages estático, o faltan
+       secretos), `phase2` es false y TODO sigue funcionando en Fase 1.
+       Nunca se bloquea el arranque: timeout corto y fallo silencioso.
+       ═════════════════════════════════════════════════════════════ */
+    function backendBase() {
+        const host = String(window.location.hostname || '');
+        return (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0')
+            ? 'http://localhost:5000'
+            : '';
+    }
+
+    let phase2ConfigPromise = null;
+    function getPhase2Config() {
+        if (!phase2ConfigPromise) {
+            phase2ConfigPromise = (async () => {
+                try {
+                    const controller = new AbortController();
+                    const timer = setTimeout(() => controller.abort(), 2500);
+                    let res;
+                    try {
+                        res = await fetch(`${backendBase()}/api/auth/config`, {
+                            credentials: 'include', signal: controller.signal,
+                            headers: { Accept: 'application/json' }
+                        });
+                    } finally { clearTimeout(timer); }
+                    if (!res.ok) return { phase2: false };
+                    const ct = String(res.headers.get('content-type') || '');
+                    if (!ct.includes('application/json')) return { phase2: false };
+                    const data = await res.json();
+                    return data && data.phase2 === true ? data : { phase2: false };
+                } catch (e) {
+                    return { phase2: false };
+                }
+            })();
+        }
+        return phase2ConfigPromise;
+    }
+
+    /** Canjea el custom token del backend para que exista `request.auth`. */
+    async function ensureFirebaseAuth(customToken) {
+        if (!customToken || typeof window.firebaseSignInWithCustomToken !== 'function') return false;
+        try {
+            const current = typeof window.firebaseCurrentUser === 'function'
+                ? window.firebaseCurrentUser() : null;
+            if (current && current.uid) return true;
+            await window.firebaseSignInWithCustomToken(customToken);
+            return true;
+        } catch (e) {
+            console.warn('[Fase2] No se pudo canjear el custom token:', e && e.message);
+            return false;
+        }
+    }
+
     function getAvatarUrl(discordUser) {
         if (!discordUser) return 'https://cdn.discordapp.com/embed/avatars/0.png';
         if (discordUser.avatar) {
@@ -597,6 +652,26 @@
             return Object.assign(base, { allowed: false, state: 'not-discord' });
         }
 
+        // FASE 2: la pertenencia al servidor oficial ya la verificó el
+        // backend con el token en servidor. No se expone ningún token aquí.
+        if (user.phase2 === true && user.discordMembershipChecked === true) {
+            const R2 = rolesLib();
+            let role2 = 'usuario';
+            const S2 = window.PanterStaff;
+            if (S2 && typeof S2.resolveRoleFor === 'function') {
+                try { role2 = S2.resolveRoleFor(user) || 'usuario'; } catch (e) { /* noop */ }
+            }
+            const esMiembro = user.discordGuildMember === true;
+            return Object.assign(base, {
+                allowed: esMiembro,
+                state: esMiembro ? 'member' : 'not-member',
+                checked: true,
+                isMember: esMiembro,
+                isAdmin: Boolean(R2 && R2.canAccessAdminPanel(role2)),
+                user
+            });
+        }
+
         const token = getAccessToken();
         if (!token) {
             // No hay forma de revalidar sin token: no se bloquea para no dejar
@@ -674,6 +749,16 @@
         try {
             sessionStorage.setItem('auth_return_url', window.location.href);
         } catch (e) {}
+
+        // FASE 2: el code se canjea en el servidor con el client_secret.
+        const cfg = await getPhase2Config();
+        if (cfg.phase2) {
+            const retorno = window.location.pathname + window.location.search;
+            window.location.href = `${backendBase()}/api/auth/discord/start?return=${encodeURIComponent(retorno)}`;
+            return;
+        }
+
+        // FASE 1 (GitHub Pages / backend no configurado): flujo implícito.
         const redirectUri = customRedirectUri || getPrimaryRedirectUri();
         const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(SCOPES)}`;
         window.location.href = authUrl;
@@ -681,18 +766,18 @@
 
     async function checkSession() {
         try {
-            const backendBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-                ? 'http://localhost:5000'
-                : '';
-            const res = await fetch(`${backendBase}/api/auth/me`, { credentials: 'include' });
-            if (res.ok) {
+            const res = await fetch(`${backendBase()}/api/auth/me`, {
+                credentials: 'include', headers: { Accept: 'application/json' }
+            });
+            if (res.ok && String(res.headers.get('content-type') || '').includes('application/json')) {
                 const data = await res.json();
+                if (data.customToken) await ensureFirebaseAuth(data.customToken);
                 if (data.authenticated && data.user) {
                     saveSession(data.user);
                     return data.user;
                 }
             }
-        } catch (e) {}
+        } catch (e) { /* sin backend: sesión local (Fase 1) */ }
         return getCurrentSession();
     }
 
@@ -779,9 +864,20 @@
         } catch (e) { return []; }
     }
 
-    function logout() {
+    async function logout() {
         stopPresence();
         clearSession();
+        try {
+            const cfg = await getPhase2Config();
+            if (cfg.phase2) {
+                await fetch(`${backendBase()}/api/auth/logout`, {
+                    method: 'POST', credentials: 'include'
+                }).catch(() => {});
+                if (typeof window.firebaseAuthSignOut === 'function') {
+                    await window.firebaseAuthSignOut().catch(() => {});
+                }
+            }
+        } catch (e) { /* ignore */ }
         return Promise.resolve();
     }
 
@@ -853,7 +949,18 @@
         consumeAuthError,
         whenReady: function() { return hashCallbackPromise; },
         refreshRoles: refreshGuildMembership,
-        syncProfile
+        syncProfile,
+        // FASE 2 (seguridad real): permite a la UI y a las reglas saber si
+        // hay un `request.auth` real detrás de la sesión.
+        getPhase2Config,
+        isPhase2: async function() {
+            return Boolean((await getPhase2Config()).phase2);
+        },
+        hasFirebaseAuth: function() {
+            const u = typeof window.firebaseCurrentUser === 'function'
+                ? window.firebaseCurrentUser() : null;
+            return Boolean(u && u.uid);
+        }
     };
 
     // API de presencia compartida por perfil, foro y panel admin.

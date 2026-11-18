@@ -91,8 +91,7 @@ const tabInfo = {
     dashboard: { title: 'Resumen General', sub: 'Estadísticas y resumen del Hub de Panter Studio.' },
     betatesters: { title: 'Beta Testers', sub: 'Inscripciones para el equipo de pruebas en Android.' },
     accounts: { title: 'Gestión de Cuentas (CEO)', sub: 'Miembros del equipo y niveles de rol autorizados.' },
-    support: { title: 'Soporte al Jugador', sub: 'Búsqueda de usuarios, edición de perfiles, saldos, mascotas y logs de canjes.' },
-    announcements: { title: 'Anuncios', sub: 'Publicación de novedades para la comunidad.' },
+    players: { title: 'Gestión de Jugadores', sub: 'Búsqueda de usuarios, edición de perfiles, saldos, mascotas y logs de canjes.' },
     staff: { title: 'Personal del Estudio', sub: 'Equipo visible en la web y rangos asignados manualmente.' },
     siteconfig: { title: 'Configuración Global', sub: 'Modificación de parámetros de la web, donaciones y bonos en Firestore.' },
     visibility: { title: 'Visibilidad del Sitio', sub: 'Gestión del modo de mantenimiento global y accesos por página.' }
@@ -116,7 +115,7 @@ tabButtons.forEach(btn => {
         
         if (tabName === 'betatesters') {
             loadBetaTesters();
-        } else if (tabName === 'support') {
+        } else if (tabName === 'players') {
             loadGlobalRedeemLogs();
         } else if (tabName === 'siteconfig') {
             loadSiteConfig();
@@ -702,6 +701,18 @@ function manageCeoUserInStaff(uid) {
 }
 
 // ---------- Beta Testers Management ----------
+/**
+ * Una postulación es vigente SOLO si fue emitida por el formulario actual,
+ * que captura el ID de Discord de la cuenta con la que se ingresó. Las
+ * postulaciones anteriores no llevan ese campo: son legado y no se muestran
+ * ni se cuentan, de modo que todos deben volver a postularse.
+ */
+function esPostulacionVigente(data) {
+    return Boolean(data && data.betaTesterRequest === true
+        && String(data.betaTesterDiscordId || '').trim());
+}
+window.PanterBetaEsVigente = esPostulacionVigente;
+
 async function loadBetaTesters() {
     const listContainer = document.getElementById('adminBetasList');
     if (!listContainer) return;
@@ -714,7 +725,12 @@ async function loadBetaTesters() {
 
         snap.forEach(docSnap => {
             const data = docSnap.data();
-            if (data && data.betaTesterRequest) {
+            // Sólo cuentan las postulaciones del formulario vigente, que
+            // capturan el ID de Discord. Las anteriores (sin ID) son legado:
+            // todos deben volver a postularse, y así no aparece ninguna
+            // ficha antigua aunque las reglas impidan borrarla (p. ej. la
+            // cuenta Fundador/CEO, protegida).
+            if (esPostulacionVigente(data)) {
                 applicants.push({
                     uid: docSnap.id,
                     ...data
@@ -778,6 +794,145 @@ async function loadBetaTesters() {
         listContainer.innerHTML = '<div style="color:var(--admin-danger);">Error al cargar postulaciones.</div>';
     }
 }
+
+// ── Limpieza de postulaciones Beta Tester ───────────────────────────
+// Borra TODAS las postulaciones (campos betaTester*) para que todos deban
+// volver a postularse con el formulario que ya captura correo, usuario e ID
+// de Discord. NO borra documentos completos: se conservan cuentas, monedas,
+// referidos y rangos. Los correos antiguos/repetidos se limpian quedando una
+// sola ficha por correo; las cuentas activas en los últimos 7 días NO se
+// tocan (sólo se les retira la postulación). Todo queda respaldado y se
+// puede restaurar.
+const BETA_APP_FIELDS = [
+    'betaTesterRequest', 'betaTesterDiscord', 'betaTesterDevice', 'betaTesterRAM',
+    'betaTesterAndroidVersion', 'betaTesterSkillBugs', 'betaTesterSkillHours',
+    'betaTesterSkillRecord', 'betaTesterSkillDiscord', 'betaTesterWhy',
+    'betaTesterTimestamp', 'betaTesterStatus', 'betaTesterStatusUpdatedAt',
+    'betaTesterEmail', 'betaTesterDiscordUsername', 'betaTesterDiscordId',
+    'betaTesterDiscordUid', 'betaTesterDiscordGlobalName',
+    'betaTesterEmailVerificado', 'betaTesterProveedor'
+];
+const BETA_BACKUP_KEY = 'ps_beta_cleanup_backup_v1';
+
+function betaEsActivo(data) {
+    const f = data.ultimaVez || data.lastSeen || data.updatedAt || data.betaTesterTimestamp || data.creadoEn;
+    const t = f ? new Date(f).getTime() : 0;
+    return Boolean(t && (Date.now() - t) < 7 * 24 * 3600 * 1000);
+}
+
+function betaPatchBorrado() {
+    const patch = {};
+    BETA_APP_FIELDS.forEach(f => {
+        patch[f] = window.deleteField ? window.deleteField() : null;
+    });
+    return patch;
+}
+
+window.limpiarPostulacionesBeta = async function () {
+    const out = { postulaciones: 0, correosDuplicados: 0, preregistros: 0, activosConservados: 0, errores: [] };
+    if (!window.db || !window.collection || !window.getDocs) {
+        out.errores.push('Firestore no disponible');
+        return out;
+    }
+    try {
+        const snap = await window.getDocs(window.collection(window.db, 'conductores'));
+        const docs = snap.docs.map(d => ({ id: d.id, data: d.data() || {} }));
+
+        // Respaldo completo y reversible antes de tocar nada.
+        try {
+            localStorage.setItem(BETA_BACKUP_KEY, JSON.stringify({
+                at: new Date().toISOString(),
+                total: docs.length,
+                docs
+            }));
+        } catch (e) { /* almacenamiento lleno: se continúa igual */ }
+
+        const porEmail = new Map();
+        docs.forEach(x => {
+            const e = String(x.data.email || '').trim().toLowerCase();
+            if (!e) return;
+            if (!porEmail.has(e)) porEmail.set(e, []);
+            porEmail.get(e).push(x);
+        });
+        const canonical = new Set();
+        porEmail.forEach(grupo => {
+            if (grupo.length < 2) return;
+            const ordenado = grupo.slice().sort((a, b) =>
+                String(b.data.updatedAt || b.data.betaTesterTimestamp || '').localeCompare(
+                    String(a.data.updatedAt || a.data.betaTesterTimestamp || '')));
+            canonical.add(ordenado[0].id);
+        });
+
+        for (const x of docs) {
+            const d = x.data;
+            const tienePostulacion = d.betaTesterRequest === true ||
+                BETA_APP_FIELDS.some(f => f !== 'betaTesterRequest' && d[f] !== undefined);
+            const duplicadoAntiguo = porEmail.get(String(d.email || '').trim().toLowerCase())?.length > 1
+                && !canonical.has(x.id) && !betaEsActivo(d);
+            const patch = {};
+
+            if (tienePostulacion) {
+                Object.assign(patch, betaPatchBorrado());
+                out.postulaciones += 1;
+            }
+            if (duplicadoAntiguo) {
+                patch.email = window.deleteField ? window.deleteField() : null;
+                patch.eliminado = true;
+                patch.eliminadoEn = new Date().toISOString();
+                patch.eliminadoMotivo = 'correo antiguo repetido';
+                out.correosDuplicados += 1;
+            } else if (betaEsActivo(d) && tienePostulacion) {
+                out.activosConservados += 1;
+            }
+            if (!Object.keys(patch).length) continue;
+
+            try {
+                await window.setDoc(window.fsDoc(window.db, 'conductores', x.id), patch, { merge: true });
+            } catch (e) {
+                out.errores.push(x.id + ': ' + String(e && e.code || e && e.message || e));
+            }
+        }
+
+        // Correos de pre-registro antiguos: deleteDoc sí está permitido aquí.
+        try {
+            const pre = await window.getDocs(window.collection(window.db, 'preregistros'));
+            await Promise.all(pre.docs.map(d => window.deleteDoc(
+                window.fsDoc(window.db, 'preregistros', d.id)).catch(() => {})));
+            out.preregistros = pre.docs.length;
+        } catch (e) { /* colección opcional */ }
+
+        try { localStorage.setItem('ps_beta_testers_count', '0'); } catch (e) { /* ignore */ }
+    } catch (e) {
+        out.errores.push(String(e && e.message || e));
+    }
+    return out;
+};
+
+window.restaurarPostulacionesBeta = async function () {
+    let backup;
+    try { backup = JSON.parse(localStorage.getItem(BETA_BACKUP_KEY) || 'null'); } catch (e) { backup = null; }
+    if (!backup || !Array.isArray(backup.docs)) return { restaurados: 0, error: 'No hay respaldo disponible.' };
+    let restaurados = 0;
+    for (const x of backup.docs) {
+        const tieneBeta = BETA_APP_FIELDS.some(f => x.data[f] !== undefined);
+        const fueCorreo = String(x.data.email || '').trim();
+        if (!tieneBeta && !fueCorreo) continue;
+        const patch = {};
+        BETA_APP_FIELDS.forEach(f => {
+            if (x.data[f] !== undefined) patch[f] = x.data[f];
+            else patch[f] = window.deleteField ? window.deleteField() : null;
+        });
+        if (fueCorreo) patch.email = x.data.email;
+        patch.eliminado = window.deleteField ? window.deleteField() : null;
+        patch.eliminadoEn = window.deleteField ? window.deleteField() : null;
+        patch.eliminadoMotivo = window.deleteField ? window.deleteField() : null;
+        try {
+            await window.setDoc(window.fsDoc(window.db, 'conductores', x.id), patch, { merge: true });
+            restaurados += 1;
+        } catch (e) { /* se reporta en consola */ }
+    }
+    return { restaurados };
+};
 
 window.setBetaStatus = async function(uid, status) {
     if (!window.db || !window.fsDoc || !window.setDoc) return;
@@ -1482,6 +1637,28 @@ function bindEvents() {
     if (refreshBetasBtn) {
         refreshBetasBtn.addEventListener('click', () => {
             loadBetaTesters();
+        });
+    }
+
+    const clearBetasBtn = document.getElementById('adminClearBetasBtn');
+    if (clearBetasBtn) {
+        clearBetasBtn.addEventListener('click', async () => {
+            const msg = document.getElementById('adminBetasCleanMsg');
+            if (!window.confirm('¿Eliminar TODAS las postulaciones Beta Tester y los correos antiguos repetidos? Todos deberán volver a postularse. Se guarda un respaldo reversible en este navegador.')) return;
+            clearBetasBtn.disabled = true;
+            if (msg) msg.textContent = 'Limpiando...';
+            try {
+                const r = await window.limpiarPostulacionesBeta();
+                const texto = `Limpieza: ${r.postulaciones} postulaciones · ${r.correosDuplicados} correos repetidos · ${r.preregistros} pre-registros · ${r.activosConservados} cuentas activas conservadas.`
+                    + (r.errores.length ? ` ${r.errores.length} errores (ver consola).` : '');
+                if (msg) { msg.textContent = texto; msg.style.color = r.errores.length ? '#fca5a5' : '#86efac'; }
+                if (r.errores.length) console.warn('[Admin] Limpieza Beta parcial:', r.errores);
+                await loadBetaTesters();
+            } catch (err) {
+                if (msg) { msg.textContent = 'No se pudo limpiar: ' + (err && err.message || err); msg.style.color = '#fca5a5'; }
+            } finally {
+                clearBetasBtn.disabled = false;
+            }
         });
     }
 

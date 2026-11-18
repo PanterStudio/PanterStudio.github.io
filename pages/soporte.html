@@ -1139,11 +1139,26 @@
         });
 
         // ---- TOAST ----
+        /** Icono real según el tipo: nunca se pinta marcado HTML como texto. */
+        function iconClassFor(type) {
+            return type === 'success' ? 'fa-solid fa-circle-check'
+                : type === 'error' ? 'fa-solid fa-circle-exclamation'
+                : 'fa-solid fa-circle-info';
+        }
+
         function showToast(msg, type = 'info') {
             const t = document.getElementById('spToast');
-            // Algunos llamadores pasan iconos HTML: se limpia para no mostrar
-            // el marcado como texto y se conserva el mensaje legible.
-            t.textContent = String(msg == null ? '' : msg).replace(/<[^>]*>/g, '').trim();
+            if (!t) return;
+            // Algunos llamadores pasan iconos HTML: se limpia el marcado y se
+            // inserta un <i> REAL, para que nunca aparezca como texto plano.
+            const limpio = String(msg == null ? '' : msg).replace(/<[^>]*>/g, '').trim();
+            t.replaceChildren();
+            const icon = document.createElement('i');
+            icon.className = iconClassFor(type);
+            icon.setAttribute('aria-hidden', 'true');
+            icon.style.marginRight = '8px';
+            t.appendChild(icon);
+            t.appendChild(document.createTextNode(limpio));
             t.className = `show ${type}`;
             clearTimeout(t._timer);
             t._timer = setTimeout(() => t.className = '', 3000);
@@ -1248,13 +1263,13 @@
                     usuarioNombre: currentUser.displayName || currentUser.email,
                     usuarioEmail: currentUser.email
                 });
-                showMsg(msg, `<i class="fa-solid fa-circle-check" aria-hidden="true"></i> Ticket creado: ${ticket.codigo}`, 'success');
+                showMsg(msg, `Ticket creado: ${ticket.codigo}`, 'success');
                 e.target.reset();
                 document.querySelectorAll('.sp-cat-item').forEach(b => b.classList.remove('selected'));
                 document.getElementById('ticketCategoria').value = '';
                 document.querySelectorAll('.sp-prio-btn').forEach(b => { b.classList.remove('selected'); if (b.dataset.prio === 'normal') b.classList.add('selected'); });
                 if (descCount) descCount.textContent = '0';
-                showToast(`<i class="fa-solid fa-circle-check" aria-hidden="true"></i> Ticket ${ticket.codigo} creado exitosamente`, 'success');
+                showToast(`Ticket ${ticket.codigo} creado exitosamente`, 'success');
                 updateStats();
             } catch (err) {
                 console.error(err);
@@ -1267,8 +1282,17 @@
 
         function showMsg(el, text, type) {
             if (!el) return;
+            // Igual que showToast: el mensaje puede llegar con un icono HTML.
+            // Se inserta un <i> REAL y el texto como nodo, sin inyección.
+            const limpio = String(text == null ? '' : text).replace(/<[^>]*>/g, '').trim();
+            el.replaceChildren();
+            const icon = document.createElement('i');
+            icon.className = iconClassFor(type);
+            icon.setAttribute('aria-hidden', 'true');
+            icon.style.marginRight = '8px';
+            el.appendChild(icon);
+            el.appendChild(document.createTextNode(limpio));
             el.style.display = 'block';
-            el.textContent = text;
             el.style.background = type === 'success' ? 'rgba(34,197,94,0.1)' : type === 'error' ? 'rgba(239,68,68,0.1)' : 'rgba(0,176,255,0.1)';
             el.style.color = type === 'success' ? '#4ade80' : type === 'error' ? '#f87171' : '#38bdf8';
             el.style.border = `1px solid ${type === 'success' ? 'rgba(34,197,94,0.3)' : type === 'error' ? 'rgba(239,68,68,0.3)' : 'rgba(0,176,255,0.3)'}`;

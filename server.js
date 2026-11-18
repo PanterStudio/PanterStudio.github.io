@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { phase2Router, phase2Status } from './server/phase2-auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,6 +12,16 @@ const PORT = process.env.PORT || 3000;
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+// FASE 2 — Autenticación real (Discord con secreto en servidor → Firebase
+// custom token → request.auth). Se registra ANTES del catch-all. Si faltan
+// las variables de entorno, el router responde phase2:false y el cliente
+// sigue usando la Fase 1 sin cambios.
+app.use(phase2Router());
+app.get('/api/phase2/status', (_req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json(phase2Status());
+});
 
 // Serve all static files (index.html, pages/*.html, assets, recursos, etc.)
 app.use(express.static(__dirname, { extensions: ['html', 'htm'] }));

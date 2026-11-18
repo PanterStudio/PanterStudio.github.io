@@ -1,0 +1,196 @@
+rules_version = '2';
+// ═══════════════════════════════════════════════════════════════════════
+// FASE 2 — REGLAS ENDURECIDAS (NO PUBLICAR TODAVÍA)
+//
+// Estas reglas EXIGEN `request.auth`, que sólo existe cuando el backend de
+// server/phase2-auth.js está desplegado y el cliente canjeó el custom token.
+// Si se publican antes de eso, TODA la web dejaría de escribir en Firestore.
+//
+// ORDEN DE ACTIVACIÓN (ver FASE2.md):
+//   1. Desplegar el backend con DISCORD_CLIENT_SECRET + service account.
+//   2. Verificar en producción que /api/auth/config → {phase2:true} y que
+//      DiscordAuth.hasFirebaseAuth() === true tras iniciar sesión.
+//   3. SÓLO ENTONCES copiar este archivo a `firestore.rules` y publicarlo.
+//
+// `firestore.rules` (Fase 1) sigue siendo el archivo activo y NO se toca.
+// ═══════════════════════════════════════════════════════════════════════
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Identidad y rango ────────────────────────────────────────────────
+    // El rango se lee de `equipo/{uid}` usando el uid VERIFICADO por Firebase
+    // Auth. Ya no se puede falsificar desde el cliente.
+    function signedIn() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function teamRole() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/equipo/$(request.auth.uid))
+        && get(/databases/$(database)/documents/equipo/$(request.auth.uid)).data.get('archivado', false) != true
+          ? get(/databases/$(database)/documents/equipo/$(request.auth.uid)).data.get('role', 'usuario')
+          : 'usuario';
+    }
+
+    function isAdminRole() {
+      return teamRole() in ['founder_ceo', 'administrador', 'programador', 'modelador'];
+    }
+
+    function isTicketStaff() {
+      return teamRole() in ['founder_ceo', 'administrador', 'programador', 'moderador', 'soporte'];
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Los 9 ids oficiales (sin `director`, retirado).
+    function officialRole(role) {
+      return role in [
+        'founder_ceo', 'administrador', 'programador', 'modelador',
+        'moderador', 'soporte', 'creador_contenido', 'vip', 'usuario'
+      ];
+    }
+
+    // ── EQUIPO: fuente ÚNICA de rangos. Nadie se autoasigna un rango ──────
+    match /equipo/{memberId} {
+      allow read: if true;
+      allow create, update: if signedIn()
+        && isAdminRole()
+        && officialRole(request.resource.data.get('role', 'usuario'));
+      allow delete: if signedIn() && isAdminRole();
+    }
+    match /personal/{memberId} {
+      allow read: if true;
+      allow write: if signedIn() && isAdminRole();
+    }
+
+    // ── PERFILES: cada usuario edita lo suyo; el staff puede ayudar ───────
+    match /conductores/{userId} {
+      allow read: if true;
+      allow create, update: if isSelf(userId) || isAdminRole();
+      allow delete: if isAdminRole();
+      match /{rest=**} {
+        allow read: if true;
+        allow write: if isSelf(userId) || isAdminRole();
+      }
+    }
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if isSelf(userId) || isAdminRole();
+      match /{rest=**} {
+        allow read: if true;
+        allow write: if isSelf(userId) || isAdminRole();
+      }
+    }
+
+    // ── PRESENCIA: sólo el propio uid puede escribir su latido ────────────
+    match /presencia/{uid} {
+      allow read: if true;
+      allow write: if isSelf(uid)
+        && request.resource.data.keys().hasOnly([
+          'uid', 'online', 'ultimaVez', 'nombre', 'avatarUrl', 'temaId'
+        ]);
+    }
+
+    // ── TICKETS DE SOPORTE ───────────────────────────────────────────────
+    // Crear: usuario autenticado y en su propio nombre.
+    // Cambiar estado / borrar: staff de tickets o el autor (sólo leer/comentar).
+    match /soporte_tickets/{ticketId} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.usuarioId == request.auth.uid;
+      allow update, delete: if isTicketStaff();
+      match /comentarios/{comentarioId} {
+        allow read: if true;
+        allow create: if signedIn();
+        allow update, delete: if isTicketStaff();
+      }
+      match /messages/{messageId} {
+        allow read: if true;
+        allow create: if signedIn();
+        allow update, delete: if isTicketStaff();
+      }
+      match /{rest=**} {
+        allow read: if true;
+        allow write: if isTicketStaff();
+      }
+    }
+
+    // Alias heredado.
+    match /tickets/{ticketId} {
+      allow read: if true;
+      allow write: if isTicketStaff();
+      match /{rest=**} { allow read: if true; allow write: if isTicketStaff(); }
+    }
+
+    // ── FORO ─────────────────────────────────────────────────────────────
+    match /foro_temas/{temaId} {
+      allow read: if true;
+      allow create: if signedIn();
+      allow update, delete: if signedIn() && (
+        resource.data.autorUid == request.auth.uid || isTicketStaff()
+      );
+      match /mensajes/{mensajeId} {
+        allow read: if true;
+        allow create: if signedIn();
+        allow update, delete: if signedIn() && (
+          resource.data.autorUid == request.auth.uid || isTicketStaff()
+        );
+      }
+      match /{rest=**} {
+        allow read: if true;
+        allow write: if signedIn() && isTicketStaff();
+      }
+    }
+
+    // ── CONTENIDO PÚBLICO: lectura abierta, escritura autenticada ─────────
+    match /gallery_images/{imageId} {
+      allow read: if true;
+      allow create, update: if signedIn() && isAdminRole();
+      allow delete: if signedIn() && isAdminRole();
+    }
+    match /vehiculos/{document}     { allow read: if true; allow write: if signedIn() && isAdminRole(); }
+    match /videos/{document}        { allow read: if true; allow write: if signedIn() && isAdminRole(); }
+    match /devlogs/{document}       { allow read: if true; allow write: if signedIn() && isAdminRole(); }
+    match /news/{document}          { allow read: if true; allow write: if signedIn() && isAdminRole(); }
+    match /project_updates/{document} { allow read: if true; allow write: if signedIn() && isAdminRole(); }
+    match /announcements/{document} { allow read: if true; allow write: if signedIn() && isAdminRole(); }
+    match /games/{document}         { allow read: if true; allow write: if signedIn() && isAdminRole(); }
+    match /applications/{document}  { allow read: if true; allow write: if signedIn() && isAdminRole(); }
+    match /apps/{document}          { allow read: if true; allow write: if signedIn() && isAdminRole(); }
+    match /settings/{document}      { allow read: if true; allow write: if signedIn() && isAdminRole(); }
+    match /admin/{document}         { allow read: if true; allow write: if signedIn() && isAdminRole(); }
+
+    match /roles_config/{docId} {
+      allow read: if true;
+      allow write: if signedIn() && isAdminRole()
+        && docId == 'global'
+        && request.resource.data.roles is list
+        && request.resource.data.roles.size() > 0
+        && request.resource.data.roles.size() <= 60;
+    }
+
+    match /discord_role_mappings/{docId} {
+      allow read: if true;
+      allow write: if signedIn() && isAdminRole()
+        && docId == 'global'
+        && request.resource.data.guildId is string;
+    }
+
+    // ── FORMULARIOS PÚBLICOS: cualquiera puede enviar el suyo ─────────────
+    // (pre-registro, donaciones, interés). Sin auth no se puede verificar al
+    // remitente: se mantiene `create` abierto pero se valida estructura.
+    match /preregistros/{document}  { allow read: if true; allow create: if true; allow update, delete: if signedIn() && isAdminRole(); }
+    match /donations/{document}     { allow read: if true; allow create: if true; allow update, delete: if signedIn() && isAdminRole(); }
+    match /donation_tiers/{document} { allow read: if true; allow write: if signedIn() && isAdminRole(); }
+    match /sponsors/{document}     { allow read: if true; allow write: if signedIn() && isAdminRole(); }
+    match /coin_redemptions/{document} { allow read: if true; allow create: if signedIn(); allow update, delete: if signedIn() && isAdminRole(); }
+    match /redenciones/{document}  { allow read: if true; allow create: if signedIn(); allow update, delete: if signedIn() && isAdminRole(); }
+
+    // ── DENEGAR TODO LO DEMÁS ────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

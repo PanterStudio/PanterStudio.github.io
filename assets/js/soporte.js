@@ -324,7 +324,8 @@ function esCodigoTicketAntiguo(t) {
  * Cuando se publiquen las reglas, «Limpiar todo» los elimina de verdad.
  */
 function ticketVisible(t) {
-    return Boolean(t) && t.eliminado !== true && !esCodigoTicketAntiguo(t);
+    return Boolean(t) && t.eliminado !== true
+        && t.probe !== true && !esCodigoTicketAntiguo(t);
 }
 
 function formatDate(isoStr) {

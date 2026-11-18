@@ -658,6 +658,13 @@
                     <div class="epic-input-wrapper">
                         <input class="epic-input" id="discordInput" type="text" placeholder="Ej: panter_player#1234 o panter_player" required autofocus>
                     </div>
+                    <div id="btIdentityBox" style="display:none; margin-top:14px; padding:12px 14px; border:1px solid rgba(0,240,255,.28); border-radius:12px; background:rgba(0,240,255,.05); font-size:.82rem; color:#b9d9e6; line-height:1.75;">
+                        <div style="font-weight:700; color:#00f0ff; margin-bottom:6px;"><i class="fa-brands fa-discord" aria-hidden="true"></i> Identidad de Discord vinculada</div>
+                        <div><span style="opacity:.7;">Correo:</span> <strong id="btIdentityEmail">—</strong></div>
+                        <div><span style="opacity:.7;">Usuario:</span> <strong id="btIdentityUsername">—</strong></div>
+                        <div><span style="opacity:.7;">ID:</span> <strong id="btIdentityId" style="font-family:monospace;">—</strong></div>
+                        <div style="margin-top:6px; font-size:.74rem; opacity:.65;">Se capturan automáticamente de la cuenta con la que iniciaste sesión y se guardan con tu postulación.</div>
+                    </div>
                 </div>
 
                 <!-- MICRO-PASO 2: DISPOSITIVO -->
@@ -1131,8 +1138,11 @@
                     window.where('betaTesterRequest', '==', true)
                 );
                 const snap = await window.getDocs(q);
-                if (snap && typeof snap.size === 'number' && snap.size > 0) {
-                    count = snap.size;
+                // Sólo cuentan las postulaciones vigentes (con ID de Discord).
+                // 0 es válido: tras la limpieza no se muestra el 29 heredado.
+                if (snap && Array.isArray(snap.docs)) {
+                    count = snap.docs.filter(d =>
+                        String((d.data() || {}).betaTesterDiscordId || '').trim()).length;
                     localStorage.setItem('ps_beta_testers_count', count);
                 }
             }
@@ -1178,46 +1188,71 @@
             const discordInput = document.getElementById('discordInput');
             const activeBanner = document.getElementById('btActiveBanner');
 
+            const identityBox = document.getElementById('btIdentityBox');
+            const setIdentity = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = value || '—';
+            };
+
             if (user) {
                 currentUser = user;
                 if (loginPrompt) loginPrompt.style.display = 'none';
                 if (submitBtn) submitBtn.removeAttribute('disabled');
 
-                if (discordInput && !discordInput.value) {
-                    discordInput.value = user.username || user.globalName || '';
+                // Identidad REAL de la cuenta Discord con la que se ingresó:
+                // correo, usuario e ID. Se capturan siempre, sin inventar datos.
+                const correo = String(user.email || '').trim().toLowerCase();
+                const usuarioDiscord = String(user.discordUsername || user.username || '').trim();
+                const idDiscord = String(user.discordId || user.id || '').trim();
+                if (identityBox) identityBox.style.display = 'block';
+                setIdentity('btIdentityEmail', correo || 'Discord no compartió el correo');
+                setIdentity('btIdentityUsername', usuarioDiscord ? '@' + usuarioDiscord : '');
+                setIdentity('btIdentityId', idDiscord || user.uid);
+
+                // El usuario de Discord queda fijo al de la sesión: así la
+                // postulación no puede registrar un nombre que no corresponde.
+                if (discordInput) {
+                    discordInput.value = usuarioDiscord || user.username || user.globalName || '';
+                    discordInput.readOnly = Boolean(usuarioDiscord);
+                    discordInput.title = usuarioDiscord ? 'Usuario de Discord vinculado a tu sesión' : '';
                 }
 
                 try {
+                    // Sólo se reconoce como «pase activo» una postulación del
+                    // formulario vigente (con ID de Discord). Las fichas
+                    // antiguas son legado: todos deben volver a postularse.
+                    const esVigente = d => Boolean(d && d.betaTesterRequest === true
+                        && String(d.betaTesterDiscordId || '').trim());
                     if (window.db && window.fsDoc && window.getDoc) {
                         const userDocRef = window.fsDoc(window.db, 'conductores', user.uid);
                         const snap = await window.getDoc(userDocRef);
                         let data = snap.exists() ? snap.data() : null;
 
                         // Reconciliación con cuentas previas de Google o postulación previa
-                        if (!data?.betaTesterRequest && window.collection && window.getDocs && window.query && window.where) {
+                        if (!esVigente(data) && window.collection && window.getDocs && window.query && window.where) {
                             if (user.email && !user.email.endsWith('@discord.local')) {
                                 const qE = window.query(
                                     window.collection(window.db, 'conductores'),
                                     window.where('email', '==', user.email.toLowerCase().trim())
                                 );
                                 const sE = await window.getDocs(qE);
-                                if (!sE.empty && sE.docs[0].data()?.betaTesterRequest) {
+                                if (!sE.empty && esVigente(sE.docs[0].data())) {
                                     data = sE.docs[0].data();
                                 }
                             }
-                            if (!data?.betaTesterRequest && user.username) {
+                            if (!esVigente(data) && user.username) {
                                 const qD = window.query(
                                     window.collection(window.db, 'conductores'),
                                     window.where('betaTesterDiscord', '==', user.username.trim())
                                 );
                                 const sD = await window.getDocs(qD);
-                                if (!sD.empty && sD.docs[0].data()?.betaTesterRequest) {
+                                if (!sD.empty && esVigente(sD.docs[0].data())) {
                                     data = sD.docs[0].data();
                                 }
                             }
                         }
                         
-                        if (data && data.betaTesterRequest) {
+                        if (esVigente(data)) {
                             hasExistingPass = true;
 
                             // Mostrar tarjeta destacada de Pase Activo
@@ -1240,11 +1275,13 @@
                                         : 'Activa';
                                 }
                                 if (activeSummary) {
-                                    activeSummary.innerHTML = `Pase firmado por <strong>@${data.betaTesterDiscord || user.username}</strong>. Tu acceso a las pruebas cerradas está confirmado.`;
+                                    const firmado = String(usuarioDiscord || user.username || data.betaTesterDiscord || 'tu cuenta').replace(/[<>&"]/g, '');
+                                    activeSummary.innerHTML = `Pase firmado por <strong>@${firmado}</strong>. Tu acceso a las pruebas cerradas está confirmado.`;
                                 }
                             }
 
-                            if (data.betaTesterDiscord) discordInput.value = data.betaTesterDiscord;
+                            // El usuario de Discord NO se restaura del dato
+                            // guardado: siempre manda la identidad de la sesión.
                             if (data.betaTesterDevice) document.getElementById('deviceInput').value = data.betaTesterDevice;
                             
                             if (data.betaTesterRAM) {
@@ -1277,6 +1314,8 @@
                 }
             } else {
                 currentUser = null;
+                if (identityBox) identityBox.style.display = 'none';
+                if (discordInput) { discordInput.readOnly = false; discordInput.value = ''; }
                 if (activeBanner) activeBanner.style.display = 'none';
                 if (loginPrompt) loginPrompt.style.display = 'block';
                 if (submitBtn) submitBtn.setAttribute('disabled', 'true');
@@ -1301,6 +1340,25 @@
         if (!ok) { setStatus('Sin conexión con el servidor. Intenta de nuevo.', 'error'); return; }
         if (!currentUser) { setStatus('Debes iniciar sesión con Discord primero.', 'error'); return; }
 
+        // La postulación EXIGE la cuenta Discord con la que se entró a la web.
+        // Sin ID de Discord no se puede identificar al postulante de forma fiable.
+        const esDiscord = window.DiscordAuth && typeof window.DiscordAuth.isDiscordSession === 'function'
+            ? window.DiscordAuth.isDiscordSession(currentUser)
+            : Boolean(String(currentUser.discordId || currentUser.id || '').trim());
+        if (!esDiscord) {
+            setStatus('<i class="fa-brands fa-discord" aria-hidden="true"></i> Inicia sesión con Discord para postularte: necesitamos vincular tu correo, usuario e ID.', 'error');
+            return;
+        }
+
+        // Identidad capturada de la sesión (nunca se inventa un correo).
+        const correoDiscord = String(currentUser.email || '').trim().toLowerCase();
+        const usuarioDiscord = String(currentUser.discordUsername || currentUser.username || '').trim();
+        const idDiscord = String(currentUser.discordId || currentUser.id || '').trim();
+        if (!idDiscord) {
+            setStatus('No se pudo leer tu ID de Discord. Cierra sesión y vuelve a entrar con Discord.', 'error');
+            return;
+        }
+
         const discord = document.getElementById('discordInput').value.trim();
         const device = document.getElementById('deviceInput').value.trim();
         const ram = document.getElementById('ramSelect').value;
@@ -1319,10 +1377,19 @@
 
         triggerScanEffect(async () => {
             try {
-                const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
-                await window.setDoc(userDocRef, {
+                const ahoraUTC = new Date().toISOString();
+                const payload = {
                     betaTesterRequest: true,
                     betaTesterDiscord: discord,
+                    // ── Identidad de la cuenta Discord usada para ingresar ──
+                    betaTesterEmail: correoDiscord,
+                    betaTesterDiscordUsername: usuarioDiscord,
+                    betaTesterDiscordId: idDiscord,
+                    betaTesterDiscordUid: String(currentUser.uid || ''),
+                    betaTesterDiscordGlobalName: String(currentUser.globalName || currentUser.displayName || ''),
+                    betaTesterEmailVerificado: Boolean(currentUser.emailVerified),
+                    betaTesterProveedor: 'discord.com',
+                    // ── Datos del formulario ──
                     betaTesterDevice: device,
                     betaTesterRAM: ram,
                     betaTesterAndroidVersion: androidVersion,
@@ -1331,9 +1398,18 @@
                     betaTesterSkillRecord: skillRecord,
                     betaTesterSkillDiscord: skillDiscord,
                     betaTesterWhy: why,
-                    betaTesterTimestamp: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                }, { merge: true });
+                    betaTesterTimestamp: ahoraUTC,
+                    updatedAt: ahoraUTC
+                };
+                // Correo/espejo a nivel de cuenta para emparejar rangos y el
+                // índice de Beta Testers. Sólo se escribe si Discord lo entregó:
+                // así NUNCA se inventa ni se borra un correo ya existente.
+                if (correoDiscord) payload.email = correoDiscord;
+                if (usuarioDiscord) payload.discordUsername = usuarioDiscord;
+                payload.discordId = idDiscord;
+
+                const userDocRef = window.fsDoc(window.db, 'conductores', currentUser.uid);
+                await window.setDoc(userDocRef, payload, { merge: true });
 
                             if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-rotate" aria-hidden="true"></i> Actualizar Pase de Tester';
                 setStatus('<i class="fa-solid fa-champagne-glasses" aria-hidden="true"></i> ¡Pase de Tester guardado con éxito! Tu inscripción está registrada oficialmente.', 'success');

@@ -2240,9 +2240,13 @@ function preventScroll(side, isOpen) {
                     window.where('betaTesterRequest', '==', true)
                 );
                 const snap = await window.getDocs(q);
-                if (snap && typeof snap.size === 'number' && snap.size > 0) {
-                    localStorage.setItem('ps_beta_testers_count', snap.size);
-                    els.forEach(el => el.textContent = snap.size);
+                // Sólo se cuentan las postulaciones del formulario vigente
+                // (con ID de Discord). Las antiguas son legado: 0 es válido.
+                if (snap && Array.isArray(snap.docs)) {
+                    const vigentes = snap.docs.filter(d =>
+                        String((d.data() || {}).betaTesterDiscordId || '').trim()).length;
+                    localStorage.setItem('ps_beta_testers_count', vigentes);
+                    els.forEach(el => el.textContent = vigentes);
                 }
             } catch (err) {
                 console.warn('Error fetching beta testers count:', err);

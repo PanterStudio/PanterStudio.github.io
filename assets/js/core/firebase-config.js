@@ -18,12 +18,12 @@ import("https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js")
   .then(({ initializeApp, firestore, auth, analytics }) => {
     const {
       getFirestore, collection, addDoc, getDocs, getDoc, onSnapshot, query, where,
-      setDoc, doc, deleteDoc, updateDoc, orderBy, limit, increment
+      setDoc, doc, deleteDoc, updateDoc, orderBy, limit, increment, deleteField
     } = firestore;
     const {
       getAuth,
       signInWithEmailAndPassword, createUserWithEmailAndPassword,
-      sendPasswordResetEmail, updateProfile, signOut,
+      sendPasswordResetEmail, updateProfile, signOut, signInWithCustomToken,
       onAuthStateChanged: firebaseOnAuthStateChanged,
       GoogleAuthProvider, OAuthProvider, signInWithPopup,
       signInWithRedirect, getRedirectResult
@@ -47,6 +47,7 @@ import("https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js")
     window.orderBy    = orderBy;
     window.limit      = limit;
     window.increment  = increment;
+    window.deleteField = deleteField;
 
     // ── Firebase Auth (real) ───────────────────────────────────
     window.firebaseAuth               = getAuth(app);
@@ -91,6 +92,14 @@ import("https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js")
     });
 
     window.signOut = () => (window.DiscordAuth ? window.DiscordAuth.logout() : Promise.resolve());
+
+    // FASE 2: canje del custom token emitido por el backend. A partir de aquí
+    // Firebase Auth tiene un usuario real y Firestore recibe `request.auth`.
+    // Se exponen con nombres propios para no chocar con los adaptadores
+    // legacy de arriba (que envuelven el primer argumento `auth`).
+    window.firebaseSignInWithCustomToken = (token) => signInWithCustomToken(window.firebaseAuth, token);
+    window.firebaseAuthSignOut = () => signOut(window.firebaseAuth);
+    window.firebaseCurrentUser = () => window.firebaseAuth.currentUser;
 
     // Observador dual: con `firebaseAuth` usa Firebase real; con la sesión
     // unificada (o sin argumentos) usa el bus de DiscordAuth.

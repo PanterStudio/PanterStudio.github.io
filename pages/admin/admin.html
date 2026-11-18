@@ -547,46 +547,6 @@
     }
     .notepad-page-btn.active { background: rgba(0,176,255,0.12); border-color: rgba(0,176,255,0.4); color: #40c4ff; }
 
-    /* ── Anuncios Comunidad (Firestore) ── */
-    .announcements-list { display: flex; flex-direction: column; gap: 8px; margin-top: 1rem; }
-    .announcement-item {
-        background: rgba(255,255,255,0.025);
-        border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 12px;
-        padding: 16px;
-        position: relative;
-        transition: all 0.2s;
-    }
-    .announcement-item:hover { border-color: rgba(0,176,255,0.2); }
-    .announcement-item-type {
-        font-size: 0.65rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        padding: 2px 8px;
-        border-radius: 5px;
-        display: inline-block;
-        margin-bottom: 6px;
-    }
-    .atype-general { background: rgba(96,165,250,0.15); color: #60a5fa; }
-    .atype-evento  { background: rgba(251,191,36,0.15); color: #fbbf24; }
-    .atype-urgente { background: rgba(248,113,113,0.15); color: #f87171; }
-    .atype-update  { background: rgba(52,211,153,0.15); color: #34d399; }
-    .announcement-title { font-weight: 800; font-size: 0.95rem; color: #fff; margin-bottom: 4px; }
-    .announcement-body { font-size: 0.85rem; color: var(--admin-text-secondary); line-height: 1.5; }
-    .announcement-meta { font-size: 0.72rem; color: var(--admin-text-muted); margin-top: 8px; }
-    .announcement-delete-btn {
-        position: absolute;
-        top: 10px; right: 12px;
-        background: transparent;
-        border: none;
-        color: rgba(255,255,255,0.2);
-        cursor: pointer;
-        font-size: 0.85rem;
-        padding: 4px;
-        transition: color 0.2s;
-    }
-    .announcement-delete-btn:hover { color: #f87171; }
-
     /* ── Personal interno ── */
     .staff-admin-list { display: flex; flex-direction: column; gap: 8px; }
     .staff-admin-row {
@@ -870,8 +830,7 @@
                         <div class="sidebar-section-label">Gestión</div>
                         <button class="sidebar-tab active" data-tab="dashboard"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Resumen</button>
                         <button class="sidebar-tab" data-tab="betatesters"><i class="fa-solid fa-gears" aria-hidden="true"></i> Beta Testers</button>
-                        <button class="sidebar-tab" data-tab="support"><i class="fa-solid fa-comment-dots" aria-hidden="true"></i> Soporte</button>
-                        <button class="sidebar-tab" data-tab="announcements"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Anuncios</button>
+                        <button class="sidebar-tab" data-tab="players"><i class="fa-solid fa-users-gear" aria-hidden="true"></i> Jugadores</button>
                         <button class="sidebar-tab" data-tab="staff"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Personal</button>
                         <button class="sidebar-tab" data-tab="siteconfig"><i class="fa-solid fa-gears" aria-hidden="true"></i> Configuración</button>
                         <button class="sidebar-tab" data-tab="visibility"><i class="fa-solid fa-globe" aria-hidden="true"></i> Visibilidad</button>
@@ -932,9 +891,13 @@
                         <div class="admin-card">
                             <div class="card-header-actions">
                                 <h3>Inscripciones a Beta Tester</h3>
-                                <button id="adminRefreshBetasBtn" class="btn">Actualizar Lista</button>
+                                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                    <button id="adminRefreshBetasBtn" class="btn">Actualizar Lista</button>
+                                    <button id="adminClearBetasBtn" class="btn btn-danger" style="background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.4);color:#fca5a5;" title="Borrar TODAS las postulaciones y correos antiguos repetidos. Deja respaldo reversible."><i class="fa-solid fa-trash-can" aria-hidden="true"></i> Eliminar postulaciones</button>
+                                </div>
                             </div>
-                            <p>Lista de usuarios postulados para las pruebas alpha/beta del juego en Android.</p>
+                            <p>Lista de usuarios postulados para las pruebas alpha/beta del juego en Android. La postulación captura el correo, el usuario y el ID de Discord de la sesión.</p>
+                            <p id="adminBetasCleanMsg" class="admin-message" style="min-height:1.1rem;"></p>
                             <div id="adminBetasList" class="betas-grid">
                                 <div style="color: var(--admin-text-secondary);">Cargando postulantes...</div>
                             </div>
@@ -944,23 +907,14 @@
                     <!-- El antiguo directorio de cuentas se eliminó: la asignación
                          de rangos se hace ahora desde Personal, por rango. -->
 
-                    <!-- ══ TAB: Soporte ══ -->
-                    <div class="tab-pane" id="tab-support">
-
-                        <!-- Banner Panel de Tickets -->
-                        <div style="background:linear-gradient(135deg,rgba(0,176,255,0.1),rgba(0,176,255,0.03));border:1px solid rgba(0,176,255,0.3);border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
-                            <div style="font-size:2.2rem;"><i class="fa-solid fa-headset" aria-hidden="true"></i></div>
-                            <div style="flex:1;">
-                                <h3 style="margin:0 0 4px;color:#fff;font-size:1rem;">Panel de Tickets de Soporte</h3>
-                                <p style="margin:0;font-size:0.82rem;color:rgba(176,188,206,0.7);">Gestiona tickets de soporte de los usuarios: asigna, responde, cambia estado y cierra casos desde el panel dedicado.</p>
-                            </div>
-                            <a href="../soporte.html?tab=staff" target="_blank" class="btn" style="background:rgba(0,176,255,0.15);border-color:rgba(0,176,255,0.4);color:#40c4ff;text-decoration:none;white-space:nowrap;">
-                                <i class="fa-solid fa-ticket" aria-hidden="true"></i> Abrir Panel de Tickets →
-                            </a>
-                        </div>
+                    <!-- ══ TAB: Jugadores (búsqueda y edición de cuentas) ══
+                         Las pestañas «Soporte» y «Anuncios» se retiraron:
+                         los tickets se gestionan en soporte.html?tab=staff y
+                         las novedades de la comunidad viven en el foro. -->
+                    <div class="tab-pane" id="tab-players">
 
                         <div class="admin-card">
-                            <h3>Soporte al Jugador</h3>
+                            <h3>Gestión de Jugadores</h3>
                             <p>Busca un jugador por su correo electrónico, ID o nombre de usuario para visualizar y editar CUALQUIER aspecto de su cuenta (perfil, saldos, mascota, permisos, etc.).</p>
                             <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
                                 <input type="text" id="supportSearchEmail" placeholder="Introduce correo, ID de usuario o nombre" class="form-input" style="flex:1; min-width: 250px;">
@@ -1140,20 +1094,6 @@
                                         </tr>
                                     </tbody>
                                 </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ══ TAB: Anuncios (Firestore) ══ -->
-                    <div class="tab-pane" id="tab-announcements">
-                        <div class="admin-card">
-                            <div class="card-header-actions">
-                                <h3><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Tablón de Anuncios <span id="annModeBadge" class="ann-mode-badge"> Cargando...</span></h3>
-                                <button class="btn" onclick="openAnnouncementModal()">+ Nuevo Anuncio</button>
-                            </div>
-                            <p>Publica anuncios visibles para toda la comunidad de Panter Studio. Se guardan en la nube.</p>
-                            <div id="announcementsList" class="announcements-list">
-                                <div class="empty-state"><div class="empty-state-icon"><i class="fa-solid fa-inbox" aria-hidden="true"></i></div><div class="empty-state-text">Cargando anuncios...</div></div>
                             </div>
                         </div>
                     </div>
@@ -1714,35 +1654,6 @@
     </main>
 
     <!-- ══ MODALES ══ -->
-
-    <!-- Modal: Anuncio -->
-    <div class="admin-modal-overlay" id="announcementModal">
-        <div class="admin-modal">
-            <h3><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Nuevo Anuncio</h3>
-            <div class="modal-form-group">
-                <label>Tipo</label>
-                <select id="annType" class="form-select">
-                    <option value="general"> General</option>
-                    <option value="evento"> Evento</option>
-                    <option value="update"> Actualización</option>
-                    <option value="urgente"> Urgente</option>
-                </select>
-            </div>
-            <div class="modal-form-group">
-                <label>Título</label>
-                <input type="text" id="annTitle" placeholder="Título del anuncio...">
-            </div>
-            <div class="modal-form-group">
-                <label>Mensaje</label>
-                <textarea id="annBody" rows="5" placeholder="Escribe el mensaje para la comunidad..."></textarea>
-            </div>
-            <p id="annFormMsg" class="ps-field-help" role="status" aria-live="polite" style="min-height:1.1rem;margin:0 0 .5rem;"></p>
-            <div class="modal-actions">
-                <button class="modal-btn-cancel" onclick="closeModal('announcementModal')">Cancelar</button>
-                <button class="modal-btn-save" id="annPublishBtn" onclick="saveAnnouncement()"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Publicar</button>
-            </div>
-        </div>
-    </div>
 
     <!-- Modal: Changelog -->
     <div class="admin-modal-overlay" id="changelogModal">
