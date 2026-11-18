@@ -3,6 +3,25 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ═══════════════════════════════════════════════════════
+    // 📌 ESTADO ACTUAL — FASE 1 ACTIVA (este es el archivo a publicar)
+    //   • ESTE `firestore.rules` es el que se pega en Firebase Console.
+    //   • `firestore.rules.phase2` contiene las reglas ENDURECIDAS con
+    //     `request.auth`, pero NO se debe publicar todavía: exigen el
+    //     backend de server/phase2-auth.js desplegado (ver FASE2.md).
+    //     Publicarlas ahora dejaría TODA la web en permission-denied.
+    //
+    // Cambios recientes que este bloque ya cubre:
+    //   • Tickets: código `#` + 12 A-Z/0-9, bandera `eliminado` y botón
+    //     «Limpiar todo» (necesita create/update/delete en soporte_tickets).
+    //   • Postulaciones Beta Tester: `conductores` guarda el correo, el
+    //     usuario y el ID de Discord; «Eliminar postulaciones» limpia esos
+    //     campos con deleteField() vía update → requiere `allow write`.
+    //   • Panel Admin: se retiraron las pestañas Soporte y Anuncios; la
+    //     colección `announcements` se mantiene para el banner público.
+    //   • Todas las marcas de tiempo del sitio son UTC+0 (ISO).
+    // ═══════════════════════════════════════════════════════
+
+    // ═══════════════════════════════════════════════════════
     // 🔐 HELPERS — Política de rangos (roles.js)
     //   • 9 rangos oficiales: Fundador/CEO, Administrador (rojo #ff0000),
     //     Programador, Modelador, Moderador, Soporte, Creador de Contenido,
