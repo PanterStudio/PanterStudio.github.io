@@ -1,15 +1,22 @@
 /**
  * personal.css — Página pública "Nuestro equipo"
- * Árbol organizacional limpio, simétrico y responsive.
- * Un único sistema de estilos (sin generaciones duplicadas).
+ * Organigrama COMPACTO: cúspide (Fundador) + tarjetas de rango en
+ * cuadrícula. Fichas de persona horizontales para aprovechar el ancho.
+ *
+ * Diseño responsive coherente:
+ *   · PC     → 2 columnas de rangos, fichas de 2 por tarjeta.
+ *   · Tablet → 2 columnas de rangos.
+ *   · Móvil  → 1 columna de rangos, fichas apiladas, sin desbordes.
+ * Sin conectores flotantes: la jerarquía la marca la cúspide y el color
+ * de cada rango (paleta oficial).
  */
 
 /* ── Contenedor e introducción ─────────────────────────────── */
 .team-container {
     width: 100%;
-    max-width: 1180px;
+    max-width: 1000px;
     margin: 0 auto;
-    padding: 1.5rem 1.25rem 4rem;
+    padding: 1.15rem 1rem 3rem;
     box-sizing: border-box;
     overflow-x: hidden;
 }
@@ -18,21 +25,21 @@
     display: grid;
     justify-items: center;
     text-align: center;
-    gap: .55rem;
-    padding: 1.8rem 1.4rem 1.5rem;
-    margin: 0 auto 1.4rem;
-    max-width: 900px;
+    gap: .35rem;
+    padding: 1.1rem 1.1rem 1.05rem;
+    margin: 0 auto .9rem;
+    max-width: 760px;
     background: rgba(20, 26, 40, .55);
     border: 1px solid rgba(255, 255, 255, .08);
-    border-radius: 22px;
+    border-radius: 18px;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 }
 .ps-team-eyebrow {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    font-size: .72rem;
+    gap: 7px;
+    font-size: .66rem;
     font-weight: 800;
     letter-spacing: .14em;
     text-transform: uppercase;
@@ -40,33 +47,33 @@
 }
 .ps-team-intro h1 {
     margin: 0;
-    font-size: clamp(2rem, 5vw, 3.1rem);
+    font-size: clamp(1.55rem, 3.6vw, 2.25rem);
     font-weight: 900;
     letter-spacing: -.02em;
     color: #f8fafc;
 }
 .ps-team-intro p {
     margin: 0;
-    max-width: 620px;
-    font-size: .95rem;
-    line-height: 1.6;
+    max-width: 560px;
+    font-size: .84rem;
+    line-height: 1.55;
     color: #94a3b8;
 }
 .ps-team-live {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    margin-top: .3rem;
-    padding: 6px 14px;
+    gap: 7px;
+    margin-top: .15rem;
+    padding: 5px 12px;
     border-radius: 100px;
-    font-size: .74rem;
+    font-size: .7rem;
     font-weight: 700;
     color: #6ee7b7;
     background: rgba(16, 185, 129, .09);
     border: 1px solid rgba(16, 185, 129, .28);
 }
 .ps-team-live-dot {
-    width: 7px; height: 7px; border-radius: 50%;
+    width: 6px; height: 6px; border-radius: 50%;
     background: #34d399;
     box-shadow: 0 0 0 0 rgba(52, 211, 153, .6);
     animation: ps-live-pulse 2s infinite;
@@ -81,280 +88,269 @@
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
-    margin: 0 auto 1.2rem;
+    margin: 0 auto .85rem;
 }
 .ps-team-summary {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 7px 16px;
+    gap: 7px;
+    padding: 5px 13px;
     border-radius: 100px;
-    font-size: .78rem;
+    font-size: .72rem;
     font-weight: 700;
     color: #7dd3fc;
     background: rgba(0, 176, 255, .09);
     border: 1px solid rgba(0, 176, 255, .28);
 }
 
-/* ── Lienzo del árbol ──────────────────────────────────────── */
+/* ── Lienzo ────────────────────────────────────────────────── */
 .ps-team-tree { display: block; width: 100%; min-width: 0; }
 
 .ps-org {
-    --ps-org-line: rgba(125, 211, 252, .28);
-    --ps-org-line-soft: rgba(125, 211, 252, .16);
+    --ps-org-line: rgba(125, 211, 252, .26);
     width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
     box-sizing: border-box;
-    padding: 2rem 1.25rem 2.5rem;
+    padding: 1.1rem 1rem 1.25rem;
     background: linear-gradient(180deg, rgba(18, 26, 42, .96), rgba(11, 17, 29, .97));
     border: 1px solid rgba(0, 176, 255, .20);
-    border-radius: 24px;
-    box-shadow: 0 25px 70px rgba(0, 0, 0, .42), inset 0 1px 0 rgba(255, 255, 255, .03);
+    border-radius: 18px;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, .38), inset 0 1px 0 rgba(255, 255, 255, .03);
     text-align: center;
     overflow: hidden;
 }
 .ps-org-title {
-    margin: 0 0 .35rem;
-    font-size: clamp(1.5rem, 3vw, 2.1rem);
+    margin: 0 0 .2rem;
+    font-size: clamp(1.1rem, 2.1vw, 1.4rem);
     font-weight: 900;
     letter-spacing: -.02em;
     color: #f1f5f9;
 }
 .ps-org-sub {
-    margin: 0 auto 1.8rem;
-    max-width: 620px;
-    font-size: .88rem;
-    line-height: 1.55;
+    margin: 0 auto .9rem;
+    max-width: 540px;
+    font-size: .76rem;
+    line-height: 1.5;
     color: #94a3b8;
 }
 
-/* Cúspide: dos nodos simétricos unidos por una línea */
-.ps-org-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    flex-wrap: nowrap;
-    gap: 0;
-}
+/* ── Cúspide: Fundador ─────────────────────────────────────── */
+.ps-org-top { display: flex; justify-content: center; }
 .ps-org-link {
-    flex: 0 0 clamp(24px, 6vw, 72px);
+    flex: 0 0 clamp(16px, 4vw, 44px);
     height: 1px;
-    margin-top: 52px;
+    margin-top: 34px;
     background: var(--ps-org-line);
 }
 .ps-org-trunk {
     width: 1px;
-    height: 34px;
+    height: 16px;
     margin: 0 auto;
     background: var(--ps-org-line);
 }
 
-/* Niveles por rango: una columna vertebral limpia */
+/* ── Niveles: cuadrícula de tarjetas de rango ──────────────── */
 .ps-org-levels {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.5rem;
-    padding-top: 1.8rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .7rem;
+    align-items: stretch;
+    padding-top: .85rem;
+    text-align: left;
 }
-.ps-org-levels::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 1.2rem;
-    left: 50%;
-    width: 1px;
-    background: var(--ps-org-line-soft);
+.ps-org-empty {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: .9rem;
+    font-size: .8rem;
+    color: #94a3b8;
+    text-align: center;
 }
 
 .ps-org-tier {
-    position: relative;
-    width: 100%;
-    max-width: 940px;
+    --ps-org-color: #0055ff;
     box-sizing: border-box;
-    padding-top: 1.4rem;
-}
-.ps-org-tier::before {
-    content: "";
-    position: absolute;
-    top: -1.8rem;
-    left: 50%;
-    width: 1px;
-    height: 1.8rem;
-    background: var(--ps-org-line);
+    min-width: 0;
+    /* style.css aplica `section { margin-bottom: 4rem }` + fadeInUp a
+       TODOS los <section>. Cada rango es un <section>, así que heredaba
+       64px de margen por nivel: esa era la causa principal de que el
+       árbol se viera desproporcionado. Se neutraliza aquí. */
+    margin: 0;
+    animation: none;
+    padding: .65rem .7rem .7rem;
+    background: rgba(255, 255, 255, .022);
+    border: 1px solid rgba(255, 255, 255, .07);
+    border-top: 2px solid var(--ps-org-color);
+    border-radius: 13px;
 }
 .ps-org-tier-label {
-    position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 16px;
+    gap: 6px;
+    padding: 3px 11px;
     border-radius: 100px;
-    font-size: .78rem;
+    font-size: .68rem;
     font-weight: 800;
     color: #08111f;
-    background: var(--ps-org-color, #0055ff);
-    box-shadow: 0 8px 22px rgba(0, 0, 0, .35);
+    background: var(--ps-org-color);
+    box-shadow: 0 5px 14px rgba(0, 0, 0, .3);
 }
+.ps-org-tier-label i { font-size: .8em; }
 .ps-org-tier-label em {
     font-style: normal;
-    font-size: .7rem;
-    padding: 1px 8px;
+    font-size: .64rem;
+    padding: 0 6px;
     border-radius: 100px;
     background: rgba(0, 0, 0, .20);
 }
 .ps-org-tier-people {
-    position: relative;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: flex-start;
-    gap: .85rem;
-    margin-top: 1rem;
-    padding-top: 1.1rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .45rem;
+    margin-top: .55rem;
 }
-.ps-org-tier-people::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(420px, 70%);
-    height: 1px;
-    background: var(--ps-org-line-soft);
+/* Un solo miembro ocupa toda la fila; con 2+, se reparten en pares. */
+.ps-org-tier-people:has(> .ps-org-person:only-child) {
+    grid-template-columns: minmax(0, 1fr);
 }
 
-/* ── Tarjeta de miembro (glassmorphism compacto) ───────────── */
+/* ── Ficha de persona (horizontal, compacta) ───────────────── */
 .ps-org-person {
     --ps-org-color: #0055ff;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 150px;
-    max-width: 100%;
     box-sizing: border-box;
-    padding: .85rem .6rem .8rem;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    column-gap: .55rem;
+    align-content: center;
+    padding: .45rem .55rem;
     background: rgba(255, 255, 255, .035);
     border: 1px solid rgba(255, 255, 255, .08);
-    border-top: 2px solid var(--ps-org-color);
-    border-radius: 16px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 10px 26px rgba(0, 0, 0, .22);
-    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
-    animation: ps-card-in .45s both;
+    border-left: 2px solid var(--ps-org-color);
+    border-radius: 11px;
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+    animation: ps-card-in .4s both;
 }
 .ps-org-person:hover {
-    transform: translateY(-4px);
+    transform: translateY(-2px);
     border-color: var(--ps-org-color);
-    box-shadow: 0 16px 34px rgba(0, 0, 0, .34), 0 0 0 1px var(--ps-org-color);
-}
-.ps-org-person.is-big {
-    width: clamp(140px, 20vw, 190px);
-    padding: 1rem .7rem .9rem;
-    background: rgba(255, 255, 255, .055);
-    border-top-width: 3px;
+    box-shadow: 0 10px 22px rgba(0, 0, 0, .3);
 }
 @keyframes ps-card-in {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
 }
 
 .ps-org-avatar {
-    position: relative;
-    width: 62px; height: 62px;
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    width: 40px; height: 40px;
     border-radius: 50%;
     overflow: hidden;
-    border: 3px solid var(--ps-org-color);
+    border: 2px solid var(--ps-org-color);
     background: rgba(255, 255, 255, .05);
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, .32);
-    flex-shrink: 0;
+    box-shadow: 0 5px 12px rgba(0, 0, 0, .28);
+    align-self: center;
 }
-.ps-org-person.is-big .ps-org-avatar { width: 90px; height: 90px; border-width: 4px; }
 .ps-org-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ps-org-initial {
     width: 100%; height: 100%;
     align-items: center; justify-content: center;
-    font-size: 1.4rem; font-weight: 900;
+    font-size: 1rem; font-weight: 900;
     color: var(--ps-org-color);
 }
-.ps-org-person.is-big .ps-org-initial { font-size: 2rem; }
-
 .ps-org-name {
-    margin-top: .55rem;
-    font-size: .9rem;
+    grid-column: 2; grid-row: 1;
+    font-size: .78rem;
     font-weight: 800;
     line-height: 1.25;
     color: #f1f5f9;
-    word-break: break-word;
-    max-width: 100%;
-}
-.ps-org-person.is-big .ps-org-name { font-size: 1.05rem; }
-.ps-org-specialty {
-    margin-top: .25rem;
-    font-size: .7rem;
-    line-height: 1.35;
-    color: #64748b;
-    max-width: 100%;
-    word-break: break-word;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .ps-org-badge {
-    margin-top: .45rem;
-    transform: scale(.86);
-    transform-origin: center;
+    grid-column: 2; grid-row: 2;
+    margin-top: .15rem;
+    justify-self: start;
+    transform: scale(.72);
+    transform-origin: left center;
 }
 .ps-org-badge .ps-role-badge {
     background: rgba(255, 255, 255, .05) !important;
     border-color: var(--ps-org-color) !important;
 }
+.ps-org-specialty {
+    grid-column: 2; grid-row: 3;
+    font-size: .64rem;
+    line-height: 1.3;
+    color: #64748b;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .ps-org-fallback-badge {
     display: inline-block;
-    padding: 2px 9px;
+    padding: 2px 8px;
     border-radius: 100px;
-    font-size: .65rem;
+    font-size: .6rem;
     font-weight: 800;
     color: var(--ps-org-color);
     border: 1px solid var(--ps-org-color);
 }
-.ps-org-empty {
-    margin: 0;
-    padding: 1.2rem;
-    font-size: .85rem;
-    color: #94a3b8;
+
+/* Cúspide: el Fundador vuelve a ficha vertical destacada. */
+.ps-org-person.is-big {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: clamp(140px, 16vw, 168px);
+    padding: .7rem .6rem .75rem;
+    text-align: center;
+    background: rgba(255, 255, 255, .055);
+    border: 1px solid rgba(255, 255, 255, .1);
+    border-top: 3px solid var(--ps-org-color);
+    border-radius: 14px;
+}
+.ps-org-person.is-big .ps-org-avatar { width: 58px; height: 58px; border-width: 3px; }
+.ps-org-person.is-big .ps-org-initial { font-size: 1.35rem; }
+.ps-org-person.is-big .ps-org-name {
+    margin-top: .4rem; font-size: .9rem;
+    white-space: normal; overflow: visible;
+}
+.ps-org-person.is-big .ps-org-badge {
+    margin-top: .3rem; justify-self: center;
+    transform: scale(.8); transform-origin: center;
+}
+.ps-org-person.is-big .ps-org-specialty {
+    margin-top: .2rem; white-space: normal; overflow: visible;
 }
 
-/* ── Responsive ────────────────────────────────────────────── */
+/* ── Tablet ────────────────────────────────────────────────── */
 @media (max-width: 760px) {
-    .team-container { padding: 1rem .7rem 3rem; }
-    .ps-team-intro { padding: 1.4rem 1rem; border-radius: 18px; }
-    .ps-org { padding: 1.5rem .7rem 2rem; border-radius: 18px; }
-    .ps-org-link { flex-basis: 18px; margin-top: 45px; }
-    .ps-org-person.is-big { width: 132px; }
-    .ps-org-person.is-big .ps-org-avatar { width: 78px; height: 78px; }
-    .ps-org-person { width: 128px; }
-    .ps-org-levels { gap: 1.2rem; padding-top: 1.4rem; }
-    .ps-org-tier { padding-top: 1.1rem; }
-    .ps-org-tier::before { height: 1.4rem; top: -1.4rem; }
-    .ps-org-tier-people { gap: .6rem; padding-top: .85rem; }
-    .ps-org-tier-people::before { width: 55%; }
+    .team-container { padding: .85rem .65rem 2.5rem; }
+    .ps-team-intro { padding: 1rem .85rem; border-radius: 15px; }
+    .ps-org { padding: 1rem .7rem 1.15rem; border-radius: 15px; }
+    .ps-org-levels { gap: .55rem; padding-top: .7rem; }
+    .ps-org-tier { padding: .55rem .6rem .6rem; }
+    .ps-org-tier-people { gap: .4rem; }
+    .ps-org-link { flex-basis: 12px; margin-top: 30px; }
+    .ps-org-trunk { height: 14px; }
 }
 
-@media (max-width: 480px) {
-    /* En móvil se simplifican los conectores: nada de líneas flotantes. */
-    .ps-org-link { flex-basis: 12px; margin-top: 40px; }
-    .ps-org-trunk { height: 24px; }
-    .ps-org-levels::before,
-    .ps-org-tier::before,
-    .ps-org-tier-people::before { display: none; }
-    .ps-org-levels { padding-top: .4rem; gap: 1rem; }
-    .ps-org-tier { padding-top: .4rem; }
-    .ps-org-tier-people { padding-top: .3rem; }
-    .ps-org-person { width: 46%; max-width: 160px; }
-    .ps-org-person.is-big { width: 44%; max-width: 150px; }
-    .ps-org-person.is-big .ps-org-avatar { width: 70px; height: 70px; }
-    .ps-org-avatar { width: 56px; height: 56px; }
+/* ── Móvil: una columna de rangos, fichas apiladas ─────────── */
+@media (max-width: 560px) {
+    .ps-org-title { font-size: 1.05rem; }
+    .ps-org-sub { font-size: .72rem; margin-bottom: .7rem; }
+    .ps-org-levels { grid-template-columns: minmax(0, 1fr); gap: .55rem; padding-top: .6rem; }
+    .ps-org-tier-people { grid-template-columns: minmax(0, 1fr); }
+    .ps-org-link { flex-basis: 8px; margin-top: 28px; }
+    .ps-org-trunk { height: 12px; }
+    .ps-org-person { grid-template-columns: 36px minmax(0, 1fr); column-gap: .5rem; }
+    .ps-org-avatar { width: 36px; height: 36px; }
+    .ps-org-name { font-size: .76rem; }
+    .ps-org-badge { transform: scale(.7); }
+    .ps-org-person.is-big { width: 150px; }
+    .ps-org-person.is-big .ps-org-avatar { width: 48px; height: 48px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

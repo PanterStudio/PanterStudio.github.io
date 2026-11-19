@@ -920,11 +920,32 @@ document.addEventListener('DOMContentLoaded', () => {
             else nav.appendChild(navRight);
         }
 
-        if (!navRight.querySelector('#navUserDropdown') && !navRight.querySelector('#navLoginBtn')) {
-            const perfilPath = toSitePath('pages/perfil.html');
-            const soportePath = toSitePath('pages/soporte.html');
-            const adminPath = toSitePath('pages/admin/admin.html');
+        const perfilPath = toSitePath('pages/perfil.html');
+        const soportePath = toSitePath('pages/soporte.html');
+        const adminPath = toSitePath('pages/admin/admin.html');
 
+        // En móvil la píldora se reduce a avatar; el nombre y el rango se
+        // muestran completos en el drawer. Se crea SIEMPRE, incluso si el
+        // nav-right ya traía el dropdown de otra carga.
+        const mobileMenu = nav.querySelector('.nav-mobile-menu');
+        if (mobileMenu && !mobileMenu.querySelector('#navMobileUserSection')) {
+            const section = document.createElement('div');
+            section.className = 'nav-mobile-user-section';
+            section.id = 'navMobileUserSection';
+            section.innerHTML = `
+                <div class="nav-mobile-user-row">
+                    <img src="https://cdn.discordapp.com/embed/avatars/0.png" alt="Avatar" id="navMobileUserAvatar">
+                    <div class="nav-mobile-user-meta">
+                        <strong data-auth-user-label="true">Invitado</strong>
+                        <span class="auth-role-badge nav-mobile-user-role" data-auth-role-badge="true" hidden></span>
+                    </div>
+                </div>
+                <a href="${adminPath}" id="adminNavLinkMobile" hidden><i class="fa-solid fa-gear" aria-hidden="true"></i> Panel Admin</a>
+                <button type="button" class="btn-logout-link" data-auth-logout="true" hidden><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Cerrar Sesión</button>`;
+            mobileMenu.insertBefore(section, mobileMenu.firstChild);
+        }
+
+        if (!navRight.querySelector('#navUserDropdown') && !navRight.querySelector('#navLoginBtn')) {
             navRight.innerHTML = `
                 <button type="button" class="btn-nav-login" id="navLoginBtn" data-open-auth-modal="true">
                     <svg width="18" height="18" viewBox="0 0 127.14 96.36" fill="currentColor"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a74.77,74.77,0,0,0,64.3,0c.87.69,1.76,1.37,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22c2.82-27.28-7.3-51-18.9-72.15ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,45.91,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,45.91,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
@@ -964,6 +985,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     dropdown.classList.remove('open');
                 }
             });
+        }
+
+        // IMPORTANTE: esto va DESPUÉS del `navRight.innerHTML` de arriba,
+        // que de lo contrario borraría el chip recién insertado. «Panel
+        // Admin» pasa del centro al bloque derecho, junto a la identidad.
+        const adminCentral = nav.querySelector('.nav-middle > #adminNavLink')
+            || nav.querySelector('#adminNavLink:not(.nav-admin-chip)');
+        if (adminCentral && !navRight.contains(adminCentral)) {
+            adminCentral.classList.add('nav-admin-chip');
+            if (!adminCentral.querySelector('i')) {
+                adminCentral.insertAdjacentHTML('afterbegin', '<i class="fa-solid fa-gear" aria-hidden="true"></i> ');
+            }
+            navRight.insertBefore(adminCentral, navRight.firstChild);
         }
     }
 
@@ -1029,11 +1063,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (navLoginBtn) navLoginBtn.style.display = 'none';
             if (navUserDropdown) navUserDropdown.style.display = 'inline-block';
             if (navUserAvatar && avatarUrl) navUserAvatar.src = avatarUrl;
+            const navMobileUserAvatar = document.getElementById('navMobileUserAvatar');
+            if (navMobileUserAvatar && avatarUrl) navMobileUserAvatar.src = avatarUrl;
             if (navUserName) navUserName.textContent = authText;
             if (navMenuUname) navMenuUname.textContent = authText;
             if (navMenuUemail) navMenuUemail.textContent = email || 'Sesión activa';
 
-            if (navUserRoleBadge) navUserRoleBadge.hidden = false;
+            // Todos los badges de rango (píldora + drawer) se muestran y se
+            // pintan con la paleta oficial en vivo.
+            document.querySelectorAll('[data-auth-role-badge]').forEach(b => { b.hidden = false; });
             paintRoleBadges(role);
             if (navMenuAdminLink) {
                 navMenuAdminLink.style.display = isAdmin ? 'flex' : 'none';
