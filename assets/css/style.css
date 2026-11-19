@@ -3472,29 +3472,35 @@ select option:checked {
    píldora queda contenida, con ellipsis y sin desbordes.
    ===================================================================== */
 nav {
+  /* El nav tiene ancho FIJO (max-width): usar `vw` para gap/fuente hacía
+     que a 1920px los enlaces crecieran y se montaran sobre el bloque
+     derecho (Foro / Panel Admin / usuario). Valores estables + más aire. */
   flex-wrap: nowrap;
   gap: 0.35rem;
   min-width: 0;
+  max-width: 1280px;
 }
 nav > .nav-left  { flex: 0 0 auto; min-width: 0; }
 nav > .nav-middle {
   flex: 1 1 auto;
   min-width: 0;
   justify-content: center;
-  gap: clamp(0.15rem, 0.7vw, 0.85rem);
-  padding: 0 0.25rem;
+  gap: 0.5rem;
+  padding: 0 0.2rem;
 }
 nav > .nav-middle > a,
 nav > .nav-middle > .nav-dropdown > .nav-dropdown-toggle {
-  padding: 0.5rem 0.45rem;
-  font-size: clamp(0.76rem, 0.85vw, 0.9rem);
+  padding: 0.45rem 0.35rem;
+  font-size: 0.82rem;
   white-space: nowrap;
 }
 nav > .nav-right {
   flex: 0 0 auto;
   min-width: 0;
   margin-left: 0;
-  gap: 0.45rem;
+  gap: 0.4rem;
+  position: relative;
+  z-index: 3; /* nunca quede tapado por un desborde del centro */
 }
 
 /* «Panel Admin» se reubica en el bloque derecho (script.js) como chip
@@ -3522,19 +3528,19 @@ nav > .nav-right {
 
 /* Píldora de usuario: compacta, nombre y rango con ellipsis, sin desborde. */
 .nav-user-pill {
-  max-width: min(230px, 26vw);
+  max-width: 200px;
   min-width: 0;
   padding: 4px 9px 4px 4px;
   gap: 6px;
   font-size: 0.78rem;
 }
 .nav-user-avatar { width: 26px; height: 26px; flex: 0 0 auto; }
-.nav-user-name { max-width: 84px; min-width: 0; font-size: 0.78rem; }
+.nav-user-name { max-width: 72px; min-width: 0; font-size: 0.78rem; }
 .nav-user-chevron { flex: 0 0 auto; }
 .nav-user-pill .auth-role-badge,
 .nav-user-pill .ps-role-badge {
   min-width: 0;
-  max-width: 108px;
+  max-width: 96px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

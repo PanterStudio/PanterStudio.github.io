@@ -1,11 +1,11 @@
 /**
- * vehiculos.js — Catálogo de vehículos conectado (Wiki + Panel Admin)
+ * vehiculos.js — Catálogo de vehículos conectado (Guías + Panel Admin)
  *
  * · Fotos por enlace Imgur o URL directa.
  * · Nombre, descripción y CATEGORÍA manual (tú creas las categorías).
  * · Filtro por categoría generado dinámicamente.
  * · Se pueden eliminar TODOS los vehículos, incluidos los del catálogo base.
- * · Firestore `vehiculos` + copia local compartida → la Wiki y el panel
+ * · Firestore `vehiculos` + copia local compartida → las Guías y el panel
  *   admin ven exactamente los mismos datos, al instante.
  */
 (function () {
@@ -293,7 +293,7 @@
         const grid = $('adminVehGrid');
         if (!grid) return;
         if (!items.length) {
-            grid.innerHTML = '<p style="font-size:.78rem;color:var(--admin-text-muted);">Sin vehículos. Añádelos desde la Wiki.</p>';
+            grid.innerHTML = '<p style="font-size:.78rem;color:var(--admin-text-muted);">Sin vehículos. Añádelos desde las Guías.</p>';
             return;
         }
         grid.innerHTML = items.map(v => `
@@ -355,7 +355,7 @@
         setSaving(true);
         upsertLocal(payload);
         setItems(items);
-        formMsg('Vehículo publicado y visible en la Wiki y el panel.', 'success');
+        formMsg('Vehículo publicado y visible en las Guías y el panel.', 'success');
 
         try {
             if (window.db && window.collection && window.addDoc) {
@@ -372,7 +372,7 @@
             console.warn('[Vehículos] Guardado en copia local:', e && e.message);
         }
         setItems(items);
-        formMsg('Vehículo publicado y visible en la Wiki y el panel.', 'success');
+        formMsg('Vehículo publicado y visible en las Guías y el panel.', 'success');
         $('vehForm')?.reset();
         setSaving(false);
         closeModal();
