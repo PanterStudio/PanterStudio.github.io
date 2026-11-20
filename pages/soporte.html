@@ -619,6 +619,27 @@
     #spToast.error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #f87171; }
     #spToast.info { background: rgba(0,176,255,0.15); border: 1px solid rgba(0,176,255,0.4); color: #38bdf8; }
 
+    /* ── BBCode con formato enriquecido (colores, listas, código…)
+       Se aplica a descripciones y comentarios cuando se pega contenido
+       con formato: se conserva tal cual, pero escapado de forma segura. */
+    .sp-chat-bb ul, .sp-chat-bb ol { margin: .4rem 0 .4rem 1.2rem; padding-left: .6rem; }
+    .sp-chat-bb li { margin: .15rem 0; }
+    .sp-chat-bb h2 { font-size: 1.1rem; font-weight: 800; color: #fff; margin: .7rem 0 .35rem; }
+    .sp-chat-bb h3 { font-size: .98rem; font-weight: 800; color: #fff; margin: .6rem 0 .3rem; }
+    .sp-chat-bb blockquote { border-left: 3px solid var(--sp-cyan, #00b0ff); padding: .3rem .7rem; margin: .5rem 0; background: rgba(0,176,255,.05); border-radius: 0 8px 8px 0; }
+    .sp-chat-bb blockquote cite { display:block; font-size:.72rem; opacity:.8; font-style:normal; }
+    .sp-chat-bb pre, .ps-code { background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.08); border-radius: 8px; padding: .6rem .8rem; overflow-x: auto; }
+    .sp-chat-bb code { font-family: monospace; font-size: .82rem; }
+    .sp-chat-bb img, .ps-bb-img { max-width: 100%; max-height: 380px; border-radius: 10px; display:block; margin: .5rem 0; }
+    .sp-chat-bb a, .sp-chat-bb a:visited { color: #7dd3fc; }
+    .sp-chat-bb hr { border: none; border-top: 1px solid rgba(255,255,255,.12); margin: .7rem 0; }
+    .sp-chat-bb .ps-bb-center { text-align: center; }
+    .sp-chat-bb .ps-bb-left { text-align: left; }
+    .sp-chat-bb .ps-bb-right { text-align: right; }
+    .sp-chat-bb .ps-bb-list { margin: .4rem 0; }
+    .sp-ticket-item { padding: 12px 14px; border: 1px solid rgba(255,255,255,.07); border-radius: 11px; background: rgba(255,255,255,.02); margin-bottom: 8px; transition: border-color .2s, background .2s; }
+    .sp-ticket-item:hover { border-color: rgba(0,176,255,.4); background: rgba(0,176,255,.05); }
+
     @media (max-width: 600px) {
         .soporte-hero { padding: 1.2rem 1rem; }
         .soporte-hero-stats { margin-left: 0; width: 100%; justify-content: space-around; }
@@ -789,6 +810,9 @@
             <button class="sp-tab" data-tab="buscar" role="tab">
                 <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Consultar Estado
             </button>
+            <button class="sp-tab" data-tab="reportar" role="tab">
+                <i class="fa-solid fa-bug" aria-hidden="true"></i> Reportar Error
+            </button>
             <button class="sp-tab" data-tab="staff" id="staffTabBtn" role="tab" hidden>
                 <i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Panel de Soporte
                 <span class="ps-team-count" id="staffTicketsCount">0</span>
@@ -837,7 +861,7 @@
 
                             <div>
                                 <label class="sp-label">Descripción Detallada *</label>
-                                <textarea id="ticketDescripcion" class="sp-input" placeholder="Explica el problema con el mayor detalle posible. ¿Qué hiciste? ¿Qué esperabas? ¿Qué ocurrió?" maxlength="2000" required></textarea>
+                                <textarea id="ticketDescripcion" class="sp-input" data-rich-paste placeholder="Explica el problema con el mayor detalle posible. ¿Qué hiciste? ¿Qué esperabas? ¿Qué ocurrió? Puedes pegar texto con formato y se conservarán los colores." maxlength="2000" required></textarea>
                                 <div style="text-align:right; font-size:0.7rem; color:var(--text-muted); margin-top:4px;">
                                     <span id="descCount">0</span>/2000
                                 </div>
@@ -893,6 +917,65 @@
                     </div>
                 </div>
 
+                <!-- ===== TAB: REPORTAR ERROR DEL JUEGO (rastreador) ===== -->
+                <div class="sp-tab-panel" id="panel-reportar">
+                    <div class="sp-card">
+                        <div class="sp-card-header">
+                            <h2 class="sp-card-title"><i class="fa-solid fa-bug" aria-hidden="true"></i> Rastreador de errores del juego</h2>
+                        </div>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin:0 0 1rem; line-height:1.55;">
+                            ¿Encontraste un fallo en <strong style="color:#fff;">Nuestra Tierra Job Simulator</strong>? Cuéntanos qué pasó y adjunta una captura o un vídeo. Cuanto más claros sean los pasos, más rápido lo resolveremos.
+                        </p>
+
+                        <div id="reporteAuthGate" class="sp-auth-gate" style="display:none;">
+                            <div style="font-size:2.4rem;"><i class="fa-solid fa-user-lock" aria-hidden="true"></i></div>
+                            <h3>Inicia Sesión para Reportar</h3>
+                            <p>Necesitas tu cuenta de Discord para enviar y consultar tus informes.</p>
+                            <button class="sp-btn sp-btn-primary" style="max-width:260px; margin:0 auto;" onclick="document.getElementById('authModal').hidden=false; document.body.style.overflow='hidden';">
+                                Iniciar Sesión con Discord
+                            </button>
+                        </div>
+
+                        <form class="sp-form" id="reporteErrorForm">
+                            <div>
+                                <label class="sp-label" for="reporteQue">¿Qué ocurrió? *</label>
+                                <input type="text" id="reporteQue" class="sp-input" maxlength="140" required
+                                       placeholder="Breve: dónde y qué falla (ej. «El camión se queda sin frenos al cargar en la ruta de montaña»)">
+                            </div>
+                            <div>
+                                <label class="sp-label" for="reporteDetalles">Detalles *</label>
+                                <textarea id="reporteDetalles" class="sp-input" rows="5" maxlength="2000" required
+                                          data-rich-paste
+                                          placeholder="Servidor / lugar, qué hacías justo antes del error y qué esperabas que ocurriera. Puedes pegar texto con formato: se conservarán los colores."></textarea>
+                            </div>
+                            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px;">
+                                <div>
+                                    <label class="sp-label" for="reporteFoto"><i class="fa-regular fa-image" aria-hidden="true"></i> Agregar foto (URL Imgur o directa)</label>
+                                    <input type="url" id="reporteFoto" class="sp-input" placeholder="https://i.imgur.com/....jpg">
+                                </div>
+                                <div>
+                                    <label class="sp-label" for="reporteVideo"><i class="fa-solid fa-video" aria-hidden="true"></i> Agregar vídeo (URL)</label>
+                                    <input type="url" id="reporteVideo" class="sp-input" placeholder="https://...">
+                                </div>
+                            </div>
+                            <div id="reporteMsg" class="admin-message" role="status" aria-live="polite" style="min-height:1.1rem;"></div>
+                            <button type="submit" class="sp-btn sp-btn-primary" id="reporteEnviarBtn">
+                                <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Enviar informe
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="sp-card" style="margin-top:1rem;">
+                        <div class="sp-card-header">
+                            <h2 class="sp-card-title"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Mis Informes</h2>
+                            <span class="ps-support-stat" id="misInformesCount">0 informes</span>
+                        </div>
+                        <div id="misInformesList">
+                            <div class="sp-empty" style="padding:1rem;"><p>Aún no has informado de ningún error.</p></div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- ===== TAB: PANEL DE SOPORTE (solo staff) ===== -->
                 <div class="sp-tab-panel" id="panel-staff">
                     <div class="sp-card">
@@ -927,6 +1010,10 @@
                                 <i class="fa-solid fa-trash-can" aria-hidden="true"></i> Limpiar todo
                             </button>
                         </div>
+                        <p id="staffCleanNotice" class="ps-field-help" role="status" aria-live="polite"
+                           style="display:none; margin:.2rem 0 .8rem; padding:8px 12px; border-radius:9px;
+                                  background:rgba(0,176,255,.07); border:1px solid rgba(0,176,255,.2);
+                                  color:#7dd3fc; font-size:.78rem; min-height:1rem;"></p>
                         <div id="staffTicketsList">
                             <div class="sp-empty">
                                 <div class="sp-empty-icon"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
@@ -982,6 +1069,15 @@
                     <a href="https://discord.gg/MukZeJmgky" target="_blank" rel="noopener" class="sp-btn" style="background:#5865F2; color:#fff; width:100%; border:none; text-decoration:none;">
                         <i class="fa-brands fa-discord" aria-hidden="true"></i> Unirse al Discord
                     </a>
+                </div>
+
+                <!-- Reportar un error (acceso rápido, estilo rastreador) -->
+                <div class="sp-card" style="background:rgba(248,113,113,.06); border-color:rgba(248,113,113,.22);">
+                    <h3 style="font-size:0.9rem; font-weight:800; color:#fff; margin:0 0 0.5rem;"><i class="fa-solid fa-bug" aria-hidden="true"></i> ¿Encontraste un error?</h3>
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin:0 0 1rem; line-height:1.5;">Cuéntanoslo y lo arreglaremos. Abre el reporte rápido o usa el rastreador completo.</p>
+                    <button type="button" class="sp-btn sp-btn-outline" id="abrirReporteModalBtn" style="width:100%;">
+                        <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Informar de un error
+                    </button>
                 </div>
 
                 <!-- Categorías quick reference -->
@@ -1067,10 +1163,45 @@
 
                     <!-- Agregar comentario -->
                     <div id="addComentarioSection" style="margin-top:1rem; display:none;">
-                        <textarea id="nuevoComentario" class="sp-input" rows="3" placeholder="Escribe tu respuesta o pega un enlace de Imgur / imagen para adjuntarla..."></textarea>
+                        <textarea id="nuevoComentario" class="sp-input" rows="3" data-rich-paste placeholder="Escribe tu respuesta o pega un enlace de Imgur / imagen para adjuntarla. El formato pegado (colores, negritas, listas) se conserva."></textarea>
                         <button class="sp-btn sp-btn-primary" id="enviarComentarioBtn" style="margin-top:8px; max-width:220px;">
                             <i class="fa-solid fa-comment-dots" aria-hidden="true"></i> Enviar Comentario
                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: REPORTAR UN ERROR (rápido) -->
+    <div id="reporteModal" class="sp-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="reporteModalTitulo">
+        <div class="sp-modal" style="max-width:520px;">
+            <div class="sp-modal-header">
+                <div>
+                    <h3 id="reporteModalTitulo" style="color:#fff; font-size:1rem; font-weight:800; margin:0;"><i class="fa-solid fa-bug" aria-hidden="true"></i> Reportar un error</h3>
+                    <p style="font-size:.78rem; color:var(--text-muted); margin:4px 0 0;">Describe qué pasó y dónde. Puedes adjuntar hasta 4 capturas.</p>
+                </div>
+                <button class="sp-modal-close" id="closeReporteModal" aria-label="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </div>
+            <div class="sp-modal-body">
+                <div class="sp-form">
+                    <div>
+                        <label class="sp-label" for="reporteModalAsunto">Asunto *</label>
+                        <input type="text" id="reporteModalAsunto" class="sp-input" maxlength="140" required placeholder="Brevemente sobre el problema">
+                    </div>
+                    <div>
+                        <label class="sp-label" for="reporteModalMensaje">Mensaje *</label>
+                        <textarea id="reporteModalMensaje" class="sp-input" rows="5" maxlength="2000" required data-rich-paste
+                                  placeholder="Qué pasó, en qué página / servidor / lugar, qué hacías antes y qué esperabas. El formato pegado se conserva."></textarea>
+                    </div>
+                    <div>
+                        <label class="sp-label" for="reporteModalFotos"><i class="fa-regular fa-images" aria-hidden="true"></i> Adjuntar capturas (URLs, una por línea, máx. 4)</label>
+                        <textarea id="reporteModalFotos" class="sp-input" rows="2" placeholder="https://i.imgur.com/....jpg"></textarea>
+                    </div>
+                    <p id="reporteModalMsg" class="admin-message" role="status" aria-live="polite" style="min-height:1.1rem;"></p>
+                    <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
+                        <button type="button" class="sp-btn sp-btn-outline" id="reporteModalCancelar">Cancelar</button>
+                        <button type="button" class="sp-btn sp-btn-primary" id="reporteModalEnviar"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Enviar</button>
                     </div>
                 </div>
             </div>
@@ -1092,6 +1223,8 @@
 
     <!-- SCRIPTS -->
     <script src="../assets/js/core/roles.js"></script>
+    <script src="../assets/js/core/role-colors.js"></script>
+    <script src="../assets/js/core/bbcode.js"></script>
     <script src="../assets/js/core/discord-auth.js"></script>
     <script src="../assets/js/core/role-badges.js"></script>
     <script src="../assets/js/core/firebase-config.js"></script>
@@ -1134,6 +1267,7 @@
                     panel.classList.add('active');
                     if (tab.dataset.tab === 'mis-tickets' && currentUser) loadMisTickets();
                     if (tab.dataset.tab === 'staff' && currentStaff) loadStaffTickets();
+                    if (tab.dataset.tab === 'reportar') { syncReporteAuth(); loadMisInformes(); }
                 }
             });
         });
@@ -1198,18 +1332,31 @@
                 grid.appendChild(btn);
             });
 
-            // Cat legend sidebar
-            const leg = document.getElementById('catLegend');
-            if (leg) {
-                leg.innerHTML = '';
-                window.SoporteJS.CATEGORIAS.forEach(cat => {
-                    const div = document.createElement('div');
-                    div.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-secondary);';
-                    div.innerHTML = `<span>${cat.icon}</span><span>${cat.label}</span>`;
-                    leg.appendChild(div);
-                });
-            }
+            // Cat legend sidebar — el color de cada categoría sale de la
+            // paleta GLOBAL de rangos y se sincroniza solo con el Panel Admin.
+            pintarCatLegend();
         }
+
+        /** Repinta la leyenda con los 9 colores oficiales en vivo. */
+        function pintarCatLegend() {
+            const leg = document.getElementById('catLegend');
+            if (!leg || !window.SoporteJS) return;
+            const C = window.PanterRoleColors;
+            const orden = (C && C.IDS) || ['founder_ceo','administrador','programador','modelador','moderador','soporte','creador_contenido','vip','usuario'];
+            leg.innerHTML = '';
+            window.SoporteJS.CATEGORIAS.forEach((cat, i) => {
+                const rol = orden[i % orden.length];
+                const color = C && C.colorFor ? C.colorFor(rol) : '#7dd3fc';
+                const div = document.createElement('div');
+                div.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-secondary);';
+                div.innerHTML = `<span style="color:${color};width:18px;text-align:center;">${cat.icon}</span><span>${cat.label}</span>`;
+                leg.appendChild(div);
+            });
+        }
+
+        // Si cambia un color en Personal, todas las categorías se actualizan.
+        window.addEventListener('panter:role-colors', pintarCatLegend);
+        document.addEventListener('panter:role-colors', pintarCatLegend);
 
         function buildPrioridadUI() {
             const row = document.getElementById('prioridadRow');
@@ -1675,12 +1822,18 @@
                     `${r.ocultos} ocultos`,
                     `${r.comentarios} comentarios`
                 ];
-                if (r.sinPermisos) {
-                    console.warn('[Soporte] Limpieza parcial:', r.errores);
-                    showToast(`Quedan ${r.sinPermisos} tickets antiguos ocultos en la web. Publica las reglas de Firestore y vuelve a pulsar «Limpiar todo» para borrarlos definitivamente.`, 'error');
-                } else {
-                    showToast(`Limpieza: ${partes.join(' · ')}.`, 'success');
+                // Aviso DISCRETO dentro del panel (ya no un toast rojo que
+                // tapa la interfaz). Los tickets antiguos quedan ocultos de
+                // forma permanente en la web; el borrado físico se completa
+                // automáticamente cuando las reglas lo permitan.
+                const notice = document.getElementById('staffCleanNotice');
+                if (notice) {
+                    notice.style.display = 'block';
+                    notice.textContent = r.sinPermisos
+                        ? `Listo: ${r.sinPermisos} tickets antiguos ya no se muestran en la web (${r.borrados} borrados, ${r.comentarios} comentarios).`
+                        : `Limpieza: ${partes.join(' · ')}.`;
                 }
+                if (r.sinPermisos) console.warn('[Soporte] Limpieza parcial:', r.errores);
                 await loadStaffTickets();
                 await updateStats();
             } catch (err) {
@@ -1688,6 +1841,178 @@
                 showToast(err?.message || 'No se pudo limpiar.', 'error');
             } finally {
                 if (btn) btn.disabled = false;
+            }
+        });
+
+        // ---- RASTREADOR DE ERRORES DEL JUEGO -------------------------------
+        // Los informes son tickets con campos extra (misma colección, mismas
+        // reglas, misma sincronización en vivo). No se crean colecciones
+        // nuevas: así funcionan online para todos en cuanto se publiquen las
+        // reglas, y mientras tanto quedan guardados en local por el motor.
+        const REPORTE_CATEGORIA = 'bug';
+
+        function syncReporteAuth() {
+            const gate = document.getElementById('reporteAuthGate');
+            const form = document.getElementById('reporteErrorForm');
+            const tiene = Boolean(currentUser);
+            if (gate) gate.style.display = tiene ? 'none' : 'block';
+            if (form) form.style.display = tiene ? '' : 'none';
+        }
+
+        function renderTextoConFormato(texto, el) {
+            const BB = window.PanterBBCode;
+            const raw = String(texto || '');
+            const tieneBB = /\[(?:b|i|u|s|color|size|h2|h3|list|quote|code|url|img|center|left|right|hr)\b/i.test(raw);
+            if (tieneBB) {
+                if (el) el.style.whiteSpace = 'normal'; // el BBCode ya pone <br>
+                if (BB && typeof BB.render === 'function') {
+                    try { return BB.render(raw); } catch (e) { /* fallback */ }
+                }
+            } else if (el) {
+                el.style.whiteSpace = 'pre-wrap';
+            }
+            const div = document.createElement('div');
+            div.textContent = raw;
+            return div.innerHTML;
+        }
+
+        function extrasReporte(que, detalles, fotos, video) {
+            const urls = String(fotos || '').split(/\r?\n/).map(s => s.trim())
+                .filter(s => /^https?:\/\//i.test(s)).slice(0, 4);
+            return {
+                esReporteError: true,
+                reporteQue: String(que || ''),
+                reporteDetalles: String(detalles || ''),
+                reporteFotos: urls,
+                reporteVideo: /^https?:\/\//i.test(String(video || '').trim()) ? String(video).trim() : ''
+            };
+        }
+
+        async function enviarReporte(datos, msgEl, btn) {
+            if (!currentUser) {
+                if (msgEl) { msgEl.textContent = 'Inicia sesión con Discord para enviar un informe.'; msgEl.style.color = '#fca5a5'; }
+                return false;
+            }
+            if (!datos.que || !datos.detalles) {
+                if (msgEl) { msgEl.textContent = 'Completa «Qué ocurrió» y los «Detalles».'; msgEl.style.color = '#fca5a5'; }
+                return false;
+            }
+            if (btn) btn.disabled = true;
+            try {
+                await window.SoporteJS.waitForFirebase();
+                const ticket = await window.SoporteJS.crearTicket({
+                    titulo: datos.que.slice(0, 120),
+                    descripcion: datos.detalles,
+                    categoria: REPORTE_CATEGORIA,
+                    prioridad: 'normal',
+                    usuarioId: currentUser.uid,
+                    usuarioNombre: currentUser.displayName || currentUser.username || 'Usuario',
+                    usuarioEmail: currentUser.email || '',
+                    extra: extrasReporte(datos.que, datos.detalles, datos.fotos, datos.video)
+                });
+                if (msgEl) {
+                    msgEl.style.color = '#86efac';
+                    msgEl.textContent = `Informe enviado: ${ticket.codigo}. Ya aparece en «Mis Informes» y en el Panel de Soporte.`;
+                }
+                showToast(`Informe ${ticket.codigo} enviado.`, 'success');
+                await loadMisInformes();
+                if (typeof updateStats === 'function') updateStats();
+                return true;
+            } catch (err) {
+                console.error('[Soporte] Error enviando informe:', err);
+                if (msgEl) { msgEl.textContent = 'No se pudo enviar el informe. Inténtalo de nuevo.'; msgEl.style.color = '#fca5a5'; }
+                return false;
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        let misInformesCache = [];
+
+        async function loadMisInformes() {
+            const list = document.getElementById('misInformesList');
+            const count = document.getElementById('misInformesCount');
+            if (!list) return;
+            if (!currentUser) {
+                list.innerHTML = '<div class="sp-empty" style="padding:1rem;"><p>Inicia sesión para ver tus informes.</p></div>';
+                if (count) count.textContent = '0 informes';
+                return;
+            }
+            try {
+                const tickets = await window.SoporteJS.getMisTickets(currentUser.uid, currentUser.email);
+                const informes = (tickets || []).filter(t => t && t.esReporteError === true)
+                    .sort((a, b) => String(b.creadoEn || '').localeCompare(String(a.creadoEn || '')));
+                misInformesCache = informes;
+                if (count) count.textContent = `${informes.length} ${informes.length === 1 ? 'informe' : 'informes'}`;
+                if (!informes.length) {
+                    list.innerHTML = '<div class="sp-empty" style="padding:1rem;"><p>Aún no has informado de ningún error.</p></div>';
+                    return;
+                }
+                list.innerHTML = informes.map(t => {
+                    const estado = window.SoporteJS.ESTADOS?.[t.estado] || null;
+                    const color = estado ? estado.color : '#7dd3fc';
+                    const fecha = window.SoporteJS.formatDate(t.creadoEn);
+                    return `<div class="sp-ticket-item" data-ticket-id="${escHtml(t.id)}" style="cursor:pointer;">
+                        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+                            <strong style="color:#fff;font-size:.86rem;">${escHtml(t.titulo || 'Informe')}</strong>
+                            <span style="font-size:.7rem;font-weight:800;color:${color};border:1px solid ${color}55;background:${color}14;padding:3px 10px;border-radius:100px;">${escHtml(t.estado || 'Abierto')}</span>
+                        </div>
+                        <div style="font-size:.74rem;color:var(--text-muted);margin-top:6px;display:flex;gap:12px;flex-wrap:wrap;">
+                            <span><i class="fa-solid fa-hashtag" aria-hidden="true"></i> ${escHtml(t.codigo)}</span>
+                            <span><i class="fa-regular fa-clock" aria-hidden="true"></i> ${escHtml(fecha)} UTC</span>
+                        </div>
+                    </div>`;
+                }).join('');
+                list.querySelectorAll('[data-ticket-id]').forEach(el => {
+                    el.addEventListener('click', () => {
+                        const t = misInformesCache.find(x => String(x.id) === String(el.dataset.ticketId));
+                        if (t) openTicketModal(t);
+                    });
+                });
+            } catch (err) {
+                console.warn('[Soporte] No se pudieron cargar los informes:', err);
+                list.innerHTML = '<div class="sp-empty" style="padding:1rem;"><p>No se pudieron cargar tus informes.</p></div>';
+            }
+        }
+
+        document.getElementById('reporteErrorForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const ok = await enviarReporte({
+                que: document.getElementById('reporteQue').value.trim(),
+                detalles: document.getElementById('reporteDetalles').value.trim(),
+                fotos: document.getElementById('reporteFoto').value.trim(),
+                video: document.getElementById('reporteVideo').value.trim()
+            }, document.getElementById('reporteMsg'), document.getElementById('reporteEnviarBtn'));
+            if (ok) e.target.reset();
+        });
+
+        // Modal rápido «Reportar un error» (imagen de referencia NEWRP).
+        const reporteModal = document.getElementById('reporteModal');
+        const abrirReporte = () => {
+            if (reporteModal) { reporteModal.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+        };
+        const cerrarReporte = () => {
+            if (reporteModal) { reporteModal.style.display = 'none'; document.body.style.overflow = ''; }
+        };
+        document.getElementById('abrirReporteModalBtn')?.addEventListener('click', () => {
+            if (!currentUser) { showToast('Inicia sesión con Discord para reportar un error.', 'info'); return; }
+            abrirReporte();
+        });
+        document.getElementById('closeReporteModal')?.addEventListener('click', cerrarReporte);
+        document.getElementById('reporteModalCancelar')?.addEventListener('click', cerrarReporte);
+        reporteModal?.addEventListener('click', (e) => { if (e.target === reporteModal) cerrarReporte(); });
+        document.getElementById('reporteModalEnviar')?.addEventListener('click', async () => {
+            const ok = await enviarReporte({
+                que: document.getElementById('reporteModalAsunto').value.trim(),
+                detalles: document.getElementById('reporteModalMensaje').value.trim(),
+                fotos: document.getElementById('reporteModalFotos').value.trim(),
+                video: ''
+            }, document.getElementById('reporteModalMsg'), document.getElementById('reporteModalEnviar'));
+            if (ok) {
+                ['reporteModalAsunto', 'reporteModalMensaje', 'reporteModalFotos'].forEach(id => {
+                    const el = document.getElementById(id); if (el) el.value = '';
+                });
+                setTimeout(cerrarReporte, 700);
             }
         });
 
@@ -1719,7 +2044,8 @@
             document.getElementById('modalTitulo').textContent = ticket.titulo || '';
             document.getElementById('modalFecha').textContent = window.SoporteJS.formatDate(ticket.creadoEn);
             document.getElementById('modalUsuario').textContent = ticket.usuarioNombre || '—';
-            document.getElementById('modalDescripcion').textContent = ticket.descripcion || '';
+            const modalDescripcion = document.getElementById('modalDescripcion');
+            modalDescripcion.innerHTML = renderTextoConFormato(ticket.descripcion || '', modalDescripcion);
             const badges = document.getElementById('modalBadges');
             if (badges) {
                 badges.innerHTML = window.SoporteJS.estadoBadge(ticket.estado) + ' '
@@ -1767,7 +2093,8 @@
             const cat = window.SoporteJS.getCategoria(ticket.categoria);
             document.getElementById('modalCat').innerHTML = `${cat.icon} ${escHtml(cat.label)}`;
             document.getElementById('modalUsuario').textContent = ticket.usuarioNombre || '—';
-            document.getElementById('modalDescripcion').textContent = ticket.descripcion;
+            const modalDescripcion = document.getElementById('modalDescripcion');
+            modalDescripcion.innerHTML = renderTextoConFormato(ticket.descripcion, modalDescripcion);
             const badges = document.getElementById('modalBadges');
             badges.innerHTML = window.SoporteJS.estadoBadge(ticket.estado) + ' '
                 + window.SoporteJS.prioridadBadge(ticket.prioridad) + ' '
@@ -2130,11 +2457,13 @@
                 if (nuevoGate) nuevoGate.style.display = 'none';
                 if (form) form.style.display = 'flex';
                 if (misGate) misGate.style.display = 'none';
+                syncReporteAuth();
 
                 // Load tickets if on that tab
                 const activeTab = document.querySelector('.sp-tab.active')?.dataset.tab;
                 if (activeTab === 'mis-tickets') loadMisTickets();
                 if (activeTab === 'staff' && currentStaff) loadStaffTickets();
+                if (activeTab === 'reportar') loadMisInformes();
                 await updateStats();
             } else {
                 currentUserProfile = null;
@@ -2156,6 +2485,10 @@
                 if (nuevoGate) nuevoGate.style.display = 'block';
                 if (form) form.style.display = 'none';
                 if (misGate) misGate.style.display = 'block';
+                syncReporteAuth();
+                misInformesCache = [];
+                const informesList = document.getElementById('misInformesList');
+                if (informesList) informesList.innerHTML = '<div class="sp-empty" style="padding:1rem;"><p>Inicia sesión para ver tus informes.</p></div>';
                 if (misList) misList.innerHTML = '';
                 if (staffTab) staffTab.hidden = true;
                 document.getElementById('statMisTickets').textContent = '—';

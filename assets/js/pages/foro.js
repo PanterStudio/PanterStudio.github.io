@@ -34,14 +34,34 @@
        transporte, carga pesada y mundo abierto en Latinoamérica para PC
        y móviles). La sección «Comunidad y Futuros Proyectos» deja espacio
        flexible para los próximos proyectos de Panter Studio Game Dev. */
+    /* Cada sección se asocia a un rango oficial. El color NO está fijo:
+       se resuelve en vivo desde la paleta global (Panel Admin → Personal),
+       de modo que cambiar un color se refleja aquí, en las subcategorías,
+       en los hilos y en las insignias automáticamente. */
     const SECTIONS = [
-        { id: 'anuncios', label: 'Anuncios y Novedades', desc: 'Parches, avances de desarrollo y comunicados oficiales del estudio.', icon: 'fa-solid fa-bullhorn', color: '#f1c40f' },
-        { id: 'general', label: 'Discusión General', desc: 'Presentaciones, rutas, capturas y charla entre conductores.', icon: 'fa-solid fa-comments', color: '#00b0ff' },
-        { id: 'nuestra-tierra', label: 'Nuestra Tierra Job Simulator', desc: 'Transporte, carga pesada y mundo abierto en Latinoamérica para PC y móviles.', icon: 'fa-solid fa-truck', color: '#e67e22' },
-        { id: 'soporte', label: 'Soporte y Ayuda', desc: 'Guías, dudas técnicas y soluciones de la comunidad.', icon: 'fa-solid fa-headset', color: '#00a715' },
-        { id: 'sugerencias', label: 'Sugerencias e Ideas', desc: 'Propón rutas, vehículos, trabajos y mejoras para el simulador.', icon: 'fa-solid fa-lightbulb', color: '#9d00ff' },
-        { id: 'offtopic', label: 'Comunidad y Futuros Proyectos', desc: 'Charla de la comunidad y espacio para los próximos proyectos del estudio.', icon: 'fa-solid fa-diagram-project', color: '#ff7ddf' }
+        { id: 'anuncios', label: 'Anuncios y Novedades', desc: 'Parches, avances de desarrollo y comunicados oficiales del estudio.', icon: 'fa-solid fa-bullhorn', rol: 'founder_ceo' },
+        { id: 'general', label: 'Discusión General', desc: 'Presentaciones, rutas, capturas y charla entre conductores.', icon: 'fa-solid fa-comments', rol: 'usuario' },
+        { id: 'nuestra-tierra', label: 'Nuestra Tierra Job Simulator', desc: 'Transporte, carga pesada y mundo abierto en Latinoamérica para PC y móviles.', icon: 'fa-solid fa-truck', rol: 'programador' },
+        { id: 'soporte', label: 'Soporte y Ayuda', desc: 'Guías, dudas técnicas y soluciones de la comunidad.', icon: 'fa-solid fa-headset', rol: 'soporte' },
+        { id: 'sugerencias', label: 'Sugerencias e Ideas', desc: 'Propón rutas, vehículos, trabajos y mejoras para el simulador.', icon: 'fa-solid fa-lightbulb', rol: 'creador_contenido' },
+        { id: 'offtopic', label: 'Comunidad y Futuros Proyectos', desc: 'Charla de la comunidad y espacio para los próximos proyectos del estudio.', icon: 'fa-solid fa-diagram-project', rol: 'vip' }
     ];
+
+    /** Color VIVO de una sección (sincronizado con la paleta global). */
+    function secColor(s) {
+        const C = window.PanterRoleColors;
+        if (C && typeof C.sectionColor === 'function') {
+            try { return C.sectionColor(s.id) || C.colorFor(s.rol); } catch (e) { /* noop */ }
+        }
+        const C2 = window.PanterRoles;
+        if (C2 && typeof C2.get === 'function') {
+            try {
+                const d = C2.get(s.rol);
+                if (d && d.color) return d.color;
+            } catch (e) { /* noop */ }
+        }
+        return '#0055ff';
+    }
 
 
     const EMOJIS = ['😀','😂','😍','😎','🤔','👍','👎','🔥','🎮','🚗','💎','🎉','🙏','👀','💬','🛠️','⚡','❤️','✅','❗','🤝','🏁','🗺️','📸','🎨','🛡️','👑','🚀','🌟','🐾','☕','🎯'];
@@ -51,169 +71,20 @@
     /* Temas semilla: garantizan que el foro nunca quede vacío, incluso
        sin conexión a Firestore. No se escriben en la BD hasta que alguien
        interactúa con ellos (se "materializan" entonces). */
-    const SEED_TOPICS = [
-        {
-            id: 't_nuestra_tierra', seccion: 'nuestra-tierra', prefijo: 'OFICIAL', fijado: true, cerrado: false,
-            titulo: 'Nuestra Tierra Job Simulator — Rutas, Carga y Mundo Abierto',
-            autorNombre: 'PanterGameY', autorUid: 'founder_pantergamey', autorEmail: '',
-            autorRol: 'founder_ceo', autorAvatar: '', autorMensajes: 54, autorDesde: '2026',
-            creadoEn: D(46), actualizadoEn: D(2), ultimaRespuestaEn: D(2), ultimaRespuestaAutor: 'Fénix',
-            respuestas: 54, vistas: 8421, reacciones: 128,
-            etiquetas: ['nuestra-tierra', 'transporte', 'carga-pesada'],
-            cuerpo: [
-                '[h2]Nuestra Tierra Job Simulator — Ficha oficial del proyecto[/h2]',
-                '[b]Bienvenidos al hilo oficial del simulador.[/b] Aquí reunimos la información clave sobre conducción, carga pesada y el mundo abierto en Latinoamérica para [i]PC y móviles[/i].',
-                '',
-                '[h3]📋 Qué puedes hacer en el simulador[/h3]',
-                '[list]',
-                '[*]Conducir camiones, vans y vehículos de reparto por carreteras de montaña y ciudades.',
-                '[*]Gestionar cargas pesadas con físicas de peso, inercia y suspensión dinámica.',
-                '[*]Completar trabajos de mensajería, paquetería y transporte de mercancías.',
-                '[*]Personalizar tu vehículo en el garaje: pintura, llantas, luces y motor.',
-                '[*]Conducir de noche y bajo lluvia con ciclo día/noche y clima dinámico.',
-                '[/list]',
-                '',
-                '[h3]🚛 Flota y vehículos[/h3]',
-                '[list=1]',
-                '[*][b]Van Sprinter de Carga[/b] — reparto urbano y mensajería urgente.',
-                '[*][b]Camiones de carga pesada[/b] — rutas de montaña y larga distancia.',
-                '[*][b]Vehículos de apoyo[/b] — grúa, asistencia en carretera y servicios.',
-                '[/list]',
-                '',
-                '[h3]📝 Ficha técnica[/h3]',
-                'Copia esta ficha si quieres proponer una ruta o un vehículo nuevo:',
-                '[code]PROYECTO: Nuestra Tierra Job Simulator\nGENERO: Simulador de transporte y carga pesada\nESCENARIO: Mundo abierto en Latinoamerica\nPLATAFORMAS: PC y moviles\nESTADO: En desarrollo\nESTUDIO: Panter Studio Game Dev\nRUTA / VEHICULO PROPUESTO: [/code]',
-                '',
-                '[quote=PanterGameY]Queremos que cada ruta se sienta real: el peso de la carga, el clima y la carretera deben importar de verdad.[/quote]',
-                '',
-                '[center][i]Este hilo se actualizará con cada avance del desarrollo. 🐾[/i][/center]'
-            ].join('\n')
-        },
-        {
-            id: 't_bienvenida', seccion: 'anuncios', prefijo: 'ANUNCIO', fijado: true, cerrado: false,
-            titulo: 'Bienvenida al Foro de Panter Studio',
-            autorNombre: 'Fénix', autorUid: 'team_fenix', autorEmail: '',
-            autorRol: 'administrador', autorAvatar: '', autorMensajes: 27, autorDesde: '2026',
-            creadoEn: D(30), actualizadoEn: D(1), ultimaRespuestaEn: D(1), ultimaRespuestaAutor: 'Carlos Dev',
-            respuestas: 12, vistas: 3110, reacciones: 64, etiquetas: ['bienvenida'],
-            cuerpo: [
-                '[h2]¡Bienvenido al FORO![/h2]',
-                'Este es el punto de encuentro oficial de la comunidad de [b]Panter Studio[/b]. Aquí puedes crear temas, responder, compartir capturas y proponer ideas.',
-                '',
-                '[h3]Antes de publicar[/h3]',
-                '[list]',
-                '[*]Sé respetuoso con los demás miembros y con el equipo.',
-                '[*]Usa la sección correcta para cada tema.',
-                '[*]No publiques enlaces sospechosos ni contenido que infrinja las normas de Discord.',
-                '[*]Busca antes de crear un tema: quizá tu duda ya tiene respuesta.',
-                '[/list]',
-                '',
-                '[center][b]¡Disfruta del foro y bienvenido a la familia! 🐾[/b][/center]'
-            ].join('\n')
-        },
-        {
-            id: 't_roadmap', seccion: 'anuncios', prefijo: 'ANUNCIO', fijado: false, cerrado: false,
-            titulo: 'Hoja de ruta · Temporada 1 de Nuestra Tierra',
-            autorNombre: 'Carlos Dev', autorUid: 'team_carlos', autorEmail: '',
-            autorRol: 'programador', autorAvatar: '', autorMensajes: 41, autorDesde: '2026',
-            creadoEn: D(18), actualizadoEn: D(4), ultimaRespuestaEn: D(4), ultimaRespuestaAutor: 'PanterGameY',
-            respuestas: 23, vistas: 1980, reacciones: 91, etiquetas: ['roadmap', 'desarrollo'],
-            cuerpo: [
-                '[h2]Temporada 1 — Roadmap público[/h2]',
-                'Compartimos el estado de desarrollo para que la comunidad sepa en qué estamos trabajando.',
-                '',
-                '[h3]En curso[/h3]',
-                '[list][*]Físicas de carga pesada y suspensión dinámica.[*]Ciclo día/noche con clima dinámico.[*]Sistema de trabajos de mensajería y paquetería.[/list]',
-                '',
-                '[h3]A continuación[/h3]',
-                '[list][*]Garaje interactivo con pintura y accesorios.[*]Peajes y carreteras de montaña.[*]Integración del foro con el panel de personal.[/list]',
-                '',
-                '[i]Las fechas son orientativas y pueden cambiar según las pruebas internas.[/i]'
-            ].join('\n')
-        },
-        {
-            id: 't_presentaciones', seccion: 'general', prefijo: 'DEBATE', fijado: false, cerrado: false,
-            titulo: 'Preséntate aquí 👋 Cuéntanos quién eres',
-            autorNombre: 'Albert Acosta', autorUid: 'team_albert', autorEmail: '',
-            autorRol: 'moderador', autorAvatar: '', autorMensajes: 18, autorDesde: '2026',
-            creadoEn: D(25), actualizadoEn: D(0), ultimaRespuestaEn: D(0), ultimaRespuestaAutor: 'Laura',
-            respuestas: 37, vistas: 2640, reacciones: 52, etiquetas: ['comunidad'],
-            cuerpo: '[h2]¡Preséntate![/h2]\nNos encanta conocer a la gente que juega con nosotros.\n\n[list][*]¿Cómo te llamas?[*]¿De dónde nos visitas?[*]¿Qué trabajo te gusta más en el juego?[/list]\n\n[b]¡Bienvenido a la comunidad! 🐾[/b]'
-        },
-        {
-            id: 't_capturas', seccion: 'general', prefijo: 'DEBATE', fijado: false, cerrado: false,
-            titulo: 'Comparte tus mejores capturas del mapa 📸',
-            autorNombre: 'Laura', autorUid: 'user_laura', autorEmail: '',
-            autorRol: 'usuario', autorAvatar: '', autorMensajes: 9, autorDesde: '2026',
-            creadoEn: D(9), actualizadoEn: D(3), ultimaRespuestaEn: D(3), ultimaRespuestaAutor: 'Miguel',
-            respuestas: 16, vistas: 1120, reacciones: 44, etiquetas: ['capturas', 'imgur'],
-            cuerpo: '[h2]Galería de la comunidad[/h2]\nSube tu imagen a Imgur y pégala con el botón [b]Imagen[/b] de la barra de herramientas.\n\n[center][i]Los atardeceres en la carretera de montaña son los mejores 🌄[/i][/center]'
-        },
-        {
-            id: 't_guia_tickets', seccion: 'soporte', prefijo: 'GUÍA', fijado: true, cerrado: false,
-            titulo: 'Guía: cómo abrir un ticket de soporte',
-            autorNombre: 'Soporte PS', autorUid: 'team_soporte', autorEmail: '',
-            autorRol: 'soporte', autorAvatar: '', autorMensajes: 63, autorDesde: '2026',
-            creadoEn: D(22), actualizadoEn: D(6), ultimaRespuestaEn: D(6), ultimaRespuestaAutor: 'Soporte PS',
-            respuestas: 8, vistas: 1870, reacciones: 33, etiquetas: ['guia', 'soporte'],
-            cuerpo: '[h2]Abrir un ticket[/h2]\n[list=1][*]Entra en [b]Soporte[/b] e inicia sesión con Discord.[*]Pulsa [b]Nuevo ticket[/b] y elige la categoría.[*]Describe el problema con el mayor detalle posible.[*]Si tienes una captura, pega el enlace de Imgur en el mensaje.[/list]\n\n[quote]Un ticket bien descrito se resuelve mucho más rápido. 🙌[/quote]'
-        },
-        {
-            id: 't_error_movil', seccion: 'soporte', prefijo: 'AYUDA', fijado: false, cerrado: false,
-            titulo: 'Error al cargar el garaje en dispositivo móvil',
-            autorNombre: 'Miguel', autorUid: 'user_miguel', autorEmail: '',
-            autorRol: 'usuario', autorAvatar: '', autorMensajes: 4, autorDesde: '2026',
-            creadoEn: D(3), actualizadoEn: D(1), ultimaRespuestaEn: D(1), ultimaRespuestaAutor: 'Carlos Dev',
-            respuestas: 5, vistas: 420, reacciones: 7, etiquetas: ['bug', 'movil'],
-            cuerpo: '[h2]Problema[/h2]\nAl abrir el garaje en móvil la pantalla se queda en negro durante unos segundos.\n\n[b]Dispositivo:[/b] Android 14 · [b]Versión:[/b] 0.9.2\n\n¿Alguien más lo ha notado?'
-        },
-        {
-            id: 't_ideas', seccion: 'sugerencias', prefijo: 'DEBATE', fijado: false, cerrado: false,
-            titulo: 'Ideas para nuevos trabajos y vehículos 💡',
-            autorNombre: 'Valentina', autorUid: 'user_vale', autorEmail: '',
-            autorRol: 'vip', autorAvatar: '', autorMensajes: 21, autorDesde: '2026',
-            creadoEn: D(12), actualizadoEn: D(2), ultimaRespuestaEn: D(2), ultimaRespuestaAutor: 'PanterGameY',
-            respuestas: 29, vistas: 1540, reacciones: 76, etiquetas: ['ideas'],
-            cuerpo: '[h2]Buzón de ideas[/h2]\n¿Qué te gustaría ver en el juego? Deja tu propuesta con un título claro y una descripción corta.\n\n[list][*]Reparto de comida a domicilio.[*]Grúa y rescate en carretera.[*]Transporte escolar.[/list]\n\n[b]¡Las mejores ideas se revisan en equipo cada semana![/b]'
-        },
-        {
-            id: 't_normativa_comunidad', seccion: 'anuncios', prefijo: 'OFICIAL', fijado: false, cerrado: true,
-            titulo: 'Normas de la comunidad y del foro (lectura obligatoria)',
-            autorNombre: 'Fénix', autorUid: 'team_fenix', autorEmail: '',
-            autorRol: 'administrador', autorAvatar: '', autorMensajes: 27, autorDesde: '2026',
-            creadoEn: D(28), actualizadoEn: D(11), ultimaRespuestaEn: D(11), ultimaRespuestaAutor: 'Fénix',
-            respuestas: 0, vistas: 5230, reacciones: 112, etiquetas: ['normativa', 'comunidad'],
-            cuerpo: '[h2]Normas de la comunidad[/h2]\n[h3]1. Respeto[/h3]\nTrata a todos los conductores y al equipo con respeto. No se tolera el acoso ni el lenguaje discriminatorio.\n\n[h3]2. Contenido del proyecto[/h3]\nPublica en la sección correcta y centrado en [b]Nuestra Tierra Job Simulator[/b] y los proyectos de Panter Studio. Nada de spam ni enlaces sospechosos.\n\n[h3]3. Reportes[/h3]\nUsa el botón [b]Reportar[/b] o abre un ticket en Soporte ante cualquier incidencia.\n\n[center][b]El incumplimiento puede conllevar sanciones.[/b][/center]'
-        },
-        {
-            id: 't_musica', seccion: 'offtopic', prefijo: 'DEBATE', fijado: false, cerrado: false,
-            titulo: '¿Qué música escuchan mientras juegan? 🎧',
-            autorNombre: 'Andrés', autorUid: 'user_andres', autorEmail: '',
-            autorRol: 'usuario', autorAvatar: '', autorMensajes: 12, autorDesde: '2026',
-            creadoEn: D(5), actualizadoEn: D(1), ultimaRespuestaEn: D(1), ultimaRespuestaAutor: 'Laura',
-            respuestas: 19, vistas: 780, reacciones: 25, etiquetas: ['offtopic'],
-            cuerpo: '[h2]Playlist de la comunidad[/h2]\n¡Comparte tu lista de reproducción! La nuestra tiene mucho synthwave y algo de champeta para las rutas de montaña. 🎶\n\n[center]🐾[/center]'
-        }
-    ];
+    /* ── Temas ────────────────────────────────────────────────
+       El foro arranca SIN temas: se conservan las 6 secciones y cualquier
+       contenido anterior (semillas o documentos ya guardados) se considera
+       legado y no se muestra. Los temas nuevos creados por la comunidad sí
+       aparecen. Las secciones viven en SECTIONS, más arriba. */
+    const SEED_TOPICS = [];
+    const SEED_MESSAGES = [];
+    const FORO_RESET_AT = Date.parse('2026-11-19T00:00:00.000Z');
 
-    const SEED_MESSAGES = [
-        { id: 'm_rutas_1', temaId: 't_nuestra_tierra', autorNombre: 'Fénix', autorUid: 'team_fenix', autorRol: 'administrador', autorAvatar: '', creadoEn: D(20),
-          cuerpo: '[quote=PanterGameY]Queremos que cada ruta se sienta real: el peso de la carga, el clima y la carretera deben importar de verdad.[/quote]\n\nRecordatorio: [b]las rutas de montaña con lluvia ya están en pruebas internas[/b]. Publicad vuestras propuestas de ruta como respuesta a este hilo. 🚚' },
-        { id: 'm_rutas_2', temaId: 't_nuestra_tierra', autorNombre: 'Albert Acosta', autorUid: 'team_albert', autorRol: 'moderador', autorAvatar: '', creadoEn: D(9),
-          cuerpo: '[h3]Propuesta de ruta[/h3]\n[code]PROYECTO: Nuestra Tierra Job Simulator\nRUTA: Corredor cafetero - tramo de montaña\nVEHICULO: Camion de carga pesada\nCARGA: 8 toneladas\nPLATAFORMAS: PC y moviles[/code]\n\n¡Quedo atento a las pruebas! 🗺️' },
-        { id: 'm_rutas_3', temaId: 't_nuestra_tierra', autorNombre: 'Fénix', autorUid: 'team_fenix', autorRol: 'administrador', autorAvatar: '', creadoEn: D(2),
-          cuerpo: 'Recibida, [b]Albert[/b]. La añadimos al listado de rutas de la Temporada 1 para probar físicas de carga. ¡Gracias! ✅' },
-        { id: 'm_bien_1', temaId: 't_bienvenida', autorNombre: 'Carlos Dev', autorUid: 'team_carlos', autorRol: 'programador', autorAvatar: '', creadoEn: D(1),
-          cuerpo: '¡Genial tener el foro en marcha! 🐾 Si encontráis cualquier fallo, reportadlo aquí mismo o en Soporte.' },
-        { id: 'm_pres_1', temaId: 't_presentaciones', autorNombre: 'Laura', autorUid: 'user_laura', autorRol: 'usuario', autorAvatar: '', creadoEn: D(0),
-          cuerpo: '¡Hola a todos! Soy Laura, de Medellín 🇨🇴. Mi trabajo favorito es el de mensajería, me encanta conducir de noche con lluvia. 🌧️🚚' },
-        { id: 'm_cap_1', temaId: 't_capturas', autorNombre: 'Miguel', autorUid: 'user_miguel', autorRol: 'usuario', autorAvatar: '', creadoEn: D(3),
-          cuerpo: 'Aquí va una de la carretera de montaña al atardecer. La luz del juego es una locura 🌄' },
-        { id: 'm_err_1', temaId: 't_error_movil', autorNombre: 'Carlos Dev', autorUid: 'team_carlos', autorRol: 'programador', autorAvatar: '', creadoEn: D(1),
-          cuerpo: 'Gracias por el reporte, [b]Miguel[/b]. Estamos revisando la carga de texturas en móvil; quedará corregido en el próximo parche. 🛠️' },
-        { id: 'm_ideas_1', temaId: 't_ideas', autorNombre: 'PanterGameY', autorUid: 'founder_pantergamey', autorRol: 'founder_ceo', autorAvatar: '', creadoEn: D(2),
-          cuerpo: '¡Buenísimas ideas! La [b]grúa y rescate en carretera[/b] ya está en el backlog de la Temporada 1. 🚀' }
-    ];
+    /** Todo tema anterior al reinicio del foro es legado y queda oculto. */
+    function esTemaLegado(t) {
+        const ts = new Date(t && (t.creadoEn || t.updatedAt || 0)).getTime() || 0;
+        return ts > 0 && ts < FORO_RESET_AT;
+    }
 
     /* ── Utilidades ─────────────────────────────────────────── */
     const $ = (id) => document.getElementById(id);
@@ -505,23 +376,18 @@
                 && !gone.has(String(t.id))
                 && t.eliminado !== true);
         const map = new Map(merged.map(t => [String(t.id), t]));
-        SEED_TOPICS.forEach(s => {
-            const k = String(s.id);
-            if (gone.has(k)) return;
-            map.set(k, map.has(k) ? mergeWithSeed(s, map.get(k)) : Object.assign({}, s));
-        });
-        return Array.from(map.values()).filter(t => t.eliminado !== true);
+        // Ya no se reinyectan semillas: el foro permanece vacío hasta que
+        // la comunidad cree temas nuevos.
+        return Array.from(map.values()).filter(t => t.eliminado !== true && !esTemaLegado(t));
     }
     function replyCount(t) {
         const local = localMessages().filter(m => m.temaId === t.id && !RETIRED_MESSAGE_IDS.has(String(m.id))).length;
-        const seed = SEED_MESSAGES.filter(m => m.temaId === t.id).length;
-        return Math.max(Number(t.respuestas || 0), local + seed);
+        return Math.max(Number(t.respuestas || 0), local);
     }
     function allMessages(temaId) {
         const gone = deletedMessageIds();
         const map = new Map();
         const add = (m) => { if (m && m.id) map.set(String(m.id), Object.assign({ temaId }, m)); };
-        SEED_MESSAGES.filter(m => m.temaId === temaId).forEach(add);
         remoteMessages.filter(m => m.temaId === temaId && !RETIRED_MESSAGE_IDS.has(String(m.id))).forEach(add);
         localMessages().filter(m => m.temaId === temaId && !RETIRED_MESSAGE_IDS.has(String(m.id))).forEach(m => {
             map.set(String(m.id), Object.assign({}, map.get(String(m.id)) || {}, m, { temaId }));
@@ -529,7 +395,8 @@
         return Array.from(map.values())
             .filter(m => !gone.has(String(m.id))
                 && m.eliminado !== true
-                && !RETIRED_MESSAGE_IDS.has(String(m.id)))
+                && !RETIRED_MESSAGE_IDS.has(String(m.id))
+                && !esTemaLegado({ creadoEn: m.creadoEn }))
             .sort((a, b) => String(a.creadoEn || '').localeCompare(String(b.creadoEn || '')));
     }
 
@@ -714,10 +581,17 @@
         };
     }
     function roleDef(role) {
+        const id = String(role || 'usuario');
+        // Fuente ÚNICA y viva: la paleta global sincronizada con el Panel
+        // Admin. Así el color del autor cambia solo en todas las vistas.
+        const C = window.PanterRoleColors;
+        if (C && typeof C.role === 'function') {
+            try { return C.role(id); } catch (e) { /* noop */ }
+        }
         const R = window.PanterRoles;
         if (R && typeof R.get === 'function') {
             try {
-                const def = R.get(typeof R.normalize === 'function' ? R.normalize(role) : role);
+                const def = R.get(typeof R.normalize === 'function' ? R.normalize(id) : id);
                 if (def) return def;
             } catch (e) { /* noop */ }
         }
@@ -967,7 +841,7 @@
         <div class="foro-editor">
             ${toolbarHtml(target)}
             <div class="foro-editor-body">
-                <textarea id="${t}" class="foro-textarea" rows="${o.rows || 6}" placeholder="${esc(o.placeholder || 'Escribe tu mensaje... Usa la barra de herramientas para dar formato.')}"></textarea>
+                <textarea id="${t}" class="foro-textarea" data-rich-paste rows="${o.rows || 6}" placeholder="${esc(o.placeholder || 'Escribe tu mensaje... Pega texto con formato y se conservarán los colores.')}"></textarea>
             </div>
             <div class="foro-preview" id="${t}_preview" hidden>
                 <div class="foro-preview-label" id="${t}_preview_label">Vista previa</div>
@@ -1124,7 +998,7 @@
             const last = list.slice().sort((a, b) =>
                 String(b.ultimaRespuestaEn || b.creadoEn || '').localeCompare(String(a.ultimaRespuestaEn || a.creadoEn || '')))[0];
             return `
-            <a class="foro-section" href="#seccion=${esc(s.id)}" style="--sec-color:${esc(s.color)}${activeSection && activeSection.id === s.id ? ';border-color:' + esc(s.color) : ''}">
+            <a class="foro-section" href="#seccion=${esc(s.id)}" style="--sec-color:${esc(secColor(s))}${activeSection && activeSection.id === s.id ? ';border-color:' + esc(secColor(s)) : ''}">
                 <span class="foro-section-icon"><i class="${esc(s.icon)}" aria-hidden="true"></i></span>
                 <span>
                     <span class="foro-section-name">${esc(s.label)}</span>
@@ -1906,6 +1780,12 @@
         bindEvents();
         syncUser();
         render();
+        // La paleta es global: si cambia un color en el Panel Admin, el foro
+        // se repinta solo (secciones, categorías, hilos e insignias).
+        window.addEventListener('panter:role-colors', scheduleRender);
+        document.addEventListener('panter:role-colors', scheduleRender);
+        window.addEventListener('panter:roles-config', scheduleRender);
+        document.addEventListener('panter:roles-config', scheduleRender);
         waitForFirebase().then(ok => {
             if (ok) { reattachFeeds(); startPresenceFeed(); }
         });

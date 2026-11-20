@@ -588,13 +588,22 @@ function normalizarUrlImagen(raw) {
  */
 function colorSistemaDe(comentario, tipo) {
     if (tipo === 'cerrado') return '';
+    // Prioridad: paleta GLOBAL en vivo (Panel Admin → Personal). Así, si se
+    // cambia el color de un rango, TODOS los avisos y categorías se
+    // sincronizan automáticamente sin recargar. Para elevaciones manda el
+    // rango DESTINO; para toma/desasignación, el de quien actúa.
+    const C = window.PanterRoleColors;
+    const rolVivo = String(comentario.sistemaDestinoRol || comentario.sistemaRol
+        || normalizarRol(comentario.sistemaDestino || '') || '');
+    if (C && typeof C.colorFor === 'function' && rolVivo && rolVivo !== 'usuario') {
+        const vivo = String(C.colorFor(rolVivo) || '');
+        if (/^#[0-9a-f]{6}$/i.test(vivo)) return vivo;
+    }
     const guardado = String(comentario.sistemaRolColor || '');
     if (/^#[0-9a-f]{6}$/i.test(guardado)) return guardado;
     // Compatibilidad con elevaciones antiguas que sólo guardaban el label.
-    const rol = String(comentario.sistemaRol || comentario.sistemaDestinoRol
-        || normalizarRol(comentario.sistemaDestino || '') || '');
-    if (!rol || rol === 'usuario') return '';
-    const color = String(obtenerRolBadge(rol).color || '');
+    if (!rolVivo || rolVivo === 'usuario') return '';
+    const color = String(obtenerRolBadge(rolVivo).color || '');
     return /^#[0-9a-f]{6}$/i.test(color) ? color : '';
 }
 
@@ -626,6 +635,20 @@ function renderTextoComentario(comentario, esStaffViewer = false) {
     }
 
     const texto = String(comentario.texto || '');
+
+    // Si el mensaje trae BBCode (por ejemplo, texto con formato copiado y
+    // pegado con colores), se pinta con el renderizador seguro compartido:
+    // conserva colores, negritas, listas, encabezados, citas e imágenes.
+    // El renderizador escapa TODO antes de aplicar etiquetas, así que no
+    // abre ningún hueco de XSS.
+    const tieneBBCode = /\[(?:b|i|u|s|color|size|font|h2|h3|list|quote|code|url|img|center|left|right|hr)\b/i.test(texto);
+    const BB = window.PanterBBCode;
+    if (tieneBBCode && BB && typeof BB.render === 'function') {
+        let htmlBB = '';
+        try { htmlBB = BB.render(texto); } catch (e) { htmlBB = ''; }
+        if (htmlBB) return `<div class="sp-chat-texto sp-chat-bb">${htmlBB}</div>`;
+    }
+
     const partes = texto.split(/(\bhttps?:\/\/[^\s<>"']+)/gi);
     let html = '';
     let imagenes = '';
@@ -1275,6 +1298,15 @@ async function crearTicket(data) {
         rolMinimoRequerido: 'Soporte',
         comentariosCount: 0
     };
+
+    // Campos opcionales del «Rastreador de errores del juego». Se guardan
+    // en el MISMO documento del ticket, por lo que viajan con la misma
+    // sincronización y no requieren colecciones ni reglas nuevas.
+    if (data.extra && typeof data.extra === 'object') {
+        Object.keys(data.extra).forEach(k => {
+            if (k.charAt(0) !== '_' && data.extra[k] !== undefined) docData[k] = data.extra[k];
+        });
+    }
 
     try {
         const ref = await window.addDoc(window.collection(window.db, SOPORTE_COLLECTION), docData);
