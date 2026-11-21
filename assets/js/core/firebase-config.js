@@ -203,17 +203,25 @@
     }
 
     // Un único ticker para todos los canales: una sola fuente de sondeo.
+    // Las emisiones se escalonan para que todas las suscripciones NO consulten
+    // Supabase en el mismo instante (eso era lo que saturaba la web y hacía
+    // que los tickets tardaran en crearse o que la pestaña se colgara).
     const channels = new Set();
     let channelTimer = null;
+    let channelCursor = 0;
     function startChannelTicker() {
         if (channelTimer) return;
         channelTimer = setInterval(() => {
-            channels.forEach((ch) => {
-                if (!ch.active) return;
-                const payload = { eventType: '*', new: {}, old: {} };
+            const active = Array.from(channels).filter((ch) => ch.active);
+            if (!active.length) return;
+            const batch = Math.max(1, Math.ceil(active.length / 4));
+            const payload = { eventType: '*', new: {}, old: {} };
+            for (let i = 0; i < batch; i++) {
+                const ch = active[(channelCursor + i) % active.length];
                 ch.callbacks.forEach((cb) => { try { cb(payload); } catch (e) { /* ignore */ } });
-            });
-        }, 4000);
+            }
+            channelCursor = (channelCursor + batch) % active.length;
+        }, 1000);
     }
 
     class RestChannel {
@@ -714,18 +722,8 @@
         const colName = target && target.__type === 'doc'
             ? target.collection
             : (target && target.__type === 'query' ? target.collection : target && target.name);
-        // Cada canal escucha SOLAMENTE su colección. Sin este filtro, un solo
-        // heartbeat de `presencia` dispara un refetch de TODAS las suscripciones
-        // abiertas, satura el límite de peticiones y termina colgando la pestaña.
-        const channelFilter = colName ? ('coleccion=eq.' + colName) : undefined;
-        const channel = supabase.channel('rt_' + (colName || 'general') + '_' + genId());
-        const changeOpts = {
-            event: '*',
-            schema: 'public',
-            table: 'web_colecciones'
-        };
-        if (channelFilter) changeOpts.filter = channelFilter;
-        channel.on('postgres_changes', changeOpts, scheduleEmit);
+        const channel = supabase.channel('rt_' + colName + '_' + genId());
+        channel.on('postgres_changes', { event: '*', schema: 'public', table: 'web_colecciones' }, scheduleEmit);
         if (colName === 'conductores') {
             channel.on('postgres_changes', { event: '*', schema: 'public', table: 'perfiles' }, scheduleEmit);
         }
