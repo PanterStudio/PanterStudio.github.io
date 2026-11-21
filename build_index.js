@@ -281,7 +281,7 @@ const newTop = `<%- include('partials/header', {
             <div class="ix-feature-icon"><i class="fa-solid fa-earth-americas" aria-hidden="true"></i></div>
             <h3>Mundo Abierto</h3>
             <p>Explora ciudades, carreteras, campos y mucho mas de Colombia.</p>
-            <a href="wiki/como-comenzar" class="ix-feature-link">Explorar &#8594;</a>
+            <a href="pages/foro.html" class="ix-feature-link">Explorar Foro &#8594;</a>
         </div>
         <div class="ix-feature">
             <div class="ix-feature-icon"><i class="fa-solid fa-handshake" aria-hidden="true"></i></div>

@@ -581,37 +581,51 @@ function normalizarUrlImagen(raw) {
  * @param {boolean} esStaffViewer si quien está mirando pertenece al equipo
  */
 /**
- * Color del aviso de sistema: el del RANGO que actuó (toma/desasignación) o
- * el del rango al que se ELEVÓ el ticket. El cierre conserva su rojo fijo.
+ * Color del aviso de sistema: SIEMPRE el del RANGO DEL STAFF QUE ACTUÓ.
+ * El cierre conserva su rojo fijo. En elevaciones se guarda también el rango
+ * destino (`sistemaDestinoRol`) para la insignia del ticket, pero el color de
+ * la línea de bitácora lo manda quien elevó, no el área receptora.
  * Se guarda ya resuelto en el mensaje para que viaje igual a Firestore y no
  * dependa de que roles.js esté cargado en el momento de pintar.
  */
 function colorSistemaDe(comentario, tipo) {
     if (tipo === 'cerrado') return '';
-    // Prioridad: paleta GLOBAL en vivo (Panel Admin → Personal). Así, si se
-    // cambia el color de un rango, TODOS los avisos y categorías se
-    // sincronizan automáticamente sin recargar. Para elevaciones manda el
-    // rango DESTINO; para toma/desasignación, el de quien actúa.
     const C = window.PanterRoleColors;
-    const rolVivo = String(comentario.sistemaDestinoRol || comentario.sistemaRol
-        || normalizarRol(comentario.sistemaDestino || '') || '');
-    if (C && typeof C.colorFor === 'function' && rolVivo && rolVivo !== 'usuario') {
-        const vivo = String(C.colorFor(rolVivo) || '');
+    const actor = normalizarRol((comentario && (comentario.sistemaRol || comentario.autorRol)) || '');
+    const destino = normalizarRol((comentario && comentario.sistemaDestinoRol) || '');
+    const rol = actor && actor !== 'usuario' ? actor : destino;
+    if (C && typeof C.colorFor === 'function' && rol && rol !== 'usuario') {
+        const vivo = String(C.colorFor(rol) || '');
         if (/^#[0-9a-f]{6}$/i.test(vivo)) return vivo;
     }
+    if (rol && rol !== 'usuario') {
+        const color = String(obtenerRolBadge(rol).color || '');
+        if (/^#[0-9a-f]{6}$/i.test(color)) return color;
+    }
+    // Sólo si no se puede resolver el rango actor se usa el color guardado.
     const guardado = String(comentario.sistemaRolColor || '');
-    if (/^#[0-9a-f]{6}$/i.test(guardado)) return guardado;
-    // Compatibilidad con elevaciones antiguas que sólo guardaban el label.
-    if (!rolVivo || rolVivo === 'usuario') return '';
-    const color = String(obtenerRolBadge(rolVivo).color || '');
-    return /^#[0-9a-f]{6}$/i.test(color) ? color : '';
+    return /^#[0-9a-f]{6}$/i.test(guardado) ? guardado : '';
+}
+
+/** Icono del aviso de sistema: el del rango de quien actuó. El cierre
+ *  conserva el candado rojo institucional. */
+function iconoSistemaDe(comentario, tipo) {
+    if (tipo === 'cerrado') return ICONOS_SISTEMA.cerrado;
+    const actor = normalizarRol((comentario && (comentario.sistemaRol || comentario.autorRol)) || '');
+    const destino = normalizarRol((comentario && comentario.sistemaDestinoRol) || '');
+    const rol = actor && actor !== 'usuario' ? actor : destino;
+    if (rol && rol !== 'usuario') {
+        const def = obtenerRolBadge(rol);
+        if (def && def.icon) return `<i class="${def.icon}" aria-hidden="true"></i>`;
+    }
+    return ICONOS_SISTEMA[tipo] || ICONOS_SISTEMA.aviso;
 }
 
 function renderTextoComentario(comentario, esStaffViewer = false) {
     if (!comentario) return '';
     if (comentario.esSistema) {
         const tipo = String(comentario.tipoSistema || 'aviso');
-        const icono = ICONOS_SISTEMA[tipo] || ICONOS_SISTEMA.aviso;
+        const icono = iconoSistemaDe(comentario, tipo);
         const fecha = formatoFechaSistema(comentario.sistemaFecha || comentario.creadoEn);
         const estilo = (() => {
             const color = colorSistemaDe(comentario, tipo);
@@ -729,12 +743,12 @@ function rolBadgeHtml(rol) {
 
 /* ── Identidad de los mensajes del chat ────────────────────────
    El USUARIO nunca ve el nombre ni el rango del staff: ve siempre
-   «SOPORTE PANTER STUDIO» con el icono de escudo. Lo único que cambia
-   es el COLOR, que sale de la paleta oficial del rango que atiende
-   (soporte verde, moderador naranja, administrador dorado,
-   programador ámbar...). El STAFF sí ve quién responde y su insignia.
-   El nombre real sigue guardado en Firestore; el velado es sólo de
-   presentación, igual que en la bitácora de sistema. */
+   «SOPORTE PANTER STUDIO». Lo que SÍ cambia es el color y el icono:
+   salen del rango DEL STAFF QUE ESCRIBIÓ CADA MENSAJE. Así, si un
+   soporte verde tomó el ticket y un administrador rojo responde o
+   eleva, ese mensaje se pinta rojo; si responde otro soporte, verde.
+   El STAFF sí ve quién responde y su insignia. El nombre real sigue
+   guardado en Firestore; el velado es sólo de presentación. */
 const STAFF_PUBLIC_NAME = 'SOPORTE PANTER STUDIO';
 const STAFF_PUBLIC_ICON = '<i class="fa-solid fa-user-shield" aria-hidden="true"></i>';
 
@@ -742,7 +756,7 @@ const STAFF_PUBLIC_ICON = '<i class="fa-solid fa-user-shield" aria-hidden="true"
  * @param {object} comentario
  * @param {boolean} esStaffViewer  quien está mirando el chat
  * @param {string} rol             rol resuelto del autor (en vivo)
- * @param {string} areaElevada     `escaladoA` del ticket (fallback de color)
+ * @param {string} [areaElevada]   legado: sólo se usa si el mensaje no trae rol
  * @returns {{esStaffMsg:boolean, anonimo:boolean, nombre:string,
  *            badgeHtml:string, avatarHtml:string, color:string, rolId:string}}
  */
@@ -751,33 +765,34 @@ function identidadComentario(comentario, esStaffViewer, rol, areaElevada) {
     const esStaffMsg = Boolean(c.esStaff)
         || Boolean(c.autorRol && normalizarRol(c.autorRol) !== 'usuario');
 
-    // El color identifica el ÁREA RESPONSABLE, no a la persona: si el ticket
-    // se elevó a Soporte/Moderador/Administrador/Programador, ese es el color
-    // que verá el usuario («si se eleva a soporte → color de soporte»).
-    // Sólo cuando no hay elevación se usa el rango real del autor.
-    let rolColor = areaElevada ? normalizarRol(areaElevada) : normalizarRol(rol || 'usuario');
-    if (rolColor === 'usuario' && rol) rolColor = normalizarRol(rol);
-    if (rolColor === 'usuario') rolColor = 'soporte';
-    const def = obtenerRolBadge(rolColor);
+    let rolId = 'usuario';
+    if (esStaffMsg) {
+        // Primero el rango guardado AL RESPONDER: es el actor real de este
+        // mensaje, aunque el ticket estuviera elevado a otra área o el
+        // permiso global del autor haya cambiado después.
+        const guardado = normalizarRol(c.autorRol || '');
+        const resuelto = normalizarRol(rol || '');
+        if (guardado && guardado !== 'usuario') rolId = guardado;
+        else if (resuelto && resuelto !== 'usuario') rolId = resuelto;
+        else {
+            const heredado = normalizarRol(areaElevada || '');
+            rolId = heredado && heredado !== 'usuario' ? heredado : 'soporte';
+        }
+    }
+
+    const def = obtenerRolBadge(rolId);
     const color = def.color || '#94a3b8';
+    const icono = def.icon || 'fa-solid fa-user-shield';
 
     if (!esStaffMsg || esStaffViewer) {
-        // Para el staff manda el rol resuelto EN VIVO; si un mensaje antiguo
-        // no se puede resolver, se usa el `autorRol` guardado y, como último
-        // recurso, «Soporte» (nunca «Usuario» en un mensaje de staff).
-        let rolBadge = normalizarRol(rol || 'usuario');
-        if (esStaffMsg && rolBadge === 'usuario') {
-            const guardado = normalizarRol(c.autorRol || 'usuario');
-            rolBadge = guardado !== 'usuario' ? guardado : 'soporte';
-        }
         return {
             esStaffMsg,
             anonimo: false,
             nombre: String(c.autor || 'Usuario'),
-            badgeHtml: rolBadgeHtml(rolBadge),
+            badgeHtml: rolBadgeHtml(rolId),
             avatarHtml: escapeHtmlSoporte(String(c.autor || 'U')[0].toUpperCase()),
             color,
-            rolId: rolColor
+            rolId
         };
     }
 
@@ -785,10 +800,10 @@ function identidadComentario(comentario, esStaffViewer, rol, areaElevada) {
         esStaffMsg,
         anonimo: true,
         nombre: STAFF_PUBLIC_NAME,
-        badgeHtml: '',                 // sin rango escrito para el usuario
-        avatarHtml: STAFF_PUBLIC_ICON, // mismo icono que la bitácora
+        badgeHtml: '',                        // sin rango escrito para el usuario
+        avatarHtml: `<i class="${icono}" aria-hidden="true"></i>`, // icono del rango actor
         color,
-        rolId: rolColor
+        rolId
     };
 }
 
@@ -1152,8 +1167,9 @@ async function elevarTicket(ticketId, destino, staffName, staffUid, staffRol) {
     const aviso = await agregarMensajeSistema(ticketId, SYSTEM_MSG_ELEVADO, {
         tipo: 'asignado', nombre, destino: label, fecha: now,
         rol, destinoRol: key,
-        // El color lo manda el RANGO AL QUE SE ELEVÓ, no quien elevó.
-        color: colorRangoSistema(key),
+        // El color/icono lo manda QUIÉN ELEVA. El área destino sigue
+        // reflejada en la insignia del ticket, no en este aviso.
+        color: colorRangoSistema(rol),
         textoStaff: `ha sido asignado por ${nombre} a ${label}`
     });
     return resultadoSincronizado(actualizado, aviso);

@@ -2,7 +2,7 @@
  * staff-sync.js — Fuente ÚNICA y compartida de rangos manuales + sesión
  * ============================================================
  * Conecta el login (DiscordAuth), el Panel Admin → Personal (`equipo` +
- * `ps_staff_local`), el Centro de Soporte, el Perfil, el árbol de Personal
+ * `ps_staff_local`), Soporte, el Perfil, el árbol de Personal
  * y el FORO para que TODOS vean el mismo rango y reaccionen al instante
  * cuando se cambia desde el panel.
  *

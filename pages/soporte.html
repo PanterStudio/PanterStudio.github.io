@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="theme-color" content="#00b0ff">
-    <title>Centro de Soporte — Panter Studio</title>
+    <title>Soporte — Panter Studio</title>
     <meta name="description" content="Crea un ticket de soporte, consulta el estado de tus casos y recibe ayuda del equipo de Panter Studio.">
     <link rel="icon" href="../recursos/PSGD.png" type="image/png">
     <link rel="apple-touch-icon" href="../recursos/PSGD.png">
@@ -957,7 +957,7 @@
             <img class="sp-hero-logo" src="../recursos/PSGD.png" alt="Panter Studio" width="84" height="84" decoding="async">
             <div class="soporte-hero-text">
                 <span class="sp-hero-kicker">SOPORTE PANTER STUDIO</span>
-                <h1>Centro de Soporte</h1>
+                <h1>Soporte Panter Studio</h1>
                 <p>¿Tienes un problema, bug o sugerencia? Crea un ticket y el equipo de Panter Studio te responderá lo antes posible.</p>
             </div>
             <div class="soporte-hero-stats">
@@ -1474,7 +1474,6 @@
         let currentUserRole = 'usuario';
         let currentStaff = false;
         let currentTicketId = null;
-        let currentTicketArea = '';   // rango al que se elevó el ticket (color del chat)
         let comentariosUnsub = null;
         let comentariosRolesUnsub = null;
         let comentariosActuales = [];
@@ -1942,7 +1941,7 @@
                             t.id,
                             currentUser?.displayName || currentUser?.username || 'Staff',
                             currentUser?.uid,
-                            currentUserRole
+                            await rolActorFresco()
                         );
                         showToast('Ticket tomado por el soporte', 'success');
                     }
@@ -1980,7 +1979,7 @@
                         currentTicketId,
                         currentUser.displayName || currentUser.username || 'Staff',
                         currentUser.uid,
-                        currentUserRole
+                        await rolActorFresco()
                     );
                 } else {
                     resultado = await window.SoporteJS.actualizarTicket(currentTicketId, { estado });
@@ -2017,6 +2016,24 @@
             };
         }
 
+        /** Rol del actor en el momento de la acción. Se refresca desde
+         *  `equipo`/`ps_staff_local` para que un cambio de rango reciente se
+         *  refleje en el color del aviso que se está generando. */
+        async function rolActorFresco() {
+            let rol = currentUserRole;
+            try {
+                if (currentUser?.uid && window.SoporteJS?.resolverRolUsuario) {
+                    const fresco = await window.SoporteJS.resolverRolUsuario(
+                        currentUser.uid,
+                        currentUser.displayName || currentUser.username || currentUser.email,
+                        currentUser.email
+                    );
+                    if (fresco) rol = fresco;
+                }
+            } catch (e) { /* se conserva el rol de sesión */ }
+            return rol;
+        }
+
         document.getElementById('modalElevarBtn')?.addEventListener('click', async () => {
             if (!currentUser || !currentTicketId || !currentStaff) {
                 showToast('Tu rango no permite elevar tickets.', 'error');
@@ -2027,7 +2044,7 @@
             if (btn) btn.disabled = true;
             try {
                 const actor = staffActor();
-                const resultado = await window.SoporteJS.elevarTicket(currentTicketId, destino, actor.name, actor.uid, currentUserRole);
+                const resultado = await window.SoporteJS.elevarTicket(currentTicketId, destino, actor.name, actor.uid, await rolActorFresco());
                 avisarSincronizacion(resultado);
                 showToast('Ticket elevado correctamente.', 'success');
                 const fresh = await window.SoporteJS.getTicketById(currentTicketId);
@@ -2050,7 +2067,7 @@
             if (btn) btn.disabled = true;
             try {
                 const actor = staffActor();
-                const resultado = await window.SoporteJS.desasignarTicket(currentTicketId, actor.name, actor.uid, currentUserRole);
+                const resultado = await window.SoporteJS.desasignarTicket(currentTicketId, actor.name, actor.uid, await rolActorFresco());
                 avisarSincronizacion(resultado);
                 showToast('Asignación removida; el ticket vuelve a Soporte.', 'success');
                 const fresh = await window.SoporteJS.getTicketById(currentTicketId);
@@ -2285,11 +2302,6 @@
             const box = document.getElementById('modalEscaladoBox');
             if (box) box.style.display = currentStaff ? 'block' : 'none';
             const area = String(ticket?.escaladoA || '').trim().toLowerCase();
-            // Si cambió el área, el color de los mensajes del staff se repinta.
-            if (area !== currentTicketArea) {
-                currentTicketArea = area;
-                if (comentariosActuales.length) renderComentariosList(comentariosActuales);
-            }
             const sel = document.getElementById('modalEscaladoDestino');
             if (sel) sel.value = area || 'soporte';
             const info = document.getElementById('modalEscaladoInfo');
@@ -2491,11 +2503,11 @@
                 return div;
             }
 
-            // Mensajes del staff: el usuario ve «SOPORTE PANTER STUDIO» con
-            // el icono de escudo y SIN rango, pero coloreado con la paleta
-            // oficial del rango que atiende. El staff ve nombre + insignia.
+            // Mensajes del staff: el usuario ve «SOPORTE PANTER STUDIO» SIN
+            // rango escrito, pero con el color y el icono del rango DE QUIEN
+            // escribió ese mensaje. El staff ve nombre + insignia.
             const id = window.SoporteJS.identidadComentario(
-                c, verComoStaff, rol || 'usuario', currentTicketArea
+                c, verComoStaff, rol || 'usuario'
             );
             // El color sale de la paleta oficial (hex sanitizado).
             const color = /^#[0-9a-f]{3,8}$/i.test(id.color) ? id.color : '#94a3b8';
