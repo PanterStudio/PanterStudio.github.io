@@ -1084,7 +1084,7 @@
                 <div class="foro-side-head"><h3><i class="fa-solid fa-bolt" aria-hidden="true"></i> Accesos rápidos</h3></div>
                 <div class="foro-side-body foro-related">
                     <a href="../pages/actualizaciones.html">Actualizaciones del desarrollo<span>Novedades y parches</span></a>
-                    <a href="../pages/soporte.html">Soporte<span>Abrir un ticket</span></a>
+                    <a href="../pages/soporte.html">Centro de Soporte<span>Abrir un ticket</span></a>
                     <a href="../pages/personal.html">Nuestro Personal<span>Equipo y rangos</span></a>
                     <a href="../pages/donaciones.html">Apóyanos<span>Impulsa el proyecto</span></a>
                 </div>

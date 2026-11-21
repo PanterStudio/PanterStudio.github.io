@@ -103,18 +103,58 @@ h1, h2, h3, h4, h5, h6,
     text-overflow: ellipsis;
 }
 
-/* Fallback por si el badge se construye sólo con clases (paleta oficial). */
+/* Fallback por si el badge se construye sólo con clases (paleta oficial).
+   Las variables en línea que imprime roles.js#badgeHtml mandan siempre;
+   si no hay inline, se usa la paleta global de role-colors.js y, como
+   último recurso, el hexadecimal oficial de cada rango. Así el texto de
+   Administrador es rojo (#ff0000), nunca amarillo. */
 .ps-role-admin_owner,
-.ps-role-founder_ceo { color: #f1c40f; background: rgba(241, 196, 15, 0.13); border-color: rgba(241, 196, 15, 0.4); }
-.ps-role-director    { color: #ff0000; background: rgba(255, 0, 0, 0.12); border-color: rgba(255, 0, 0, 0.35); }
-.ps-role-administrador { color: #f1c40f; background: rgba(241, 196, 15, 0.12); border-color: rgba(241, 196, 15, 0.35); }
-.ps-role-programador { color: #ffbc00; background: rgba(255, 188, 0, 0.12); border-color: rgba(255, 188, 0, 0.35); }
-.ps-role-modelador   { color: #6f5cff; background: rgba(111, 92, 255, 0.12); border-color: rgba(111, 92, 255, 0.35); }
-.ps-role-moderador   { color: #e67e22; background: rgba(230, 126, 34, 0.12); border-color: rgba(230, 126, 34, 0.35); }
-.ps-role-soporte     { color: #00a715; background: rgba(0, 167, 21, 0.12); border-color: rgba(0, 167, 21, 0.35); }
-.ps-role-creador_contenido { color: #9d00ff; background: rgba(157, 0, 255, 0.12); border-color: rgba(157, 0, 255, 0.35); }
-.ps-role-vip         { color: #ff7ddf; background: rgba(255, 125, 223, 0.12); border-color: rgba(255, 125, 223, 0.35); }
-.ps-role-usuario     { color: #0055ff; background: rgba(0, 85, 255, 0.12); border-color: rgba(0, 85, 255, 0.3); }
+.ps-role-founder_ceo {
+    color: var(--ps-role-color, var(--ps-role-founder_ceo, #f1c40f));
+    background: var(--ps-role-bg, var(--ps-role-founder_ceo-bg, rgba(241, 196, 15, 0.12)));
+    border-color: var(--ps-role-border, var(--ps-role-founder_ceo-border, rgba(241, 196, 15, 0.35)));
+}
+.ps-role-administrador,
+.ps-role-director {
+    color: var(--ps-role-color, var(--ps-role-administrador, #ff0000));
+    background: var(--ps-role-bg, var(--ps-role-administrador-bg, rgba(255, 0, 0, 0.12)));
+    border-color: var(--ps-role-border, var(--ps-role-administrador-border, rgba(255, 0, 0, 0.35)));
+}
+.ps-role-programador {
+    color: var(--ps-role-color, var(--ps-role-programador, #ffbc00));
+    background: var(--ps-role-bg, var(--ps-role-programador-bg, rgba(255, 188, 0, 0.12)));
+    border-color: var(--ps-role-border, var(--ps-role-programador-border, rgba(255, 188, 0, 0.35)));
+}
+.ps-role-modelador {
+    color: var(--ps-role-color, var(--ps-role-modelador, #6f5cff));
+    background: var(--ps-role-bg, var(--ps-role-modelador-bg, rgba(111, 92, 255, 0.12)));
+    border-color: var(--ps-role-border, var(--ps-role-modelador-border, rgba(111, 92, 255, 0.35)));
+}
+.ps-role-moderador {
+    color: var(--ps-role-color, var(--ps-role-moderador, #e67e22));
+    background: var(--ps-role-bg, var(--ps-role-moderador-bg, rgba(230, 126, 34, 0.12)));
+    border-color: var(--ps-role-border, var(--ps-role-moderador-border, rgba(230, 126, 34, 0.35)));
+}
+.ps-role-soporte {
+    color: var(--ps-role-color, var(--ps-role-soporte, #00a715));
+    background: var(--ps-role-bg, var(--ps-role-soporte-bg, rgba(0, 167, 21, 0.12)));
+    border-color: var(--ps-role-border, var(--ps-role-soporte-border, rgba(0, 167, 21, 0.35)));
+}
+.ps-role-creador_contenido {
+    color: var(--ps-role-color, var(--ps-role-creador_contenido, #9d00ff));
+    background: var(--ps-role-bg, var(--ps-role-creador_contenido-bg, rgba(157, 0, 255, 0.12)));
+    border-color: var(--ps-role-border, var(--ps-role-creador_contenido-border, rgba(157, 0, 255, 0.35)));
+}
+.ps-role-vip {
+    color: var(--ps-role-color, var(--ps-role-vip, #ff7ddf));
+    background: var(--ps-role-bg, var(--ps-role-vip-bg, rgba(255, 125, 223, 0.12)));
+    border-color: var(--ps-role-border, var(--ps-role-vip-border, rgba(255, 125, 223, 0.35)));
+}
+.ps-role-usuario {
+    color: var(--ps-role-color, var(--ps-role-usuario, #0055ff));
+    background: var(--ps-role-bg, var(--ps-role-usuario-bg, rgba(0, 85, 255, 0.12)));
+    border-color: var(--ps-role-border, var(--ps-role-usuario-border, rgba(0, 85, 255, 0.3)));
+}
 
 /* Nav: el nombre no debe romper el layout con badges largos. */
 .nav-user-name {
