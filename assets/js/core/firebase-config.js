@@ -66,6 +66,15 @@
     const GET_CACHE_TTL = 3500;
     const getCache = new Map();
 
+    /* Configuración y roster cambian muy poco: sondearlos cada 4 s no aporta
+       fluidez y mantiene la red ocupada. Tickets, foro y presencia siguen a
+       4 s para que la conversación se sienta en vivo. */
+    const SLOW_POLL_MS = 12000;
+    const SLOW_POLL_COLLECTIONS = new Set([
+        'roles_config', 'discord_role_mappings', 'equipo',
+        'settings', 'sponsors', 'donations'
+    ]);
+
     function acquireRestSlot() {
         if (restActive < MAX_REST_CONCURRENCY) {
             restActive++;
@@ -240,7 +249,7 @@
             // Si la pestaña está en segundo plano no hay nada que repintar.
             if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
             const due = Array.from(channels).filter((ch) =>
-                ch.active && now - (lastChannelEmit.get(ch) || 0) >= 4000);
+                ch.active && now - (lastChannelEmit.get(ch) || 0) >= (ch.intervalMs || 4000));
             if (!due.length) return;
             const batch = Math.max(1, Math.ceil(due.length / 4));
             const payload = { eventType: '*', new: {}, old: {} };
@@ -798,6 +807,7 @@
         if (colName === 'conductores') {
             channel.on('postgres_changes', { event: '*', schema: 'public', table: 'perfiles' }, scheduleEmit);
         }
+        channel.intervalMs = SLOW_POLL_COLLECTIONS.has(colName) ? SLOW_POLL_MS : 4000;
         channel.subscribe();
         lastChannelEmit.set(channel, Date.now());
 
