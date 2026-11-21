@@ -237,6 +237,8 @@
             const now = Date.now();
             // Ningún canal se consulta más de una vez cada 4 s (igual que antes),
             // pero se reparten entre los ticks de 1 s para evitar picos.
+            // Si la pestaña está en segundo plano no hay nada que repintar.
+            if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
             const due = Array.from(channels).filter((ch) =>
                 ch.active && now - (lastChannelEmit.get(ch) || 0) >= 4000);
             if (!due.length) return;
@@ -725,41 +727,110 @@
         return makeQuerySnapshot(applyConstraints(items, constraints), colName);
     }
 
-    function onSnapshotImpl(target, onNext, onError) {
-        let active = true;
-        let timer = null;
+    /* Varios módulos observan el mismo dato (equipo, roles_config, perfil…).
+       Crear un canal por suscripción hacía que el ticker sondeara el mismo
+       documento varias veces con desfase. Agrupamos suscriptores por objetivo
+       para que un único sondeo sirva a todos. */
+    const sharedSnapshotChannels = new Map();
+
+    function snapshotTargetKey(target) {
+        if (!target) return 'none';
+        if (target.__type === 'doc') return 'doc|' + target.collection + '|' + target.id;
+        if (target.__type === 'query') {
+            const parts = (target.constraints || []).map(c => {
+                if (!c) return '';
+                if (c.__type === 'where') return [c.field, c.op, String(c.value)].join(':');
+                if (c.__type === 'limit') return 'limit:' + c.n;
+                if (c.__type === 'orderBy') return 'order:' + c.field + ':' + c.dir;
+                return '';
+            });
+            return 'query|' + target.collection + '|' + parts.join('&');
+        }
+        return 'col|' + (target.name || '');
+    }
+
+    function getSharedSnapshotChannel(target, key) {
+        let entry = sharedSnapshotChannels.get(key);
+        if (entry) return entry;
+
+        const listeners = new Set();
+        let lastSnapshot = null;
+        let hasSnapshot = false;
+        let emitTimer = null;
+
+        const broadcast = (snap, err) => {
+            listeners.forEach(sub => {
+                try {
+                    if (err) {
+                        if (typeof sub.onError === 'function') sub.onError(err);
+                    } else if (typeof sub.onNext === 'function') {
+                        sub.onNext(snap);
+                    }
+                } catch (e) { /* ignore */ }
+            });
+        };
+
         const emit = async () => {
-            if (!active) return;
+            if (!listeners.size) return;
             try {
                 const snap = (target && target.__type === 'doc')
                     ? await getDocImpl(target)
                     : await getDocsImpl(target);
-                if (active && typeof onNext === 'function') onNext(snap);
+                if (!listeners.size) return;
+                lastSnapshot = snap;
+                hasSnapshot = true;
+                broadcast(snap, null);
             } catch (err) {
-                if (active && typeof onError === 'function') onError(err);
+                if (listeners.size) broadcast(null, err);
             }
         };
+
         const scheduleEmit = () => {
-            if (!active) return;
-            clearTimeout(timer);
-            timer = setTimeout(emit, 180);
+            clearTimeout(emitTimer);
+            emitTimer = setTimeout(emit, 180);
         };
-        emit();
+
         const colName = target && target.__type === 'doc'
             ? target.collection
             : (target && target.__type === 'query' ? target.collection : target && target.name);
-        const channel = supabase.channel('rt_' + colName + '_' + genId());
+        const channel = supabase.channel('rt_' + key.replace(/[^a-z0-9]/gi, '_').slice(0, 40));
         channel.on('postgres_changes', { event: '*', schema: 'public', table: 'web_colecciones' }, scheduleEmit);
         if (colName === 'conductores') {
             channel.on('postgres_changes', { event: '*', schema: 'public', table: 'perfiles' }, scheduleEmit);
         }
         channel.subscribe();
         lastChannelEmit.set(channel, Date.now());
-        return () => {
-            active = false;
-            clearTimeout(timer);
-            supabase.removeChannel(channel);
+
+        entry = {
+            listeners,
+            add(sub) {
+                listeners.add(sub);
+                if (hasSnapshot) {
+                    try { if (typeof sub.onNext === 'function') sub.onNext(lastSnapshot); } catch (e) { /* ignore */ }
+                }
+            },
+            remove(sub) {
+                listeners.delete(sub);
+                clearTimeout(emitTimer);
+                if (!listeners.size) {
+                    channel.unsubscribe();
+                    sharedSnapshotChannels.delete(key);
+                }
+            },
+            start() { emit(); }
         };
+        sharedSnapshotChannels.set(key, entry);
+        return entry;
+    }
+
+    function onSnapshotImpl(target, onNext, onError) {
+        const key = snapshotTargetKey(target);
+        const entry = getSharedSnapshotChannel(target, key);
+        const sub = { onNext, onError };
+        const first = entry.listeners.size === 0;
+        entry.add(sub);
+        if (first) entry.start();
+        return () => entry.remove(sub);
     }
 
     /* ── Marcadores compatibles con Firestore ──────────────────────────────── */
