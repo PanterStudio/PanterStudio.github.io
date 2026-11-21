@@ -2698,6 +2698,17 @@ nav.nav-open .nav-mobile-menu { display: flex; }
   min-height: 250px; /* rectangle estándar */
 }
 
+/* Top Conductores en vivo: comfortable en pantallas pequeñas */
+@media (max-width: 600px) {
+  #live-drivers-section {
+    padding: 1.25rem !important;
+    border-radius: 18px !important;
+    margin-bottom: 2rem !important;
+  }
+  #live-drivers-section h2 { font-size: 1.2rem !important; }
+  #liveTopDriversGrid { grid-template-columns: 1fr !important; }
+}
+
 /* En móvil: alturas reducidas */
 @media (max-width: 600px) {
   .ad-slot-wrapper.ad-horizontal .ad-slot-inner {

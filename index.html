@@ -865,10 +865,22 @@
                 }).join('');
             } catch (e) {
                 console.warn('[Index] Error cargando Top Conductores:', e);
+                grid.innerHTML = '<div style="color:#fca5a5; font-size:0.9rem;">No se pudo cargar el ranking en este momento. Intenta recargar la página.</div>';
             }
         }
-        if (window.db && window.getDocs) loadLiveGameRanking();
-        else document.addEventListener('supabaseReady', loadLiveGameRanking, { once: true });
+        function showTimeoutMessage() {
+            const grid = document.getElementById('liveTopDriversGrid');
+            if (grid && /Cargando/i.test(grid.textContent || '')) {
+                grid.innerHTML = '<div style="color:#fca5a5; font-size:0.9rem;">No se pudo conectar con Supabase. Verifica tu conexión e inténtalo de nuevo.</div>';
+            }
+        }
+        if (window.db && window.getDocs) {
+            loadLiveGameRanking();
+        } else {
+            document.addEventListener('supabaseReady', loadLiveGameRanking, { once: true });
+            setTimeout(showTimeoutMessage, 8000);
+        }
+        document.addEventListener('panter:data-refresh', loadLiveGameRanking);
     })();
     </script>
 </body>
