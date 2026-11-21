@@ -3608,24 +3608,3 @@ nav > .nav-right {
   .nav-brand-avatar-link { margin-left: 6px; }
   .nav-user-chevron { display: none; }
 }
-
-/* ========================================
-   PERF: menos coste de composición en móvil
-   y en usuarios que prefieren menos movimiento.
-   ======================================== */
-@media (max-width: 768px), (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto !important; }
-  *, *::before, *::after {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
-  header { background: var(--bg-glass-strong) !important; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-  }
-}

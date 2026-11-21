@@ -28,11 +28,6 @@
     const AUTH = SUPABASE_URL + '/auth/v1';
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-    // Memoización de ~300 ms: evita que varias suscripciones pidan la misma
-    // colección en el mismo tick de polling. Las escrituras la invalidan.
-    const collectionFetchCache = new Map();
-    function clearCollectionFetchCache() { collectionFetchCache.clear(); }
-
     window.SUPABASE_URL = SUPABASE_URL;
     window.SUPABASE_KEY = SUPABASE_KEY;
 
@@ -54,46 +49,98 @@
         return Object.assign(h, extra || {});
     }
 
-    async function restRequest(method, url, body, prefer) {
-        const headers = baseHeaders(prefer ? { 'Prefer': prefer } : null);
-        const init = { method: method, headers: headers, mode: 'cors', cache: 'no-store' };
-        if (method !== 'GET') clearCollectionFetchCache();
-        if (body !== undefined && body !== null && method !== 'GET') {
-            init.body = JSON.stringify(body);
+    /* Control de concurrencia: varias suscripciones en vivo pueden pedir el
+       mismo documento en el mismo tick. Se deduplican peticiones idénticas
+       en vuelo y se limita el número de fetches simultáneos para evitar
+       ERR_INSUFFICIENT_RESOURCES y la cascada de reintentos. */
+    const MAX_REST_CONCURRENCY = 6;
+    let restActive = 0;
+    const restQueue = [];
+    const inflightRest = new Map();
+
+    function acquireRestSlot() {
+        if (restActive < MAX_REST_CONCURRENCY) {
+            restActive++;
+            return Promise.resolve();
         }
+        return new Promise(resolve => { restQueue.push(resolve); });
+    }
+    function releaseRestSlot() {
+        if (restQueue.length) {
+            const next = restQueue.shift();
+            next();
+            return;
+        }
+        restActive = Math.max(0, restActive - 1);
+    }
+
+    async function restRequestRaw(method, url, body, prefer) {
+        const headers = baseHeaders(prefer ? { 'Prefer': prefer } : null);
+        const payload = (body !== undefined && body !== null && method !== 'GET')
+            ? JSON.stringify(body)
+            : undefined;
 
         let lastError = null;
         for (let attempt = 0; attempt < 3; attempt++) {
+            const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+            const timeoutId = controller ? setTimeout(() => controller.abort(), 8000) : null;
+            const init = {
+                method: method,
+                headers: headers,
+                mode: 'cors',
+                cache: 'no-store',
+                signal: controller ? controller.signal : undefined
+            };
+            if (payload !== undefined) init.body = payload;
             try {
-                const res = await fetch(url, init);
-                if (!res.ok) {
-                    let detail = '';
-                    try { detail = await res.text(); } catch (e) { /* ignore */ }
-                    try {
-                        const j = JSON.parse(detail);
-                        detail = j.message || j.msg || j.error_description || j.error || detail;
-                    } catch (e) { /* ignore */ }
-                    const err = new Error(detail || ('Supabase HTTP ' + res.status));
-                    err.status = res.status;
-                    // Los errores 4xx (RLS, validación) no se reintentan.
-                    if (res.status >= 400 && res.status < 500) throw err;
-                    lastError = err;
-                    await new Promise(r => setTimeout(r, 250 * (attempt + 1)));
-                    continue;
+                try {
+                    const res = await fetch(url, init);
+                    if (!res.ok) {
+                        let detail = '';
+                        try { detail = await res.text(); } catch (e) { /* ignore */ }
+                        try {
+                            const j = JSON.parse(detail);
+                            detail = j.message || j.msg || j.error_description || j.error || detail;
+                        } catch (e) { /* ignore */ }
+                        const err = new Error(detail || ('Supabase HTTP ' + res.status));
+                        err.status = res.status;
+                        // Los errores 4xx (RLS, validación) no se reintentan.
+                        if (res.status >= 400 && res.status < 500) throw err;
+                        lastError = err;
+                        await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+                        continue;
+                    }
+                    if (res.status === 204) return null;
+                    const text = await res.text();
+                    if (!text) return null;
+                    try { return JSON.parse(text); } catch (e) { return text; }
+                } catch (e) {
+                    if (e && e.status >= 400 && e.status < 500) throw e;
+                    lastError = e;
+                    if (attempt < 2) await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
                 }
-                if (res.status === 204) return null;
-                const text = await res.text();
-                if (!text) return null;
-                try { return JSON.parse(text); } catch (e) { return text; }
-            } catch (e) {
-                if (e && e.status >= 400 && e.status < 500) throw e;
-                lastError = e;
-                if (attempt < 2) await new Promise(r => setTimeout(r, 250 * (attempt + 1)));
+            } finally {
+                if (timeoutId) clearTimeout(timeoutId);
             }
         }
         const err = new Error('Supabase no disponible: ' + (lastError && lastError.message ? lastError.message : 'sin conexión'));
         err.offline = true;
         throw err;
+    }
+
+    async function restRequest(method, url, body, prefer) {
+        const key = [method, url, body === undefined ? '' : JSON.stringify(body), prefer || ''].join('|');
+        if (inflightRest.has(key)) return inflightRest.get(key);
+        const promise = (async () => {
+            await acquireRestSlot();
+            try {
+                return await restRequestRaw(method, url, body, prefer);
+            } finally {
+                releaseRestSlot();
+            }
+        })().finally(() => { inflightRest.delete(key); });
+        inflightRest.set(key, promise);
+        return promise;
     }
 
     /* ── Mini cliente Supabase (REST + polling) ────────────────────────────── */
@@ -156,25 +203,17 @@
     }
 
     // Un único ticker para todos los canales: una sola fuente de sondeo.
-    // Se pausa con la pestaña oculta para no gastar CPU/red en segundo plano.
     const channels = new Set();
     let channelTimer = null;
-    function tickChannels() {
-        if (typeof document !== 'undefined' && document.hidden) return;
-        channels.forEach((ch) => {
-            if (!ch.active) return;
-            const payload = { eventType: '*', new: {}, old: {} };
-            ch.callbacks.forEach((cb) => { try { cb(payload); } catch (e) { /* ignore */ } });
-        });
-    }
     function startChannelTicker() {
         if (channelTimer) return;
-        channelTimer = setInterval(tickChannels, 4000);
-        if (typeof document !== 'undefined') {
-            document.addEventListener('visibilitychange', () => {
-                if (!document.hidden && channels.size) setTimeout(tickChannels, 80);
+        channelTimer = setInterval(() => {
+            channels.forEach((ch) => {
+                if (!ch.active) return;
+                const payload = { eventType: '*', new: {}, old: {} };
+                ch.callbacks.forEach((cb) => { try { cb(payload); } catch (e) { /* ignore */ } });
             });
-        }
+        }, 4000);
     }
 
     class RestChannel {
@@ -500,48 +539,38 @@
     }
 
     async function fetchCollectionItems(collectionName) {
-        const key = String(collectionName || '');
-        const now = Date.now();
-        const cached = collectionFetchCache.get(key);
-        if (cached && now - cached.at < 300) return cached.promise;
+        const byKey = new Map();
 
-        const promise = (async () => {
-            const byKey = new Map();
+        if (collectionName === 'conductores') {
+            const [perfilesRes, webRes] = await Promise.all([
+                supabase.from('perfiles').select('*'),
+                supabase.from('web_colecciones').select('*').eq('coleccion', 'conductores')
+            ]);
 
-            if (key === 'conductores') {
-                const [perfilesRes, webRes] = await Promise.all([
-                    supabase.from('perfiles').select('*'),
-                    supabase.from('web_colecciones').select('*').eq('coleccion', 'conductores')
-                ]);
-
-                if (!webRes.error && Array.isArray(webRes.data)) {
-                    for (const r of webRes.data) {
-                        byKey.set(r.id, { ...(r.datos || {}), id: r.id, uid: r.id });
-                    }
+            if (!webRes.error && Array.isArray(webRes.data)) {
+                for (const r of webRes.data) {
+                    byKey.set(r.id, { ...(r.datos || {}), id: r.id, uid: r.id });
                 }
-                if (!perfilesRes.error && Array.isArray(perfilesRes.data)) {
-                    for (const row of perfilesRes.data) {
-                        const mapped = mapPerfilRowToWeb(row);
-                        const existing = byKey.get(mapped.id) || {};
-                        byKey.set(mapped.id, { ...existing, ...mapped });
-                    }
-                }
-                if (webRes.error && perfilesRes.error) {
-                    console.warn('[Supabase] No se pudo leer conductores:', webRes.error.message || perfilesRes.error.message);
-                }
-                return [...byKey.values()];
             }
-
-            const { data, error } = await supabase.from('web_colecciones').select('*').eq('coleccion', key);
-            if (error) {
-                console.warn(`[Supabase] Error leyendo colección "${key}":`, error.message);
-                return [];
+            if (!perfilesRes.error && Array.isArray(perfilesRes.data)) {
+                for (const row of perfilesRes.data) {
+                    const mapped = mapPerfilRowToWeb(row);
+                    const existing = byKey.get(mapped.id) || {};
+                    byKey.set(mapped.id, { ...existing, ...mapped });
+                }
             }
-            return (data || []).map((r) => ({ ...(r.datos || {}), id: r.id }));
-        })();
+            if (webRes.error && perfilesRes.error) {
+                console.warn('[Supabase] No se pudo leer conductores:', webRes.error.message || perfilesRes.error.message);
+            }
+            return [...byKey.values()];
+        }
 
-        collectionFetchCache.set(key, { at: now, promise });
-        return promise;
+        const { data, error } = await supabase.from('web_colecciones').select('*').eq('coleccion', collectionName);
+        if (error) {
+            console.warn(`[Supabase] Error leyendo colección "${collectionName}":`, error.message);
+            return [];
+        }
+        return (data || []).map((r) => ({ ...(r.datos || {}), id: r.id }));
     }
 
     async function getDocImpl(docRef) {
@@ -662,35 +691,16 @@
         return makeQuerySnapshot(applyConstraints(items, constraints), colName);
     }
 
-    function snapshotSignature(snap) {
-        try {
-            if (snap && Array.isArray(snap.docs)) {
-                return JSON.stringify(snap.docs.map(d => [d.id, d.data()]));
-            }
-            if (snap && typeof snap.data === 'function') return JSON.stringify(snap.data());
-            return JSON.stringify(snap || null);
-        } catch (e) {
-            return null;
-        }
-    }
-
     function onSnapshotImpl(target, onNext, onError) {
         let active = true;
         let timer = null;
-        let lastSignature = null;
         const emit = async () => {
             if (!active) return;
             try {
                 const snap = (target && target.__type === 'doc')
                     ? await getDocImpl(target)
                     : await getDocsImpl(target);
-                if (!active || typeof onNext !== 'function') return;
-                // El polling llega cada 4 s pero los datos casi nunca cambian:
-                // no repintamos la UI si el snapshot es idéntico.
-                const signature = snapshotSignature(snap);
-                if (signature !== null && signature === lastSignature) return;
-                lastSignature = signature;
-                onNext(snap);
+                if (active && typeof onNext === 'function') onNext(snap);
             } catch (err) {
                 if (active && typeof onError === 'function') onError(err);
             }
@@ -704,8 +714,18 @@
         const colName = target && target.__type === 'doc'
             ? target.collection
             : (target && target.__type === 'query' ? target.collection : target && target.name);
-        const channel = supabase.channel('rt_' + colName + '_' + genId());
-        channel.on('postgres_changes', { event: '*', schema: 'public', table: 'web_colecciones' }, scheduleEmit);
+        // Cada canal escucha SOLAMENTE su colección. Sin este filtro, un solo
+        // heartbeat de `presencia` dispara un refetch de TODAS las suscripciones
+        // abiertas, satura el límite de peticiones y termina colgando la pestaña.
+        const channelFilter = colName ? ('coleccion=eq.' + colName) : undefined;
+        const channel = supabase.channel('rt_' + (colName || 'general') + '_' + genId());
+        const changeOpts = {
+            event: '*',
+            schema: 'public',
+            table: 'web_colecciones'
+        };
+        if (channelFilter) changeOpts.filter = channelFilter;
+        channel.on('postgres_changes', changeOpts, scheduleEmit);
         if (colName === 'conductores') {
             channel.on('postgres_changes', { event: '*', schema: 'public', table: 'perfiles' }, scheduleEmit);
         }
