@@ -646,6 +646,180 @@
         .soporte-tabs { gap: 2px; }
         .sp-tab { font-size: 0.78rem; padding: 8px 10px; }
     }
+
+    /* ============================================================
+       REDISEÑO ESTILO GTAHUB SUPPORT — panel central oscuro,
+       acciones rápidas y FAQs en acordeón. No altera IDs ni lógica.
+       ============================================================ */
+    :root { --sp-accent: #00b0ff; --sp-accent-2: #0066ff; }
+
+    .soporte-shell {
+        background: linear-gradient(180deg, rgba(16,21,35,.97) 0%, rgba(8,11,19,.97) 100%);
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 24px;
+        box-shadow: 0 30px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.04);
+        padding: 1.6rem !important;
+        margin-top: 1.25rem;
+        margin-bottom: 2.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .soporte-shell::before {
+        content: '';
+        position: absolute;
+        inset: -120px 30% auto 30%;
+        height: 220px;
+        background: radial-gradient(circle, rgba(0,176,255,.16), transparent 65%);
+        pointer-events: none;
+    }
+
+    .soporte-shell .soporte-hero {
+        background: rgba(255,255,255,.025);
+        border: 1px solid rgba(255,255,255,.07);
+        border-radius: 18px;
+        padding: 1.8rem 1.5rem 1.4rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: .6rem;
+        position: relative;
+    }
+    .sp-hero-logo {
+        width: 84px; height: 84px; object-fit: contain;
+        filter: drop-shadow(0 0 18px rgba(0,176,255,.35));
+        margin-bottom: .2rem;
+    }
+    .sp-hero-kicker {
+        display: inline-block;
+        font-size: .68rem;
+        font-weight: 800;
+        letter-spacing: .22em;
+        color: var(--sp-accent);
+        text-transform: uppercase;
+        margin-bottom: .35rem;
+    }
+    .soporte-shell .soporte-hero-text h1 {
+        font-family: 'Orbitron', sans-serif;
+        font-size: clamp(1.5rem, 3.5vw, 2.15rem);
+        margin-bottom: .35rem;
+    }
+    .soporte-shell .soporte-hero-text p { max-width: 620px; font-size: .9rem; }
+    .sp-lang-badge {
+        position: absolute; top: 16px; right: 16px;
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 6px 11px; border-radius: 999px;
+        background: rgba(255,255,255,.05);
+        border: 1px solid rgba(255,255,255,.1);
+        color: #e5e7eb; font-size: .72rem; font-weight: 800; letter-spacing: .08em;
+    }
+    .soporte-shell .soporte-hero-stats {
+        margin: .6rem 0 0; display: flex; gap: 2.2rem; justify-content: center; flex-wrap: wrap;
+    }
+    .soporte-shell .sp-stat strong { color: var(--sp-accent); font-size: 1.35rem; }
+
+    .soporte-shell .soporte-tabs {
+        justify-content: center;
+        margin: 1.25rem auto 1.35rem;
+        max-width: 760px;
+        background: rgba(0,0,0,.28);
+        border-color: rgba(255,255,255,.07);
+        padding: 6px;
+    }
+    .soporte-shell .sp-tab { flex: 0 1 auto; min-width: 130px; border-radius: 9px; }
+    .soporte-shell .sp-tab.active {
+        background: linear-gradient(135deg, var(--sp-accent), var(--sp-accent-2));
+        border-color: rgba(255,255,255,.18);
+        color: #fff;
+        box-shadow: 0 6px 18px rgba(0,102,255,.28);
+    }
+    .soporte-shell .sp-tab:hover:not(.active) { color: var(--sp-accent); }
+
+    .soporte-shell .sp-card {
+        background: rgba(10,14,24,.82);
+        border: 1px solid rgba(255,255,255,.075);
+        border-radius: 16px;
+        box-shadow: 0 12px 32px rgba(0,0,0,.28);
+    }
+    .soporte-shell .sp-btn-primary {
+        background: linear-gradient(135deg, var(--sp-accent), var(--sp-accent-2)) !important;
+        border: none !important;
+        color: #fff !important;
+        box-shadow: 0 6px 18px rgba(0,102,255,.25);
+    }
+
+    .sp-side-title {
+        font-size: .82rem; font-weight: 800; color: #fff; margin: 0 0 .85rem;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .sp-side-title i { color: var(--sp-accent); }
+    .sp-extras-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+    .sp-extra-btn {
+        appearance: none; text-decoration: none; cursor: pointer;
+        display: flex; flex-direction: column; align-items: center; gap: 6px;
+        padding: 12px 5px; border-radius: 11px;
+        background: rgba(255,255,255,.035);
+        border: 1px solid rgba(255,255,255,.07);
+        color: #e5e7eb; font-size: .74rem; font-weight: 800;
+        transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+    .sp-extra-btn i { font-size: 1.05rem; color: var(--sp-accent); }
+    .sp-extra-btn small { display: block; font-size: .6rem; font-weight: 600; color: var(--text-muted, #6b7a90); margin-top: 2px; }
+    .sp-extra-btn:hover { transform: translateY(-2px); border-color: rgba(0,176,255,.4); background: rgba(0,176,255,.08); }
+
+    .sp-faq-overlay {
+        position: fixed; inset: 0; z-index: 10010;
+        background: rgba(2,4,9,.78);
+        backdrop-filter: blur(6px);
+        display: flex; align-items: center; justify-content: center;
+        padding: 1rem;
+    }
+    .sp-faq-overlay[hidden] { display: none !important; }
+    .sp-faq-dialog {
+        width: min(640px, 100%); max-height: min(82vh, 720px); overflow: auto;
+        background: linear-gradient(180deg, rgba(18,23,38,.98), rgba(9,12,20,.98));
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 18px;
+        box-shadow: 0 28px 80px rgba(0,0,0,.65);
+    }
+    .sp-faq-header {
+        display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+        padding: 1.25rem 1.4rem; border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .sp-faq-header h2 { margin: 0 0 4px; font-size: 1.05rem; font-weight: 800; color: #fff; }
+    .sp-faq-header p { margin: 0; font-size: .78rem; color: var(--text-muted, #94a3b8); }
+    .sp-faq-close {
+        appearance: none; cursor: pointer; border: 1px solid rgba(255,255,255,.12);
+        background: rgba(255,255,255,.05); color: #fff; border-radius: 9px;
+        width: 34px; height: 34px; display: grid; place-items: center; flex-shrink: 0;
+    }
+    .sp-faq-list { padding: .8rem 1.1rem 1.2rem; }
+    .sp-faq-list details {
+        border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .sp-faq-list details:last-child { border-bottom: none; }
+    .sp-faq-list summary {
+        list-style: none; cursor: pointer; padding: .95rem .35rem;
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        font-size: .85rem; font-weight: 700; color: #e5e7eb;
+    }
+    .sp-faq-list summary::-webkit-details-marker { display: none; }
+    .sp-faq-list summary i { color: var(--sp-accent); font-size: .75rem; transition: transform .2s ease; }
+    .sp-faq-list details[open] summary i { transform: rotate(180deg); }
+    .sp-faq-list details > div {
+        padding: 0 .35rem 1rem; font-size: .8rem; line-height: 1.6;
+        color: var(--text-secondary, #b0bcce);
+    }
+    .sp-faq-list code { color: #7dd3fc; font-family: monospace; }
+
+    @media (max-width: 700px) {
+        .soporte-shell { padding: 1rem !important; border-radius: 18px; }
+        .sp-lang-badge { position: static; align-self: flex-end; }
+        .sp-extras-row { grid-template-columns: 1fr; }
+        .sp-extra-btn { flex-direction: row; justify-content: center; gap: 10px; }
+        .sp-extra-btn small { margin: 0; }
+        .soporte-shell .sp-tab { flex: 1 0 auto; min-width: 110px; font-size: .76rem; }
+    }
     </style>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
@@ -777,16 +951,18 @@
         </nav>
     </nav>
 
-    <div class="container" style="padding-top:1rem; max-width:1100px;">
+    <div class="container soporte-shell" style="padding-top:1rem; max-width:1100px;">
 
         <!-- HERO -->
         <div class="soporte-hero">
-            <div class="soporte-hero-icon"><i class="fa-solid fa-headset" aria-hidden="true"></i></div>
+            <img class="sp-hero-logo" src="../recursos/PSGD.png" alt="Panter Studio" width="84" height="84" decoding="async">
             <div class="soporte-hero-text">
+                <span class="sp-hero-kicker">SOPORTE PANTER STUDIO</span>
                 <h1>Centro de Soporte</h1>
                 <p>¿Tienes un problema, bug o sugerencia? Crea un ticket y el equipo de Panter Studio te responderá lo antes posible.</p>
             </div>
             <div class="soporte-hero-stats">
+                <span class="sp-lang-badge" title="Español"><i class="fa-solid fa-globe" aria-hidden="true"></i> ES</span>
                 <div class="sp-stat">
                     <strong id="statTicketsAbiertos">—</strong>
                     <span>Abiertos</span>
@@ -1026,6 +1202,25 @@
             <!-- SIDEBAR -->
             <div style="display:flex; flex-direction:column; gap:1rem;">
 
+                <!-- Accesos rápidos (estilo GTAHUB Support) -->
+                <div class="sp-card sp-extras-card">
+                    <h3 class="sp-side-title"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Accesos rápidos</h3>
+                    <div class="sp-extras-row">
+                        <button type="button" class="sp-extra-btn" data-tab-target="nuevo">
+                            <i class="fa-solid fa-headset" aria-hidden="true"></i>
+                            <span>Soporte <small>Crear ticket</small></span>
+                        </button>
+                        <button type="button" class="sp-extra-btn" id="spFaqOpenBtn">
+                            <i class="fa-solid fa-circle-question" aria-hidden="true"></i>
+                            <span>FAQs <small>Preguntas frecuentes</small></span>
+                        </button>
+                        <a href="https://discord.gg/MukZeJmgky" target="_blank" rel="noopener" class="sp-extra-btn">
+                            <i class="fa-brands fa-discord" aria-hidden="true"></i>
+                            <span>Discord <small>Soporte inmediato</small></span>
+                        </a>
+                    </div>
+                </div>
+
                 <!-- Info Card -->
                 <div class="sp-card">
                     <h3 style="font-size:0.9rem; font-weight:800; color:#fff; margin:0 0 1rem;"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> ¿Cómo funciona?</h3>
@@ -1084,6 +1279,43 @@
                     <h3 style="font-size:0.85rem; font-weight:800; color:#fff; margin:0 0 0.8rem;"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Categorías</h3>
                     <div style="display:flex; flex-direction:column; gap:6px;" id="catLegend"></div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ MODAL (acordeón estilo GTAHUB Support) -->
+    <div id="spFaqModal" class="sp-faq-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="spFaqTitle">
+        <div class="sp-faq-dialog">
+            <div class="sp-faq-header">
+                <div>
+                    <h2 id="spFaqTitle">Preguntas frecuentes</h2>
+                    <p>Respuestas rápidas sobre el sistema de tickets de Panter Studio.</p>
+                </div>
+                <button type="button" class="sp-faq-close" id="spFaqCloseBtn" aria-label="Cerrar FAQs">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="sp-faq-list">
+                <details>
+                    <summary>¿Cómo creo un ticket?<i class="fa-solid fa-chevron-down" aria-hidden="true"></i></summary>
+                    <div>Inicia sesión con Discord, abre <strong>Nuevo Ticket</strong>, escribe un título, elige la categoría y describe el problema con al menos 20 caracteres.</div>
+                </details>
+                <details>
+                    <summary>¿Cuánto tarda la respuesta?<i class="fa-solid fa-chevron-down" aria-hidden="true"></i></summary>
+                    <div>Normalmente respondemos dentro de las <strong>24 horas</strong>. Los tickets urgentes se priorizan según la prioridad seleccionada.</div>
+                </details>
+                <details>
+                    <summary>¿Puedo consultar mi ticket sin iniciar sesión?<i class="fa-solid fa-chevron-down" aria-hidden="true"></i></summary>
+                    <div>Sí. Usa <strong>Consultar Estado</strong> con el código del ticket, por ejemplo <code>#NZ4ZNLC70PAE</code>. Por privacidad, el detalle completo sólo lo ve el autor o el staff.</div>
+                </details>
+                <details>
+                    <summary>¿Dónde reporto errores del juego?<i class="fa-solid fa-chevron-down" aria-hidden="true"></i></summary>
+                    <div>En la pestaña <strong>Reportar Error</strong> o con el botón rápido <strong>Informar de un error</strong>. Puedes adjuntar capturas y vídeos por URL.</div>
+                </details>
+                <details>
+                    <summary>¿El staff ve mi información personal?<i class="fa-solid fa-chevron-down" aria-hidden="true"></i></summary>
+                    <div>El staff autorizado ve quién responde y el historial interno. Los mensajes públicos del sistema muestran únicamente avisos institucionales, sin nombres ni rangos del personal.</div>
+                </details>
             </div>
         </div>
     </div>
@@ -1221,17 +1453,17 @@
     </footer>
 
     <!-- SCRIPTS -->
-    <script src="../assets/js/core/roles.js" defer></script>
-    <script src="../assets/js/core/role-colors.js" defer></script>
-    <script src="../assets/js/core/bbcode.js" defer></script>
-    <script src="../assets/js/core/discord-auth.js" defer></script>
-    <script src="../assets/js/core/role-badges.js" defer></script>
-    <script src="../assets/js/core/firebase-config.js" defer></script>
-    <script src="../assets/js/site-visibility.js" defer></script>
-    <script src="../assets/js/ui-enhancements.js" defer></script>
-    <script src="../assets/js/soporte.js" defer></script>
-    <script src="../assets/js/core/staff-sync.js" defer></script>
-    <script src="../assets/js/core/script.js" defer></script>
+    <script src="../assets/js/core/roles.js"></script>
+    <script src="../assets/js/core/role-colors.js"></script>
+    <script src="../assets/js/core/bbcode.js"></script>
+    <script src="../assets/js/core/discord-auth.js"></script>
+    <script src="../assets/js/core/role-badges.js"></script>
+    <script src="../assets/js/core/firebase-config.js"></script>
+    <script src="../assets/js/site-visibility.js"></script>
+    <script src="../assets/js/ui-enhancements.js"></script>
+    <script src="../assets/js/soporte.js"></script>
+    <script src="../assets/js/core/staff-sync.js"></script>
+    <script src="../assets/js/core/script.js"></script>
 
     <script>
     // ============================================================
@@ -1269,6 +1501,27 @@
                     if (tab.dataset.tab === 'reportar') { syncReporteAuth(); loadMisInformes(); }
                 }
             });
+        });
+
+        // ---- ACCESOS RÁPIDOS / FAQ (estilo GTAHUB Support) ----
+        document.querySelectorAll('[data-tab-target]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = document.querySelector('.sp-tab[data-tab="' + btn.dataset.tabTarget + '"]');
+                if (target) target.click();
+                document.querySelector('.soporte-shell')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+        const faqModal = document.getElementById('spFaqModal');
+        const setFaqOpen = (open) => {
+            if (!faqModal) return;
+            faqModal.hidden = !open;
+            document.body.style.overflow = open ? 'hidden' : 'auto';
+        };
+        document.getElementById('spFaqOpenBtn')?.addEventListener('click', () => setFaqOpen(true));
+        document.getElementById('spFaqCloseBtn')?.addEventListener('click', () => setFaqOpen(false));
+        faqModal?.addEventListener('click', (e) => { if (e.target === faqModal) setFaqOpen(false); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && faqModal && !faqModal.hidden) setFaqOpen(false);
         });
 
         // ---- TOAST ----
@@ -1389,7 +1642,19 @@
         // ---- FORM SUBMIT ----
         document.getElementById('nuevoTicketForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!currentUser) return;
+            // La sesión puede existir en DiscordAuth antes de que el bus
+            // `authStateChanged` actualice la variable local. Se recomprueba
+            // aquí para que el formulario nunca descarte un envío en silencio.
+            if (!currentUser && window.DiscordAuth && typeof window.DiscordAuth.getUser === 'function') {
+                currentUser = window.DiscordAuth.getUser() || null;
+            }
+            if (!currentUser) {
+                showMsg(document.getElementById('submitMsg'), 'Inicia sesión con Discord para crear el ticket.', 'error');
+                const modal = document.getElementById('authModal');
+                if (modal) modal.hidden = false;
+                document.body.style.overflow = 'hidden';
+                return;
+            }
             const titulo = document.getElementById('ticketTitulo').value.trim();
             const categoria = document.getElementById('ticketCategoria').value;
             const prioridad = document.getElementById('ticketPrioridad').value;
