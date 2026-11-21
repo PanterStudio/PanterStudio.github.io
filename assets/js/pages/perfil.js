@@ -73,6 +73,10 @@
   const gameConductorId               = $('gameConductorId');
   const gameCoins                     = $('gameCoins');
   const gameEmeralds                  = $('gameEmeralds');
+  const gameLevelXp                   = $('gameLevelXp');
+  const gameElitePass                 = $('gameElitePass');
+  const gameLicenses                  = $('gameLicenses');
+  const gameVehicles                  = $('gameVehicles');
   const gameLastSync                  = $('gameLastSync');
 
   const sponsorBadge     = $('sponsorBadge');
@@ -706,14 +710,44 @@
     const gp = countGamesPlayedToday(currentUser.uid);
     set(profileGamesPlayedToday, `${gp}/3`);
 
-    // Sincronización de estadísticas del juego
+    // Sincronización de estadísticas del juego (Supabase public.perfiles)
     if (currentConductorData) {
-      set(gameUsername, currentConductorData.nombre_usuario || '—');
-      set(gameConductorId, currentConductorData.id_usuario || '—');
-      set(gameCoins, currentConductorData.dinero !== undefined ? String(currentConductorData.dinero) : '—');
-      set(gameEmeralds, currentConductorData.esmeraldas !== undefined ? String(currentConductorData.esmeraldas) : '—');
-      if (currentConductorData.last_sync_unix) {
-        const syncDate = new Date(currentConductorData.last_sync_unix * 1000);
+      const cd = currentConductorData;
+      set(gameUsername, cd.nombre_usuario || cd.displayName || '—');
+      const numId = Number(cd.numero_id || 0);
+      set(gameConductorId, numId > 0 ? `#${String(numId).padStart(4, '0')}` : (cd.id_usuario || cd.supabaseId || '—'));
+      const moneyVal = cd.dinero !== undefined ? cd.dinero : cd.coins;
+      set(gameCoins, moneyVal !== undefined ? `$${Number(moneyVal).toLocaleString('es-CO')}` : '—');
+      set(gameEmeralds, cd.esmeraldas !== undefined ? String(cd.esmeraldas) : '—');
+      set(gameLevelXp, `Nivel ${Number(cd.nivel || 0)} · ${Number(cd.experiencia || 0).toLocaleString('es-CO')} XP`);
+      if (gameElitePass) {
+        gameElitePass.innerHTML = cd.pase_elite_activo
+          ? `<span style="color:#fbbf24; font-weight:800;">👑 Activo${cd.pase_elite_dias_reclamados ? ` (${cd.pase_elite_dias_reclamados} días)` : ''}</span>`
+          : `<span style="color:var(--text-muted);">Inactivo</span>`;
+      }
+      if (gameLicenses) {
+        const lic = (cd.licencias && typeof cd.licencias === 'object') ? cd.licencias : {};
+        const labels = {
+          c1: 'C1', c2: 'C2', c3: 'C3',
+          automovil: 'Auto', camion: 'Camión',
+          carga_delicada: 'Carga Delicada', carga_sobredimensionada: 'Sobredim.'
+        };
+        const aprobadas = Object.entries(labels)
+          .filter(([k]) => Boolean(lic[k]))
+          .map(([, txt]) => `<span style="display:inline-block;padding:2px 7px;margin:2px;border-radius:999px;font-size:0.7rem;font-weight:700;background:rgba(16,185,129,0.16);color:#34d399;border:1px solid rgba(16,185,129,0.35);">${txt}</span>`);
+        gameLicenses.innerHTML = aprobadas.length ? aprobadas.join('') : '<span style="color:var(--text-muted);">Sin licencias aún</span>';
+      }
+      if (gameVehicles) {
+        const vehs = (cd.vehiculos_comprados && typeof cd.vehiculos_comprados === 'object') ? cd.vehiculos_comprados : {};
+        const owned = Object.entries(vehs)
+          .filter(([, v]) => Boolean(v))
+          .map(([k]) => `<span style="display:inline-block;padding:2px 7px;margin:2px;border-radius:999px;font-size:0.7rem;font-weight:700;background:rgba(0,176,255,0.14);color:#38bdf8;border:1px solid rgba(0,176,255,0.3);">${String(k).replace(/_/g, ' ')}</span>`);
+        gameVehicles.innerHTML = owned.length ? owned.join('') : '<span style="color:var(--text-muted);">Sin vehículos comprados</span>';
+      }
+      const syncDate = cd.last_sync_unix
+        ? new Date(cd.last_sync_unix * 1000)
+        : (cd.updatedAt ? new Date(cd.updatedAt) : null);
+      if (syncDate && !isNaN(syncDate.getTime())) {
         set(gameLastSync, syncDate.toLocaleString('es-ES', {
           timeZone: 'UTC', day: '2-digit', month: 'short', year: 'numeric',
           hour: '2-digit', minute: '2-digit', hour12: false
@@ -726,6 +760,10 @@
       set(gameConductorId, '—');
       set(gameCoins, '—');
       set(gameEmeralds, '—');
+      set(gameLevelXp, '—');
+      set(gameElitePass, '—');
+      set(gameLicenses, '—');
+      set(gameVehicles, '—');
       set(gameLastSync, '—');
     }
 

@@ -439,6 +439,7 @@
 
         try {
             if (!context.tokenInvalid) {
+                context._cachedAt = Date.now();
                 sessionStorage.setItem(GUILD_CACHE_KEY, JSON.stringify(context));
             }
         } catch (e) { /* ignore */ }
@@ -624,14 +625,55 @@
         saveAccessToken(accessToken, params.get('expires_in'));
 
         try {
-            const context = await fetchDiscordGuildContext(accessToken);
-            const user = await fetchDiscordUserProfile(accessToken, context);
+            const rawUser = await discordFetch('/users/@me', accessToken);
+            let context = null;
+            try {
+                context = await fetchDiscordGuildContext(accessToken);
+            } catch (ctxErr) {
+                console.warn('[DiscordAuth] No se pudo leer contexto de guild en callback:', ctxErr.message);
+                context = {
+                    guildId: OFFICIAL_GUILD_ID,
+                    guildName: OFFICIAL_GUILD_NAME,
+                    permissions: null,
+                    roleIds: [],
+                    roleNames: [],
+                    role: null,
+                    discordAdmin: false,
+                    isMember: false,
+                    membershipChecked: false
+                };
+            }
+            const user = formatDiscordUser(rawUser, {
+                permissions: context.permissions,
+                roleIds: context.roleIds,
+                roleNames: context.roleNames,
+                role: context.role,
+                discordAdmin: context.discordAdmin,
+                guildId: context.guildId,
+                guildName: context.guildName,
+                isMember: context.isMember,
+                membershipChecked: context.membershipChecked
+            });
             saveSession(user);
             syncProfile(user).catch(() => {});
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    notifyListeners(user);
+                }, { once: true });
+            }
 
             if (window.opener && window.opener !== window) {
                 window.opener.postMessage({ type: 'DISCORD_AUTH_SUCCESS', user }, '*');
                 window.close();
+            } else {
+                try {
+                    const ret = sessionStorage.getItem('auth_return_url');
+                    sessionStorage.removeItem('auth_return_url');
+                    if (ret && ret.startsWith(window.location.origin) && !/\/index\.html?$/i.test(new URL(ret).pathname) && new URL(ret).pathname !== window.location.pathname) {
+                        window.location.replace(ret);
+                    }
+                } catch (e) { /* ignore */ }
             }
             return true;
         } catch (err) {
@@ -705,19 +747,32 @@
             });
         }
 
-        let context;
-        try {
-            // El acceso web siempre se valida contra el servidor oficial.
-            context = await fetchDiscordGuildContext(token, {
-                guildId: OFFICIAL_GUILD_ID,
-                guildName: OFFICIAL_GUILD_NAME
-            });
-        } catch (e) {
-            return Object.assign(base, {
-                allowed: true,
-                state: 'error',
-                error: e.message
-            });
+        let context = null;
+        if (!opts.force) {
+            try {
+                const rawCache = sessionStorage.getItem(GUILD_CACHE_KEY);
+                if (rawCache) {
+                    const cached = JSON.parse(rawCache);
+                    if (cached && cached._cachedAt && (Date.now() - cached._cachedAt) < 30000 && String(cached.guildId || '') === String(OFFICIAL_GUILD_ID)) {
+                        context = cached;
+                    }
+                }
+            } catch (e) { /* ignore */ }
+        }
+        if (!context) {
+            try {
+                // El acceso web siempre se valida contra el servidor oficial.
+                context = await fetchDiscordGuildContext(token, {
+                    guildId: OFFICIAL_GUILD_ID,
+                    guildName: OFFICIAL_GUILD_NAME
+                });
+            } catch (e) {
+                return Object.assign(base, {
+                    allowed: true,
+                    state: 'error',
+                    error: e.message
+                });
+            }
         }
 
         base.context = context;

@@ -1,21 +1,4 @@
-# Dependencias
 node_modules/
-
-# Archivos del sistema
 desktop.ini
-**/desktop.ini
-Thumbs.db
+*.gdoc
 .DS_Store
-
-# Entorno y logs
-.env
-.env.*
-*.log
-npm-debug.log*
-
-# Temporales
-.cache/
-tmp/
-
-# Backups locales (no se versionan)
-views/index_js_backup.txt
