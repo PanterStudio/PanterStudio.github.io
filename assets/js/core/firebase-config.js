@@ -207,20 +207,24 @@
     // Supabase en el mismo instante (eso era lo que saturaba la web y hacía
     // que los tickets tardaran en crearse o que la pestaña se colgara).
     const channels = new Set();
+    const lastChannelEmit = new WeakMap();
     let channelTimer = null;
-    let channelCursor = 0;
     function startChannelTicker() {
         if (channelTimer) return;
         channelTimer = setInterval(() => {
-            const active = Array.from(channels).filter((ch) => ch.active);
-            if (!active.length) return;
-            const batch = Math.max(1, Math.ceil(active.length / 4));
+            const now = Date.now();
+            // Ningún canal se consulta más de una vez cada 4 s (igual que antes),
+            // pero se reparten entre los ticks de 1 s para evitar picos.
+            const due = Array.from(channels).filter((ch) =>
+                ch.active && now - (lastChannelEmit.get(ch) || 0) >= 4000);
+            if (!due.length) return;
+            const batch = Math.max(1, Math.ceil(due.length / 4));
             const payload = { eventType: '*', new: {}, old: {} };
             for (let i = 0; i < batch; i++) {
-                const ch = active[(channelCursor + i) % active.length];
+                const ch = due[i];
+                lastChannelEmit.set(ch, now);
                 ch.callbacks.forEach((cb) => { try { cb(payload); } catch (e) { /* ignore */ } });
             }
-            channelCursor = (channelCursor + batch) % active.length;
         }, 1000);
     }
 
@@ -728,6 +732,7 @@
             channel.on('postgres_changes', { event: '*', schema: 'public', table: 'perfiles' }, scheduleEmit);
         }
         channel.subscribe();
+        lastChannelEmit.set(channel, Date.now());
         return () => {
             active = false;
             clearTimeout(timer);
