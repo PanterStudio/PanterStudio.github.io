@@ -58,6 +58,14 @@
     const restQueue = [];
     const inflightRest = new Map();
 
+    /* Caché muy corta de lecturas: el polling en vivo consulta el mismo
+       documento desde varios módulos con desfase de 1 s. Sin esta caché,
+       cada módulo lanzaba su propio GET de ~400-1000 ms. Con TTL de 3,5 s
+       (menor que el intervalo de 4 s del ticker) cada URL se descarga como
+       máximo una vez por ciclo y las escrituras la invalidan de inmediato. */
+    const GET_CACHE_TTL = 3500;
+    const getCache = new Map();
+
     function acquireRestSlot() {
         if (restActive < MAX_REST_CONCURRENCY) {
             restActive++;
@@ -129,12 +137,26 @@
     }
 
     async function restRequest(method, url, body, prefer) {
+        if (method === 'GET') {
+            const hit = getCache.get(url);
+            if (hit && Date.now() - hit.at < GET_CACHE_TTL) return hit.data;
+        }
         const key = [method, url, body === undefined ? '' : JSON.stringify(body), prefer || ''].join('|');
         if (inflightRest.has(key)) return inflightRest.get(key);
         const promise = (async () => {
             await acquireRestSlot();
             try {
-                return await restRequestRaw(method, url, body, prefer);
+                const result = await restRequestRaw(method, url, body, prefer);
+                if (method === 'GET') {
+                    getCache.set(url, { at: Date.now(), data: result });
+                    if (getCache.size > 200) {
+                        const now = Date.now();
+                        getCache.forEach((v, k) => { if (now - v.at > GET_CACHE_TTL) getCache.delete(k); });
+                    }
+                } else {
+                    getCache.clear();
+                }
+                return result;
             } finally {
                 releaseRestSlot();
             }

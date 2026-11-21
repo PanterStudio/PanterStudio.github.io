@@ -96,7 +96,16 @@
         colorFor: (id) => role(id).color
     };
 
-    // Reacciona a cambios de la paleta (Panel Admin) y a otras pestañas.
+    // panter:roles-config YA significa que roles.js cargó y aplicó la
+    // configuración. Volver a llamar a loadRoleConfig(true) desde aquí creaba
+    // un ciclo recursivo (applyRoleConfig -> evento -> loadRoleConfig -> ...)
+    // que lanzaba decenas de peticiones a roles_config por segundo y hacía
+    // que la página se sintiera lenta. Aquí solo se repinta la paleta.
+    function onRolesConfig() {
+        apply();
+    }
+    // Fuentes externas reales (firebase listo / otra pestaña) sí fuerzan
+    // una recarga desde Supabase.
     function onChange() {
         const R = window.PanterRoles;
         if (R && typeof R.loadRoleConfig === 'function') {
@@ -105,8 +114,8 @@
         }
         apply();
     }
-    window.addEventListener('panter:roles-config', onChange);
-    document.addEventListener('panter:roles-config', onChange);
+    window.addEventListener('panter:roles-config', onRolesConfig);
+    document.addEventListener('panter:roles-config', onRolesConfig);
     document.addEventListener('firebaseReady', onChange, { once: true });
     window.addEventListener('storage', (e) => {
         if (e && /role/i.test(String(e.key || ''))) onChange();

@@ -392,9 +392,21 @@
      * Aplica una configuración de roles sobre la jerarquía activa.
      * Las definiciones ausentes vuelven a los valores de fábrica.
      */
+    let lastAppliedSignature = null;
     function applyRoleConfig(config) {
         const source = config && typeof config === 'object' ? config : {};
         const roles = Array.isArray(source.roles) ? source.roles : [];
+
+        // El polling en vivo entrega el MISMO documento una y otra vez.
+        // Si no cambió nada, no reconstruimos la jerarquía ni disparamos
+        // eventos (eso repintaba la UI y saturaba la capa de datos).
+        const signature = JSON.stringify([
+            source.version, source.updatedAt, source.updatedBy, roles
+        ]);
+        if (cachedRoleConfig && lastAppliedSignature === signature) {
+            return cachedRoleConfig;
+        }
+        lastAppliedSignature = signature;
 
         // Restaurar fábrica y limpiar roles personalizados previos.
         BASE_ROLE_IDS.forEach(id => { ROLE_DEFS[id] = cloneRoleDef(BASE_ROLE_DEFS[id]); });
