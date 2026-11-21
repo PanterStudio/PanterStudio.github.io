@@ -1167,10 +1167,11 @@ async function elevarTicket(ticketId, destino, staffName, staffUid, staffRol) {
     const aviso = await agregarMensajeSistema(ticketId, SYSTEM_MSG_ELEVADO, {
         tipo: 'asignado', nombre, destino: label, fecha: now,
         rol, destinoRol: key,
-        // El color/icono lo manda QUIÉN ELEVA. El área destino sigue
-        // reflejada en la insignia del ticket, no en este aviso.
+        // El color/icono lo manda QUIÉN ELEVA. El texto de staff nombra el
+        // área destino («Administrador ha sido asignado por ...»); la insignia
+        // del ticket sigue mostrando también ese destino.
         color: colorRangoSistema(rol),
-        textoStaff: `ha sido asignado por ${nombre} a ${label}`
+        textoStaff: `${label} ha sido asignado por ${nombre}`
     });
     return resultadoSincronizado(actualizado, aviso);
 }

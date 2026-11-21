@@ -93,6 +93,7 @@ const tabInfo = {
     accounts: { title: 'Gestión de Cuentas (CEO)', sub: 'Miembros del equipo y niveles de rol autorizados.' },
     players: { title: 'Gestión de Jugadores', sub: 'Búsqueda de usuarios, edición de perfiles, saldos, mascotas y logs de canjes.' },
     staff: { title: 'Personal del Estudio', sub: 'Equipo visible en la web y rangos asignados manualmente.' },
+    tickets: { title: 'Registro de Tickets', sub: 'Tickets tomados por cada staff y sus categorías.' },
     siteconfig: { title: 'Configuración Global', sub: 'Modificación de parámetros de la web, donaciones y bonos en Firestore.' },
     visibility: { title: 'Visibilidad del Sitio', sub: 'Gestión del modo de mantenimiento global y accesos por página.' }
 };
@@ -127,6 +128,8 @@ tabButtons.forEach(btn => {
                     .then(() => refreshRoleUI())
                     .catch(() => {});
             }
+        } else if (tabName === 'tickets') {
+            loadTicketStaffReport();
         } else if (tabName === 'visibility') {
             loadSiteVisibilitySettings();
         }
@@ -1762,6 +1765,9 @@ function bindEvents() {
             staffSetMessage('Ocurrió un error al procesar la acción.', true);
         });
     });
+    document.getElementById('ticketReportRefreshBtn')?.addEventListener('click', () => {
+        loadTicketStaffReport(true);
+    });
     document.getElementById('creatorCodeSaveBtn')?.addEventListener('click', () => {
         saveCreatorReferralCode().catch(error => creatorCodeSetMessage(error?.message || 'No se pudo guardar el código.', 'error'));
     });
@@ -1974,6 +1980,159 @@ let staffMembersCache = [];
 let staffDirectoryCache = [];
 let staffDirectoryLoaded = false;
 let editingStaffUid = null;
+
+// ── Registro de tickets por staff (soporte_tickets) ──────────────
+const TICKET_REPORT_CATEGORIES = {
+    bug:        { label: 'Bug / Error',      color: '#ef4444' },
+    cuenta:     { label: 'Mi Cuenta',        color: '#00b0ff' },
+    tecnico:    { label: 'Problema Técnico', color: '#f59e0b' },
+    sugerencia: { label: 'Sugerencia',       color: '#a855f7' },
+    pago:       { label: 'Pagos / Donación', color: '#22c55e' },
+    minijuegos: { label: 'Panter Core',      color: '#0ea5e9' },
+    otro:       { label: 'Otro',             color: '#64748b' }
+};
+let ticketReportCache = null;
+let ticketReportLoading = false;
+
+function ticketCategoryMeta(id) {
+    const key = String(id || '').trim().toLowerCase();
+    return TICKET_REPORT_CATEGORIES[key] || { label: key || 'Sin categoría', color: '#64748b' };
+}
+
+function ticketReportUtc(value) {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
+}
+
+async function loadTicketStaffReport(force = false) {
+    const list = document.getElementById('ticketReportList');
+    const summary = document.getElementById('ticketReportSummary');
+    if (!list) return;
+
+    if (ticketReportCache && !force) {
+        renderTicketStaffReport(ticketReportCache);
+        return;
+    }
+    if (ticketReportLoading) return;
+    if (!window.db || !window.collection || !window.getDocs) {
+        if (summary) summary.textContent = 'Esperando conexión con Supabase…';
+        list.innerHTML = '<div class="ticket-report-empty">La capa de datos aún no está lista. Intenta de nuevo en unos segundos.</div>';
+        return;
+    }
+
+    ticketReportLoading = true;
+    if (summary) summary.textContent = 'Cargando tickets…';
+    list.innerHTML = '<div class="ticket-report-empty">Cargando tickets…</div>';
+    try {
+        const snap = await window.getDocs(window.collection(window.db, 'soporte_tickets'));
+        const rows = (snap && Array.isArray(snap.docs) ? snap.docs : []).map(docSnap =>
+            Object.assign({ id: docSnap.id }, docSnap.data() || {})
+        );
+        // El roster se usa sólo para mostrar el badge del rango de cada staff.
+        try { await loadStaffMembers(); } catch (e) { console.warn('[Tickets] No se pudo cargar el roster:', e); }
+        ticketReportCache = rows;
+        renderTicketStaffReport(rows);
+    } catch (error) {
+        console.warn('[Tickets] No se pudo cargar el registro de tickets:', error);
+        if (summary) summary.textContent = 'No se pudo cargar el registro. Revisa la conexión.';
+        list.innerHTML = '<div class="ticket-report-empty">No se pudo cargar el registro de tickets.</div>';
+    } finally {
+        ticketReportLoading = false;
+    }
+}
+
+function renderTicketStaffReport(rows) {
+    const list = document.getElementById('ticketReportList');
+    const summary = document.getElementById('ticketReportSummary');
+    if (!list) return;
+
+    const groups = new Map();
+    let takenCount = 0;
+    (rows || []).forEach(ticket => {
+        const nombre = String(ticket.tomadoPor || ticket.staffNombre || '').trim();
+        const uid = String(ticket.tomadoPorUid || ticket.staffAsignadoId || '').trim();
+        if (!nombre && !uid) return; // Sólo tickets efectivamente tomados.
+
+        const key = uid ? `uid:${uid}` : `name:${nombre.toLowerCase()}`;
+        if (!groups.has(key)) {
+            groups.set(key, { name: nombre || uid, uid, tickets: [], categorias: new Map() });
+        }
+        const group = groups.get(key);
+        if (!group.name && nombre) group.name = nombre;
+
+        const meta = ticketCategoryMeta(ticket.categoria);
+        const prev = group.categorias.get(meta.label) || { count: 0, color: meta.color };
+        group.categorias.set(meta.label, { count: prev.count + 1, color: meta.color });
+        group.tickets.push(ticket);
+        takenCount += 1;
+    });
+
+    const sorted = Array.from(groups.values()).sort((a, b) =>
+        b.tickets.length - a.tickets.length || a.name.localeCompare(b.name, 'es')
+    );
+    if (summary) {
+        summary.textContent = `${sorted.length} staff · ${takenCount} ${takenCount === 1 ? 'ticket tomado' : 'tickets tomados'}`;
+    }
+    if (!sorted.length) {
+        list.innerHTML = '<div class="ticket-report-empty">Todavía no hay tickets tomados por el staff.</div>';
+        return;
+    }
+
+    list.innerHTML = sorted.map(group => {
+        const nombreBuscado = String(group.name || '').trim().toLowerCase();
+        const member = staffMembersCache.find(item => group.uid && String(item.uid) === group.uid)
+            || staffMembersCache.find(item => {
+                const nombreItem = String(item.nombre || item.displayName || item.username || item.nombre_usuario || '').trim().toLowerCase();
+                return nombreItem && nombreItem === nombreBuscado;
+            });
+        const role = member ? normalizeRole(member.role) : '';
+        const badge = role && window.PanterRoles
+            ? window.PanterRoles.badgeHtml(role, { iconOnly: false })
+            : '';
+        const chips = Array.from(group.categorias.entries())
+            .sort((a, b) => b[1].count - a[1].count || a[0].localeCompare(b[0], 'es'))
+            .map(([label, info]) =>
+                `<span class="ticket-cat-chip" style="--chip-color:${info.color}">${staffEscape(label)} <b>${info.count}</b></span>`
+            ).join('');
+        const ticketRows = group.tickets.slice()
+            .sort((a, b) => String(b.tomadoEn || b.actualizadoEn || '').localeCompare(String(a.tomadoEn || a.actualizadoEn || '')))
+            .map(ticket => {
+                const meta = ticketCategoryMeta(ticket.categoria);
+                const estado = String(ticket.estado || ticket.status || '—');
+                const area = String(ticket.escaladoLabel || ticket.escaladoA || '—');
+                return `<tr>
+                    <td class="ticket-report-code">${staffEscape(ticket.codigo || `#${ticket.id}`)}</td>
+                    <td title="${staffEscape(ticket.titulo || '')}">${staffEscape(ticket.titulo || 'Sin título')}</td>
+                    <td><span class="ticket-cat-chip" style="--chip-color:${meta.color}">${staffEscape(meta.label)}</span></td>
+                    <td>${staffEscape(estado)}</td>
+                    <td>${staffEscape(area)}</td>
+                    <td>${staffEscape(ticketReportUtc(ticket.tomadoEn))}</td>
+                </tr>`;
+            }).join('');
+
+        return `<article class="ticket-staff-card">
+            <div class="ticket-staff-head">
+                <div class="ticket-staff-name">
+                    <strong>${staffEscape(group.name)}</strong>${badge}
+                    <small>${group.uid ? `ID ${staffEscape(group.uid)}` : 'Sin UID registrado'}</small>
+                </div>
+                <span class="ticket-staff-total">${group.tickets.length} <small>${group.tickets.length === 1 ? 'ticket' : 'tickets'}</small></span>
+            </div>
+            <div class="ticket-cat-row">${chips || '<span class="ticket-report-empty">Sin categoría registrada</span>'}</div>
+            <details class="ticket-report-detail">
+                <summary>Ver ${group.tickets.length} ${group.tickets.length === 1 ? 'ticket' : 'tickets'}</summary>
+                <div class="ticket-report-table-wrap">
+                    <table class="ticket-report-table">
+                        <thead><tr><th>Código</th><th>Título</th><th>Categoría</th><th>Estado</th><th>Área</th><th>Tomado (UTC)</th></tr></thead>
+                        <tbody>${ticketRows}</tbody>
+                    </table>
+                </div>
+            </details>
+        </article>`;
+    }).join('');
+}
 
 function staffEscape(value) {
     if (window.PanterRoles) return window.PanterRoles.escapeHtml(value);

@@ -764,6 +764,52 @@
     .ps-assign-chip button { background: none; border: none; color: #f87171; cursor: pointer; font-size: .85rem; line-height: 1; padding: 0; }
     .ps-assign-empty { font-size: .75rem; color: var(--admin-text-muted, #8a99ad); }
     .ps-assign-manual { margin-top: 1.5rem; }
+
+    /* ── Registro de tickets por staff ── */
+    .ticket-report-summary {
+        margin: .2rem 0 1rem; font-size: .82rem; color: var(--admin-text-muted, #8a99ad);
+    }
+    .ticket-report-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: .85rem;
+    }
+    .ticket-staff-card {
+        border: 1px solid rgba(255,255,255,.08); border-radius: 14px;
+        background: rgba(15,23,42,.55); padding: 1rem; min-width: 0;
+    }
+    .ticket-staff-head {
+        display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem;
+        flex-wrap: wrap; margin-bottom: .7rem;
+    }
+    .ticket-staff-name { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+    .ticket-staff-name strong { color: #fff; font-size: .92rem; }
+    .ticket-staff-name small { display: block; width: 100%; color: var(--admin-text-muted, #8a99ad); font-size: .7rem; }
+    .ticket-staff-total {
+        font-size: 1.15rem; font-weight: 900; color: #7dd3fc; white-space: nowrap;
+    }
+    .ticket-staff-total small { font-size: .68rem; font-weight: 700; color: var(--admin-text-muted, #8a99ad); }
+    .ticket-cat-row { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .65rem; }
+    .ticket-cat-chip {
+        display: inline-flex; align-items: center; gap: .35rem;
+        padding: 4px 9px; border-radius: 999px; font-size: .7rem; font-weight: 700;
+        color: var(--chip-color, #94a3b8);
+        background: color-mix(in srgb, var(--chip-color, #94a3b8) 12%, transparent);
+        border: 1px solid color-mix(in srgb, var(--chip-color, #94a3b8) 38%, transparent);
+    }
+    .ticket-cat-chip b { color: #fff; }
+    .ticket-report-detail summary {
+        cursor: pointer; font-size: .75rem; font-weight: 800; color: #7dd3fc; padding: .35rem 0;
+    }
+    .ticket-report-table-wrap { overflow-x: auto; margin-top: .5rem; }
+    .ticket-report-table { width: 100%; border-collapse: collapse; font-size: .72rem; min-width: 520px; }
+    .ticket-report-table th, .ticket-report-table td {
+        padding: .45rem .55rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .ticket-report-table th {
+        color: var(--admin-text-muted, #8a99ad); font-size: .66rem; text-transform: uppercase; letter-spacing: .05em;
+    }
+    .ticket-report-table td { color: #e2e8f0; }
+    .ticket-report-code { font-family: monospace; color: #7dd3fc; font-weight: 700; }
+    .ticket-report-empty { color: var(--admin-text-muted, #8a99ad); font-size: .82rem; }
     </style>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
@@ -833,6 +879,7 @@
                         <button class="sidebar-tab" data-tab="betatesters"><i class="fa-solid fa-gears" aria-hidden="true"></i> Beta Testers</button>
                         <button class="sidebar-tab" data-tab="players"><i class="fa-solid fa-users-gear" aria-hidden="true"></i> Jugadores</button>
                         <button class="sidebar-tab" data-tab="staff"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Personal</button>
+                        <button class="sidebar-tab" data-tab="tickets"><i class="fa-solid fa-ticket" aria-hidden="true"></i> Registro Tickets</button>
                         <button class="sidebar-tab" data-tab="siteconfig"><i class="fa-solid fa-gears" aria-hidden="true"></i> Configuración</button>
                         <button class="sidebar-tab" data-tab="visibility"><i class="fa-solid fa-globe" aria-hidden="true"></i> Visibilidad</button>
                     </div>
@@ -1290,6 +1337,25 @@
                                 </div>
                             </div>
                             </details>
+                        </div>
+                    </div>
+
+                    <!-- ══ TAB: Registro de tickets por staff ══ -->
+                    <div class="tab-pane" id="tab-tickets">
+                        <div class="admin-card">
+                            <div class="card-header-actions">
+                                <div>
+                                    <h3><i class="fa-solid fa-ticket" aria-hidden="true"></i> Registro de Tickets por Staff</h3>
+                                    <p style="margin:0;">Tickets tomados por cada miembro del equipo, con desglose por categoría. Fuente: <strong>soporte_tickets</strong> en tiempo real.</p>
+                                </div>
+                                <button class="btn" id="ticketReportRefreshBtn">
+                                    <i class="fa-solid fa-rotate" aria-hidden="true"></i> Actualizar
+                                </button>
+                            </div>
+                            <p id="ticketReportSummary" class="ticket-report-summary" aria-live="polite">Cargando registro…</p>
+                            <div id="ticketReportList" class="ticket-report-grid">
+                                <div class="ticket-report-empty">Cargando tickets…</div>
+                            </div>
                         </div>
                     </div>
 
