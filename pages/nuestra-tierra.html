@@ -9,13 +9,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/modules.css">
-    <script src="../assets/js/core/roles.js"></script>
-    <script src="../assets/js/core/role-colors.js"></script>
-    <script src="../assets/js/core/bbcode.js"></script>
-    <script src="../assets/js/core/discord-auth.js"></script>
-    <script src="../assets/js/core/role-badges.js"></script>
-    <script src="../assets/js/core/firebase-config.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    <script src="../assets/js/core/roles.js" defer></script>
+    <script src="../assets/js/core/role-colors.js" defer></script>
+    <script src="../assets/js/core/bbcode.js" defer></script>
+    <script src="../assets/js/core/discord-auth.js" defer></script>
+    <script src="../assets/js/core/role-badges.js" defer></script>
+    <script src="../assets/js/core/firebase-config.js" defer></script>
     <style>
         :root {
             --nt-blue: #00b0ff;
@@ -342,7 +341,7 @@
     <nav>
         <div class="nav-left">
             <a href="../index.html" class="nav-logo">
-                <img src="../recursos/PSGD.png" alt="Panter Studio">
+                <img decoding="async" src="../recursos/PSGD.png" alt="Panter Studio">
                 <span>Panter Studio</span>
             </a>
         </div>
@@ -405,7 +404,7 @@
 
             <!-- TEASER MEDIA -->
             <div class="showcase-video-box">
-                <img src="../recursos/imagenes/1.png" alt="Nuestra Tierra Teaser">
+                <img loading="lazy" decoding="async" src="../recursos/imagenes/1.jpg" alt="Nuestra Tierra Teaser">
                 <div class="video-play-overlay">
                     <a href="videos.html" class="play-btn-circle" title="Ver Gameplay y Trailers"><i class="fa-solid fa-play" aria-hidden="true"></i></a>
                 </div>
@@ -506,8 +505,8 @@
     <footer>
         <p>&copy; 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
     </footer>
-    <script src="../assets/js/site-visibility.js"></script>
-    <script src="../assets/js/core/staff-sync.js"></script>
-    <script src="../assets/js/core/script.js"></script>
+    <script src="../assets/js/site-visibility.js" defer></script>
+    <script src="../assets/js/core/staff-sync.js" defer></script>
+    <script src="../assets/js/core/script.js" defer></script>
 </body>
 </html>

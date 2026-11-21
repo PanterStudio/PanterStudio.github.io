@@ -9,13 +9,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/modules.css">
-    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
-    <script src="../assets/js/core/roles.js"></script>
-    <script src="../assets/js/core/role-colors.js"></script>
-    <script src="../assets/js/core/bbcode.js"></script>
-    <script src="../assets/js/core/discord-auth.js"></script>
-    <script src="../assets/js/core/role-badges.js"></script>
-    <script src="../assets/js/core/firebase-config.js"></script>
+    <script src="../assets/js/core/roles.js" defer></script>
+    <script src="../assets/js/core/role-colors.js" defer></script>
+    <script src="../assets/js/core/bbcode.js" defer></script>
+    <script src="../assets/js/core/discord-auth.js" defer></script>
+    <script src="../assets/js/core/role-badges.js" defer></script>
+    <script src="../assets/js/core/firebase-config.js" defer></script>
     <style>
         /* Hero Section Épico */
         .bt-hero {
@@ -525,7 +524,7 @@
     <nav class="navbar">
         <div class="nav-left">
             <a href="../index.html" class="nav-logo">
-                <img src="../recursos/PSGD.png" alt="PS Logo" style="height:32px;">
+                <img decoding="async" src="../recursos/PSGD.png" alt="PS Logo" style="height:32px;">
                 <span>Panter Studio</span>
             </a>
         </div>
@@ -572,7 +571,7 @@
         
         <!-- HERO BANNER ÉPICO -->
         <div class="bt-hero">
-            <img src="https://i.imgur.com/1IRRyFY.jpeg" alt="Beta Tester" class="bt-hero-bg">
+            <img decoding="async" src="https://i.imgur.com/1IRRyFY.jpeg" alt="Beta Tester" class="bt-hero-bg">
             <div class="bt-hero-overlay"></div>
             <div class="bt-hero-content">
                 <div>
@@ -850,8 +849,8 @@
         <p><i class="fa-regular fa-copyright" aria-hidden="true"></i> 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
     </footer>
 
-    <script src="../assets/js/core/staff-sync.js"></script>
-    <script src="../assets/js/core/script.js"></script>
+    <script src="../assets/js/core/staff-sync.js" defer></script>
+    <script src="../assets/js/core/script.js" defer></script>
     <script>
     let currentStep = 1;
     const totalSteps = 6;

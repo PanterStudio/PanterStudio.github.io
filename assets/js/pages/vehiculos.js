@@ -31,7 +31,7 @@
         categoria: 'carga',
         badge: 'Carga / Van',
         descripcion: 'Vehículo de carga tipo van usado específicamente en el trabajo de Mensajero. Ofrece excelente capacidad para almacenar paquetes y cajas, y una velocidad óptima para repartos rápidos.',
-        url: '../../recursos/vehiculos/sprinter.png'
+        url: '../../recursos/vehiculos/sprinter.jpg'
     }];
 
     const $ = (id) => document.getElementById(id);

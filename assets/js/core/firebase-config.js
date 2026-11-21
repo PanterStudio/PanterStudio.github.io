@@ -28,6 +28,11 @@
     const AUTH = SUPABASE_URL + '/auth/v1';
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+    // Memoización de ~300 ms: evita que varias suscripciones pidan la misma
+    // colección en el mismo tick de polling. Las escrituras la invalidan.
+    const collectionFetchCache = new Map();
+    function clearCollectionFetchCache() { collectionFetchCache.clear(); }
+
     window.SUPABASE_URL = SUPABASE_URL;
     window.SUPABASE_KEY = SUPABASE_KEY;
 
@@ -52,6 +57,7 @@
     async function restRequest(method, url, body, prefer) {
         const headers = baseHeaders(prefer ? { 'Prefer': prefer } : null);
         const init = { method: method, headers: headers, mode: 'cors', cache: 'no-store' };
+        if (method !== 'GET') clearCollectionFetchCache();
         if (body !== undefined && body !== null && method !== 'GET') {
             init.body = JSON.stringify(body);
         }
@@ -150,17 +156,25 @@
     }
 
     // Un único ticker para todos los canales: una sola fuente de sondeo.
+    // Se pausa con la pestaña oculta para no gastar CPU/red en segundo plano.
     const channels = new Set();
     let channelTimer = null;
+    function tickChannels() {
+        if (typeof document !== 'undefined' && document.hidden) return;
+        channels.forEach((ch) => {
+            if (!ch.active) return;
+            const payload = { eventType: '*', new: {}, old: {} };
+            ch.callbacks.forEach((cb) => { try { cb(payload); } catch (e) { /* ignore */ } });
+        });
+    }
     function startChannelTicker() {
         if (channelTimer) return;
-        channelTimer = setInterval(() => {
-            channels.forEach((ch) => {
-                if (!ch.active) return;
-                const payload = { eventType: '*', new: {}, old: {} };
-                ch.callbacks.forEach((cb) => { try { cb(payload); } catch (e) { /* ignore */ } });
+        channelTimer = setInterval(tickChannels, 4000);
+        if (typeof document !== 'undefined') {
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && channels.size) setTimeout(tickChannels, 80);
             });
-        }, 4000);
+        }
     }
 
     class RestChannel {
@@ -486,38 +500,48 @@
     }
 
     async function fetchCollectionItems(collectionName) {
-        const byKey = new Map();
+        const key = String(collectionName || '');
+        const now = Date.now();
+        const cached = collectionFetchCache.get(key);
+        if (cached && now - cached.at < 300) return cached.promise;
 
-        if (collectionName === 'conductores') {
-            const [perfilesRes, webRes] = await Promise.all([
-                supabase.from('perfiles').select('*'),
-                supabase.from('web_colecciones').select('*').eq('coleccion', 'conductores')
-            ]);
+        const promise = (async () => {
+            const byKey = new Map();
 
-            if (!webRes.error && Array.isArray(webRes.data)) {
-                for (const r of webRes.data) {
-                    byKey.set(r.id, { ...(r.datos || {}), id: r.id, uid: r.id });
+            if (key === 'conductores') {
+                const [perfilesRes, webRes] = await Promise.all([
+                    supabase.from('perfiles').select('*'),
+                    supabase.from('web_colecciones').select('*').eq('coleccion', 'conductores')
+                ]);
+
+                if (!webRes.error && Array.isArray(webRes.data)) {
+                    for (const r of webRes.data) {
+                        byKey.set(r.id, { ...(r.datos || {}), id: r.id, uid: r.id });
+                    }
                 }
-            }
-            if (!perfilesRes.error && Array.isArray(perfilesRes.data)) {
-                for (const row of perfilesRes.data) {
-                    const mapped = mapPerfilRowToWeb(row);
-                    const existing = byKey.get(mapped.id) || {};
-                    byKey.set(mapped.id, { ...existing, ...mapped });
+                if (!perfilesRes.error && Array.isArray(perfilesRes.data)) {
+                    for (const row of perfilesRes.data) {
+                        const mapped = mapPerfilRowToWeb(row);
+                        const existing = byKey.get(mapped.id) || {};
+                        byKey.set(mapped.id, { ...existing, ...mapped });
+                    }
                 }
+                if (webRes.error && perfilesRes.error) {
+                    console.warn('[Supabase] No se pudo leer conductores:', webRes.error.message || perfilesRes.error.message);
+                }
+                return [...byKey.values()];
             }
-            if (webRes.error && perfilesRes.error) {
-                console.warn('[Supabase] No se pudo leer conductores:', webRes.error.message || perfilesRes.error.message);
-            }
-            return [...byKey.values()];
-        }
 
-        const { data, error } = await supabase.from('web_colecciones').select('*').eq('coleccion', collectionName);
-        if (error) {
-            console.warn(`[Supabase] Error leyendo colección "${collectionName}":`, error.message);
-            return [];
-        }
-        return (data || []).map((r) => ({ ...(r.datos || {}), id: r.id }));
+            const { data, error } = await supabase.from('web_colecciones').select('*').eq('coleccion', key);
+            if (error) {
+                console.warn(`[Supabase] Error leyendo colección "${key}":`, error.message);
+                return [];
+            }
+            return (data || []).map((r) => ({ ...(r.datos || {}), id: r.id }));
+        })();
+
+        collectionFetchCache.set(key, { at: now, promise });
+        return promise;
     }
 
     async function getDocImpl(docRef) {
@@ -638,16 +662,35 @@
         return makeQuerySnapshot(applyConstraints(items, constraints), colName);
     }
 
+    function snapshotSignature(snap) {
+        try {
+            if (snap && Array.isArray(snap.docs)) {
+                return JSON.stringify(snap.docs.map(d => [d.id, d.data()]));
+            }
+            if (snap && typeof snap.data === 'function') return JSON.stringify(snap.data());
+            return JSON.stringify(snap || null);
+        } catch (e) {
+            return null;
+        }
+    }
+
     function onSnapshotImpl(target, onNext, onError) {
         let active = true;
         let timer = null;
+        let lastSignature = null;
         const emit = async () => {
             if (!active) return;
             try {
                 const snap = (target && target.__type === 'doc')
                     ? await getDocImpl(target)
                     : await getDocsImpl(target);
-                if (active && typeof onNext === 'function') onNext(snap);
+                if (!active || typeof onNext !== 'function') return;
+                // El polling llega cada 4 s pero los datos casi nunca cambian:
+                // no repintamos la UI si el snapshot es idéntico.
+                const signature = snapshotSignature(snap);
+                if (signature !== null && signature === lastSignature) return;
+                lastSignature = signature;
+                onNext(snap);
             } catch (err) {
                 if (active && typeof onError === 'function') onError(err);
             }

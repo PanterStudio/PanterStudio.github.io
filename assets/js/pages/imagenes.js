@@ -107,25 +107,25 @@
             id: 'seed-garaje', categoria: 'garaje', badge: 'Garaje & Taller',
             titulo: 'Taller de Personalización',
             descripcion: 'Personaliza suspensión, pintura, luces exploradoras, llantas y motores para rutas de montaña.',
-            url: '../recursos/imagenes/garage.png'
+            url: '../recursos/imagenes/garage.jpg'
         },
         {
             id: 'seed-sprinter', categoria: 'vehiculos', badge: 'Vehículo Express',
             titulo: 'Van Sprinter de Carga',
             descripcion: 'Modelo de alta fidelidad diseñado para misiones de mensajería urgente y paquetería urbana.',
-            url: '../recursos/vehiculos/sprinter.png'
+            url: '../recursos/vehiculos/sprinter.jpg'
         },
         {
             id: 'seed-montana', categoria: 'mapas', badge: 'Rutas & Mapas',
             titulo: 'Carreteras de Montaña',
             descripcion: 'Curvas cerradas, peajes, vegetación tropical y desniveles con físicas auténticas de suspensión.',
-            url: '../recursos/imagenes/mapa1.png'
+            url: '../recursos/imagenes/mapa1.jpg'
         },
         {
             id: 'seed-fisicas', categoria: 'vehiculos', badge: 'Gameplay 3D',
             titulo: 'Físicas de Carga Pesada',
             descripcion: 'Control de inercia y tracción según el peso de la mercancía transportada en cada entrega.',
-            url: '../recursos/imagenes/1.png'
+            url: '../recursos/imagenes/1.jpg'
         },
         {
             id: 'seed-clima', categoria: 'mapas', badge: 'Clima Dinámico',
@@ -137,7 +137,7 @@
             id: 'seed-cabina', categoria: 'garaje', badge: 'Interior & Cabina',
             titulo: 'Cabina y Tacómetro Activo',
             descripcion: 'Cámaras en primera persona con tacómetros funcionales, espejos retrovisores y volante interactivo.',
-            url: '../recursos/imagenes/hero_banner.png'
+            url: '../recursos/imagenes/hero_banner.jpg'
         }
     ];
 

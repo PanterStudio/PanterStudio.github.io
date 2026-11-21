@@ -11,13 +11,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/modules.css">
-    <script src="../assets/js/core/roles.js"></script>
-    <script src="../assets/js/core/role-colors.js"></script>
-    <script src="../assets/js/core/bbcode.js"></script>
-    <script src="../assets/js/core/discord-auth.js"></script>
-    <script src="../assets/js/core/role-badges.js"></script>
-    <script src="../assets/js/core/firebase-config.js"></script>
-    <script src="../assets/js/site-visibility.js"></script>
+    <script src="../assets/js/core/roles.js" defer></script>
+    <script src="../assets/js/core/role-colors.js" defer></script>
+    <script src="../assets/js/core/bbcode.js" defer></script>
+    <script src="../assets/js/core/discord-auth.js" defer></script>
+    <script src="../assets/js/core/role-badges.js" defer></script>
+    <script src="../assets/js/core/firebase-config.js" defer></script>
+    <script src="../assets/js/site-visibility.js" defer></script>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 </head>
@@ -26,7 +26,7 @@
     <nav>
         <div class="nav-left">
             <a href="../index.html" class="nav-logo">
-                <img src="../recursos/PSGD.png" alt="Panter Studio">
+                <img decoding="async" src="../recursos/PSGD.png" alt="Panter Studio">
                 <span>Panter Studio</span>
             </a>
         </div>
@@ -334,7 +334,7 @@
             <!-- Tab: Internacional -->
             <div id="panel-internacional" class="donation-panel active">
                 <div class="method-card">
-                    <img class="method-icon" src="https://logodownload.org/wp-content/uploads/2014/10/paypal-logo-0.png" alt="PayPal">
+                    <img loading="lazy" decoding="async" class="method-icon" src="https://logodownload.org/wp-content/uploads/2014/10/paypal-logo-0.png" alt="PayPal">
                     <div class="method-title">PayPal</div>
                     <div class="method-desc">Dona de forma rápida y segura utilizando tu cuenta de PayPal o tarjetas internacionales.</div>
                     <a id="paypalBtn" class="method-btn" href="https://www.paypal.com/donate/?hosted_button_id=9LJTEL67CKJP4" target="_blank" rel="noopener noreferrer">Apoyar con PayPal</a>
@@ -362,7 +362,7 @@
                     <button class="method-btn" onclick="toggleQRVisualizer('nequi-qr')">Ver QR o Celular</button>
                     
                     <div id="nequi-qr" class="qr-visualizer">
-                        <img class="qr-img" src="../recursos/nequi_qr.png" alt="Nequi QR" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://nequi.com.co';">
+                        <img loading="lazy" decoding="async" class="qr-img" src="../recursos/nequi_qr.png" alt="Nequi QR" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://nequi.com.co';">
                         <div class="copy-field">
                             <span>Cel: 3102987151</span>
                             <button class="copy-btn" onclick="copyToClipboard('3102987151', this)">Copiar</button>
@@ -376,7 +376,7 @@
                     <button class="method-btn outline" onclick="toggleQRVisualizer('daviplata-qr')">Ver QR o Celular</button>
                     
                     <div id="daviplata-qr" class="qr-visualizer">
-                        <img class="qr-img" src="../recursos/breve_qr.png" alt="Daviplata QR" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://daviplata.com';">
+                        <img loading="lazy" decoding="async" class="qr-img" src="../recursos/breve_qr.png" alt="Daviplata QR" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://daviplata.com';">
                         <div class="copy-field">
                             <span>Cel: 3102987151</span>
                             <button class="copy-btn" onclick="copyToClipboard('3102987151', this)">Copiar</button>
@@ -390,7 +390,7 @@
                     <button class="method-btn outline" onclick="toggleQRVisualizer('breve-qr')">Ver QR o Celular</button>
                     
                     <div id="breve-qr" class="qr-visualizer">
-                        <img class="qr-img" src="../recursos/breve_qr.png" alt="Breve QR" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://breve.com';">
+                        <img loading="lazy" decoding="async" class="qr-img" src="../recursos/breve_qr.png" alt="Breve QR" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://breve.com';">
                         <div class="copy-field">
                             <span>Cel: 3102987151</span>
                             <button class="copy-btn" onclick="copyToClipboard('3102987151', this)">Copiar</button>
@@ -470,8 +470,8 @@
         <p>&copy; 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
     </footer>
 
-    <script src="../assets/js/core/staff-sync.js"></script>
-    <script src="../assets/js/core/script.js"></script>
-    <script src="../assets/js/pages/donaciones.js"></script>
+    <script src="../assets/js/core/staff-sync.js" defer></script>
+    <script src="../assets/js/core/script.js" defer></script>
+    <script src="../assets/js/pages/donaciones.js" defer></script>
 </body>
 </html>

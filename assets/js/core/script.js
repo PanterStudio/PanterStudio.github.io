@@ -1922,83 +1922,101 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Particles effect
-    if (window.tsParticles && typeof window.tsParticles.load === 'function' && document.getElementById('tsparticles')) {
-    tsParticles.load("tsparticles", {
-        background: {
-            color: {
-                value: "transparent",
-            },
-        },
-        fpsLimit: 120,
-        interactivity: {
-            events: {
-                onClick: {
-                    enable: false,  // Disabled global click, now handled per button
-                },
-                onHover: {
-                    enable: true,
-                    mode: "repulse",
-                },
-                resize: true,
-            },
-            modes: {
-                push: {
-                    quantity: 4,
-                },
-                repulse: {
-                    distance: 200,
-                    duration: 0.4,
-                },
-            },
-        },
-        particles: {
-            color: {
-                value: "#1e70c8",
-            },
-            links: {
-                color: "#1e70c8",
-                distance: 150,
-                enable: true,
-                opacity: 0.5,
-                width: 1,
-            },
-            collisions: {
-                enable: true,
-            },
-            move: {
-                direction: "none",
-                enable: true,
-                outModes: {
-                    default: "bounce",
-                },
-                random: false,
-                speed: 2,
-                straight: false,
-            },
-            number: {
-                density: {
-                    enable: true,
-                    area: 800,
-                },
-                value: 80,
-            },
-            opacity: {
-                value: 0.5,
-            },
-            shape: {
-                type: "circle",
-            },
-            size: {
-                value: { min: 1, max: 5 },
-            },
-        },
-        detectRetina: true,
-    }).then(container => {
-        particlesContainer = container;
-    }).catch((error) => {
-        console.warn('No se pudo iniciar el efecto de partículas:', error);
-    });
+    // Particles effect: se carga bajo demanda, después del primer render y
+    // nunca en móvil/reduced-motion. Antes bloqueaba casi todas las páginas.
+    const particlesHost = document.getElementById('tsparticles');
+    if (particlesHost) {
+        const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const smallScreen = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+        const lowPower = smallScreen || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2);
+        if (!reduceMotion && !lowPower) {
+            let particlesLoaderPromise = null;
+
+            function loadTsParticles() {
+                if (window.tsParticles && typeof window.tsParticles.load === 'function') {
+                    return Promise.resolve(window.tsParticles);
+                }
+                if (particlesLoaderPromise) return particlesLoaderPromise;
+                particlesLoaderPromise = new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js';
+                    script.async = true;
+                    script.onload = () => window.tsParticles
+                        ? resolve(window.tsParticles)
+                        : reject(new Error('tsParticles no disponible'));
+                    script.onerror = () => reject(new Error('No se pudo cargar tsParticles'));
+                    document.head.appendChild(script);
+                });
+                return particlesLoaderPromise;
+            }
+
+            function startParticles() {
+                loadTsParticles().then(() => {
+                    if (!document.body.contains(particlesHost)) return null;
+                    return window.tsParticles.load('tsparticles', {
+                        background: { color: { value: 'transparent' } },
+                        fpsLimit: 30,
+                        pauseOnBlur: true,
+                        detectRetina: false,
+                        interactivity: {
+                            events: {
+                                onClick: { enable: false },
+                                onHover: { enable: false },
+                                resize: true
+                            }
+                        },
+                        particles: {
+                            color: { value: '#1e70c8' },
+                            links: {
+                                color: '#1e70c8',
+                                distance: 130,
+                                enable: true,
+                                opacity: 0.35,
+                                width: 1
+                            },
+                            collisions: { enable: false },
+                            move: {
+                                direction: 'none',
+                                enable: true,
+                                outModes: { default: 'out' },
+                                random: false,
+                                speed: 1,
+                                straight: false
+                            },
+                            number: {
+                                density: { enable: true, area: 1100 },
+                                value: 35
+                            },
+                            opacity: { value: 0.4 },
+                            shape: { type: 'circle' },
+                            size: { value: { min: 1, max: 3 } }
+                        }
+                    }).then(container => {
+                        particlesContainer = container;
+                        const syncParticlesPlayback = () => {
+                            if (!particlesContainer) return;
+                            try {
+                                if (document.hidden) {
+                                    if (typeof particlesContainer.pause === 'function') particlesContainer.pause();
+                                } else if (typeof particlesContainer.play === 'function') {
+                                    particlesContainer.play();
+                                }
+                            } catch (e) { /* noop */ }
+                        };
+                        document.addEventListener('visibilitychange', syncParticlesPlayback);
+                        syncParticlesPlayback();
+                    });
+                }).catch((error) => {
+                    console.warn('No se pudo iniciar el efecto de partículas:', error);
+                });
+            }
+
+            if (typeof window.requestIdleCallback === 'function') {
+                window.requestIdleCallback(startParticles, { timeout: 2500 });
+            } else {
+                setTimeout(startParticles, 1200);
+            }
+        }
     }
 
     // Pre-registro form

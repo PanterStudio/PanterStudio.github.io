@@ -16,13 +16,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/modules.css">
-    <script src="assets/js/core/roles.js"></script>
-    <script src="assets/js/core/role-colors.js"></script>
-    <script src="assets/js/core/bbcode.js"></script>
-    <script src="assets/js/core/discord-auth.js"></script>
-    <script src="assets/js/core/role-badges.js"></script>
-    <script src="assets/js/core/firebase-config.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    <script src="assets/js/core/roles.js" defer></script>
+    <script src="assets/js/core/role-colors.js" defer></script>
+    <script src="assets/js/core/bbcode.js" defer></script>
+    <script src="assets/js/core/discord-auth.js" defer></script>
+    <script src="assets/js/core/role-badges.js" defer></script>
+    <script src="assets/js/core/firebase-config.js" defer></script>
     <style>
         /* ===== INDEX SPECIFIC DYNAMIC STYLES ===== */
         :root {
@@ -447,7 +446,7 @@
             <div class="ps-auth-gate-glow" aria-hidden="true"></div>
 
             <div class="ps-auth-gate-logo">
-                <img src="recursos/PSGD.png" alt="Panter Studio Game Dev" width="96" height="96">
+                <img decoding="async" src="recursos/PSGD.png" alt="Panter Studio Game Dev" width="96" height="96">
             </div>
 
             <p class="ps-auth-gate-kicker">
@@ -462,7 +461,7 @@
             </p>
 
             <div id="psAuthGateProfile" class="ps-auth-gate-profile" hidden>
-                <img id="psAuthGateAvatar" src="recursos/PSGD.png" alt="" width="44" height="44">
+                <img decoding="async" id="psAuthGateAvatar" src="recursos/PSGD.png" alt="" width="44" height="44">
                 <div class="ps-auth-gate-profile-info">
                     <strong id="psAuthGateName">—</strong>
                     <span id="psAuthGateRole"></span>
@@ -562,7 +561,7 @@
         <div class="auth-modal-card" role="dialog" aria-modal="true" aria-labelledby="authModalTitle" style="max-width:440px; border-radius:24px; background:rgba(13, 18, 31, 0.95); border:1px solid rgba(0, 210, 255, 0.2); box-shadow:0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 210, 255, 0.15); padding:2rem;">
             <button type="button" class="auth-modal-close" id="authModalCloseBtn" aria-label="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
             <div style="text-align:center; margin-bottom:1.25rem;">
-                <img src="recursos/PSGD.png" alt="PS Game Dev Logo" style="height: 75px; width: auto; filter: drop-shadow(0 0 16px rgba(0, 210, 255, 0.5)); margin-bottom: 10px;" />
+                <img decoding="async" src="recursos/PSGD.png" alt="PS Game Dev Logo" style="height: 75px; width: auto; filter: drop-shadow(0 0 16px rgba(0, 210, 255, 0.5)); margin-bottom: 10px;" />
                 <h3 style="font-size: 1.3rem; letter-spacing: 1px; color:#fff; font-weight:800; margin:0 0 4px;">SOPORTE PS GAME DEV</h3>
                 <p style="font-size:0.85rem; color:var(--text-secondary,#94a3b8); margin:0;">Plataforma de Tickets y Gestión de Servicios</p>
             </div>
@@ -613,7 +612,7 @@
     <nav>
         <div class="nav-left">
             <a href="index.html" class="nav-logo">
-                <img src="recursos/PSGD.png" alt="Panter Studio">
+                <img decoding="async" src="recursos/PSGD.png" alt="Panter Studio">
                 <span>Panter Studio</span>
             </a>
         </div>
@@ -673,7 +672,7 @@
             </div>
 
             <div class="hero-media-wrapper">
-                <img src="recursos/imagenes/garage.png" alt="Nuestra Tierra Simulator Garage" class="hero-media-img">
+                <img decoding="async" fetchpriority="high" width="1015" height="455" src="recursos/imagenes/garage.jpg" alt="Nuestra Tierra Simulator Garage" class="hero-media-img">
                 <div class="hero-media-overlay-badge">
                     <span style="font-size: 0.8rem; font-weight: 700; color: #ffffff;"><i class="fa-solid fa-truck" aria-hidden="true"></i> Simulación Móvil 3D</span>
                     <span style="font-size: 0.75rem; font-weight: 800; color: #ff8c00; background: rgba(255,140,0,0.2); padding: 2px 8px; border-radius: 100px;">Lanzamiento Proximo</span>
@@ -811,10 +810,10 @@
         <p><i class="fa-regular fa-copyright" aria-hidden="true"></i> 2026 Panter Studio Game Dev. Todos los derechos reservados.</p>
     </footer>
 
-    <script src="assets/js/core/staff-sync.js"></script>
-    <script src="assets/js/core/script.js"></script>
-    <script src="assets/js/pages/index-auth-gate.js"></script>
-    <script src="assets/js/core/announcements-public.js"></script>
+    <script src="assets/js/core/staff-sync.js" defer></script>
+    <script src="assets/js/core/script.js" defer></script>
+    <script src="assets/js/pages/index-auth-gate.js" defer></script>
+    <script src="assets/js/core/announcements-public.js" defer></script>
     <script>
     (function () {
         async function loadLiveGameRanking() {
